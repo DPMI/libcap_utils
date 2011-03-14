@@ -1,4 +1,4 @@
-AMLOCAL_AMFLAGS = -I m4
+ACLOCAL_AMFLAGS = -I m4
 
 lib_LTLIBRARIES = libcap_utils.la
 
