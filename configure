@@ -1,0 +1,19 @@
+#!/bin/sh
+
+# Try to set the optimum compiler.
+
+env=`uname -a | grep CYGWIN`
+echo "env = $env "
+
+if [ -f /usr/local/intel/bin/iccbin ];  then
+ echo "Found Intel Compiler. Will use it."  
+ cp Makefile.icc Makefile
+else 
+ if [ -d /cygdrive ]; then
+   echo "Found CYGWIN, adjusting for it."
+   cp Makefile.cygwin Makefile
+ else 
+   echo "Defaulting to GCC."
+   cp Makefile.gcc Makefile
+ fi
+fi

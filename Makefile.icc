@@ -1,0 +1,69 @@
+#
+# Make stuff
+#
+
+srcdir = .
+prefix = /usr
+
+INCPATH=$(prefix)/include
+LIBPATH=$(prefix)/lib
+MANPATH=$(prefix)/man
+BINPATH=$(prefix)/bin
+
+DESTDIR=
+
+DB=$(DESTDIR)$(BINPATH)
+DI=$(DESTDIR)$(INCPATH)
+DL=$(DESTDIR)$(LIBPATH)
+DM=$(DESTDIR)$(MANPATH)
+DP=$(DESTDIR)$(prefix)
+
+
+compiler=/usr/local/intel/bin/iccbin
+carg=-c -fPIC -O2 -Wall -xK
+objects= createstream.o openstream.o closestream.o createfilter.o filter.o readpost.o writepost.o valtopico.o spectopico.o timecmp.o ethaton.o
+targetlib=/usr/lib/
+targetinclude=/usr/include/
+libname=libcap_utils
+version=1.0.5
+
+all: $(objects)
+	$(compiler) -shared -Wl,-soname,$(libname).so.1 -o $(libname).so.$(version) $(objects) -lc
+
+createfilter.o:	createfilter.c cap_utils.h
+	$(compiler) $(carg) createfilter.c
+openstream.o: openstream.c cap_utils.h
+	$(compiler) $(carg) openstream.c
+closestream.o: closestream.c cap_utils.h
+
+	$(compiler) $(carg) closestream.c
+filter.o: filter.c cap_utils.h
+	$(compiler) $(carg) filter.c
+readpost.o: readpost.c cap_utils.h
+	$(compiler) $(carg) readpost.c
+writepost.o: writepost.c cap_utils.h
+	$(compiler) $(carg) writepost.c
+valtopico.o: valtopico.c cap_utils.h
+	$(compiler) $(carg) valtopico.c
+spectopico.o: spectopico.c  cap_utils.h
+	$(compiler) $(carg) spectopico.c
+timecmp.o: timecmp.c cap_utils.h
+	$(compiler) $(carg) timecmp.c
+ethaton.o: ethaton.c cap_utils.h
+	$(compiler) $(carg) ethaton.c
+clean:
+	rm $(objects) libcap_utils.so.$(version)
+install:
+	-@if [ ! -d $(DP) ]; then mkdir $(DP); fi
+	-@if [ ! -d $(DL) ]; then mkdir $(DL); fi
+	-@if [ ! -d $(DI) ]; then mkdir $(DI); fi
+	cp $(libname).so.$(version) $(DL)/$(libname).so.$(version); \
+	cp cap_utils.h $(DI)/cap_utils.h; \
+	/sbin/ldconfig;\
+	ln -sf $(DL)/$(libname).so.$(version) $(DL)/$(libname).so
+	ln -sf $(DL)/$(libname).so.$(version) $(DL)/$(libname).so.1
+uninstall:
+	rm $(targetlib)libcap_utils.*; \
+	rm $(targetinclude)cap_utils.h
+
+update: all uninstall install
