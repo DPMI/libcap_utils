@@ -18,8 +18,7 @@ DL=$(DESTDIR)$(LIBPATH)
 DM=$(DESTDIR)$(MANPATH)
 DP=$(DESTDIR)$(prefix)
 
-compiler=gcc
-carg=-c -fPIC -O2 -Wall
+CFLAGS+=-c -fPIC -O2 -Wall
 objects= createstream.o openstream.o closestream.o createfilter.o filter.o readpost.o writepost.o valtopico.o spectopico.o timecmp.o ethaton.o
 
 
@@ -30,29 +29,29 @@ libname=libcap_utils
 version=1.0.5
 
 all: $(objects)
-	$(compiler) -shared -Wl,-soname,$(libname).so.1 -o $(libname).so.$(version) $(objects) -lc
+	$(CC) -shared -Wl,-soname,$(libname).so.1 -o $(libname).so.$(version) $(objects) -lc
 createfilter.o:	createfilter.c cap_utils.h
-	$(compiler) $(carg) createfilter.c
+	$(CC) $(CFLAGS) createfilter.c
 filter.o: filter.c cap_utils.h
-	$(compiler) $(carg) filter.c
+	$(CC) $(CFLAGS) filter.c
 openstream.o: openstream.c cap_utils.h
-	$(compiler) $(carg) openstream.c
+	$(CC) $(CFLAGS) openstream.c
 closestream.o: closestream.c cap_utils.h
-	$(compiler) $(carg) closestream.c
+	$(CC) $(CFLAGS) closestream.c
 createstream.o: createstream.c cap_utils.h
-	$(compiler) $(carg) createstream.c
+	$(CC) $(CFLAGS) createstream.c
 readpost.o: readpost.c cap_utils.h
-	$(compiler) $(carg) readpost.c
+	$(CC) $(CFLAGS) readpost.c
 writepost.o: writepost.c cap_utils.h
-	$(compiler) $(carg) writepost.c
+	$(CC) $(CFLAGS) writepost.c
 valtopico.o: valtopico.c cap_utils.h
-	$(compiler) $(carg) valtopico.c
+	$(CC) $(CFLAGS) valtopico.c
 spectopico.o: spectopico.c  cap_utils.h
-	$(compiler) $(carg) spectopico.c
+	$(CC) $(CFLAGS) spectopico.c
 timecmp.o: timecmp.c cap_utils.h
-	$(compiler) $(carg) timecmp.c
+	$(CC) $(CFLAGS) timecmp.c
 ethaton.o: ethaton.c cap_utils.h
-	$(compiler) $(carg) ethaton.c
+	$(CC) $(CFLAGS) ethaton.c
 clean:
 	rm $(objects) libcap_utils.so.$(version)
 install:
