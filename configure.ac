@@ -1,6 +1,7 @@
-AC_INIT([libcap_utils],[0.5], [dsv@bth.se])
+AC_INIT([libcap_utils],[0.5.1], [dsv@bth.se])
 AC_DEFINE([VERSION_MAJOR], 0)
 AC_DEFINE([VERSION_MINOR], 5)
+AC_DEFINE([VERSION_MICRO], 1)
 
 AC_CONFIG_AUX_DIR([build-aux])
 AM_INIT_AUTOMAKE([-Wall 1.11 silent-rules foreign])

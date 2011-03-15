@@ -49,7 +49,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <ctype.h>
-#define VERSION "0.5"
+#define VERSION "0.5.1"
 #define VERSION_MAJOR 0
 #define VERSION_MINOR 5
 #define LLPROTO 0x0810
