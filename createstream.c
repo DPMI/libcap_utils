@@ -54,7 +54,6 @@ OUTPUT:
 
 
 int createstream(struct stream *myStream,char *address, int protocol, char *nic){
-  int newsocket=0;
   struct ifreq ifr;
   int ifindex=0;
   int socket_descriptor=0;
@@ -76,9 +75,11 @@ int createstream(struct stream *myStream,char *address, int protocol, char *nic)
   for(i=0;i<buffLen;i++){
     myStream->buffer[i]=0;
   }
-  myStream->FH.comment_size=0;
-  for(i=0;i<200;i++){
-    myStream->FH.mpid[i]=0;
+  if(myStream->FH.comment_size==0){
+    myStream->FH.comment_size=0;
+    for(i=0;i<200;i++){
+      myStream->FH.mpid[i]=0;
+    }
   }
   printf("Creating a %d stream. \n",protocol);
 

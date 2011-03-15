@@ -193,11 +193,6 @@ struct filter* createfilter(int argc, char** argv);
 int checkFilter(char* pkt, struct filter* theFilter);
 
 int close_cap_stream(int *SD);
-//int read_post_stream(int *SD, u_char* data, int size,long seqnr, char *addr, int proto);
-//int read_filter_post_stream(int *SD, u_char* data, int size, struct filter my_filter);
-
-int alloc_buffer(FILE **infile, u_char **data);
-int dealloc_buffer(u_char **data);
 #endif
 
 /*
