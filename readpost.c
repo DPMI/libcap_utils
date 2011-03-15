@@ -317,8 +317,8 @@ int read_post(struct stream *myStream, char **data, struct filter *my_Filter){
 	      myStream->bufferSize=amount;
 	      bzero(rBuffer,buffLen);
 	      myStream->pktCount=0;
-	      printf("Normal read, data present %d\n",amount);
-	      printf("rBuffer = %p, from = %p \n",&rBuffer, &from);
+	      //	      printf("Normal read, data present %d\n",amount);
+	      //	      printf("rBuffer = %p, from = %p \n",&rBuffer, &from);
 	      while(myStream->bufferSize<7410){
 		readBytes=recvfrom(myStream->mySocket, rBuffer, buffLen, 0,&from, (socklen_t*)&from);
 		if(readBytes<0){
@@ -359,8 +359,8 @@ int read_post(struct stream *myStream, char **data, struct filter *my_Filter){
 	      myStream->bufferSize=amount;
 	      myStream->pktCount=0;
 	      bzero(rBuffer,buffLen);
-	      printf("Normal read, data present %d\n",amount);
-	      printf("rBuffer = %p, from = %p \n",&rBuffer, &from);
+	      //	      printf("Normal read, data present %d\n",amount);
+	      //	      printf("rBuffer = %p, from = %p \n",&rBuffer, &from);
 	      while(myStream->bufferSize<7410){
 		readBytes=recvfrom(myStream->mySocket, rBuffer, buffLen, 0,NULL, NULL);
 //		printf("eth.type=%04x %02X:%02X:%02X:%02X:%02X:%02X --> %02X:%02X:%02X:%02X:%02X:%02X",ntohs(eh->h_proto),eh->h_source[0],eh->h_source[1],eh->h_source[2],eh->h_source[3],eh->h_source[4],eh->h_source[5],eh->h_dest[0],eh->h_dest[1],eh->h_dest[2],eh->h_dest[3],eh->h_dest[4],eh->h_dest[5]);
