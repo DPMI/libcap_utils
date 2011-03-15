@@ -23,7 +23,7 @@
 //#define debug
 int timecmp(timepico *ts1, timepico *ts2)
 {
-#ifdef debug
+#ifdef DEBUG
   printf("\nts1->tv_sec=%d ts1->tv_psec %012llu \n",ts1->tv_sec,ts1->tv_psec); 
   printf("ts2->tv_sec=%d ts2->tv_psec %012llu \n",ts2->tv_sec,ts2->tv_psec); 
 #endif  

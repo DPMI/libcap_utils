@@ -97,7 +97,7 @@ int openstream(struct stream *myStream,char *address, int protocol, char *nic, i
   for(i=0;i<200;i++){
     myStream->FH.mpid[i]=0;
   }
-#ifdef debug
+#ifdef DEBUG
   printf("openstream() \n");
 #endif
   switch(protocol){
@@ -127,7 +127,7 @@ int openstream(struct stream *myStream,char *address, int protocol, char *nic, i
 	perror("Cannot accept new connection.");
 	return(0);
       }
-#ifdef debug
+#ifdef DEBUG
       printf("TCP unicast\nIP.destination=%s port=%d\n", address,port);
       printf("Client: %s  %d\n",inet_ntoa(client.sin_addr), ntohs(client.sin_port));
 #endif
@@ -146,14 +146,14 @@ int openstream(struct stream *myStream,char *address, int protocol, char *nic, i
       sender.sin_family = AF_INET;
       inet_aton(address,&sender.sin_addr);
       sender.sin_port = htons(port);
-#ifdef debug
+#ifdef DEBUG
       printf("Listens to %s:%d\n",inet_ntoa(sender.sin_addr),ntohs(sender.sin_port));
 #endif
       if( bind (socket_descriptor, (struct sockaddr *) &sender,sizeof(sender))<0){
 	perror("Cannot bind port number \n");
 	return(0);
       }
-#ifdef debug
+#ifdef DEBUG
       printf("UDP Multi/uni-cast\nIP.destination=%s UDP.port=%d\n", address,port);
 #endif
       myStream->address=(char*)calloc(strlen(address)+1,1);
@@ -211,7 +211,7 @@ int openstream(struct stream *myStream,char *address, int protocol, char *nic, i
 	free(myaddress);
 	return(0);
       }
-#ifdef debug
+#ifdef DEBUG
       printf("Ethernet Multicast\nEthernet.type=%04X\nEthernet.dst=%02X:%02X:%02X:%02X:%02X:%02X\nInterface=%s (%d)\n", LLPROTO
 	     ,mcast.mr_address[0], mcast.mr_address[1], mcast.mr_address[2]
 	     ,mcast.mr_address[3], mcast.mr_address[4], mcast.mr_address[5]
@@ -235,13 +235,13 @@ int openstream(struct stream *myStream,char *address, int protocol, char *nic, i
       struct file_header *fhptr;
       fhptr=&(myStream->FH);
       i=fread(fhptr, 1, sizeof(struct file_header), myStream->myFile);
-#ifdef debug
+#ifdef DEBUG
       printf("Read File Header %d bytes <-> %d\n",i, sizeof(struct file_header));
 #endif
       strncpy(myStream->FH.mpid, fhptr->mpid,200);
       myStream->comment=(char*)calloc(fhptr->comment_size+1,1);
       i=fread(myStream->comment, 1, fhptr->comment_size, myStream->myFile);
-#ifdef debug
+#ifdef DEBUG
       printf("Read comment  %d bytes\nFile pointer peeks to %ld",i, ftell(myStream->myFile));
 #endif
       if(fhptr->version.major!=VERSION_MAJOR || fhptr->version.minor != VERSION_MINOR ) {
@@ -261,7 +261,7 @@ int openstream(struct stream *myStream,char *address, int protocol, char *nic, i
   myStream->mySocket=socket_descriptor;
   myStream->ifindex=ifindex;
 
-#ifdef debug
+#ifdef DEBUG
   printf("sizeof(cap_head) = %d\n",sizeof(cap_head));
   printf("sizeof(ethhead)  = %d\n",sizeof(struct ethhdr));
   printf("sizeof(sendhead) = %d\n",sizeof(struct sendhead));
@@ -273,7 +273,7 @@ int openstream(struct stream *myStream,char *address, int protocol, char *nic, i
       myStream->bufferSize=0;
       bzero(osrBuffer,buffLen);
       myStream->pktCount=0;
-#ifdef debug      
+#ifdef DEBUG      
       printf("osrBuffer = %p, \n",&osrBuffer);
 #endif
       readBytes=recvfrom(myStream->mySocket, osrBuffer, sizeof(struct sendhead), 0, NULL, NULL);
@@ -296,7 +296,7 @@ int openstream(struct stream *myStream,char *address, int protocol, char *nic, i
 	fprintf(stderr,"I will not process this stream, change the version on Libcap_utils.\n");
 	return(0);
       }
-#ifdef debug
+#ifdef DEBUG
       printf("Read %d bytes, Got the sendhead.\n",readBytes);
 #endif
       // Now we read some packets.
@@ -313,12 +313,12 @@ int openstream(struct stream *myStream,char *address, int protocol, char *nic, i
 	  myStream->flushed=1;
 	  break;
 	}
-#ifdef debug
+#ifdef DEBUG
 	printf("myStream->buffer = %p\n",myStream->buffer);
 	printf("Packet contained %d bytes Buffer Size = %d / %d  \n",readBytes,myStream->bufferSize, buffLen);
 #endif
 	if(ntohs(sh->flush)==1){// This indicates a flush from the sender..
-#ifdef debug
+#ifdef DEBUG
 	  printf("Sender terminated. \n");
 #endif
 	  myStream->flushed=1;
@@ -334,7 +334,7 @@ int openstream(struct stream *myStream,char *address, int protocol, char *nic, i
       bzero(osrBuffer,buffLen);
       myStream->pktCount=0;
       
-#ifdef debug      
+#ifdef DEBUG      
       printf("osrBuffer = %p, \n",&osrBuffer);
 #endif
       while(myStream->bufferSize==0){ // This equals approx 5 packets each of 
@@ -371,12 +371,12 @@ int openstream(struct stream *myStream,char *address, int protocol, char *nic, i
 	}
 	memcpy(myStream->buffer+myStream->bufferSize, osrBuffer+sizeof(struct sendhead), readBytes-sizeof(struct sendhead));
 	myStream->bufferSize+=(readBytes-sizeof(struct sendhead));
-#ifdef debug
+#ifdef DEBUG
 	printf("Packet contained %d bytes (Send %d, Cap %d) Buffer Size = %d / %d  Pkts %ld \n",readBytes, sizeof(struct sendhead),sizeof(struct cap_header),myStream->bufferSize, buffLen, myStream->pktCount);
 	printf("Buffer Size = %d / %d \n",myStream->bufferSize, buffLen);
 #endif
 	if(ntohs(sh->flush)==1){// This indicates a flush from the sender..
-#ifdef debug
+#ifdef DEBUG
 	  printf("Sender terminated. \n");
 #endif
 	  myStream->flushed=1;
@@ -391,15 +391,15 @@ int openstream(struct stream *myStream,char *address, int protocol, char *nic, i
       bzero(osrBuffer,buffLen);
       myStream->pktCount=0;
 
-#ifdef debug      
+#ifdef DEBUG      
       printf("osrBuffer = %p, \n",&osrBuffer);
 #endif
       while(myStream->bufferSize==0){ // Read one chunk of data, mostly to determine sequence number and stream version. 
-#ifdef debug
+#ifdef DEBUG
 	printf("ETH read from %d, to %p max %d bytes, from socket %p\n",myStream->mySocket, myStream->buffer, buffLen);
 #endif
 	readBytes=recvfrom(myStream->mySocket, osrBuffer, buffLen, 0, NULL, NULL);
-#ifdef debug
+#ifdef DEBUG
 	printf("eth.type=%04x %02X:%02X:%02X:%02X:%02X:%02X --> %02X:%02X:%02X:%02X:%02X:%02X",ntohs(eh->h_proto),eh->h_source[0],eh->h_source[1],eh->h_source[2],eh->h_source[3],eh->h_source[4],eh->h_source[5],eh->h_dest[0],eh->h_dest[1],eh->h_dest[2],eh->h_dest[3],eh->h_dest[4],eh->h_dest[5]);
 	printf("myStream->address = %02x:%02x:%02x:%02x:%02x:%02x \n",myStream->address[0],myStream->address[1],myStream->address[2],myStream->address[3],myStream->address[4],myStream->address[5]);
 #endif
@@ -436,7 +436,7 @@ int openstream(struct stream *myStream,char *address, int protocol, char *nic, i
 	  }
 	  memcpy(myStream->buffer+myStream->bufferSize, osrBuffer+sizeof(struct ethhdr)+sizeof(struct sendhead), readBytes-sizeof(struct ethhdr)-sizeof(struct sendhead));
 	  myStream->bufferSize+=(readBytes-sizeof(struct ethhdr)-sizeof(struct sendhead));
-#ifdef debug
+#ifdef DEBUG
 	  printf("Packet contained %d bytes (Eth %d, Send %d, Cap %d) Buffer Size = %d / %d  Pkts %ld \n",readBytes,sizeof(struct ethhdr), sizeof(struct sendhead),sizeof(struct cap_header),myStream->bufferSize, buffLen, myStream->pktCount);
 #endif
 	  if(ntohs(sh->flush)==1){// This indicates a flush from the sender..
@@ -453,14 +453,14 @@ int openstream(struct stream *myStream,char *address, int protocol, char *nic, i
       break;
     case 0:
     default:
-#ifdef debug
+#ifdef DEBUG
       printf("Reading from %ld\n", ftell(myStream->myFile));
 #endif
       readBytes=fread(myStream->buffer, 1, buffLen, myStream->myFile);
       myStream->bufferSize=readBytes;
       myStream->readPos=0;
 
-#ifdef debug      
+#ifdef DEBUG      
       printf("Read %d bytes.\n", readBytes);
       for(i=0;i<5;i++){
 	printf("%c",myStream->buffer[i]);
@@ -470,7 +470,7 @@ int openstream(struct stream *myStream,char *address, int protocol, char *nic, i
 
       break;
   }
-#ifdef debug
+#ifdef DEBUG
   printf("Read op filled: %p --- %d --- %p \n", myStream->buffer, readBytes, myStream->buffer+readBytes);
 #endif
   if(myStream->bufferSize<buffLen){
@@ -504,7 +504,7 @@ int openstream(struct stream *myStream,char *address, int protocol, char *nic, i
 	}
     }
   }
-#ifdef debug
+#ifdef DEBUG
   printf("OPENSTREAM Initial read complete.\n");  
 #endif  
 

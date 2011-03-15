@@ -43,7 +43,7 @@ const char * parse_date_time (const char *input, struct tm *tm){
     cp = strptime(input, "%s", tm);//Seconds since the epoch 1970-01-01 00:00:00 UTC
   }
 
-#ifdef debug
+#ifdef DEBUG
   printf("Input = %s  ==> fractional seconds = %s\n",input,cp);
 #endif
   return cp;
@@ -117,7 +117,7 @@ struct filter* createfilter(int argc, char** argv){
     } else {
       // Incase of an argument 
       optionIndex=-2;
-#ifdef debug      
+#ifdef DEBUG      
       printf("An argument\n");
 #endif
     }
@@ -148,7 +148,7 @@ struct filter* createfilter(int argc, char** argv){
 	      myfilter->starttime.tv_psec=0;
 	    }
 	    myfilter->index+=4096;
-#ifdef debug      
+#ifdef DEBUG      
 	    printf("Start time: %d.%012llu \n",(int)myfilter->starttime.tv_sec,myfilter->starttime.tv_psec);
 #endif
 	  }
@@ -173,7 +173,7 @@ struct filter* createfilter(int argc, char** argv){
 	    }
 	    myfilter->index+=2048;
 	  }
-#ifdef debug      
+#ifdef DEBUG      
 	  printf("End time: %d.%012llu \n",(int)myfilter->endtime.tv_sec,myfilter->endtime.tv_psec);
 #endif
 	  break;
@@ -181,7 +181,7 @@ struct filter* createfilter(int argc, char** argv){
 	case 1024:// Set MP id
 	  strncpy(myfilter->mampid,argv[i+1],8);
 	  myfilter->index+=1024;
-#ifdef debug
+#ifdef DEBUG
 	  printf("mpid = %s\n",myfilter->mampid);
 #endif	  
 	  break;
@@ -189,7 +189,7 @@ struct filter* createfilter(int argc, char** argv){
 	case 512:// Set Nic
 	  myfilter->index+=512;
 	  strncpy(myfilter->nic,argv[i+1],8);
-#ifdef debug
+#ifdef DEBUG
 	  printf("if = %s\n",myfilter->nic);
 #endif
 	  break;
@@ -204,7 +204,7 @@ struct filter* createfilter(int argc, char** argv){
 	    *(maskstring)='\0';
 	  }
 	  myfilter->vlan=atoi(argv[i+1]);
-#ifdef debug
+#ifdef DEBUG
 	  printf("eth.vlan = %04x / %04x \n",myfilter->vlan,myfilter->vlan_mask);
 #endif
 	  break;
@@ -228,7 +228,7 @@ struct filter* createfilter(int argc, char** argv){
 	    myfilter->eth_type=atoi(argv[i+1]);
 	  }
 	  myfilter->index+=128;
-#ifdef debug
+#ifdef DEBUG
 	  printf("eth.type = %04x / %04x \n",myfilter->eth_type, myfilter->eth_type_mask);
 #endif
 	  break;
@@ -248,7 +248,7 @@ struct filter* createfilter(int argc, char** argv){
 	    *(maskstring)='\0';
 	  }
 	  eth_aton(myfilter->eth_src,argv[i+1]);
-#ifdef debug
+#ifdef DEBUG
 	  printf("eth.src = %02x:%02x:%02x:%02x:%02x:%02x: / %02x:%02x:%02x:%02x:%02x:%02x\n"
 		 ,myfilter->eth_src[0],myfilter->eth_src[1],myfilter->eth_src[2]
 		 ,myfilter->eth_src[3],myfilter->eth_src[4],myfilter->eth_src[5]
@@ -273,7 +273,7 @@ struct filter* createfilter(int argc, char** argv){
 	    *(maskstring)='\0';
 	  }
 	  eth_aton(myfilter->eth_dst,argv[i+1]);
-#ifdef debug
+#ifdef DEBUG
 	  printf("eth.dst = %02x:%02x:%02x:%02x:%02x:%02x: / %02x:%02x:%02x:%02x:%02x:%02x\n"
 		 ,myfilter->eth_dst[0],myfilter->eth_dst[1],myfilter->eth_dst[2]
 		 ,myfilter->eth_dst[3],myfilter->eth_dst[4],myfilter->eth_dst[5]
@@ -298,7 +298,7 @@ struct filter* createfilter(int argc, char** argv){
 	    myfilter->ip_proto=atoi(argv[i+1]);
 	    /*	 break;*/
 	  }       
-#ifdef debug
+#ifdef DEBUG
 	  printf("ip.proto = %02x\n",myfilter->ip_proto);
 #endif
 	  myfilter->index+=16;
@@ -314,7 +314,7 @@ struct filter* createfilter(int argc, char** argv){
 	  }
 	  strncpy(myfilter->ip_src,argv[i+1],16);
 	  myfilter->index+=8;
-#ifdef debug
+#ifdef DEBUG
 	  printf("ip.src = %s / %s \n",myfilter->ip_src,myfilter->ip_src_mask);
 #endif
 
@@ -329,7 +329,7 @@ struct filter* createfilter(int argc, char** argv){
 	    *(maskstring)='\0';
 	  }
 	  strncpy(myfilter->ip_dst,argv[i+1],16);
-#ifdef debug
+#ifdef DEBUG
 	  printf("ip.dst = %s / %s \n",myfilter->ip_dst,myfilter->ip_dst_mask);
 #endif
 	  myfilter->index+=4;
@@ -346,7 +346,7 @@ struct filter* createfilter(int argc, char** argv){
 	  }
 	  myfilter->tp_sport=atoi(argv[i+1]);
 	  myfilter->index+=2;
-#ifdef debug
+#ifdef DEBUG
 	  printf("tp.sport = %d / %d \n",myfilter->tp_sport, myfilter->tp_sport_mask);
 #endif
 	  break;
@@ -360,7 +360,7 @@ struct filter* createfilter(int argc, char** argv){
 	    *(maskstring)='\0';
 	  }
 	  myfilter->tp_dport=atoi(argv[i+1]);
-#ifdef debug
+#ifdef DEBUG
 	  printf("tp.dport = %d / %d \n",myfilter->tp_dport, myfilter->tp_dport_mask);
 #endif
 	  myfilter->index+=1;
@@ -387,7 +387,7 @@ struct filter* createfilter(int argc, char** argv){
 	  printf("-U or --tp.dport  filter on destination portnumber                 value/[mask]\n");
 //	  printf("-h or --help      this text\n");
 	  myfilter->index=0;
-#ifdef debug 
+#ifdef DEBUG 
 	  printf("Returning NULL, since help was called.\n");
 #endif
 	  return(0);
