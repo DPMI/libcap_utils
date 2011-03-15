@@ -2,8 +2,8 @@
                           createfilter.c  -  description
                              -------------------
     begin                : Wed 5 2003
-    copyright            : (C) 2003 by Anders Ekberg, Patrik Carlsson
-    email                : anders.ekberg@bth.se, patrik.carlsson@bth.se
+    copyright            : (C) 2003 by Anders Ekberg, Patrik Arlos
+    email                : anders.ekberg@bth.se, Patrik.Arlos@bth.se
  ***************************************************************************/
 
 /***************************************************************************

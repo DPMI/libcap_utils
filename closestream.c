@@ -2,8 +2,8 @@
                           closestream.c  -  description
                              -------------------
     begin                : Mon Aug 1 2004
-    copyright            : (C) 2004 by Patrik Carlsson
-    email                : patrik.carlsson@bth.se
+    copyright            : (C) 2005 by Patrik Arlos
+    email                : Patrik.Arlos@bth.se
  ***************************************************************************/
 
 /***************************************************************************
