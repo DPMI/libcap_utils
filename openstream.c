@@ -272,13 +272,18 @@ int openstream(struct stream *myStream,char *address, int protocol, char *nic, i
 #ifdef DEBUG
       printf("Read File Header %d bytes <-> %d\n",i, sizeof(struct file_header));
 #endif
-      myStream->comment  = strdup(fhptr);
-      myStream->filename = strdup(address);
+      myStream->comment=(char*)calloc(fhptr->comment_size+1,1);
+      i=fread(myStream->comment, 1, fhptr->comment_size, myStream->myFile);
+#ifdef DEBUG
+      printf("Read comment  %d bytes\nFile pointer peeks to %ld",i, ftell(myStream->myFile));
+#endif
 
       if ( !is_valid_version(fhptr) ){ /* is_valid_version has side-effects */
 	return(0);
       }
 
+      myStream->filename=(char*)calloc(strlen(address)+1,1);
+      strcpy(myStream->filename,address);
       break;
   } 
 
