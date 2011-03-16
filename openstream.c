@@ -83,7 +83,7 @@ static int stream_init(struct stream* st, int protocol, int port){
   /** st->pktCount = 0; for backwards compability, @bug */
   st->bufferSize=0;
   st->readPos=0;
-  /** st->flushed = 0; for backwards compability, @bug */
+  st->flushed = 0;
   st->address=0;
   st->filename=0;
   st->portnr=port;
