@@ -282,8 +282,7 @@ int openstream(struct stream *myStream,char *address, int protocol, char *nic, i
 	return(0);
       }
 
-      myStream->filename=(char*)calloc(strlen(address)+1,1);
-      strcpy(myStream->filename,address);
+      myStream->filename = strdup(address);
       break;
   } 
 
