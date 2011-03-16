@@ -52,6 +52,21 @@ OUTPUT:
 //#include <net/ethernet.h>
 #include <net/if.h>
 
+/**
+ * Validates the file_header version against libcap_utils version. Prints
+ * warning to stderr if version mismatch.
+ * @return Non-zero if version is valid.
+ */
+static int is_valid_version(struct file_header* fhptr){
+  if( fhptr->version.major == VERSION_MAJOR && fhptr->version.minor == VERSION_MINOR ) {
+    return 1;
+  }
+
+  fprintf(stderr,"Stream uses version %d.%d, this application uses ", fhptr->version.major, fhptr->version.minor);
+  fprintf(stderr,"Libcap_utils version " VERSION "\n");
+  fprintf(stderr,"Change libcap version or convert file.\n");
+  return 0;
+}
 
 int openstream(struct stream *myStream,char *address, int protocol, char *nic, int port){
   char osrBuffer[buffLen]; // Temporary buffer for holding ETHERNET/UDP packets, while filling buffer.
@@ -244,11 +259,9 @@ int openstream(struct stream *myStream,char *address, int protocol, char *nic, i
 #ifdef DEBUG
       printf("Read comment  %d bytes\nFile pointer peeks to %ld",i, ftell(myStream->myFile));
 #endif
-      if(fhptr->version.major!=VERSION_MAJOR || fhptr->version.minor != VERSION_MINOR ) {
-	fprintf(stderr,"Stream uses version %d.%d, this application uses ",myStream->FH.version.major, myStream->FH.version.minor);
-	fprintf(stderr,"Libcap_utils Version %d.%d\n",VERSION_MAJOR, VERSION_MINOR);
-	fprintf(stderr,"Change libcap version or convert file.\n");
-//	return(0);
+
+      if ( !is_valid_version(fhptr) ){ /* is_valid_version has side-effects */
+	return(0);
       }
 
       myStream->filename=(char*)calloc(strlen(address)+1,1);
