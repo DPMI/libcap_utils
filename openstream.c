@@ -68,6 +68,39 @@ static int is_valid_version(struct file_header* fhptr){
   return 0;
 }
 
+/**
+ * Initialize variables for a stream.
+ * @bug To retain compability with code, some variables which weren't
+ *      initialized are left that way, at least until I proved and tested it
+ *      does not break.
+ * @return Non-zero on failure.
+ */
+static int stream_init(struct stream* st, int protocol, int port){
+  st->type=protocol;
+  st->myFile=0;
+  st->mySocket=0;
+  /** st->expSeqnr = 0; for backwards compability, @bug */
+  /** st->pktCount = 0; for backwards compability, @bug */
+  st->bufferSize=0;
+  st->readPos=0;
+  /** st->flushed = 0; for backwards compability, @bug */
+  st->address=0;
+  st->filename=0;
+  st->portnr=port;
+
+  st->ifindex=0;
+  /** st->if_mtu = 0; for backwards compability, @bug */
+  st->comment=0;
+
+  memset(st->buffer, 0, buffLen);
+
+  /* initialize file_header */
+  st->FH.comment_size=0;
+  memset(st->FH.mpid, 0, 200); /* @bug what is 200? why is not [0] = 0 enought? */
+
+  return 0;
+}
+
 int openstream(struct stream *myStream,char *address, int protocol, char *nic, int port){
   char osrBuffer[buffLen]; // Temporary buffer for holding ETHERNET/UDP packets, while filling buffer.
   int newsocket=0;
@@ -94,24 +127,10 @@ int openstream(struct stream *myStream,char *address, int protocol, char *nic, i
 
 
   /* Initialize the structure */
-  myStream->type=protocol;
-  myStream->readPos=0;
-  myStream->bufferSize=0;
-  myStream->myFile=0;
-  myStream->mySocket=0;
-  myStream->address=0;
-  myStream->portnr=port;
-  myStream->filename=0;
-  myStream->ifindex=0;
-  myStream->comment=0;
-  myStream->flushed=0;
-  for(i=0;i<buffLen;i++){
-    myStream->buffer[i]=0;
+  if ( !stream_init(myStream, protocol, port) ){
+    fprintf(stderr, "stream_init failed\n");
   }
-  myStream->FH.comment_size=0;
-  for(i=0;i<200;i++){
-    myStream->FH.mpid[i]=0;
-  }
+
 #ifdef DEBUG
   printf("openstream() \n");
 #endif
