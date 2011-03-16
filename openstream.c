@@ -272,7 +272,6 @@ int openstream(struct stream *myStream,char *address, int protocol, char *nic, i
 #ifdef DEBUG
       printf("Read File Header %d bytes <-> %d\n",i, sizeof(struct file_header));
 #endif
-      strncpy(myStream->FH.mpid, fhptr->mpid,200);
       myStream->comment=(char*)calloc(fhptr->comment_size+1,1);
       i=fread(myStream->comment, 1, fhptr->comment_size, myStream->myFile);
 #ifdef DEBUG
