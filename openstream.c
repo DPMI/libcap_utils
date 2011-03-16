@@ -471,7 +471,7 @@ int openstream(struct stream *myStream,char *address, int protocol, char *nic, i
       break;
   }
 #ifdef DEBUG
-  printf("Read op filled: %p --- %d --- %p \n", myStream->buffer, readBytes, myStream->buffer+readBytes);
+  printf("Read op filled: %p --- %04x --- %p \n", myStream->buffer, readBytes, myStream->buffer+readBytes);
 #endif
   if(myStream->bufferSize<buffLen){
     switch(myStream->type){
