@@ -200,7 +200,7 @@ timepico timespec_to_timepico(struct timespec);
 int timecmp(timepico *ts1, timepico *ts2);
 
 //Converts an ASCII representation of an ethernet address to char[6]
-int eth_aton(char *dest,char *org);
+int eth_aton(char *dest, const char *org);
 
 int openstream(struct stream* myStream,char *address, int protocol, char *nic, int port);
 int closestream(struct stream* myStream);

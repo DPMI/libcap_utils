@@ -32,7 +32,7 @@ OUTPUT:
 
 #include "cap_utils.h"
 
-int eth_aton(char *dest,char *org){
+int eth_aton(char *dest, const char *org){
   char tmp[3];
   char *ptr;
   ptr=tmp;
