@@ -175,11 +175,10 @@ int openstream(struct stream *myStream,char *address, int protocol, char *nic, i
       }
       myStream->FH.version.major=ntohs(sh->version.major);
       myStream->FH.version.minor=ntohs(sh->version.minor);
-      if(myStream->FH.version.major != VERSION_MAJOR || myStream->FH.version.minor != VERSION_MINOR){
-	fprintf(stderr,"Stream uses version %d.%d, this application uses version %d.%d.\n",myStream->FH.version.major, myStream->FH.version.minor, VERSION_MAJOR, VERSION_MAJOR);
-	fprintf(stderr,"I will not process this stream, change the version on Libcap_utils.\n");
-	return(0);
+      if ( !is_valid_version(&myStream->FH) ){
+	return EINVAL;
       }
+
 #ifdef DEBUG
       printf("Read %d bytes, Got the sendhead.\n",readBytes);
 #endif
@@ -230,10 +229,8 @@ int openstream(struct stream *myStream,char *address, int protocol, char *nic, i
 	  myStream->expSeqnr=ntohl(sh->sequencenr)+1;
 	  myStream->FH.version.major=ntohs(sh->version.major);
 	  myStream->FH.version.minor=ntohs(sh->version.minor);
-	  if(myStream->FH.version.major != VERSION_MAJOR || myStream->FH.version.minor != VERSION_MINOR){
-	    fprintf(stderr,"Stream uses version %d.%d, this application uses version %d.%d.\n",myStream->FH.version.major, myStream->FH.version.minor, VERSION_MAJOR, VERSION_MAJOR);
-	    fprintf(stderr,"I will not process this stream, change the version on Libcap_utils.\n");
-	    return(0);
+	  if ( !is_valid_version(&myStream->FH) ){
+	    return EINVAL;
 	  }
 	} else {
 	  if(myStream->expSeqnr!=ntohl(sh->sequencenr)){
@@ -288,10 +285,8 @@ int openstream(struct stream *myStream,char *address, int protocol, char *nic, i
 	    myStream->expSeqnr=ntohl(sh->sequencenr)+1;
 	    myStream->FH.version.major=ntohs(sh->version.major);
 	    myStream->FH.version.minor=ntohs(sh->version.minor);
-	    if(myStream->FH.version.major != VERSION_MAJOR || myStream->FH.version.minor != VERSION_MINOR){
-	      fprintf(stderr,"Stream uses version %d.%d, this application uses version %d.%d.\n",myStream->FH.version.major, myStream->FH.version.minor, VERSION_MAJOR, VERSION_MAJOR);
-	      fprintf(stderr,"I will not process this stream, change the version on Libcap_utils.\n");
-	      return(0);
+	    if ( !is_valid_version(&myStream->FH) ){
+	      return EINVAL;
 	    }
 	  } else {
 	    if(myStream->expSeqnr!=ntohl(sh->sequencenr)){
