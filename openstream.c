@@ -132,38 +132,18 @@ int openstream(struct stream *myStream,char *address, int protocol, char *nic, i
 #endif
   switch(protocol){
     case PROTOCOL_TCP_UNICAST:
-      /* initialize a TCP stream */
-      if ( (ret=stream_tcp_init(myStream, address, port)) != 0 ){
-	fprintf(stderr, "stream_tcp_init failed with code %d: %s\n", ret, strerror(ret));
-	return 0;
-      }
-
+      ret = stream_tcp_init(myStream, address, port);
       break;
 
     case PROTOCOL_UDP_MULTICAST:
-      /* initialize a UDP stream */
-      if ( (ret=stream_udp_init(myStream, address, port)) != 0 ){
-	fprintf(stderr, "stream_udp_init failed with code %d: %s\n", ret, strerror(ret));
-	return 0;
-      }
-
+      ret = stream_udp_init(myStream, address, port);
       break;
 
     case PROTOCOL_ETHERNET_MULTICAST:
-      /* initialize an ethernet stream */
-      if ( (ret=stream_ethernet_init(myStream, address)) != 0 ){
-	fprintf(stderr, "stream_ethernet_init failed with code %d: %s\n", ret, strerror(ret));
-	return 0;
-      }
-
+      ret = stream_ethernet_init(myStream, address);
       break;
     case PROTOCOL_LOCAL_FILE:
-      /* initialize a file stream */
-      if ( (ret=stream_file_init(myStream, address)) != 0 ){
-	fprintf(stderr, "stream_file_init failed with code %d: %s\n", ret, strerror(ret));
-	return 0;
-      }
-      
+      ret = stream_file_init(myStream, address);
       break;
 
     default:
@@ -171,12 +151,13 @@ int openstream(struct stream *myStream,char *address, int protocol, char *nic, i
       return 0;
   }
 
-#ifdef DEBUG
-  printf("sizeof(cap_head) = %d\n",sizeof(cap_head));
-  printf("sizeof(ethhead)  = %d\n",sizeof(struct ethhdr));
-  printf("sizeof(sendhead) = %d\n",sizeof(struct sendhead));
-  printf("OPENSTREAM.Initial read.\n");
-#endif
+  /* initialize a file stream */
+  if ( ret != 0 ){
+    fprintf(stderr, "failed to initialize protocol. code %d:\n", ret);
+    fprintf(stderr, "  protocol: %d\n", protocol);
+    fprintf(stderr, "  message: %s\n", strerror(ret));
+    return 0;
+  }
 
   switch(myStream->type){
     case PROTOCOL_TCP_UNICAST:
