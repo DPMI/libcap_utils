@@ -16,22 +16,6 @@
  *                                                                         *
  ***************************************************************************/
 
-#undef __CYGWIN
-#ifdef __CYGWIN
-#define fpos64_t fpos_t 	/* Cygwin >1.5 uses 64bit file operators by default */
-#define fopen64 fopen
-#define fclose64 fclose
-#define fread64 fread
-#define fwrite64 fwrite
-#define fgetpos64 fgetpos
-#define fsetpos64 fsetpos
-
-#ifndef IPPROTO_GRE 
- #define IPPROTO_GRE 47	/* Apparently the Cygwin includes doesnt include this one. */
-#endif
-#endif
-
-
 #ifndef CAP_UTILS
 #define CAP_UTILS
 #define _GNU_SOURCE
