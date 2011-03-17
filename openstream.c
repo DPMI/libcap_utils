@@ -81,8 +81,8 @@ static int stream_init(struct stream* st, int protocol, int port){
   st->type=protocol;
   st->myFile=0;
   st->mySocket=0;
-  /** st->expSeqnr = 0; for backwards compability, @bug */
-  /** st->pktCount = 0; for backwards compability, @bug */
+  st->expSeqnr = 0;
+  st->pktCount = 0;
   st->bufferSize=0;
   st->readPos=0;
   st->flushed = 0;
@@ -108,7 +108,8 @@ static int stream_init(struct stream* st, int protocol, int port){
 }
 
 int openstream(struct stream *myStream,char *address, int protocol, char *nic, int port){
-  char osrBuffer[buffLen]; // Temporary buffer for holding ETHERNET/UDP packets, while filling buffer.
+  // Temporary buffer for holding ETHERNET/UDP packets, while filling buffer.
+  char osrBuffer[buffLen] = {0,};
   int ret = 0;
 
   char *ether=osrBuffer;
@@ -161,12 +162,6 @@ int openstream(struct stream *myStream,char *address, int protocol, char *nic, i
 
   switch(myStream->type){
     case PROTOCOL_TCP_UNICAST:
-      myStream->bufferSize=0;
-      bzero(osrBuffer,buffLen);
-      myStream->pktCount=0;
-#ifdef DEBUG      
-      printf("osrBuffer = %p, \n",&osrBuffer);
-#endif
       readBytes=recvfrom(myStream->mySocket, osrBuffer, sizeof(struct sendhead), 0, NULL, NULL);
       
       if(readBytes<0){
@@ -178,8 +173,6 @@ int openstream(struct stream *myStream,char *address, int protocol, char *nic, i
 	myStream->flushed=1;
 	break;
       }
-      myStream->pktCount=0;
-      myStream->expSeqnr=0;
       myStream->FH.version.major=ntohs(sh->version.major);
       myStream->FH.version.minor=ntohs(sh->version.minor);
       if(myStream->FH.version.major != VERSION_MAJOR || myStream->FH.version.minor != VERSION_MINOR){
@@ -221,13 +214,6 @@ int openstream(struct stream *myStream,char *address, int protocol, char *nic, i
       break;
 
     case PROTOCOL_UDP_MULTICAST:
-      myStream->bufferSize=0;
-      bzero(osrBuffer,buffLen);
-      myStream->pktCount=0;
-      
-#ifdef DEBUG      
-      printf("osrBuffer = %p, \n",&osrBuffer);
-#endif
       while(myStream->bufferSize==0){ // This equals approx 5 packets each of 
 	readBytes=recvfrom(myStream->mySocket, osrBuffer, buffLen, 0, NULL, NULL);
 	
@@ -278,13 +264,6 @@ int openstream(struct stream *myStream,char *address, int protocol, char *nic, i
 
      break;
     case PROTOCOL_ETHERNET_MULTICAST:
-      myStream->bufferSize=0;
-      bzero(osrBuffer,buffLen);
-      myStream->pktCount=0;
-
-#ifdef DEBUG      
-      printf("osrBuffer = %p, \n",&osrBuffer);
-#endif
       while(myStream->bufferSize==0){ // Read one chunk of data, mostly to determine sequence number and stream version. 
 #ifdef DEBUG
 	printf("ETH read from %d, to %p max %d bytes, from socket %p\n",myStream->mySocket, myStream->buffer, buffLen);
