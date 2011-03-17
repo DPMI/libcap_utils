@@ -183,7 +183,6 @@ int openstream(struct stream *myStream,char *address, int protocol, char *nic, i
       printf("Read %d bytes, Got the sendhead.\n",readBytes);
 #endif
       // Now we read some packets.
-      bzero(osrBuffer,buffLen);
       while(myStream->bufferSize==0){ // This equals approx 1 packets each of 
 	readBytes=recvfrom(myStream->mySocket, myStream->buffer, buffLen, 0, NULL, NULL);
 	
