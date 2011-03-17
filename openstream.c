@@ -114,6 +114,7 @@ int openstream(struct stream *myStream,char *address, int protocol, char *nic, i
   }
   char *myaddress=0;
   int i=0;
+  int ret = 0;
 
   char *ether=osrBuffer;
   struct ethhdr *eh=(struct ethhdr *)ether;
@@ -127,8 +128,9 @@ int openstream(struct stream *myStream,char *address, int protocol, char *nic, i
 
 
   /* Initialize the structure */
-  if ( !stream_init(myStream, protocol, port) ){
-    fprintf(stderr, "stream_init failed\n");
+  if ( (ret=stream_init(myStream, protocol, port)) != 0 ){
+    fprintf(stderr, "stream_init failed with code %d\n", ret);
+    exit(1);
   }
 
 #ifdef DEBUG
