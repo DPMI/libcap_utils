@@ -62,10 +62,10 @@
 
 /* Protocol definitions */
 enum protocol_t {
-  PROCOL_LOCAL_FILE = 0,
-  PROCOL_ETHERNET_MULTICAST,
-  PROCOL_UDP_MULTICAST,
-  PROCOL_TCP_MULTICAST_,
+  PROTOCOL_LOCAL_FILE = 0,
+  PROTOCOL_ETHERNET_MULTICAST,
+  PROTOCOL_UDP_MULTICAST,
+  PROTOCOL_TCP_UNICAST,
 };
 
 // Time struct for precision down to picoseconds
@@ -216,6 +216,7 @@ int checkFilter(char* pkt, struct filter* theFilter);
 int close_cap_stream(int *SD);
 
 
+int is_valid_version(struct file_header* fhptr);
 int stream_file_init(struct stream* st, const char* filename);
 
 #endif /* CAP_UTILS */

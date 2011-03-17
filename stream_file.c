@@ -42,6 +42,20 @@ int stream_file_init(struct stream* st, const char* filename){
     perror("open input failed");
     return errno;
   }
+
+  struct file_header* fhptr = &(st->FH);
+  int i;
+
+  i = fread(fhptr, 1, sizeof(struct file_header), st->myFile);
+  st->comment = (char*)malloc(fhptr->comment_size+1);
+  i = fread(st->comment, 1, fhptr->comment_size, st->myFile);
+
+  if ( !is_valid_version(fhptr) ){ /* is_valid_version has side-effects */
+    return EINVAL;
+  }
+
+  /** @bug I think this memory leaks */
+  st->filename = strdup(filename);
   
   /* add callbacks */
   st->fill_buffer = stream_file_fillbuffer;

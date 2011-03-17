@@ -57,7 +57,7 @@ OUTPUT:
  * warning to stderr if version mismatch.
  * @return Non-zero if version is valid.
  */
-static int is_valid_version(struct file_header* fhptr){
+int is_valid_version(struct file_header* fhptr){
   if( fhptr->version.major == VERSION_MAJOR && fhptr->version.minor == VERSION_MINOR ) {
     return 1;
   }
@@ -117,7 +117,6 @@ int openstream(struct stream *myStream,char *address, int protocol, char *nic, i
     strncpy(ifr.ifr_name, nic, IFNAMSIZ);
   }
   char *myaddress=0;
-  int i=0;
   int ret = 0;
 
   char *ether=osrBuffer;
@@ -130,7 +129,6 @@ int openstream(struct stream *myStream,char *address, int protocol, char *nic, i
 
   int readBytes=0;
 
-
   /* Initialize the structure */
   if ( (ret=stream_init(myStream, protocol, port)) != 0 ){
     fprintf(stderr, "stream_init failed with code %d\n", ret);
@@ -141,7 +139,7 @@ int openstream(struct stream *myStream,char *address, int protocol, char *nic, i
   printf("openstream() \n");
 #endif
   switch(protocol){
-    case 3: // TCP unicast
+    case PROTOCOL_TCP_UNICAST: // TCP unicast
       newsocket=socket(AF_INET,SOCK_STREAM,0);
       if(newsocket<0) {
 	perror("Cannot open socket. ");
@@ -175,7 +173,7 @@ int openstream(struct stream *myStream,char *address, int protocol, char *nic, i
       strcpy(myStream->address,address);
       break;
 
-    case 2: // UDP multi/unicast
+    case PROTOCOL_UDP_MULTICAST: // UDP multi/unicast
       socket_descriptor=socket(AF_INET,SOCK_DGRAM,IPPROTO_UDP);
       if(socket_descriptor<0) {
 	perror("Cannot open socket. ");
@@ -211,7 +209,7 @@ int openstream(struct stream *myStream,char *address, int protocol, char *nic, i
 
       break;
 
-    case 1: // Ethernet multicast
+    case PROTOCOL_ETHERNET_MULTICAST: // Ethernet multicast
       socket_descriptor=socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL));//LLPROTO));
       if(socket_descriptor<0) {
 	perror("Cannot open socket. ");
@@ -265,32 +263,18 @@ int openstream(struct stream *myStream,char *address, int protocol, char *nic, i
 
 
       break;
-    case 0:
-    default:
+    case PROTOCOL_LOCAL_FILE:
       /* initialize a file stream */
       if ( (ret=stream_file_init(myStream, address)) != 0 ){
 	fprintf(stderr, "stream_file_init failed with code %d: %s\n", ret, strerror(ret));
 	return 0;
       }
       
-      struct file_header *fhptr;
-      fhptr=&(myStream->FH);
-      i=fread(fhptr, 1, sizeof(struct file_header), myStream->myFile);
-#ifdef DEBUG
-      printf("Read File Header %d bytes <-> %d\n",i, sizeof(struct file_header));
-#endif
-      myStream->comment=(char*)calloc(fhptr->comment_size+1,1);
-      i=fread(myStream->comment, 1, fhptr->comment_size, myStream->myFile);
-#ifdef DEBUG
-      printf("Read comment  %d bytes\nFile pointer peeks to %ld",i, ftell(myStream->myFile));
-#endif
-
-      if ( !is_valid_version(fhptr) ){ /* is_valid_version has side-effects */
-	return(0);
-      }
-
-      myStream->filename = strdup(address);
       break;
+
+    default:
+      fprintf(stderr, "Unhandled protocol %d\n", protocol);
+      return 0;
   } 
 
 
@@ -306,7 +290,7 @@ int openstream(struct stream *myStream,char *address, int protocol, char *nic, i
 #endif
 
   switch(myStream->type){
-    case 3://TCP
+    case PROTOCOL_TCP_UNICAST:
       myStream->bufferSize=0;
       bzero(osrBuffer,buffLen);
       myStream->pktCount=0;
@@ -366,7 +350,7 @@ int openstream(struct stream *myStream,char *address, int protocol, char *nic, i
       myStream->readPos=0;
       break;
 
-    case 2://UDP
+    case PROTOCOL_UDP_MULTICAST:
       myStream->bufferSize=0;
       bzero(osrBuffer,buffLen);
       myStream->pktCount=0;
@@ -423,7 +407,7 @@ int openstream(struct stream *myStream,char *address, int protocol, char *nic, i
       myStream->readPos=0;
 
      break;
-    case 1://ETHERNET
+    case PROTOCOL_ETHERNET_MULTICAST:
       myStream->bufferSize=0;
       bzero(osrBuffer,buffLen);
       myStream->pktCount=0;
@@ -488,8 +472,8 @@ int openstream(struct stream *myStream,char *address, int protocol, char *nic, i
       myStream->readPos=0;
 
       break;
-    case 0:
-    default:
+
+    case PROTOCOL_LOCAL_FILE:
       myStream->fill_buffer(myStream);
       break;
   }
