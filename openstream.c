@@ -138,7 +138,7 @@ int openstream(struct stream *myStream,char *address, int protocol, char *nic, i
   printf("openstream() \n");
 #endif
   switch(protocol){
-    case PROTOCOL_TCP_UNICAST: // TCP unicast
+    case PROTOCOL_TCP_UNICAST:
       /* initialize a TCP stream */
       if ( (ret=stream_tcp_init(myStream, address, port)) != 0 ){
 	fprintf(stderr, "stream_tcp_init failed with code %d: %s\n", ret, strerror(ret));
@@ -147,7 +147,7 @@ int openstream(struct stream *myStream,char *address, int protocol, char *nic, i
 
       break;
 
-    case PROTOCOL_UDP_MULTICAST: // UDP multi/unicast
+    case PROTOCOL_UDP_MULTICAST:
       /* initialize a UDP stream */
       if ( (ret=stream_udp_init(myStream, address, port)) != 0 ){
 	fprintf(stderr, "stream_udp_init failed with code %d: %s\n", ret, strerror(ret));
@@ -156,7 +156,7 @@ int openstream(struct stream *myStream,char *address, int protocol, char *nic, i
 
       break;
 
-    case PROTOCOL_ETHERNET_MULTICAST: // Ethernet multicast
+    case PROTOCOL_ETHERNET_MULTICAST:
       /* initialize an ethernet stream */
       if ( (ret=stream_ethernet_init(myStream, address)) != 0 ){
 	fprintf(stderr, "stream_ethernet_init failed with code %d: %s\n", ret, strerror(ret));
