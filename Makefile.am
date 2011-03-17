@@ -3,6 +3,9 @@ ACLOCAL_AMFLAGS = -I m4
 lib_LTLIBRARIES = libcap_utils.la
 nobase_include_HEADERS = cap_utils.h
 
+pkgconfigdir = $(libdir)/pkgconfig
+pkgconfig_DATA = cap_utils.pc
+
 libcap_utils_la_LDFLAGS = -shared -version-info 0:0:0
 libcap_utils_la_CFLAGS = -Wall
 libcap_utils_la_SOURCES = \
