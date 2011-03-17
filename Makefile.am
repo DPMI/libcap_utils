@@ -1,7 +1,9 @@
 ACLOCAL_AMFLAGS = -I m4
 
 lib_LTLIBRARIES = libcap_utils.la
-nobase_include_HEADERS = cap_utils.h
+nobase_include_HEADERS = \
+	caputils/caputils.h \
+	caputils/stream.h
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = cap_utils.pc
