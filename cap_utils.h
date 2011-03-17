@@ -70,7 +70,7 @@ enum protocol_t {
 
 // Time struct for precision down to picoseconds
 struct picotime {
-    time_t tv_sec;
+    uint32_t tv_sec;
     uint64_t tv_psec;
 } __attribute__((packed));
 
