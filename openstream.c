@@ -139,41 +139,16 @@ int openstream(struct stream *myStream,char *address, int protocol, char *nic, i
 #endif
   switch(protocol){
     case PROTOCOL_TCP_UNICAST: // TCP unicast
-      newsocket=socket(AF_INET,SOCK_STREAM,0);
-      if(newsocket<0) {
-	perror("Cannot open socket. ");
-	return(0);
-      }     
-      setsockopt(newsocket,SOL_SOCKET,SO_REUSEADDR,(void*)1,sizeof(int));
-      sender.sin_family = AF_INET;
-//      sender.sin_addr.s_addr = htonl(INADDR_ANY);
-      inet_aton(address,&sender.sin_addr);
-      sender.sin_port = htons(port);
+      /* initialize a TCP stream */
+      if ( (ret=stream_tcp_init(myStream, address, port)) != 0 ){
+	fprintf(stderr, "stream_tcp_init failed with code %d: %s\n", ret, strerror(ret));
+	return 0;
+      }
 
-      if( bind (newsocket, (struct sockaddr *) &sender,sizeof(sender))<0){
-	perror("Cannot bind port number \n");
-	return(0);
-      }
-      listen(newsocket, 1);
-#ifdef deug
-      printf("Listens to %s:%d\n",inet_ntoa(sender.sin_addr),ntohs(sender.sin_port));
-#endif
-      cliLen=sizeof(client);
-      socket_descriptor= accept(newsocket, (struct sockaddr *)&client, &cliLen);
-      if(socket_descriptor<0) {
-	perror("Cannot accept new connection.");
-	return(0);
-      }
-#ifdef DEBUG
-      printf("TCP unicast\nIP.destination=%s port=%d\n", address,port);
-      printf("Client: %s  %d\n",inet_ntoa(client.sin_addr), ntohs(client.sin_port));
-#endif
-      myStream->address=(char*)calloc(strlen(address)+1,1);
-      strcpy(myStream->address,address);
       break;
 
     case PROTOCOL_UDP_MULTICAST: // UDP multi/unicast
-      /* initialize an ethernet stream */
+      /* initialize a UDP stream */
       if ( (ret=stream_udp_init(myStream, address, port)) != 0 ){
 	fprintf(stderr, "stream_udp_init failed with code %d: %s\n", ret, strerror(ret));
 	return 0;
@@ -201,8 +176,7 @@ int openstream(struct stream *myStream,char *address, int protocol, char *nic, i
     default:
       fprintf(stderr, "Unhandled protocol %d\n", protocol);
       return 0;
-  } 
-
+  }
 
   free(myaddress);
   myStream->mySocket=socket_descriptor;

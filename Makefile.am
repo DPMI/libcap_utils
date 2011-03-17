@@ -17,6 +17,7 @@ libcap_utils_la_SOURCES = \
 	stream_ethernet.c \
 	stream_file.c \
 	stream_udp.c \
+	stream_tcp.c \
 	timecmp.c \
 	valtopico.c \
 	writepost.c
