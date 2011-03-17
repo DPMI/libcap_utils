@@ -69,7 +69,7 @@ int read_post(struct stream *myStream, char **data, struct filter *my_Filter){
       }
 
       switch(myStream->type){
-	case 3://TCP
+	case PROTOCOL_TCP_UNICAST://TCP
 	  myStream->bufferSize=0;
 	  bzero(rBuffer,buffLen);
 	  myStream->pktCount=0;
@@ -102,7 +102,7 @@ int read_post(struct stream *myStream, char **data, struct filter *my_Filter){
 	  printf("Initial read complete.\n");
 
 	  break;
-	case 2://UDP
+	case PROTOCOL_UDP_MULTICAST://UDP
 	  myStream->bufferSize=0;
 	  bzero(rBuffer,buffLen);
 	  myStream->pktCount=0;
@@ -149,7 +149,7 @@ int read_post(struct stream *myStream, char **data, struct filter *my_Filter){
 	  myStream->readPos=0;
 	  printf("Initial read complete.\n");
 	  break;
-	case 1://ETHERNET
+	case PROTOCOL_ETHERNET_MULTICAST://ETHERNET
 	  myStream->bufferSize=0;
 	  bzero(rBuffer,buffLen);
 	  myStream->pktCount=0;
@@ -206,7 +206,7 @@ int read_post(struct stream *myStream, char **data, struct filter *my_Filter){
 	  myStream->readPos=0;
 	  printf("Initial read complete.\n");
 	  break;
-	case 0:
+	case PROTOCOL_LOCAL_FILE:
 	default:
 	  readBytes=fread(myStream->buffer, 1, buffLen, myStream->myFile);
 	  myStream->bufferSize=readBytes;
