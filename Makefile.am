@@ -14,6 +14,7 @@ libcap_utils_la_SOURCES = \
 	openstream.c \
 	readpost.c \
 	spectopico.c \
+	stream_ethernet.c \
 	stream_file.c \
 	timecmp.c \
 	valtopico.c \

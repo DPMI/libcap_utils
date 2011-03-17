@@ -210,57 +210,11 @@ int openstream(struct stream *myStream,char *address, int protocol, char *nic, i
       break;
 
     case PROTOCOL_ETHERNET_MULTICAST: // Ethernet multicast
-      socket_descriptor=socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL));//LLPROTO));
-      if(socket_descriptor<0) {
-	perror("Cannot open socket. ");
-	return(0);
+      /* initialize an ethernet stream */
+      if ( (ret=stream_ethernet_init(myStream, address)) != 0 ){
+	fprintf(stderr, "stream_ethernet_init failed with code %d: %s\n", ret, strerror(ret));
+	return 0;
       }
-      if(ioctl(socket_descriptor, SIOCGIFINDEX, &ifr) == -1 ){
-	perror("SIOCGIFINDEX error. ");
-	return(0);
-      }
-      ifindex=ifr.ifr_ifindex;
-      if(ioctl(socket_descriptor,SIOCGIFMTU,&ifr) == -1 ) {
-	perror("SIOCGIIFMTU");
-	exit(1);
-      }
-      myStream->if_mtu=ifr.ifr_mtu;
-
-      myaddress=(char*)calloc(strlen(address)+1,1);
-      eth_aton(myaddress, address);
-      struct packet_mreq mcast;
-      mcast.mr_ifindex = ifindex;
-      mcast.mr_type = PACKET_MR_MULTICAST;
-      mcast.mr_alen = ETH_ALEN;
-      memcpy(mcast.mr_address, myaddress, ETH_ALEN);
-      if(setsockopt(socket_descriptor, SOL_PACKET, PACKET_ADD_MEMBERSHIP, (void*)&mcast,sizeof(mcast))==-1){
-	perror("Adding multicast address failed..");
-	free(myaddress);
-	return(0);
-      }
-      struct sockaddr_ll sll;
-      sll.sll_family=AF_PACKET;
-      sll.sll_ifindex=ifindex;
-      sll.sll_protocol=htons(ETH_P_ALL);//LLPROTO);
-      sll.sll_pkttype=PACKET_MULTICAST;
-      memcpy(sll.sll_addr,myaddress,ETH_ALEN);
-      if (bind(socket_descriptor, (struct sockaddr *) &sll, sizeof(sll)) == -1) {
-	perror("Binding to interface.");
-	free(myaddress);
-	return(0);
-      }
-#ifdef DEBUG
-      printf("Ethernet Multicast\nEthernet.type=%04X\nEthernet.dst=%02X:%02X:%02X:%02X:%02X:%02X\nInterface=%s (%d)\n", LLPROTO
-	     ,mcast.mr_address[0], mcast.mr_address[1], mcast.mr_address[2]
-	     ,mcast.mr_address[3], mcast.mr_address[4], mcast.mr_address[5]
-	     ,nic, ifindex);
-#endif
-      myStream->address=(char*)calloc(strlen(myaddress),1);
-      memcpy(myStream->address,myaddress,ETH_ALEN);
-      myStream->FH.comment_size=0;
-      myStream->comment=0;
-      
-
 
       break;
     case PROTOCOL_LOCAL_FILE:
