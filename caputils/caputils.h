@@ -25,9 +25,6 @@
 #include <errno.h>
 #include <net/ethernet.h>
 
-#define VERSION "0.5.1"
-#define VERSION_MAJOR 0
-#define VERSION_MINOR 5
 #define LLPROTO 0x0810
 #define LISTENPORT 0x0810
 #define PKT_CAPSIZE 96              //Maximum nr of bytes captured from each packet
