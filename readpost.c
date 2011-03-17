@@ -62,16 +62,17 @@ int read_post(struct stream *myStream, char **data, struct filter *my_Filter){
     skip_counter++;
     if(myStream->bufferSize==0){// Initial or last read?
       printf("Initial read.\n");
+
+      if( myStream->flushed==1 ){
+	printf("EOF stream reached.\n");
+	return(0);
+      }
+
       switch(myStream->type){
 	case 3://TCP
-	  if(myStream->flushed==1){
-	    printf("EOF stream reached.\n");
-	    return(0);
-	  }
 	  myStream->bufferSize=0;
 	  bzero(rBuffer,buffLen);
 	  myStream->pktCount=0;
-	  
 	  
 	  while(myStream->bufferSize<7410){ // This equals approx 5 packets each of 
 //	    printf("ETH read from %d, to %p max %d bytes, from socket %p\n",myStream->mySocket, myStream->buffer, buffLen,&from);
@@ -102,10 +103,6 @@ int read_post(struct stream *myStream, char **data, struct filter *my_Filter){
 
 	  break;
 	case 2://UDP
-	  if(myStream->flushed==1){
-	    printf("EOF stream reached.\n");
-	    return(0);
-	  }
 	  myStream->bufferSize=0;
 	  bzero(rBuffer,buffLen);
 	  myStream->pktCount=0;
@@ -153,10 +150,6 @@ int read_post(struct stream *myStream, char **data, struct filter *my_Filter){
 	  printf("Initial read complete.\n");
 	  break;
 	case 1://ETHERNET
-	  if(myStream->flushed==1){
-	    printf("EOF stream reached.\n");
-	    return(0);
-	  }
 	  myStream->bufferSize=0;
 	  bzero(rBuffer,buffLen);
 	  myStream->pktCount=0;
@@ -276,10 +269,6 @@ int read_post(struct stream *myStream, char **data, struct filter *my_Filter){
 		printf("EOF stream reached.\n");
 		return(0);
 	      }
-	      if(myStream->flushed==1){
-		printf("EOF stream reached.\n");
-		return(0);
-	      }
 	      myStream->bufferSize=amount;
 	      bzero(rBuffer,buffLen);
 	      myStream->pktCount=0;
@@ -306,10 +295,6 @@ int read_post(struct stream *myStream, char **data, struct filter *my_Filter){
 
 	      break;
 	    case 2://UDP
-	      if(myStream->flushed==1){
-		printf("EOF stream reached.\n");
-		return(0);
-	      }
 	      if(myStream->flushed==1){
 		printf("EOF stream reached.\n");
 		return(0);
@@ -449,10 +434,6 @@ int read_post(struct stream *myStream, char **data, struct filter *my_Filter){
 	memmove(myStream->buffer,myStream->buffer+myStream->readPos, amount);
 	switch(myStream->type){
 	  case 3:
-	      if(myStream->flushed==1){
-		printf("EOF stream reached.\n");
-		return(0);
-	      }
 	      if(myStream->flushed==1){
 		printf("EOF stream reached.\n");
 		return(0);
