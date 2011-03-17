@@ -92,6 +92,10 @@ static int stream_init(struct stream* st, int protocol, int port){
   /** st->if_mtu = 0; for backwards compability, @bug */
   st->comment=0;
 
+  /* callbacks */
+  st->fill_buffer = NULL;
+  st->destroy = NULL;
+
   memset(st->buffer, 0, buffLen);
 
   /* initialize file_header */
@@ -263,11 +267,12 @@ int openstream(struct stream *myStream,char *address, int protocol, char *nic, i
       break;
     case 0:
     default:
-      myStream->myFile=fopen64(address,"rb");
-      if(myStream->myFile==NULL) {
-	perror("open input failed");
+      /* initialize a file stream */
+      if ( (ret=stream_file_init(myStream, address)) != 0 ){
+	fprintf(stderr, "stream_file_init failed with code %d: %s\n", ret, strerror(ret));
 	return 0;
       }
+      
       struct file_header *fhptr;
       fhptr=&(myStream->FH);
       i=fread(fhptr, 1, sizeof(struct file_header), myStream->myFile);
@@ -485,21 +490,7 @@ int openstream(struct stream *myStream,char *address, int protocol, char *nic, i
       break;
     case 0:
     default:
-#ifdef DEBUG
-      printf("Reading from %ld\n", ftell(myStream->myFile));
-#endif
-      readBytes=fread(myStream->buffer, 1, buffLen, myStream->myFile);
-      myStream->bufferSize=readBytes;
-      myStream->readPos=0;
-
-#ifdef DEBUG      
-      printf("Read %d bytes.\n", readBytes);
-      for(i=0;i<5;i++){
-	printf("%c",myStream->buffer[i]);
-      }
-      printf("\nmyStream->buffer = %p   readPos=%d\n", myStream->buffer, myStream->readPos);
-#endif
-
+      myStream->fill_buffer(myStream);
       break;
   }
 #ifdef DEBUG

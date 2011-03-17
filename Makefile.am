@@ -13,7 +13,8 @@ libcap_utils_la_SOURCES = \
 	filter.c \
 	openstream.c \
 	readpost.c \
-	spectopico.o \
+	spectopico.c \
+	stream_file.c \
 	timecmp.c \
 	valtopico.c \
 	writepost.c

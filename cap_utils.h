@@ -60,6 +60,13 @@
 #define LISTENPORT 0x0810
 #define PKT_CAPSIZE 96              //Maximum nr of bytes captured from each packet
 
+/* Protocol definitions */
+enum protocol_t {
+  PROCOL_LOCAL_FILE = 0,
+  PROCOL_ETHERNET_MULTICAST,
+  PROCOL_UDP_MULTICAST,
+  PROCOL_TCP_MULTICAST_,
+};
 
 // Time struct for precision down to picoseconds
 struct picotime {
@@ -93,8 +100,8 @@ struct cap_header{
   char nic[8];                          // Identifies the CI where the frame was caught
   char mampid[8];                       // Identifies the MP where the frame was caught, 
   timepico ts;                          // Identifies when the frame was caught
-  int len;                              // Identifies the lenght of the frame
-  int caplen;                           // Identifies how much of the frame that we find here
+  uint32_t len;                              // Identifies the lenght of the frame
+  uint32_t caplen;                           // Identifies how much of the frame that we find here
 };
 typedef struct cap_header  cap_head;
 
@@ -169,6 +176,10 @@ struct stream{
 
   struct file_header FH;                //
   char *comment;                        //
+
+  /* Callback functions */
+  int (*fill_buffer)(struct stream* st);
+  int (*destroy)(struct stream* st);
 };
 
 struct ether_vlan_header{
@@ -205,5 +216,6 @@ int checkFilter(char* pkt, struct filter* theFilter);
 int close_cap_stream(int *SD);
 
 
+int stream_file_init(struct stream* st, const char* filename);
 
 #endif /* CAP_UTILS */
