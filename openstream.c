@@ -38,7 +38,8 @@ OUTPUT:
 */
 
 #include "caputils/caputils.h"
-
+#include <stdlib.h>
+#include <string.h>
 #include <sys/socket.h>
 #include <sys/ioctl.h>
 #include <features.h>
@@ -51,6 +52,7 @@ OUTPUT:
 #include <linux/if_packet.h>
 //#include <net/ethernet.h>
 #include <net/if.h>
+#include <arpa/inet.h>
 
 /**
  * Validates the file_header version against libcap_utils version. Prints

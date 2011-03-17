@@ -20,6 +20,7 @@
 
 #include "caputils/caputils.h"
 #include <unistd.h>
+#include <stdlib.h>
 
 int closestream(struct stream *myStream){
   errno=0;

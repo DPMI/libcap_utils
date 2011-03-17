@@ -2,11 +2,14 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
+#include "caputils/caputils.h"
 #include <assert.h>
+#include <string.h>
 #include <sys/socket.h>
 #include <sys/ioctl.h>
 #include <net/if.h>
-#include "caputils/caputils.h"
+#include <netinet/in.h>
+#include <arpa/inet.h>
 
 int stream_udp_init(struct stream* st, const char* address, int port){
   struct sockaddr_in sender;

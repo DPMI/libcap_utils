@@ -19,6 +19,12 @@
   The function returns 1 until the file ends and a 0 is returned.
  ***************************************************************************/
 #include "caputils/caputils.h"
+#include <string.h>
+#include <arpa/inet.h>
+#include <netinet/in.h>
+#include <netinet/ip.h>
+#include <netinet/udp.h>
+#include <netinet/tcp.h>
 
 int matchEth(char desired[6],char mask[6], char net[6]){
   int i;

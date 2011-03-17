@@ -19,20 +19,8 @@
   The function returns 1 until the file ends and a 0 is returned.
  ***************************************************************************/
 #include "caputils/caputils.h"
-#include <sys/socket.h>
-#include <sys/ioctl.h>
-#include <features.h>
-
-#include <signal.h>
-#include <getopt.h>
-#include <unistd.h>
-
-//#include <netpacket/packet.h>
-#include <linux/if_packet.h>
-//#include <net/ethernet.h>
-#include <net/if.h>
-
-
+#include <string.h>
+#include <arpa/inet.h>
 
 int read_post(struct stream *myStream, char **data, struct filter *my_Filter){
   char rBuffer[buffLen]; // Temporary buffer for holding ETHERNET/UDP packets, while filling buffer.

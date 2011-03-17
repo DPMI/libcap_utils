@@ -21,11 +21,9 @@
 #include "caputils/caputils.h"
 #include <unistd.h>
 #include <time.h>
-
-
-
-//#define debug
-//#define resultFilter
+#include <stdlib.h>
+#include <string.h>
+#include <netinet/in.h>
 
 const char * parse_date_time (const char *input, struct tm *tm){
   const char *cp;

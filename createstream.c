@@ -38,7 +38,8 @@ OUTPUT:
 
 #include "caputils/caputils.h"
 
-#include <sys/socket.h>
+#include <stdlib.h>
+#include <string.h>
 #include <sys/ioctl.h>
 #include <features.h>
 
@@ -46,10 +47,11 @@ OUTPUT:
 #include <getopt.h>
 #include <unistd.h>
 
-//#include <netpacket/packet.h>
 #include <linux/if_packet.h>
-//#include <net/ethernet.h>
+#include <sys/socket.h>
 #include <net/if.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 
 
 

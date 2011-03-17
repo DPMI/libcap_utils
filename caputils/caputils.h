@@ -21,22 +21,10 @@
 #define _GNU_SOURCE
 
 #include <stdint.h>
-#include <stdlib.h>
 #include <stdio.h>
 #include <errno.h>
-#include <string.h>
-#include <sys/types.h>
-#include <sys/time.h>
-#include <sys/cdefs.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <arpa/inet.h>
 #include <net/ethernet.h>
-#include <netinet/in.h>
-#include <netinet/ip.h>
-#include <netinet/udp.h>
-#include <netinet/tcp.h>
-#include <ctype.h>
+
 #define VERSION "0.5.1"
 #define VERSION_MAJOR 0
 #define VERSION_MINOR 5
@@ -96,30 +84,30 @@ typedef struct cap_header  cap_head;
 // 1000 0000 0000 0000 0000 0000 0011 1100
 // and the fields src_mask, dst_mask, src_ip and dst_ip contains the information
 struct filter{
-  u_int32_t index;			//{2^31}
+  uint32_t index;			//{2^31}
 
   timepico starttime;			//{4096}    st
   timepico endtime;			//{2048}    et
   char mampid[8];                       //{1024]    mpid
   char nic[8];        			//{512}     if
-  u_int16_t vlan;                       //{256}     eth.vlan
-  u_int16_t eth_type;  			//{128}     eth.type
+  uint16_t vlan;                       //{256}     eth.vlan
+  uint16_t eth_type;  			//{128}     eth.type
   unsigned char eth_src[6];             //{64}      eth.src
   unsigned char eth_dst[6];             //{32}      eth.dst
-  u_int8_t ip_proto;  			//{16}      ip.proto
+  uint8_t ip_proto;  			//{16}      ip.proto
   char ip_src[16];    			//{8}       ip.src
   char ip_dst[16];    			//{4}       ip.dst
-  u_int16_t tp_sport; 			//{2}       tp.port
-  u_int16_t tp_dport; 			//{1}       tp.port
+  uint16_t tp_sport; 			//{2}       tp.port
+  uint16_t tp_dport; 			//{1}       tp.port
 
-  u_int16_t vlan_mask;                  //
-  u_int16_t eth_type_mask;              //
+  uint16_t vlan_mask;                  //
+  uint16_t eth_type_mask;              //
   unsigned char eth_src_mask[6];        //
   unsigned char eth_dst_mask[6];        //
   char ip_src_mask[16];			//
   char ip_dst_mask[16];			//
-  u_int16_t tp_sport_mask;              //
-  u_int16_t tp_dport_mask;              //
+  uint16_t tp_sport_mask;              //
+  uint16_t tp_dport_mask;              //
 
 };
 
@@ -134,11 +122,11 @@ struct sendhead {
 };
 
 struct ether_vlan_header{
-  u_int8_t  ether_dhost[ETH_ALEN];  /* destination eth addr */
-  u_int8_t  ether_shost[ETH_ALEN];  /* source ether addr    */
-  u_int16_t vlan_proto;             /* vlan is present if feild begins with 0x8100 */
-  u_int16_t vlan_tci;               /* vlan is present if feild begins with 0x8100 */
-  u_int16_t h_proto;                /* Ethernet payload protocol */
+  uint8_t  ether_dhost[ETH_ALEN];  /* destination eth addr */
+  uint8_t  ether_shost[ETH_ALEN];  /* source ether addr    */
+  uint16_t vlan_proto;             /* vlan is present if feild begins with 0x8100 */
+  uint16_t vlan_tci;               /* vlan is present if feild begins with 0x8100 */
+  uint16_t h_proto;                /* Ethernet payload protocol */
 };
 
 #include <caputils/stream.h>

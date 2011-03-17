@@ -2,12 +2,15 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
+#include "caputils/caputils.h"
 #include <assert.h>
+#include <stdlib.h>
+#include <string.h>
 #include <sys/socket.h>
 #include <sys/ioctl.h>
 #include <linux/if_packet.h>
 #include <net/if.h>
-#include "caputils/caputils.h"
+#include <arpa/inet.h>
 
 int stream_ethernet_init(struct stream* st, const char* address){
   struct ifreq ifr;

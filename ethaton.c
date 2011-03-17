@@ -31,6 +31,8 @@ OUTPUT:
 */
 
 #include "caputils/caputils.h"
+#include <stdlib.h>
+#include <string.h>
 
 int eth_aton(char *dest, const char *org){
   char tmp[3];
