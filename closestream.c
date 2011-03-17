@@ -18,7 +18,7 @@
  This function closes a socket  and returns 1 on complition, else 0.
  ***************************************************************************/
 
-#include "cap_utils.h"
+#include "caputils/caputils.h"
 #include <unistd.h>
 
 int closestream(struct stream *myStream){

@@ -17,7 +17,7 @@
 /***************************************************************************
  This function writes a packet to file.
  ***************************************************************************/
-#include "cap_utils.h"
+#include "caputils/caputils.h"
 
 int write_post(struct stream *outStream, u_char* data, int size){
 //  printf("STREAM is %d myFile=%p mySocket=%d\n",outStream->type,outStream->myFile,outStream->mySocket);

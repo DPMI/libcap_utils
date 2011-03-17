@@ -18,7 +18,7 @@
  This function compares two struct timepico (ts1<ts2=-1, ts1>ts2=1, ts1==ts2=0)
  ***************************************************************************/
 
-#include "cap_utils.h"
+#include "caputils/caputils.h"
 
 //#define debug
 int timecmp(timepico *ts1, timepico *ts2)

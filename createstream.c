@@ -16,7 +16,7 @@
  ***************************************************************************/
 /***************************************************************************
  This function opens a large file (64bits) and reads the fileheader
- described in cap_utils.h. the file pointer the points to the first packet.
+ described in caputils/caputils.h. the file pointer the points to the first packet.
  Function returns 1 if success and 0 if open failed.
  ***************************************************************************/
 
@@ -36,7 +36,7 @@ OUTPUT:
   int 1 if ok.
 */
 
-#include "cap_utils.h"
+#include "caputils/caputils.h"
 
 #include <sys/socket.h>
 #include <sys/ioctl.h>

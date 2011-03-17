@@ -7,7 +7,7 @@
 #include <sys/ioctl.h>
 #include <linux/if_packet.h>
 #include <net/if.h>
-#include "cap_utils.h"
+#include "caputils/caputils.h"
 
 int stream_ethernet_init(struct stream* st, const char* address){
   struct ifreq ifr;

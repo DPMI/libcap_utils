@@ -18,7 +18,7 @@
  This function reads a captured packet from the file and stores it in data.
   The function returns 1 until the file ends and a 0 is returned.
  ***************************************************************************/
-#include "cap_utils.h"
+#include "caputils/caputils.h"
 
 int matchEth(char desired[6],char mask[6], char net[6]){
   int i;

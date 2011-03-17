@@ -18,7 +18,7 @@
  This function reads a captured packet from the file and stores it in data.
   The function returns 1 until the file ends and a 0 is returned.
  ***************************************************************************/
-#include "cap_utils.h"
+#include "caputils/caputils.h"
 #include <sys/socket.h>
 #include <sys/ioctl.h>
 #include <features.h>

@@ -17,7 +17,7 @@
 /***************************************************************************
  This function converts a struct timeval to a struct timepico (ms->ps)
  ***************************************************************************/
-#include "cap_utils.h"
+#include "caputils/caputils.h"
 
 timepico timeval_to_timepico(struct timeval in)
 {

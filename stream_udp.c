@@ -6,7 +6,7 @@
 #include <sys/socket.h>
 #include <sys/ioctl.h>
 #include <net/if.h>
-#include "cap_utils.h"
+#include "caputils/caputils.h"
 
 int stream_udp_init(struct stream* st, const char* address, int port){
   struct sockaddr_in sender;

@@ -17,7 +17,7 @@
 /***************************************************************************
  This function converts a struct timespec to a struct timepico (us->ps)
  ***************************************************************************/
-#include "cap_utils.h"
+#include "caputils/caputils.h"
 
 timepico timespec_to_timepico(struct timespec in)
 {

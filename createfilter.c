@@ -18,7 +18,7 @@
  This function takes arguments from a option string in the original program
  call and creates a filter to be used in all programs based on cap_utils.
  ***************************************************************************/
-#include "cap_utils.h"
+#include "caputils/caputils.h"
 #include <unistd.h>
 #include <time.h>
 

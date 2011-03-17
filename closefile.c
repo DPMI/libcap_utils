@@ -18,7 +18,7 @@
  This function closes a large file (64bits) and returns 1 on complition, else 0.
  ***************************************************************************/
 
-#include "cap_utils.h"
+#include "caputils/caputils.h"
 
 int close_cap_file(FILE **infile)
 {

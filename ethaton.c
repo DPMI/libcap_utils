@@ -16,7 +16,7 @@
  ***************************************************************************/
 /***************************************************************************
  This function opens a large file (64bits) and reads the fileheader
- described in cap_utils.h. the file pointer the points to the first packet.
+ described in caputils/caputils.h. the file pointer the points to the first packet.
  Function returns 1 if success and 0 if open failed.
  ***************************************************************************/
 
@@ -30,7 +30,7 @@ OUTPUT:
   int 1 if ok.
 */
 
-#include "cap_utils.h"
+#include "caputils/caputils.h"
 
 int eth_aton(char *dest, const char *org){
   char tmp[3];
