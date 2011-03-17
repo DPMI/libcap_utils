@@ -207,12 +207,10 @@ int read_post(struct stream *myStream, char **data, struct filter *my_Filter){
 	  printf("Initial read complete.\n");
 	  break;
 	case PROTOCOL_LOCAL_FILE:
-	default:
-	  readBytes=fread(myStream->buffer, 1, buffLen, myStream->myFile);
-	  myStream->bufferSize=readBytes;
-	  myStream->readPos=0;
+	  myStream->fill_buffer(myStream);
 	  break;
       }
+
 //      printf("Read op filled: %p --- %04x --- %p \n", myStream->buffer, readBytes, myStream->buffer+readBytes);
       if(myStream->bufferSize<buffLen){
 	switch(myStream->type){
