@@ -107,15 +107,6 @@ static int stream_init(struct stream* st, int protocol, int port){
 
 int openstream(struct stream *myStream,char *address, int protocol, char *nic, int port){
   char osrBuffer[buffLen]; // Temporary buffer for holding ETHERNET/UDP packets, while filling buffer.
-  int newsocket=0;
-  struct ifreq ifr;
-  int socket_descriptor=0;
-  struct sockaddr_in sender,client;
-  socklen_t cliLen;
-  if(nic!=0) {
-    strncpy(ifr.ifr_name, nic, IFNAMSIZ);
-  }
-  char *myaddress=0;
   int ret = 0;
 
   char *ether=osrBuffer;
@@ -177,9 +168,6 @@ int openstream(struct stream *myStream,char *address, int protocol, char *nic, i
       fprintf(stderr, "Unhandled protocol %d\n", protocol);
       return 0;
   }
-
-  free(myaddress);
-  myStream->mySocket=socket_descriptor;
 
 #ifdef DEBUG
   printf("sizeof(cap_head) = %d\n",sizeof(cap_head));
