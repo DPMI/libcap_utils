@@ -218,6 +218,7 @@ int close_cap_stream(int *SD);
 
 int is_valid_version(struct file_header* fhptr);
 
+int stream_udp_init(struct stream* st, const char* address, int port);
 int stream_ethernet_init(struct stream* st, const char* address);
 int stream_file_init(struct stream* st, const char* filename);
 

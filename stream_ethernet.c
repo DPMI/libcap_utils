@@ -2,6 +2,7 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
+#include <assert.h>
 #include <sys/socket.h>
 #include <sys/ioctl.h>
 #include <linux/if_packet.h>
@@ -13,9 +14,13 @@ int stream_ethernet_init(struct stream* st, const char* address){
   struct packet_mreq mcast;
   struct sockaddr_ll sll;
 
+  assert(st);
+  assert(address);
+
+  /* open raw socket */
   st->mySocket = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL));//LLPROTO));
   if ( st->mySocket < 0 ){
-    perror("socket failed");
+    perror("socket open failed");
     return errno;
   }
 
@@ -23,7 +28,7 @@ int stream_ethernet_init(struct stream* st, const char* address){
     perror("SIOCGIFINDEX failed");
     return errno;
   }
-  mcast.mr_ifindex = ifr.ifr_ifindex;
+  st->ifindex = ifr.ifr_ifindex;
 
   if ( ioctl(st->mySocket, SIOCGIFMTU, &ifr) == -1 ){
     perror("SIOCGIFMTU failed");
@@ -33,6 +38,7 @@ int stream_ethernet_init(struct stream* st, const char* address){
 
   char* myaddress = (char*)malloc(strlen(address)+1); /* stream takes ownership of memory */
   eth_aton(myaddress, address);
+  mcast.mr_ifindex = st->ifindex;
   mcast.mr_type = PACKET_MR_MULTICAST;
   mcast.mr_alen = ETH_ALEN;
   memcpy(mcast.mr_address, myaddress, ETH_ALEN);
@@ -44,7 +50,7 @@ int stream_ethernet_init(struct stream* st, const char* address){
   }
 
   sll.sll_family=AF_PACKET;
-  sll.sll_ifindex=mcast.mr_ifindex;
+  sll.sll_ifindex=st->ifindex;
   sll.sll_protocol=htons(ETH_P_ALL);//LLPROTO);
   sll.sll_pkttype=PACKET_MULTICAST;
   memcpy(sll.sll_addr,myaddress,ETH_ALEN);

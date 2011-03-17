@@ -16,6 +16,7 @@ libcap_utils_la_SOURCES = \
 	spectopico.c \
 	stream_ethernet.c \
 	stream_file.c \
+	stream_udp.c \
 	timecmp.c \
 	valtopico.c \
 	writepost.c

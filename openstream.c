@@ -109,7 +109,6 @@ int openstream(struct stream *myStream,char *address, int protocol, char *nic, i
   char osrBuffer[buffLen]; // Temporary buffer for holding ETHERNET/UDP packets, while filling buffer.
   int newsocket=0;
   struct ifreq ifr;
-  int ifindex=0;
   int socket_descriptor=0;
   struct sockaddr_in sender,client;
   socklen_t cliLen;
@@ -174,38 +173,11 @@ int openstream(struct stream *myStream,char *address, int protocol, char *nic, i
       break;
 
     case PROTOCOL_UDP_MULTICAST: // UDP multi/unicast
-      socket_descriptor=socket(AF_INET,SOCK_DGRAM,IPPROTO_UDP);
-      if(socket_descriptor<0) {
-	perror("Cannot open socket. ");
-	return(0);
-      }     
-      setsockopt(socket_descriptor,SOL_SOCKET,SO_REUSEADDR,(void*)1,sizeof(int));
-      setsockopt(socket_descriptor,SOL_SOCKET,SO_BROADCAST,(void*)1,sizeof(int));
-      sender.sin_family = AF_INET;
-      inet_aton(address,&sender.sin_addr);
-      sender.sin_port = htons(port);
-#ifdef DEBUG
-      printf("Listens to %s:%d\n",inet_ntoa(sender.sin_addr),ntohs(sender.sin_port));
-#endif
-      if( bind (socket_descriptor, (struct sockaddr *) &sender,sizeof(sender))<0){
-	perror("Cannot bind port number \n");
-	return(0);
+      /* initialize an ethernet stream */
+      if ( (ret=stream_udp_init(myStream, address, port)) != 0 ){
+	fprintf(stderr, "stream_udp_init failed with code %d: %s\n", ret, strerror(ret));
+	return 0;
       }
-#ifdef DEBUG
-      printf("UDP Multi/uni-cast\nIP.destination=%s UDP.port=%d\n", address,port);
-#endif
-      myStream->address=(char*)calloc(strlen(address)+1,1);
-      strcpy(myStream->address,address);
-      if(ioctl(socket_descriptor, SIOCGIFINDEX, &ifr) == -1 ){
-	perror("SIOCGIFINDEX error. ");
-	return(0);
-      }
-      ifindex=ifr.ifr_ifindex;
-      if(ioctl(socket_descriptor,SIOCGIFMTU,&ifr) == -1 ) {
-	perror("SIOCGIIFMTU");
-	exit(1);
-      }
-      myStream->if_mtu=ifr.ifr_mtu;
 
       break;
 
@@ -234,7 +206,6 @@ int openstream(struct stream *myStream,char *address, int protocol, char *nic, i
 
   free(myaddress);
   myStream->mySocket=socket_descriptor;
-  myStream->ifindex=ifindex;
 
 #ifdef DEBUG
   printf("sizeof(cap_head) = %d\n",sizeof(cap_head));
