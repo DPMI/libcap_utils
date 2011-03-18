@@ -138,62 +138,6 @@ int read_post(struct stream *myStream, char **data, struct filter *my_Filter){
 	  printf("Initial read complete.\n");
 	  break;
 	case PROTOCOL_ETHERNET_MULTICAST://ETHERNET
-	  myStream->bufferSize=0;
-	  bzero(rBuffer,buffLen);
-	  myStream->pktCount=0;
-
-
-	  while(myStream->bufferSize<7410){ // This equals approx 5 packets each of 
-//	    printf("ETH read from %d, to %p max %d bytes\n",myStream->mySocket, myStream->buffer, buffLen);
-	    readBytes=recvfrom(myStream->mySocket, rBuffer, buffLen, 0, NULL, NULL);
-//	    printf("eth.type=%04x %02X:%02X:%02X:%02X:%02X:%02X --> %02X:%02X:%02X:%02X:%02X:%02X",ntohs(eh->h_proto),eh->h_source[0],eh->h_source[1],eh->h_source[2],eh->h_source[3],eh->h_source[4],eh->h_source[5],eh->h_dest[0],eh->h_dest[1],eh->h_dest[2],eh->h_dest[3],eh->h_dest[4],eh->h_dest[5]);
-//	    printf("myStream->address = %02x:%02x:%02x:%02x:%02x:%02x \n",myStream->address[0],myStream->address[1],myStream->address[2],myStream->address[3],myStream->address[4],myStream->address[5]);
-
-	    if(readBytes<0){
-	      perror("Cannot receive Net stream data.");
-	      return(0);
-	    }
-	    if(readBytes==0){
-	      perror("Connection closed by client.");
-	      return(0);
-	    }
-
-	    if(ntohs(eh->h_proto) == LLPROTO && memcmp((const void*)eh->h_dest,(const void*)myStream->address, ETH_ALEN)==0){
-	      myStream->pktCount+=ntohs(sh->nopkts);
-	      if(myStream->bufferSize==0) {
-		myStream->expSeqnr=ntohl(sh->sequencenr)+1;
-		myStream->FH.version.minor=ntohs(sh->version.minor);
-		myStream->FH.version.major=ntohs(sh->version.major);
-
-	      } else {
-		if(myStream->expSeqnr!=ntohl(sh->sequencenr)){
-		  printf("Missmatch of sequence numbers. Expeced %ld got %d\n",myStream->expSeqnr, ntohl(sh->sequencenr));
-		  myStream->expSeqnr=ntohl(sh->sequencenr);
-		} 
-		myStream->expSeqnr++;
-		if(myStream->expSeqnr>=0xFFFF){
-		  myStream->expSeqnr=0;
-		}
-		
-	      }
-	      memcpy(myStream->buffer+myStream->bufferSize, rBuffer+sizeof(struct ethhdr)+sizeof(struct sendhead), readBytes-sizeof(struct ethhdr)-sizeof(struct sendhead));
-	      myStream->bufferSize+=(readBytes-sizeof(struct ethhdr)-sizeof(struct sendhead));
-//	      printf("Buffer Size = %d / %d \n",myStream->bufferSize, buffLen);
-//	      printf("sequenceNr = %04x\nmyStream->readPos=%d\n",ntohs(sh->sequencenr),myStream->readPos);
-	      if(ntohs(sh->flush)==1){
-		printf("Indicataion of termination from sender.. %d/%d\n", readBytes, myStream->if_mtu);
-		myStream->flushed=1;
-		break;//Break the while loop.
-	      }
-	    } else {
-//	      printf("Not my address, %d bytes.\n", readBytes);
-	    }
-
-
-	  }
-	  myStream->readPos=0;
-	  printf("Initial read complete.\n");
-	  break;
 	case PROTOCOL_LOCAL_FILE:
 	  if ( myStream->fill_buffer(myStream, buffLen) <= 0 ){
 	    fprintf(stderr, "Failed to read from stream: %s", strerror(errno));
