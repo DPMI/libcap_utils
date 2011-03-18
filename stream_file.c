@@ -18,11 +18,12 @@ static int stream_file_fillbuffer(struct stream* st){
 
   int readBytes = fread(st->buffer, 1, buffLen, st->myFile);
 
-  if ( readBytes > 0 ){
-    st->bufferSize = readBytes;
-    st->readPos = 0;
+  /* check if an error occured, EOF is not considered an error. */
+  if ( readBytes < buffLen && ferror(st->myFile) > 0 ){
+    return 0;
   }
 
+  st->bufferSize += readBytes;
   return readBytes;
 }
 
