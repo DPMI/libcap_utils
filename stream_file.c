@@ -8,11 +8,6 @@
 #include <string.h>
 #include "caputils/caputils.h"
 
-/**
- * Fills the stream buffer.
- * @param len Requested amount of bytes to read.
- * @return Number of bytes actually read, or non-positive on errors.
- */
 static int stream_file_fillbuffer(struct stream* st, size_t len){
   assert(st);
   assert(st->myFile);
@@ -21,7 +16,7 @@ static int stream_file_fillbuffer(struct stream* st, size_t len){
 
   /* check if an error occured, EOF is not considered an error. */
   if ( readBytes < len && ferror(st->myFile) > 0 ){
-    return 0;
+    return -1;
   }
 
   st->bufferSize += readBytes;

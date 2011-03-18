@@ -139,7 +139,7 @@ int read_post(struct stream *myStream, char **data, struct filter *my_Filter){
 	  break;
 	case PROTOCOL_ETHERNET_MULTICAST://ETHERNET
 	case PROTOCOL_LOCAL_FILE:
-	  if ( myStream->fill_buffer(myStream, buffLen) <= 0 ){
+	  if ( myStream->fill_buffer(myStream, buffLen) < 0 ){
 	    fprintf(stderr, "Failed to read from stream: %s", strerror(errno));
 	    return 0;
 	  }

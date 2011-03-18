@@ -1,6 +1,22 @@
 #ifndef CAPUTILS__STREAM_H
 #define CAPUTILS__STREAM_H
 
+/* forward declare for callbacks */
+struct stream;
+
+/**
+ * Fill the stream buffer.
+ * @param len Requested amount of bytes to read.
+ * @return Number of bytes actually read, zero if there is nothing more to read
+ *         and negative on errors.
+ */
+typedef int (*fill_buffer_callback)(struct stream* st, size_t len);
+
+/**
+ * Stream destructor.
+ */
+typedef int (*destroy_callback)(struct stream* st);
+
 // Stream structure, used to manage different types of streams
 //
 //
@@ -30,8 +46,8 @@ struct stream{
   char *comment;                        //
 
   /* Callback functions */
-  int (*fill_buffer)(struct stream* st, size_t len);
-  int (*destroy)(struct stream* st);
+  fill_buffer_callback fill_buffer;
+  destroy_callback destroy;
 };
 
 int is_valid_version(struct file_header* fhptr);

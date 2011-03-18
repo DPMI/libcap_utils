@@ -257,7 +257,7 @@ int openstream(struct stream *myStream,char *address, int protocol, char *nic, i
      break;
     case PROTOCOL_ETHERNET_MULTICAST:
     case PROTOCOL_LOCAL_FILE:
-      if ( myStream->fill_buffer(myStream, buffLen) <= 0 ){
+      if ( myStream->fill_buffer(myStream, buffLen) < 0 ){
 	fprintf(stderr, "Failed to read from stream: %s", strerror(errno));
 	return 0;
       }

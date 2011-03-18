@@ -13,15 +13,16 @@
 #include <net/if.h>
 #include <arpa/inet.h>
 
+static char osrBuffer[buffLen] = {0,};
+
 static int fill_buffer(struct stream* st, size_t len){
-  char osrBuffer[buffLen] = {0,};
   int readBytes;
 
-  char* ether = osrBuffer;
-  struct ethhdr *eh=(struct ethhdr *)ether;
-  struct sendhead *sh=(struct sendhead *)(ether+sizeof(struct ethhdr));
+  const char* ether = osrBuffer;
+  const struct ethhdr *eh=(const struct ethhdr *)ether;
+  const struct sendhead *sh=(const struct sendhead *)(ether + sizeof(struct ethhdr));
   
-  while ( st->bufferSize==0 ){ // Read one chunk of data, mostly to determine sequence number and stream version. 
+  while ( 1 ){
     readBytes=recvfrom(st->mySocket, osrBuffer, len, 0, NULL, NULL);
 
 #ifdef DEBUG
@@ -32,13 +33,13 @@ static int fill_buffer(struct stream* st, size_t len){
     /* terminated */
     if ( readBytes < 0 ){
       perror("Cannot receive Ethernet data.");
-      return 0;
+      return -1;
     }
 
     /* proper shutdown */
     if( readBytes==0 ){
       perror("Connection closed by client.");
-      return 0;
+      return -1; /* return -1 so it won't try again */
     }
 
     /* check protocol and destination */
@@ -92,8 +93,9 @@ static int fill_buffer(struct stream* st, size_t len){
     if( ntohs(sh->flush) == 1 ){
       printf("Sender terminated. \n");
       st->flushed=1;
-      break;//Break the while loop.
     }
+
+    break; //Break the while loop.
   }
 
   return readBytes;
