@@ -195,7 +195,7 @@ int read_post(struct stream *myStream, char **data, struct filter *my_Filter){
 	  printf("Initial read complete.\n");
 	  break;
 	case PROTOCOL_LOCAL_FILE:
-	  myStream->fill_buffer(myStream);
+	  myStream->fill_buffer(myStream, buffLen);
 	  break;
       }
 

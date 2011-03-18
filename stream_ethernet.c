@@ -13,7 +13,7 @@
 #include <net/if.h>
 #include <arpa/inet.h>
 
-static int fill_buffer(struct stream* st){
+static int fill_buffer(struct stream* st, size_t len){
   char osrBuffer[buffLen] = {0,};
   int readBytes;
 
@@ -22,11 +22,7 @@ static int fill_buffer(struct stream* st){
   struct sendhead *sh=(struct sendhead *)(ether+sizeof(struct ethhdr));
   
   while ( st->bufferSize==0 ){ // Read one chunk of data, mostly to determine sequence number and stream version. 
-#ifdef DEBUG
-    printf("ETH read from %d, to %p max %d bytes, from socket %p\n",st->mySocket, st->buffer, buffLen);
-#endif
-
-    readBytes=recvfrom(st->mySocket, osrBuffer, buffLen, 0, NULL, NULL);
+    readBytes=recvfrom(st->mySocket, osrBuffer, len, 0, NULL, NULL);
 
 #ifdef DEBUG
     printf("eth.type=%04x %02X:%02X:%02X:%02X:%02X:%02X --> %02X:%02X:%02X:%02X:%02X:%02X",ntohs(eh->h_proto),eh->h_source[0],eh->h_source[1],eh->h_source[2],eh->h_source[3],eh->h_source[4],eh->h_source[5],eh->h_dest[0],eh->h_dest[1],eh->h_dest[2],eh->h_dest[3],eh->h_dest[4],eh->h_dest[5]);

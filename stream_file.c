@@ -9,17 +9,18 @@
 #include "caputils/caputils.h"
 
 /**
- * Fill buffer.
- * @return Number of bytes read, or <0 on errors.
+ * Fills the stream buffer.
+ * @param len Requested amount of bytes to read.
+ * @return Number of bytes actually read, or non-positive on errors.
  */
-static int stream_file_fillbuffer(struct stream* st){
+static int stream_file_fillbuffer(struct stream* st, size_t len){
   assert(st);
   assert(st->myFile);
 
-  int readBytes = fread(st->buffer, 1, buffLen, st->myFile);
+  int readBytes = fread(st->buffer, 1, len, st->myFile);
 
   /* check if an error occured, EOF is not considered an error. */
-  if ( readBytes < buffLen && ferror(st->myFile) > 0 ){
+  if ( readBytes < len && ferror(st->myFile) > 0 ){
     return 0;
   }
 

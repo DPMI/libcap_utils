@@ -30,7 +30,7 @@ struct stream{
   char *comment;                        //
 
   /* Callback functions */
-  int (*fill_buffer)(struct stream* st);
+  int (*fill_buffer)(struct stream* st, size_t len);
   int (*destroy)(struct stream* st);
 };
 
