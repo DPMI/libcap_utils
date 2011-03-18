@@ -6,11 +6,102 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 #include <sys/socket.h>
 #include <sys/ioctl.h>
 #include <linux/if_packet.h>
 #include <net/if.h>
 #include <arpa/inet.h>
+
+static int fill_buffer(struct stream* st){
+  char osrBuffer[buffLen] = {0,};
+  int readBytes;
+
+  char* ether = osrBuffer;
+  struct ethhdr *eh=(struct ethhdr *)ether;
+  struct sendhead *sh=(struct sendhead *)(ether+sizeof(struct ethhdr));
+  
+  while ( st->bufferSize==0 ){ // Read one chunk of data, mostly to determine sequence number and stream version. 
+#ifdef DEBUG
+    printf("ETH read from %d, to %p max %d bytes, from socket %p\n",st->mySocket, st->buffer, buffLen);
+#endif
+
+    readBytes=recvfrom(st->mySocket, osrBuffer, buffLen, 0, NULL, NULL);
+
+#ifdef DEBUG
+    printf("eth.type=%04x %02X:%02X:%02X:%02X:%02X:%02X --> %02X:%02X:%02X:%02X:%02X:%02X",ntohs(eh->h_proto),eh->h_source[0],eh->h_source[1],eh->h_source[2],eh->h_source[3],eh->h_source[4],eh->h_source[5],eh->h_dest[0],eh->h_dest[1],eh->h_dest[2],eh->h_dest[3],eh->h_dest[4],eh->h_dest[5]);
+    printf("st->address = %02x:%02x:%02x:%02x:%02x:%02x \n",st->address[0],st->address[1],st->address[2],st->address[3],st->address[4],st->address[5]);
+#endif
+	
+    /* terminated */
+    if ( readBytes < 0 ){
+      perror("Cannot receive Ethernet data.");
+      return 0;
+    }
+
+    /* proper shutdown */
+    if( readBytes==0 ){
+      perror("Connection closed by client.");
+      return 0;
+    }
+
+    /* check protocol and destination */
+    if( ntohs(eh->h_proto) != LLPROTO || memcmp((const void*)eh->h_dest,(const void*)st->address, ETH_ALEN) != 0 ){
+      continue;
+    }
+
+    /* increase packet count */
+    st->pktCount += ntohs(sh->nopkts);
+
+    /* if no sequencenr is set some additional checks are made.
+     * they will also run when the sequence number wraps, but that ok since the
+     * sequence number will match in that case anyway. */
+    if ( st->expSeqnr == 0 ){
+      st->expSeqnr = ntohl(sh->sequencenr);
+
+      /* read stream version */
+      st->FH.version.major=ntohs(sh->version.major);
+      st->FH.version.minor=ntohs(sh->version.minor);
+
+      /* ensure we can read this version */
+      if ( !is_valid_version(&st->FH) ){
+	return -1;
+      }
+    }
+
+    /* validate sequence number */
+    if( st->expSeqnr != ntohl(sh->sequencenr) ){
+      fprintf(stderr,"Missmatch of sequence numbers. Expeced %ld got %d\n",st->expSeqnr, ntohl(sh->sequencenr));
+      st->expSeqnr = ntohl(sh->sequencenr); /* reset sequence number */
+    }
+
+    /* increment sequence number (next packet is expected to have +1) */
+    st->expSeqnr++;
+
+    /* wrap sequence number */
+    if( st->expSeqnr>=0xFFFF ){
+      st->expSeqnr=0;
+    }
+
+    /* copy packets to stream buffer */
+    size_t header_size = sizeof(struct ethhdr)+sizeof(struct sendhead);
+    memcpy(st->buffer + st->bufferSize, osrBuffer + header_size, readBytes - header_size);
+    st->bufferSize += readBytes - header_size;
+
+#ifdef DEBUG
+    printf("Packet contained %d bytes (Eth %d, Send %d, Cap %d) Buffer Size = %d / %d  Pkts %ld \n",readBytes,sizeof(struct ethhdr), sizeof(struct sendhead),sizeof(struct cap_header),st->bufferSize, buffLen, st->pktCount);
+#endif
+
+    /* This indicates a flush from the sender.. */
+    if( ntohs(sh->flush) == 1 ){
+      printf("Sender terminated. \n");
+      st->flushed=1;
+      break;//Break the while loop.
+    }
+  }
+
+  return readBytes;
+}
 
 int stream_ethernet_init(struct stream* st, const char* address){
   struct ifreq ifr;
@@ -74,6 +165,10 @@ int stream_ethernet_init(struct stream* st, const char* address){
   st->address = myaddress; /* take ownership of memory */
   st->FH.comment_size=0;
   st->comment=0;
+
+  /* callbacks */
+  st->fill_buffer = fill_buffer;
+  st->destroy = NULL;
 
   return 0;
 }

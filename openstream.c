@@ -113,7 +113,6 @@ int openstream(struct stream *myStream,char *address, int protocol, char *nic, i
   int ret = 0;
 
   char *ether=osrBuffer;
-  struct ethhdr *eh=(struct ethhdr *)ether;
   struct sendhead *sh=0;
   if(protocol==1)
     sh=(struct sendhead *)(ether+sizeof(struct ethhdr));
@@ -208,7 +207,6 @@ int openstream(struct stream *myStream,char *address, int protocol, char *nic, i
 	}
 	myStream->bufferSize+=readBytes;
       }
-      myStream->readPos=0;
       break;
 
     case PROTOCOL_UDP_MULTICAST:
@@ -256,70 +254,15 @@ int openstream(struct stream *myStream,char *address, int protocol, char *nic, i
 	  break;//Break the while loop.
 	}
       }
-      myStream->readPos=0;
-
      break;
     case PROTOCOL_ETHERNET_MULTICAST:
-      while(myStream->bufferSize==0){ // Read one chunk of data, mostly to determine sequence number and stream version. 
-#ifdef DEBUG
-	printf("ETH read from %d, to %p max %d bytes, from socket %p\n",myStream->mySocket, myStream->buffer, buffLen);
-#endif
-	readBytes=recvfrom(myStream->mySocket, osrBuffer, buffLen, 0, NULL, NULL);
-#ifdef DEBUG
-	printf("eth.type=%04x %02X:%02X:%02X:%02X:%02X:%02X --> %02X:%02X:%02X:%02X:%02X:%02X",ntohs(eh->h_proto),eh->h_source[0],eh->h_source[1],eh->h_source[2],eh->h_source[3],eh->h_source[4],eh->h_source[5],eh->h_dest[0],eh->h_dest[1],eh->h_dest[2],eh->h_dest[3],eh->h_dest[4],eh->h_dest[5]);
-	printf("myStream->address = %02x:%02x:%02x:%02x:%02x:%02x \n",myStream->address[0],myStream->address[1],myStream->address[2],myStream->address[3],myStream->address[4],myStream->address[5]);
-#endif
-	
-	if(readBytes<0){
-	  perror("Cannot receive Ethernet data.");
-	  return(0);
-	}
-	if(readBytes==0){
-	  perror("Connection closed by client.");
-	  return(0);
-	}
-	if(ntohs(eh->h_proto) == LLPROTO && memcmp((const void*)eh->h_dest,(const void*)myStream->address, ETH_ALEN)==0){
-	  myStream->pktCount+=ntohs(sh->nopkts);
-	  if(myStream->bufferSize==0) {
-	    myStream->expSeqnr=ntohl(sh->sequencenr)+1;
-	    myStream->FH.version.major=ntohs(sh->version.major);
-	    myStream->FH.version.minor=ntohs(sh->version.minor);
-	    if ( !is_valid_version(&myStream->FH) ){
-	      return EINVAL;
-	    }
-	  } else {
-	    if(myStream->expSeqnr!=ntohl(sh->sequencenr)){
-	      fprintf(stderr,"Missmatch of sequence numbers. Expeced %ld got %d\n",myStream->expSeqnr, ntohl(sh->sequencenr));
-	      myStream->expSeqnr=ntohl(sh->sequencenr);
-	    } 
-	    myStream->expSeqnr++;
-	    if(myStream->expSeqnr>=0xFFFF){
-	      myStream->expSeqnr=0;
-	    }
-	    
-	  }
-	  memcpy(myStream->buffer+myStream->bufferSize, osrBuffer+sizeof(struct ethhdr)+sizeof(struct sendhead), readBytes-sizeof(struct ethhdr)-sizeof(struct sendhead));
-	  myStream->bufferSize+=(readBytes-sizeof(struct ethhdr)-sizeof(struct sendhead));
-#ifdef DEBUG
-	  printf("Packet contained %d bytes (Eth %d, Send %d, Cap %d) Buffer Size = %d / %d  Pkts %ld \n",readBytes,sizeof(struct ethhdr), sizeof(struct sendhead),sizeof(struct cap_header),myStream->bufferSize, buffLen, myStream->pktCount);
-#endif
-	  if(ntohs(sh->flush)==1){// This indicates a flush from the sender..
-	    printf("Sender terminated. \n");
-	    myStream->flushed=1;
-	    break;//Break the while loop.
-	  }
-	} else {
-//	      printf("Not my address, %d bytes.\n", readBytes);
-	}
-      }
-      myStream->readPos=0;
-
-      break;
-
     case PROTOCOL_LOCAL_FILE:
       myStream->fill_buffer(myStream);
       break;
   }
+
+  myStream->readPos=0;
+
 #ifdef DEBUG
   printf("Read op filled: %p --- %04x --- %p \n", myStream->buffer, readBytes, myStream->buffer+readBytes);
 #endif
