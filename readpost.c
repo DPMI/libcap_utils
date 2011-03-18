@@ -195,43 +195,12 @@ int read_post(struct stream *myStream, char **data, struct filter *my_Filter){
 	  printf("Initial read complete.\n");
 	  break;
 	case PROTOCOL_LOCAL_FILE:
-	  myStream->fill_buffer(myStream, buffLen);
+	  if ( myStream->fill_buffer(myStream, buffLen) <= 0 ){
+	    fprintf(stderr, "Failed to read from stream: %s", strerror(errno));
+	    return 0;
+	  }
 	  break;
       }
-
-//      printf("Read op filled: %p --- %04x --- %p \n", myStream->buffer, readBytes, myStream->buffer+readBytes);
-      if(myStream->bufferSize<buffLen){
-	switch(myStream->type){
-	  case 3:
-	  case 2:
-	  case 1:
-	    break;
-	  case 0:
-	  default:
-	    if(ferror(myStream->myFile)>0){
-	      perror("Reading file.");
-	      return(0); // Some error occured.
-	    }
-	}
-      }
-      
-      if(myStream->bufferSize==0) {
-	switch(myStream->type){
-	  case 3:
-	  case 2:
-	  case 1:
-	    perror("Connection closed. ");
-	    return(0);
-	    break;
-	  case 0:
-	  default:
-	    if(feof(myStream->myFile)){
-	      perror("EOF reached.");
-	      return(0);// End-of-file reached.
-	    }
-	}
-      }
-
     } else {
       // We have some data in the buffer.
       cp=(struct cap_header*)(myStream->buffer+myStream->readPos);
