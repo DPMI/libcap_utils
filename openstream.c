@@ -140,7 +140,7 @@ int openstream(struct stream *myStream,char *address, int protocol, char *nic, i
       break;
 
     case PROTOCOL_ETHERNET_MULTICAST:
-      ret = stream_ethernet_init(myStream, address);
+      ret = stream_ethernet_init(myStream, address, nic);
       break;
     case PROTOCOL_LOCAL_FILE:
       ret = stream_file_init(myStream, address);

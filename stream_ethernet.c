@@ -103,13 +103,17 @@ static int fill_buffer(struct stream* st){
   return readBytes;
 }
 
-int stream_ethernet_init(struct stream* st, const char* address){
+int stream_ethernet_init(struct stream* st, const char* address, const char* iface){
   struct ifreq ifr;
   struct packet_mreq mcast;
   struct sockaddr_ll sll;
 
   assert(st);
   assert(address);
+  assert(nic);
+
+  /* store the iface name */
+  strncpy(ifr.ifr_name, iface, IFNAMSIZ);
 
   /* open raw socket */
   st->mySocket = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL));//LLPROTO));

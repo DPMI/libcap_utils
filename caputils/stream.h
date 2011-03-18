@@ -38,7 +38,7 @@ int is_valid_version(struct file_header* fhptr);
 
 int stream_udp_init(struct stream* st, const char* address, int port);
 int stream_tcp_init(struct stream* st, const char* address, int port);
-int stream_ethernet_init(struct stream* st, const char* address);
+int stream_ethernet_init(struct stream* st, const char* address, const char* iface);
 int stream_file_init(struct stream* st, const char* filename);
 
 #endif /* CAPUTILS__STREAM_H */
