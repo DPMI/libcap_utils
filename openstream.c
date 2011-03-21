@@ -108,16 +108,7 @@ static int stream_init(struct stream* st, int protocol, int port){
 }
 
 int openstream(struct stream *myStream,char *address, int protocol, char *nic, int port){
-  // Temporary buffer for holding ETHERNET/UDP packets, while filling buffer.
-  char osrBuffer[buffLen] = {0,};
   int ret = 0;
-
-  char *ether=osrBuffer;
-  struct sendhead *sh=0;
-  if(protocol==1)
-    sh=(struct sendhead *)(ether+sizeof(struct ethhdr));
-  if(protocol==2 || protocol==3) 
-    sh=(struct sendhead *)(ether);
 
   /* Initialize the structure */
   if ( (ret=stream_init(myStream, protocol, port)) != 0 ){
@@ -153,24 +144,6 @@ int openstream(struct stream *myStream,char *address, int protocol, char *nic, i
     fprintf(stderr, "  message: %s\n", strerror(ret));
     return 0;
   }
-
-  switch(myStream->type){
-    case PROTOCOL_TCP_UNICAST:
-    case PROTOCOL_UDP_MULTICAST:
-      fprintf(stderr, "Not reimplemented.\n");
-      abort();
-      break;
-
-    case PROTOCOL_ETHERNET_MULTICAST:
-    case PROTOCOL_LOCAL_FILE:
-      if ( myStream->fill_buffer(myStream) < 0 ){
-	fprintf(stderr, "Failed to read from stream: %s", strerror(errno));
-	return 0;
-      }
-      break;
-  }
-
-  myStream->readPos=0;
 
   return 1;
 }
