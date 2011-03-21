@@ -119,17 +119,12 @@ int openstream(struct stream *myStream,char *address, int protocol, char *nic, i
   if(protocol==2 || protocol==3) 
     sh=(struct sendhead *)(ether);
 
-  int readBytes=0;
-
   /* Initialize the structure */
   if ( (ret=stream_init(myStream, protocol, port)) != 0 ){
     fprintf(stderr, "stream_init failed with code %d\n", ret);
     exit(1);
   }
 
-#ifdef DEBUG
-  printf("openstream() \n");
-#endif
   switch(protocol){
     case PROTOCOL_TCP_UNICAST:
       ret = stream_tcp_init(myStream, address, port);
@@ -161,100 +156,11 @@ int openstream(struct stream *myStream,char *address, int protocol, char *nic, i
 
   switch(myStream->type){
     case PROTOCOL_TCP_UNICAST:
-      readBytes=recvfrom(myStream->mySocket, osrBuffer, sizeof(struct sendhead), 0, NULL, NULL);
-      
-      if(readBytes<0){
-	perror("Cannot receive TCP data.");
-	return(0);
-      }
-      if(readBytes==0){
-	perror("Connection closed by client.");
-	myStream->flushed=1;
-	break;
-      }
-      myStream->FH.version.major=ntohs(sh->version.major);
-      myStream->FH.version.minor=ntohs(sh->version.minor);
-      if ( !is_valid_version(&myStream->FH) ){
-	return EINVAL;
-      }
-
-#ifdef DEBUG
-      printf("Read %d bytes, Got the sendhead.\n",readBytes);
-#endif
-      // Now we read some packets.
-      while(myStream->bufferSize==0){ // This equals approx 1 packets each of 
-	readBytes=recvfrom(myStream->mySocket, myStream->buffer, buffLen, 0, NULL, NULL);
-	
-	if(readBytes<0){
-	  perror("Cannot receive TCP/UDP data.");
-	  return(0);
-	}
-	if(readBytes==0){
-	  perror("Connection closed by client.");
-	  myStream->flushed=1;
-	  break;
-	}
-#ifdef DEBUG
-	printf("myStream->buffer = %p\n",myStream->buffer);
-	printf("Packet contained %d bytes Buffer Size = %d / %d  \n",readBytes,myStream->bufferSize, buffLen);
-#endif
-	if(ntohs(sh->flush)==1){// This indicates a flush from the sender..
-#ifdef DEBUG
-	  printf("Sender terminated. \n");
-#endif
-	  myStream->flushed=1;
-	  break;//Break the while loop.
-	}
-	myStream->bufferSize+=readBytes;
-      }
+    case PROTOCOL_UDP_MULTICAST:
+      fprintf(stderr, "Not reimplemented.\n");
+      abort();
       break;
 
-    case PROTOCOL_UDP_MULTICAST:
-      while(myStream->bufferSize==0){ // This equals approx 5 packets each of 
-	readBytes=recvfrom(myStream->mySocket, osrBuffer, buffLen, 0, NULL, NULL);
-	
-	if(readBytes<0){
-	  perror("Cannot receive TCP/UDP data.");
-	  return(0);
-	}
-	if(readBytes==0){
-	  perror("Connection closed by client.");
-	  return(0);
-	}
-	myStream->pktCount+=ntohs(sh->nopkts);
-	if(myStream->bufferSize<7410) {
-	  myStream->expSeqnr=ntohl(sh->sequencenr)+1;
-	  myStream->FH.version.major=ntohs(sh->version.major);
-	  myStream->FH.version.minor=ntohs(sh->version.minor);
-	  if ( !is_valid_version(&myStream->FH) ){
-	    return EINVAL;
-	  }
-	} else {
-	  if(myStream->expSeqnr!=ntohl(sh->sequencenr)){
-	    fprintf(stderr,"Missmatch of sequence numbers. Expeced %ld got %d\n",myStream->expSeqnr, ntohl(sh->sequencenr));
-	    myStream->expSeqnr=ntohl(sh->sequencenr);
-	  } 
-	  myStream->expSeqnr++;
-	  if(myStream->expSeqnr>=0xFFFF){
-	    myStream->expSeqnr=0;
-	  }
-	  
-	}
-	memcpy(myStream->buffer+myStream->bufferSize, osrBuffer+sizeof(struct sendhead), readBytes-sizeof(struct sendhead));
-	myStream->bufferSize+=(readBytes-sizeof(struct sendhead));
-#ifdef DEBUG
-	printf("Packet contained %d bytes (Send %d, Cap %d) Buffer Size = %d / %d  Pkts %ld \n",readBytes, sizeof(struct sendhead),sizeof(struct cap_header),myStream->bufferSize, buffLen, myStream->pktCount);
-	printf("Buffer Size = %d / %d \n",myStream->bufferSize, buffLen);
-#endif
-	if(ntohs(sh->flush)==1){// This indicates a flush from the sender..
-#ifdef DEBUG
-	  printf("Sender terminated. \n");
-#endif
-	  myStream->flushed=1;
-	  break;//Break the while loop.
-	}
-      }
-     break;
     case PROTOCOL_ETHERNET_MULTICAST:
     case PROTOCOL_LOCAL_FILE:
       if ( myStream->fill_buffer(myStream) < 0 ){
@@ -265,14 +171,6 @@ int openstream(struct stream *myStream,char *address, int protocol, char *nic, i
   }
 
   myStream->readPos=0;
-
-#ifdef DEBUG
-  printf("Read op filled: %p --- %04x --- %p \n", myStream->buffer, readBytes, myStream->buffer+readBytes);
-#endif
-
-#ifdef DEBUG
-  printf("OPENSTREAM Initial read complete.\n");  
-#endif  
 
   return 1;
 }

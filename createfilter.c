@@ -115,9 +115,6 @@ struct filter* createfilter(int argc, char** argv){
     } else {
       // Incase of an argument 
       optionIndex=-2;
-#ifdef DEBUG      
-      printf("An argument\n");
-#endif
     }
     if(optionIndex==-1){
 //      printf("Unknown option.\n");
