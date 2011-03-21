@@ -83,7 +83,7 @@ int read_post(struct stream *myStream, char **data, struct filter *my_Filter){
     // We have some data in the buffer.
     cp=(struct cap_header*)(myStream->buffer + myStream->readPos);
 #ifdef DEBUG
-    printf("readPos = %d \t cp->nic: %s, cp->caplen: %d,  cp->len: %d\n", myStream->readPos, cp->nic, cp->caplen, cp->len);
+    fprintf(stderr, "readPos = %d \t cp->nic: %s, cp->caplen: %d,  cp->len: %d\n", myStream->readPos, cp->nic, cp->caplen, cp->len);
 #endif /* DEBUG */
 
     const size_t packet_size = sizeof(struct cap_header) + cp->caplen;
@@ -94,7 +94,9 @@ int read_post(struct stream *myStream, char **data, struct filter *my_Filter){
     assert(packet_size > 0);
 
     if( end_pos > myStream->bufferSize ) {
-      printf("\nInsufficient data\t");
+#ifdef DEBUG
+      fprintf(stderr, "Insufficient data.\n");
+#endif /* DEBUG */
       if ( fill_buffer(myStream) == 0 ){
 	return 0; /* could not read */
       }
