@@ -110,7 +110,7 @@ int read_post(struct stream *myStream, char **data, struct filter *my_Filter){
 
     filterStatus=checkFilter((myStream->buffer+myStream->readPos),my_Filter);
     //    printf("[%d]", skip_counter);
-  }while(filterStatus==0);
+  } while(filterStatus==0);
   //  printf("Skipped %d packets.\n",skip_counter);
   
   return(1);

@@ -75,6 +75,9 @@ struct cap_header{
   timepico ts;                          // Identifies when the frame was caught
   uint32_t len;                              // Identifies the lenght of the frame
   uint32_t caplen;                           // Identifies how much of the frame that we find here
+
+  /* convenience accessor (since array size is 0 it won't affect sizeof) */
+  char payload[0];
 };
 typedef struct cap_header  cap_head;
 
