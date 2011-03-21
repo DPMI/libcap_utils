@@ -22,9 +22,114 @@
 #include <string.h>
 #include <arpa/inet.h>
 
-int read_post(struct stream *myStream, char **data, struct filter *my_Filter){
-  char rBuffer[buffLen]; // Temporary buffer for holding ETHERNET/UDP packets, while filling buffer.
+/* This is potentially very dangerous, but there are so many issues laying
+ * around anyway, so for now I use a statically allocated buffer for storage. */
+static char rBuffer[buffLen]; // Temporary buffer for holding ETHERNET/UDP packets, while filling buffer.
 
+int initial_read(struct stream* st, struct sendhead* sh){
+  struct sockaddr from;
+  int readBytes = 0;
+  printf("Initial read.\n");
+
+  if( st->flushed==1 ){
+    printf("EOF stream reached.\n");
+    return(0);
+  }
+  
+  switch(st->type){
+  case PROTOCOL_TCP_UNICAST://TCP
+    st->bufferSize=0;
+    bzero(rBuffer,buffLen);
+    st->pktCount=0;
+    
+    while(st->bufferSize<7410){ // This equals approx 5 packets each of 
+      //	    printf("ETH read from %d, to %p max %d bytes, from socket %p\n",st->mySocket, st->buffer, buffLen,&from);
+      readBytes=recvfrom(st->mySocket, st->buffer, buffLen, 0, &from, (socklen_t*)&from);
+      
+      if(readBytes<0){
+	perror("Cannot receive Net stream data.");
+	return(0);
+      }
+      if(readBytes==0){
+	perror("Connection closed by client.");
+	st->flushed=1;
+	st->readPos=0;
+	break;
+      }
+      
+      st->bufferSize+=readBytes;
+      //	    printf("Buffer Size = %d / %d \n",st->bufferSize, buffLen);
+      //	      printf("sequenceNr = %04x\nst->readPos=%d\n",ntohs(sh->sequencenr),st->readPos);
+      if(ntohs(sh->flush)==1){
+	printf("Indicataion of termination from sender.. %d/%d\n", readBytes, st->if_mtu);
+	st->flushed=1;
+	break;//Break the while loop.
+      }
+    }
+    st->readPos=0;
+    printf("Initial read complete.\n");
+    
+    break;
+  case PROTOCOL_UDP_MULTICAST://UDP
+    st->bufferSize=0;
+    bzero(rBuffer,buffLen);
+    st->pktCount=0;
+    
+    
+    while(st->bufferSize<7410){ // This equals approx 5 packets each of 
+      //	    printf("ETH read from %d, to %p max %d bytes, from socket %p\n",st->mySocket, st->buffer, buffLen,&from);
+      readBytes=recvfrom(st->mySocket, rBuffer, buffLen, 0, &from, (socklen_t*)&from);
+      
+      if(readBytes<0){
+	perror("Cannot receive Net stream data.");
+	return(0);
+      }
+      if(readBytes==0){
+	perror("Connection closed by client.");
+	return(0);
+      }
+      st->pktCount+=ntohs(sh->nopkts);
+      if(st->bufferSize==0) {
+	st->expSeqnr=ntohl(sh->sequencenr)+1;
+	st->FH.version.minor=ntohs(sh->version.minor);
+	st->FH.version.major=ntohs(sh->version.major);
+      } else {
+	if(st->expSeqnr!=ntohl(sh->sequencenr)){
+	  printf("Missmatch of sequence numbers. Expeced %ld got %d\n",st->expSeqnr, ntohl(sh->sequencenr));
+	  st->expSeqnr=ntohl(sh->sequencenr);
+	} 
+	st->expSeqnr++;
+	if(st->expSeqnr>=0xFFFF){
+	  st->expSeqnr=0;
+	}
+	
+      }
+      memcpy(st->buffer+st->bufferSize, rBuffer+sizeof(struct sendhead), readBytes-sizeof(struct ethhdr)-sizeof(struct sendhead));
+      st->bufferSize+=(readBytes-sizeof(struct sendhead));
+      //	    printf("Buffer Size = %d / %d \n",st->bufferSize, buffLen);
+      //	      printf("sequenceNr = %04x\nst->readPos=%d\n",ntohs(sh->sequencenr),st->readPos);
+      if(ntohs(sh->flush)==1){
+	printf("Indicataion of termination from sender.. %d/%d\n", readBytes, st->if_mtu);
+	st->flushed=1;
+	break;//Break the while loop.
+      }
+    }
+    st->readPos=0;
+    printf("Initial read complete.\n");
+    break;
+  case PROTOCOL_ETHERNET_MULTICAST://ETHERNET
+  case PROTOCOL_LOCAL_FILE:
+    if ( st->fill_buffer(st, buffLen) < 0 ){
+      fprintf(stderr, "Failed to read from stream: %s", strerror(errno));
+      return 0;
+    }
+    break;
+  }
+  
+  return 1;
+}
+
+int read_post(struct stream *myStream, char **data, struct filter *my_Filter){
   struct sockaddr from;
   struct cap_header *cp;
 
@@ -49,101 +154,8 @@ int read_post(struct stream *myStream, char **data, struct filter *my_Filter){
   do{
     skip_counter++;
     if(myStream->bufferSize==0){// Initial or last read?
-      printf("Initial read.\n");
-
-      if( myStream->flushed==1 ){
-	printf("EOF stream reached.\n");
-	return(0);
-      }
-
-      switch(myStream->type){
-	case PROTOCOL_TCP_UNICAST://TCP
-	  myStream->bufferSize=0;
-	  bzero(rBuffer,buffLen);
-	  myStream->pktCount=0;
-	  
-	  while(myStream->bufferSize<7410){ // This equals approx 5 packets each of 
-//	    printf("ETH read from %d, to %p max %d bytes, from socket %p\n",myStream->mySocket, myStream->buffer, buffLen,&from);
-	    readBytes=recvfrom(myStream->mySocket, myStream->buffer, buffLen, 0, &from, (socklen_t*)&from);
-
-	    if(readBytes<0){
-	      perror("Cannot receive Net stream data.");
-	      return(0);
-	    }
-	    if(readBytes==0){
-	      perror("Connection closed by client.");
-	      myStream->flushed=1;
-	      myStream->readPos=0;
-	      break;
-	    }
-
-	    myStream->bufferSize+=readBytes;
-//	    printf("Buffer Size = %d / %d \n",myStream->bufferSize, buffLen);
-//	      printf("sequenceNr = %04x\nmyStream->readPos=%d\n",ntohs(sh->sequencenr),myStream->readPos);
-	    if(ntohs(sh->flush)==1){
-	      printf("Indicataion of termination from sender.. %d/%d\n", readBytes, myStream->if_mtu);
-	      myStream->flushed=1;
-	      break;//Break the while loop.
-	    }
-	  }
-	  myStream->readPos=0;
-	  printf("Initial read complete.\n");
-
-	  break;
-	case PROTOCOL_UDP_MULTICAST://UDP
-	  myStream->bufferSize=0;
-	  bzero(rBuffer,buffLen);
-	  myStream->pktCount=0;
-	  
-	  
-	  while(myStream->bufferSize<7410){ // This equals approx 5 packets each of 
-//	    printf("ETH read from %d, to %p max %d bytes, from socket %p\n",myStream->mySocket, myStream->buffer, buffLen,&from);
-	    readBytes=recvfrom(myStream->mySocket, rBuffer, buffLen, 0, &from, (socklen_t*)&from);
-
-	    if(readBytes<0){
-	      perror("Cannot receive Net stream data.");
-	      return(0);
-	    }
-	    if(readBytes==0){
-	      perror("Connection closed by client.");
-	      return(0);
-	    }
-	    myStream->pktCount+=ntohs(sh->nopkts);
-	    if(myStream->bufferSize==0) {
-	      myStream->expSeqnr=ntohl(sh->sequencenr)+1;
-	      myStream->FH.version.minor=ntohs(sh->version.minor);
-	      myStream->FH.version.major=ntohs(sh->version.major);
-	    } else {
-	      if(myStream->expSeqnr!=ntohl(sh->sequencenr)){
-		printf("Missmatch of sequence numbers. Expeced %ld got %d\n",myStream->expSeqnr, ntohl(sh->sequencenr));
-		myStream->expSeqnr=ntohl(sh->sequencenr);
-	      } 
-	      myStream->expSeqnr++;
-	      if(myStream->expSeqnr>=0xFFFF){
-		myStream->expSeqnr=0;
-	      }
-	      
-	    }
-	    memcpy(myStream->buffer+myStream->bufferSize, rBuffer+sizeof(struct sendhead), readBytes-sizeof(struct ethhdr)-sizeof(struct sendhead));
-	    myStream->bufferSize+=(readBytes-sizeof(struct sendhead));
-//	    printf("Buffer Size = %d / %d \n",myStream->bufferSize, buffLen);
-//	      printf("sequenceNr = %04x\nmyStream->readPos=%d\n",ntohs(sh->sequencenr),myStream->readPos);
-	    if(ntohs(sh->flush)==1){
-	      printf("Indicataion of termination from sender.. %d/%d\n", readBytes, myStream->if_mtu);
-	      myStream->flushed=1;
-	      break;//Break the while loop.
-	    }
-	  }
-	  myStream->readPos=0;
-	  printf("Initial read complete.\n");
-	  break;
-	case PROTOCOL_ETHERNET_MULTICAST://ETHERNET
-	case PROTOCOL_LOCAL_FILE:
-	  if ( myStream->fill_buffer(myStream, buffLen) < 0 ){
-	    fprintf(stderr, "Failed to read from stream: %s", strerror(errno));
-	    return 0;
-	  }
-	  break;
+      if ( initial_read(myStream, sh) == 0 ){
+	return 0; /* error */
       }
     } else {
       // We have some data in the buffer.
