@@ -108,7 +108,7 @@ int stream_ethernet_init(struct stream* st, const char* address, const char* ifa
 
   assert(st);
   assert(address);
-  assert(nic);
+  assert(iface);
 
   /* store the iface name */
   strncpy(ifr.ifr_name, iface, IFNAMSIZ);
@@ -161,7 +161,7 @@ int stream_ethernet_init(struct stream* st, const char* address, const char* ifa
   printf("Ethernet Multicast\nEthernet.type=%04X\nEthernet.dst=%02X:%02X:%02X:%02X:%02X:%02X\nInterface=%s (%d)\n", LLPROTO
 	 ,mcast.mr_address[0], mcast.mr_address[1], mcast.mr_address[2]
 	 ,mcast.mr_address[3], mcast.mr_address[4], mcast.mr_address[5]
-	 ,nic, mcast.mr_ifindex);
+	 ,iface, mcast.mr_ifindex);
 #endif
   
   st->address = myaddress; /* take ownership of memory */
