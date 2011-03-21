@@ -154,7 +154,8 @@ int read_post(struct stream *myStream, char **data, struct filter *my_Filter){
   do {
     skip_counter++;
 
-    if( myStream->bufferSize==0 ){// Initial or last read?
+    /* bufferSize tells how much data there is available in the buffer */
+    if( myStream->bufferSize == 0 ){
       if ( initial_read(myStream, sh) == 0 ){
 	return 0; /* error */
       }
@@ -163,7 +164,10 @@ int read_post(struct stream *myStream, char **data, struct filter *my_Filter){
 
     // We have some data in the buffer.
     cp=(struct cap_header*)(myStream->buffer+myStream->readPos);
-    //      printf("readPos = %d \t cp->nic: %s, cp->caplen: %d,  cp->len: %d\n", myStream->readPos, cp->nic, cp->caplen, cp->len);
+#ifdef DEBUG
+    printf("readPos = %d \t cp->nic: %s, cp->caplen: %d,  cp->len: %d\n", myStream->readPos, cp->nic, cp->caplen, cp->len);
+#endif /* DEBUG */
+
     if( (cp->caplen+myStream->readPos+sizeof(struct cap_header))<=myStream->bufferSize ) {
       // And we can simply move the pointer forward.
       myStream->readPos+=(cp->caplen+sizeof(struct cap_header));
