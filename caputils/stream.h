@@ -6,11 +6,10 @@ struct stream;
 
 /**
  * Fill the stream buffer.
- * @param len Requested amount of bytes to read.
  * @return Number of bytes actually read, zero if there is nothing more to read
  *         and negative on errors.
  */
-typedef int (*fill_buffer_callback)(struct stream* st, size_t len);
+typedef int (*fill_buffer_callback)(struct stream* st);
 
 /**
  * Stream destructor.

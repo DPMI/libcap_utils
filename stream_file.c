@@ -8,14 +8,29 @@
 #include <string.h>
 #include "caputils/caputils.h"
 
-static int stream_file_fillbuffer(struct stream* st, size_t len){
+static int stream_file_fillbuffer(struct stream* st){
   assert(st);
   assert(st->myFile);
 
-  int readBytes = fread(st->buffer, 1, len, st->myFile);
+  size_t available = buffLen;
+  size_t offset = 0;
+
+  /* copy old content */
+  if ( st->readPos > 0 ){
+    size_t bytes = st->bufferSize - st->readPos;
+    memmove(st->buffer, st->buffer + st->readPos, bytes); /* move content */
+    memset(st->buffer + bytes, 0, buffLen-bytes); /* reset rest */
+    st->bufferSize = bytes;
+    st->readPos = 0;
+    available = buffLen - bytes;
+    offset = bytes;
+  }
+
+  char* dst = st->buffer + offset;
+  int readBytes = fread(dst, 1, available, st->myFile);
 
   /* check if an error occured, EOF is not considered an error. */
-  if ( readBytes < len && ferror(st->myFile) > 0 ){
+  if ( readBytes < available && ferror(st->myFile) > 0 ){
     return -1;
   }
 
