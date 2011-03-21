@@ -14,7 +14,10 @@ AM_DISABLE_STATIC
 LT_INIT
 
 AC_ARG_ENABLE([debug],
-	[AS_HELP_STRING([--enable-debug], [will print debugging information during runtime @<:@default=disabled@:>@])],
+	[AS_HELP_STRING([--enable-debug], [will print debugging information during runtime @<:@default=disabled@:>@])]
+)
+
+AS_IF([test "x$enable_debug" != "xno"],
 	[AC_DEFINE([DEBUG])],
 	[AC_DEFINE([NDEBUG])]
 )
