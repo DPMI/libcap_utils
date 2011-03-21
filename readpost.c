@@ -62,7 +62,6 @@ int fill_buffer(struct stream* st){
 }
 
 int read_post(struct stream *myStream, char **data, struct filter *my_Filter){
-  struct cap_header *cp;
   int filterStatus=0;
   int skip_counter=-1;
 
@@ -81,7 +80,7 @@ int read_post(struct stream *myStream, char **data, struct filter *my_Filter){
     }
 
     // We have some data in the buffer.
-    cp=(struct cap_header*)(myStream->buffer + myStream->readPos);
+    struct cap_header* cp = (struct cap_header*)(myStream->buffer + myStream->readPos);
 #ifdef DEBUG
     fprintf(stderr, "readPos = %d \t cp->nic: %s, cp->caplen: %d,  cp->len: %d\n", myStream->readPos, cp->nic, cp->caplen, cp->len);
 #endif /* DEBUG */
