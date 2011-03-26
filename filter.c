@@ -50,7 +50,7 @@ int checkFilter(char *pkt, const struct filter* theFilter){
   struct tcphdr *tcp_hdr;
   struct udphdr *udp_hdr;
   int match=1;
-  int VLAN_PRESENT=0;
+  size_t vlan_offset = 0;
   int packetLength=0;
 
   if(theFilter==0){
@@ -150,12 +150,12 @@ int checkFilter(char *pkt, const struct filter* theFilter){
   if((packetLength>=14)){
     eth_hdr=(struct ethhdr*)(pkt+sizeof(cap_head));
     if(packetLength>=14 && ntohs(eth_hdr->h_proto)==0x8100)
-      VLAN_PRESENT=4;
+      vlan_offset=4;
     else
-      VLAN_PRESENT=0;
+      vlan_offset=0;
   }
 //filter on vlan
-  if((packetLength>=14)&&(VLAN_PRESENT==4)&&(theFilter->index&256)&&(match==1)){
+  if((packetLength>=14)&&(vlan_offset==4)&&(theFilter->index&256)&&(match==1)){
     vlan_hdr=(struct ether_vlan_header*)(pkt+sizeof(cap_head));
     if(!((theFilter->vlan)==(ntohs(vlan_hdr->vlan_tci)&theFilter->vlan_mask)))
       return(0);
@@ -165,7 +165,7 @@ int checkFilter(char *pkt, const struct filter* theFilter){
   
 //filter on ethertype
   if((packetLength>=14)&&(theFilter->index&128)&&(match==1)) {
-    eth_hdr=(struct ethhdr*)(pkt+sizeof(cap_head)+VLAN_PRESENT);
+    eth_hdr=(struct ethhdr*)(pkt+sizeof(cap_head)+vlan_offset);
     if(!(theFilter->eth_type==(ntohs(eth_hdr->h_proto)&theFilter->eth_type_mask)))
       return(0);
     else
@@ -174,7 +174,7 @@ int checkFilter(char *pkt, const struct filter* theFilter){
 
 //filter on ethernet source
   if((packetLength>=14)&&(theFilter->index&64)&&(match==1)){
-   eth_hdr=(struct ethhdr*)(pkt+sizeof(cap_head)+VLAN_PRESENT);
+   eth_hdr=(struct ethhdr*)(pkt+sizeof(cap_head)+vlan_offset);
    if(matchEth(theFilter->eth_src,theFilter->eth_src_mask,eth_hdr->h_source)==0)
      return(0);
     else
@@ -182,7 +182,7 @@ int checkFilter(char *pkt, const struct filter* theFilter){
   }
 //filter on ethernet destination
   if((theFilter->index&32)&&(match==1)){
-   eth_hdr=(struct ethhdr*)(pkt+sizeof(cap_head)+VLAN_PRESENT);
+   eth_hdr=(struct ethhdr*)(pkt+sizeof(cap_head)+vlan_offset);
    if(matchEth(theFilter->eth_src,theFilter->eth_dst_mask, eth_hdr->h_dest)==0)
       return(0);
     else
@@ -191,7 +191,7 @@ int checkFilter(char *pkt, const struct filter* theFilter){
 
 //filter on ip protocol
   if((packetLength>=34)&&(theFilter->index&16)&&(match==1)) {
-    ip_hdr=(struct ip*)(pkt+sizeof(cap_head)+sizeof(struct ethhdr)+VLAN_PRESENT);
+    ip_hdr=(struct ip*)(pkt+sizeof(cap_head)+sizeof(struct ethhdr)+vlan_offset);
 //    printf("pkt.ip.proto = %d <> %d theFilter.ip_proto \n", ip_hdr->ip_p,theFilter->ip_proto);
     if(!(theFilter->ip_proto==ip_hdr->ip_p))
       return(0);
@@ -200,7 +200,7 @@ int checkFilter(char *pkt, const struct filter* theFilter){
   }
 //filter on ip.source
   if((packetLength>=34)&&(theFilter->index&8)&&(match==1)) {
-    ip_hdr=(struct ip*)(pkt+sizeof(cap_head)+sizeof(struct ethhdr)+VLAN_PRESENT);
+    ip_hdr=(struct ip*)(pkt+sizeof(cap_head)+sizeof(struct ethhdr)+vlan_offset);
     if(!((ip_hdr->ip_src.s_addr&inet_addr(theFilter->ip_src_mask))==inet_addr(theFilter->ip_src)))
       return(0);
     else
@@ -208,7 +208,7 @@ int checkFilter(char *pkt, const struct filter* theFilter){
   }
 //filter on destination
   if(((packetLength>=34)&&theFilter->index&4)&&(match==1)) {
-    ip_hdr=(struct ip*)(pkt+sizeof(cap_head)+sizeof(struct ethhdr)+VLAN_PRESENT);
+    ip_hdr=(struct ip*)(pkt+sizeof(cap_head)+sizeof(struct ethhdr)+vlan_offset);
     if(!((ip_hdr->ip_dst.s_addr&inet_addr(theFilter->ip_dst_mask))==inet_addr(theFilter->ip_dst)))
       return(0);
     else
@@ -216,16 +216,16 @@ int checkFilter(char *pkt, const struct filter* theFilter){
   }
 //filter on source port
   if((packetLength>=42)&&(theFilter->index&2)&&(match==1)) {
-    ip_hdr=(struct ip*)(pkt+sizeof(cap_head)+sizeof(struct ethhdr)+VLAN_PRESENT);
+    ip_hdr=(struct ip*)(pkt+sizeof(cap_head)+sizeof(struct ethhdr)+vlan_offset);
     if(IPPROTO_UDP==ip_hdr->ip_p) {
-      udp_hdr=(struct udphdr*)(pkt+sizeof(cap_head)+sizeof(struct ethhdr)+4*(ip_hdr->ip_hl)+VLAN_PRESENT);
+      udp_hdr=(struct udphdr*)(pkt+sizeof(cap_head)+sizeof(struct ethhdr)+4*(ip_hdr->ip_hl)+vlan_offset);
       if(!(theFilter->tp_sport==(ntohs(udp_hdr->source)&theFilter->tp_sport_mask))) {
 	return(0);
       } else{
 	match*=1;
       }
     } else if(IPPROTO_TCP==ip_hdr->ip_p) {
-      tcp_hdr=(struct tcphdr*)(pkt+sizeof(cap_head)+sizeof(struct ethhdr)+4*(ip_hdr->ip_hl)+VLAN_PRESENT);
+      tcp_hdr=(struct tcphdr*)(pkt+sizeof(cap_head)+sizeof(struct ethhdr)+4*(ip_hdr->ip_hl)+vlan_offset);
       if(!(theFilter->tp_sport==(ntohs(tcp_hdr->source)&theFilter->tp_sport_mask))) {
 	return(0);
       } else {
@@ -237,16 +237,16 @@ int checkFilter(char *pkt, const struct filter* theFilter){
   }
 //filter on detination port
   if((packetLength>=42)&&(theFilter->index&1)&&(match==1)) {
-    ip_hdr=(struct ip*)(pkt+sizeof(cap_head)+sizeof(struct ethhdr)+VLAN_PRESENT);
+    ip_hdr=(struct ip*)(pkt+sizeof(cap_head)+sizeof(struct ethhdr)+vlan_offset);
     if(IPPROTO_UDP==ip_hdr->ip_p) {
-      udp_hdr=(struct udphdr*)(pkt+sizeof(cap_head)+sizeof(struct ethhdr)+4*(ip_hdr->ip_hl)+VLAN_PRESENT);
+      udp_hdr=(struct udphdr*)(pkt+sizeof(cap_head)+sizeof(struct ethhdr)+4*(ip_hdr->ip_hl)+vlan_offset);
       if(!(theFilter->tp_dport==(ntohs(udp_hdr->dest)&theFilter->tp_dport_mask))){
 	return(0);
       } else {
 	match*=1;
       }
     } else if(IPPROTO_TCP==ip_hdr->ip_p) {
-      tcp_hdr=(struct tcphdr*)(pkt+sizeof(cap_head)+sizeof(struct ethhdr)+4*(ip_hdr->ip_hl)+VLAN_PRESENT);
+      tcp_hdr=(struct tcphdr*)(pkt+sizeof(cap_head)+sizeof(struct ethhdr)+4*(ip_hdr->ip_hl)+vlan_offset);
       if(!(theFilter->tp_dport==(ntohs(tcp_hdr->dest)&theFilter->tp_dport_mask))){
 	return(0);
       } else {
