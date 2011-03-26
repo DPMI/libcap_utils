@@ -26,7 +26,7 @@
 #include <netinet/udp.h>
 #include <netinet/tcp.h>
 
-static int matchEth(const char desired[6], const char mask[6], const char net[6]){
+static int matchEth(const unsigned char desired[6], const unsigned char mask[6], const unsigned char net[6]){
   for ( int i=0; i<6; i++ ){
     if((net[i]&mask[i])!=desired[i]){
        return 0;
