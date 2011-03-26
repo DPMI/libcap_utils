@@ -19,6 +19,7 @@
   The function returns 1 until the file ends and a 0 is returned.
  ***************************************************************************/
 #include "caputils/caputils.h"
+#include "caputils_int.h"
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
@@ -107,7 +108,7 @@ int read_post(struct stream *myStream, char **data, const struct filter *my_Filt
     *data = myStream->buffer + myStream->readPos;
     myStream->readPos += packet_size;
 
-    filterStatus=checkFilter((myStream->buffer+myStream->readPos),my_Filter);
+    filterStatus = checkFilter((myStream->buffer+myStream->readPos), my_Filter);
     //    printf("[%d]", skip_counter);
   } while(filterStatus==0);
   //  printf("Skipped %d packets.\n",skip_counter);

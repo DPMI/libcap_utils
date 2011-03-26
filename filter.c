@@ -40,7 +40,7 @@ int matchEth(char desired[6],char mask[6], char net[6]){
 
 
 
-int checkFilter(char *pkt, struct filter* theFilter){
+int checkFilter(char *pkt, const struct filter* theFilter){
 /*
   printf("f:theFilter        = %p \n", theFilter);
   if(theFilter!=NULL){

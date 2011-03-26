@@ -175,7 +175,6 @@ int write_post(struct stream* myStream, u_char* data, int size);
 int read_post(struct stream* st, char** data, const struct filter*filter);
 
 struct filter* createfilter(int argc, char** argv);
-int checkFilter(char* pkt, struct filter* theFilter);
 
 int close_cap_stream(int *SD);
 
