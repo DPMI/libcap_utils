@@ -146,13 +146,33 @@ int timecmp(timepico *ts1, timepico *ts2);
 //Converts an ASCII representation of an ethernet address to char[6]
 int eth_aton(char *dest, const char *org);
 
-int openstream(struct stream* myStream,char *address, int protocol, char *nic, int port);
+/**
+ * Open an existing stream.
+ */
+int openstream(struct stream* myStream, const char* address, int protocol, const char* nic, int port);
+
+/**
+ * Create a new stream.
+ */
+int createstream(struct stream* myStream, const char *address, int protocol, const char* nic);
+
+/**
+ * Close stream.
+ */
 int closestream(struct stream* myStream);
-int createstream(struct stream* myStream,char *address, int protocol, char *nic);
 
-
+/**
+ * Write a captured frame to a stream.
+ */
 int write_post(struct stream* myStream, u_char* data, int size);
-int read_post(struct stream* myStream, char** data, const struct filter *myFilter);
+
+/**
+ * Read the next matching frame from a stream.
+ * @param st Stream to read from
+ * @param data Returns a pointer to the internal buffer for reading the frame.
+ * @param filter Filter to match frames with.
+ */
+int read_post(struct stream* st, char** data, const struct filter*filter);
 
 struct filter* createfilter(int argc, char** argv);
 int checkFilter(char* pkt, struct filter* theFilter);

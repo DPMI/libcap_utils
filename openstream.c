@@ -107,7 +107,7 @@ static int stream_init(struct stream* st, int protocol, int port){
   return 0;
 }
 
-int openstream(struct stream *myStream,char *address, int protocol, char *nic, int port){
+int openstream(struct stream *myStream, const char* address, int protocol, const char* nic, int port){
   int ret = 0;
 
   /* Initialize the structure */

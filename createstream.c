@@ -55,7 +55,7 @@ OUTPUT:
 
 
 
-int createstream(struct stream *myStream,char *address, int protocol, char *nic){
+int createstream(struct stream* myStream, const char *address, int protocol, const char *nic){
   struct ifreq ifr;
   int ifindex=0;
   int socket_descriptor=0;
