@@ -36,14 +36,14 @@ static int matchEth(const char desired[6], const char mask[6], const char net[6]
   return 1;
 }
 
-int checkFilter(char *pkt, const struct filter* theFilter){
+int checkFilter(const char *pkt, const struct filter* theFilter){
 /*
   printf("f:theFilter        = %p \n", theFilter);
   if(theFilter!=NULL){
     printf("f:theFilter->index = %u \n",theFilter->index);
   }
 */
-  struct cap_header *head;
+  const struct cap_header* head = (const struct cap_header*)pkt;
   struct ether_vlan_header *vlan_hdr;
   struct ethhdr *eth_hdr;
   struct ip *ip_hdr;
@@ -65,10 +65,6 @@ int checkFilter(char *pkt, const struct filter* theFilter){
     return(1);
   }
 
-  
-
-
-  head=(cap_head*)pkt;
   packetLength=head->caplen;
 /* A length of 
    14 allows us to work on the Ethernet header 
