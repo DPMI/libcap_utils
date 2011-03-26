@@ -141,7 +141,7 @@ timepico timeval_to_timepico(struct timeval);
 timepico timespec_to_timepico(struct timespec);
 
 //compares two struct timepico (ts1<ts2=-1, ts1>ts2=1, ts1==ts2=0)
-int timecmp(timepico *ts1, timepico *ts2);
+int timecmp(const timepico *ts1, const timepico *ts2);
 
 //Converts an ASCII representation of an ethernet address to char[6]
 int eth_aton(char *dest, const char *org);

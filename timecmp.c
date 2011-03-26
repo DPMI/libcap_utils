@@ -20,13 +20,8 @@
 
 #include "caputils/caputils.h"
 
-//#define debug
-int timecmp(timepico *ts1, timepico *ts2)
+int timecmp(const timepico *ts1, const timepico *ts2)
 {
-#ifdef DEBUG
-  printf("\nts1->tv_sec=%d ts1->tv_psec %012llu \n",ts1->tv_sec,ts1->tv_psec); 
-  printf("ts2->tv_sec=%d ts2->tv_psec %012llu \n",ts2->tv_sec,ts2->tv_psec); 
-#endif  
   if (ts1->tv_sec < ts2->tv_sec){ //if ts1 is before ts2
     return -1;
   }
