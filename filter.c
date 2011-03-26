@@ -26,19 +26,15 @@
 #include <netinet/udp.h>
 #include <netinet/tcp.h>
 
-int matchEth(char desired[6],char mask[6], char net[6]){
-  int i;
-  for(i=0;i<6;i++){
+static int matchEth(const char desired[6], const char mask[6], const char net[6]){
+  for ( int i=0; i<6; i++ ){
     if((net[i]&mask[i])!=desired[i]){
-       break;
+       return 0;
     }
   }
-  if(i==6)
-    return(1);
-  return(0);
+
+  return 1;
 }
-
-
 
 int checkFilter(char *pkt, const struct filter* theFilter){
 /*
