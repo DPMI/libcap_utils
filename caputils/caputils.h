@@ -152,7 +152,7 @@ int createstream(struct stream* myStream,char *address, int protocol, char *nic)
 
 
 int write_post(struct stream* myStream, u_char* data, int size);
-int read_post(struct stream* myStream, char** data,struct filter *myFilter);
+int read_post(struct stream* myStream, char** data, const struct filter *myFilter);
 
 struct filter* createfilter(int argc, char** argv);
 int checkFilter(char* pkt, struct filter* theFilter);

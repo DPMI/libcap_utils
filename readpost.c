@@ -61,7 +61,7 @@ int fill_buffer(struct stream* st){
   return 1;
 }
 
-int read_post(struct stream *myStream, char **data, struct filter *my_Filter){
+int read_post(struct stream *myStream, char **data, const struct filter *my_Filter){
   int filterStatus=0;
   int skip_counter=-1;
 
