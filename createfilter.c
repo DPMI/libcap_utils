@@ -19,6 +19,8 @@
  call and creates a filter to be used in all programs based on cap_utils.
  ***************************************************************************/
 #include "caputils/caputils.h"
+#include "caputils_int.h"
+
 #include <unistd.h>
 #include <time.h>
 #include <stdlib.h>
@@ -232,17 +234,12 @@ struct filter* createfilter(int argc, char** argv){
 	  myfilter->index+=64;
 	  maskstring=index(argv[i+1],'/');
 	  if(maskstring==NULL){// No mask was given set default. 
-	    myfilter->eth_src_mask[0]=0xFF;
-	    myfilter->eth_src_mask[1]=0xFF;
-	    myfilter->eth_src_mask[2]=0xFF;
-	    myfilter->eth_src_mask[3]=0xFF;
-	    myfilter->eth_src_mask[4]=0xFF;
-	    myfilter->eth_src_mask[5]=0xFF;
+	    eth_aton(&myfilter->eth_src_mask,"FF:FF:FF:FF:FF:FF");
 	  } else {
-	    eth_aton(myfilter->eth_src_mask,(maskstring+1));
+	    eth_aton(&myfilter->eth_src_mask,(maskstring+1));
 	    *(maskstring)='\0';
 	  }
-	  eth_aton(myfilter->eth_src,argv[i+1]);
+	  eth_aton(&myfilter->eth_src, argv[i+1]);
 #ifdef DEBUG
 	  printf("eth.src = %02x:%02x:%02x:%02x:%02x:%02x: / %02x:%02x:%02x:%02x:%02x:%02x\n"
 		 ,myfilter->eth_src[0],myfilter->eth_src[1],myfilter->eth_src[2]
@@ -257,17 +254,12 @@ struct filter* createfilter(int argc, char** argv){
 	  myfilter->index+=32;
 	  maskstring=index(argv[i+1],'/');
 	  if(maskstring==NULL){// No mask was given set default. 
-	    myfilter->eth_dst_mask[0]=0xFF;
-	    myfilter->eth_dst_mask[1]=0xFF;
-	    myfilter->eth_dst_mask[2]=0xFF;
-	    myfilter->eth_dst_mask[3]=0xFF;
-	    myfilter->eth_dst_mask[4]=0xFF;
-	    myfilter->eth_dst_mask[5]=0xFF;
+	    eth_aton(&myfilter->eth_dst_mask, "FF:FF:FF:FF:FF:FF");
 	  } else {
-	    eth_aton(myfilter->eth_dst_mask,(maskstring+1));
+	    eth_aton(&myfilter->eth_dst_mask, (maskstring+1));
 	    *(maskstring)='\0';
 	  }
-	  eth_aton(myfilter->eth_dst,argv[i+1]);
+	  eth_aton(&myfilter->eth_dst, argv[i+1]);
 #ifdef DEBUG
 	  printf("eth.dst = %02x:%02x:%02x:%02x:%02x:%02x: / %02x:%02x:%02x:%02x:%02x:%02x\n"
 		 ,myfilter->eth_dst[0],myfilter->eth_dst[1],myfilter->eth_dst[2]

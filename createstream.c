@@ -37,6 +37,7 @@ OUTPUT:
 */
 
 #include "caputils/caputils.h"
+#include "caputils_int.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -60,10 +61,12 @@ int createstream(struct stream* myStream, const char *address, int protocol, con
   int ifindex=0;
   int socket_descriptor=0;
   struct sockaddr_in destination;
+  struct ether_addr ethernet_address;
+
   if(nic!=0) {
     strncpy(ifr.ifr_name, nic, IFNAMSIZ);
   }
-  char *myaddress=0;
+
   int i=0;
   /* Initialize the structure */
   myStream->type=protocol;
@@ -137,16 +140,14 @@ int createstream(struct stream* myStream, const char *address, int protocol, con
 	return(0);
       }
       ifindex=ifr.ifr_ifindex;
-      myaddress=(char*)calloc(strlen(address)+1,1);
-      eth_aton(myaddress, address);
+      eth_aton(&ethernet_address, address);
       struct packet_mreq mcast;
       mcast.mr_ifindex = ifindex;
       mcast.mr_type = PACKET_MR_MULTICAST;
       mcast.mr_alen = ETH_ALEN;
-      memcpy(mcast.mr_address, myaddress, ETH_ALEN);
+      memcpy(mcast.mr_address, &ethernet_address, ETH_ALEN);
       if(setsockopt(socket_descriptor, SOL_PACKET, PACKET_ADD_MEMBERSHIP, (void*)&mcast,sizeof(mcast))==-1){
 	perror("Adding multicast address failed..");
-	free(myaddress);
 	return(0);
       }
       struct sockaddr_ll sll;
@@ -154,10 +155,9 @@ int createstream(struct stream* myStream, const char *address, int protocol, con
       sll.sll_ifindex=ifindex;
       sll.sll_protocol=htons(LLPROTO);
       sll.sll_pkttype=PACKET_MULTICAST;
-      memcpy(sll.sll_addr,myaddress,ETH_ALEN);
+      memcpy(sll.sll_addr, &ethernet_address, ETH_ALEN);
       if (bind(socket_descriptor, (struct sockaddr *) &sll, sizeof(sll)) == -1) {
 	perror("Binding to interface.");
-	free(myaddress);
 	return(0);
       }
       printf("Ethernet Multicast\nEthernet.type=%04X\Ethernet.dst=%02X:%02X:%02X:%02X:%02X:%02X\nInterface=%s\n", LLPROTO
@@ -165,8 +165,8 @@ int createstream(struct stream* myStream, const char *address, int protocol, con
 	     ,mcast.mr_address[3], mcast.mr_address[4], mcast.mr_address[5]
 	     ,nic);
 
-      address=(char*)calloc(strlen(address)+1,1);
-      strncpy(myStream->address, myaddress, ETH_ALEN);
+      myStream->address = (char*)malloc(7); /* 6 chars + null terminator */
+      strncpy(myStream->address, (char*)&ethernet_address, ETH_ALEN);
       break;
     case 0:
     default:
@@ -185,7 +185,6 @@ int createstream(struct stream* myStream, const char *address, int protocol, con
       break;
   } 
 
-  free(myaddress);
   myStream->mySocket=socket_descriptor;
   myStream->ifindex=ifindex;
 

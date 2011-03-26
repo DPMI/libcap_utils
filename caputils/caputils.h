@@ -95,8 +95,8 @@ struct filter{
   char nic[8];        			//{512}     if
   uint16_t vlan;                       //{256}     eth.vlan
   uint16_t eth_type;  			//{128}     eth.type
-  unsigned char eth_src[6];             //{64}      eth.src
-  unsigned char eth_dst[6];             //{32}      eth.dst
+  struct ether_addr eth_src;             //{64}      eth.src
+  struct ether_addr eth_dst;             //{32}      eth.dst
   uint8_t ip_proto;  			//{16}      ip.proto
   char ip_src[16];    			//{8}       ip.src
   char ip_dst[16];    			//{4}       ip.dst
@@ -105,8 +105,8 @@ struct filter{
 
   uint16_t vlan_mask;                  //
   uint16_t eth_type_mask;              //
-  unsigned char eth_src_mask[6];        //
-  unsigned char eth_dst_mask[6];        //
+  struct ether_addr eth_src_mask;        //
+  struct ether_addr eth_dst_mask;        //
   char ip_src_mask[16];			//
   char ip_dst_mask[16];			//
   uint16_t tp_sport_mask;              //
@@ -142,9 +142,6 @@ timepico timespec_to_timepico(struct timespec);
 
 //compares two struct timepico (ts1<ts2=-1, ts1>ts2=1, ts1==ts2=0)
 int timecmp(const timepico *ts1, const timepico *ts2);
-
-//Converts an ASCII representation of an ethernet address to char[6]
-int eth_aton(char *dest, const char *org);
 
 /**
  * Open an existing stream.

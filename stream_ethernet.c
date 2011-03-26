@@ -3,6 +3,7 @@
 #endif /* HAVE_CONFIG_H */
 
 #include "caputils/caputils.h"
+#include "caputils_int.h"
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
@@ -132,8 +133,7 @@ int stream_ethernet_init(struct stream* st, const char* address, const char* ifa
   }
   st->if_mtu = ifr.ifr_mtu;
 
-  char* myaddress = (char*)malloc(strlen(address)+1); /* stream takes ownership of memory */
-  eth_aton(myaddress, address);
+  struct ether_addr* myaddress = ether_aton(address);
   mcast.mr_ifindex = st->ifindex;
   mcast.mr_type = PACKET_MR_MULTICAST;
   mcast.mr_alen = ETH_ALEN;
@@ -164,7 +164,6 @@ int stream_ethernet_init(struct stream* st, const char* address, const char* ifa
 	 ,iface, mcast.mr_ifindex);
 #endif
   
-  st->address = myaddress; /* take ownership of memory */
   st->FH.comment_size=0;
   st->comment=0;
 

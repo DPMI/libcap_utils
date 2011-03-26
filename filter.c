@@ -26,9 +26,10 @@
 #include <netinet/udp.h>
 #include <netinet/tcp.h>
 
-static int matchEth(const unsigned char desired[6], const unsigned char mask[6], const unsigned char net[6]){
-  for ( int i=0; i<6; i++ ){
-    if((net[i]&mask[i])!=desired[i]){
+static int matchEth(const struct ether_addr* desired, const struct ether_addr* mask, const uint8_t net[ETH_ALEN]){
+  for ( int i=0; i < ETH_ALEN; i++ ){
+    uint8_t t = (net[i] & mask->ether_addr_octet[i]);
+    if( t != desired->ether_addr_octet[i] ){
        return 0;
     }
   }
@@ -171,7 +172,7 @@ int checkFilter(const char *pkt, const struct filter* theFilter){
 //filter on ethernet source
   if((packetLength>=14)&&(theFilter->index&64)&&(match==1)){
    eth_hdr=(struct ethhdr*)(pkt+sizeof(cap_head)+vlan_offset);
-   if(matchEth(theFilter->eth_src,theFilter->eth_src_mask,eth_hdr->h_source)==0)
+   if(matchEth(&theFilter->eth_src, &theFilter->eth_src_mask, eth_hdr->h_source)==0)
      return(0);
     else
       match*=1;
@@ -179,7 +180,7 @@ int checkFilter(const char *pkt, const struct filter* theFilter){
 //filter on ethernet destination
   if((theFilter->index&32)&&(match==1)){
    eth_hdr=(struct ethhdr*)(pkt+sizeof(cap_head)+vlan_offset);
-   if(matchEth(theFilter->eth_src,theFilter->eth_dst_mask, eth_hdr->h_dest)==0)
+   if(matchEth(&theFilter->eth_src, &theFilter->eth_dst_mask, eth_hdr->h_dest)==0)
       return(0);
     else
       match*=1;

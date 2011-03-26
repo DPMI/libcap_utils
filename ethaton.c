@@ -14,43 +14,23 @@
  *   (at your option) any later version.                                   *
  *                                                                         *
  ***************************************************************************/
-/***************************************************************************
- This function opens a large file (64bits) and reads the fileheader
- described in caputils/caputils.h. the file pointer the points to the first packet.
- Function returns 1 if success and 0 if open failed.
- ***************************************************************************/
-
-/*
-INPUT:
- char *dest, pointer to destination area. 
- char *org, pointer to string containing ethernet address. SYNTAX is 
- XX:XX:XX:XX:XX:XX the ":" can be replaced with any char. BUT something MUST be present!
-OUTPUT:
-  int 0 if fail
-  int 1 if ok.
-*/
 
 #include "caputils/caputils.h"
+#include "caputils_int.h"
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 
-int eth_aton(char *dest, const char *org){
-  char tmp[3];
-  char *ptr;
-  ptr=tmp;
-  tmp[2]='\0';
-  int j,k;
-  j=k=0;
-  int t;
-//  printf("eth_aton:");
-//  printf("src = %s: --> ",org);
-  for(j=0;j<ETH_ALEN;j++){
-    strncpy(tmp,org+k,2);
-    t=(int)strtoul(tmp,NULL,16);
-    *(dest+j)=t;
-    k=k+3;
-//    printf("%02x:",t);
+int eth_aton(struct ether_addr* dst, const char* addr){
+  assert(dst);
+  assert(addr);
+
+  struct ether_addr* tmp = ether_aton(addr);
+  
+  if ( !tmp ){
+    return 0;
   }
-//  printf("\n");
+
+  memcpy(dst, tmp, sizeof(struct ether_addr));
   return 1;
 }
