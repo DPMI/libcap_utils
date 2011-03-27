@@ -9,7 +9,12 @@
 static int packet_flag = 0;
 
 void show_usage(){
-  printf("** show usage **\n");
+  printf("capinfo  caputils-" CAPUTILS_VERSION "\n");
+  printf("(c) 2011 David Sveningsson\n\n");
+  printf("Open a capstream and show information about it.\n");
+  printf("Usage: capinfo [OPTIONS] FILENAME..\n\n");
+  printf("      --packets              Show how many packets it contain.\n");
+  printf("  -h, --help                 Show this help.\n");
 }
 
 int show_info(const char* filename){
