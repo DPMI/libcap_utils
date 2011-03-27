@@ -59,7 +59,25 @@ int stream_file_init(struct stream* st, const char* filename){
   struct file_header* fhptr = &(st->FH);
   int i;
 
-  i = fread(fhptr, 1, sizeof(struct file_header), st->myFile);
+  /* load stream file header */
+  {
+    /* try legacy header first */
+    struct file_header_05 fhleg;
+    fread(&fhleg, 1, sizeof(struct file_header_05), st->myFile);
+
+    if ( fhleg.version.major == 0 && fhleg.version.minor == 5 ){
+      /* legacy header matches, copy it */
+
+      fhptr->comment_size = fhleg.comment_size;
+      fhptr->version.major = 0;
+      fhptr->version.minor = 5;
+      memcpy(fhptr->mpid, fhleg.mpid, 200);
+    } else {
+      /* load new header */
+      fseek(st->myFile, 0L, SEEK_SET);
+      fread(fhptr, 1, sizeof(struct file_header), st->myFile);
+    }
+  }
 
   /* read comment */
   st->comment = (char*)malloc(fhptr->comment_size+1);

@@ -52,17 +52,26 @@ typedef struct picotime timepico;
 // A simple structure used to store a version number. 
 // The number is divided into a major and minor number. 
 struct file_version{
-  uint32_t major;
-  uint32_t minor;
+  uint8_t major;
+  uint8_t minor;
 };
 
 // File header, when a cap file is stored to disk. This header is placed first. 
 // The header has two parts, header and comment. After the comment the frames 
 // are stored. 
 struct file_header{
-  uint32_t comment_size;                     // How large is the comment
+  uint32_t comment_size;                // How large is the comment
   struct file_version version;          // What version was used to store this file
   char mpid[200];                       // Which MP(or MPs) created this file. 
+};
+
+struct file_header_05 {
+  uint32_t comment_size;
+  struct {
+    uint32_t major;
+    uint32_t minor;
+  } version;
+  char mpid[200];
 };
 
 // Capture Header. This header is attached to each packet that we keep, i.e. it matched a filter.
