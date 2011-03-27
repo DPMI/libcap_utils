@@ -1,0 +1,11 @@
+caputils-0.7.0
+--------------
+
+Based on the 0.5 branch.
+
+ * Backwards-compability support
+ * Numerous API-fixes, the API is *NOT* compatable with earlier versions, but there
+   is only minor fixes required.
+ * Numerous bug-fixes, including endianess-fixes.
+ * New tools: capinfo, shows information about capfiles.
+ * Uses autotools and pkg-config
