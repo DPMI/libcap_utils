@@ -1,0 +1,8 @@
+abs_top_srcdir=@abs_top_srcdir@
+abs_top_builddir=@abs_top_builddir@
+
+Name: libcap_utils
+Description: 
+Version: @VERSION@
+Libs: ${abs_top_builddir}/libcap_utils.la
+Cflags: -I${abs_top_srcdir}
