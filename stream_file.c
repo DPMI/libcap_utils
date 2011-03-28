@@ -2,11 +2,12 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
+#include "caputils/caputils.h"
+#include "caputils_int.h"
 #include <assert.h>
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
-#include "caputils/caputils.h"
 
 static int stream_file_fillbuffer(struct stream* st){
   assert(st);
@@ -38,6 +39,20 @@ static int stream_file_fillbuffer(struct stream* st){
   return readBytes;
 }
 
+int load_legacy_05(struct file_header_05* fh, FILE* src){
+  fseek(src, 0L, SEEK_SET);
+  fread(fh, 1, sizeof(struct file_header_05), src);
+
+  return fh->version.major == 0 && fh->version.minor == 5;
+}
+
+int load_legacy_06(struct file_header_06* fh, FILE* src){
+  fseek(src, 0L, SEEK_SET);
+  fread(fh, 1, sizeof(struct file_header_06), src);
+
+  return fh->version.major == 0 && fh->version.minor == 6;
+}
+
 /**
  * Initialize file stream.
  * @return Non-zero on error (see errno(3) for descriptions).
@@ -56,28 +71,37 @@ int stream_file_init(struct stream* st, const char* filename){
     return errno;
   }
 
-  struct file_header* fhptr = &(st->FH);
+  struct file_header_t* fhptr = &(st->FH);
   int i;
 
   /* load stream file header */
-  {
-    /* try legacy header first */
-    struct file_header_05 fhleg;
-    fread(&fhleg, 1, sizeof(struct file_header_05), st->myFile);
+  fread(fhptr, 1, sizeof(struct file_header_t), st->myFile);
 
-    if ( fhleg.version.major == 0 && fhleg.version.minor == 5 ){
-      /* legacy header matches, copy it */
+  if ( fhptr->magic != CAPUTILS_FILE_MAGIC ){
+    /* try loading legacy headers */
 
-      fhptr->comment_size = fhleg.comment_size;
+    struct file_header_05 fhleg05;
+    struct file_header_06 fhleg06;
+
+    if ( load_legacy_05(&fhleg05, st->myFile) ){
+      fhptr->comment_size = fhleg05.comment_size;
       fhptr->version.major = 0;
       fhptr->version.minor = 5;
-      memcpy(fhptr->mpid, fhleg.mpid, 200);
+      fhptr->header_offset = sizeof(struct file_header_05);
+      memcpy(fhptr->mpid, fhleg05.mpid, 200);
+    } else if ( load_legacy_06(&fhleg06, st->myFile) ){
+      fhptr->comment_size = fhleg06.comment_size;
+      fhptr->version.major = 0;
+      fhptr->version.minor = 6;
+      fhptr->header_offset = sizeof(struct file_header_06);
+      memcpy(fhptr->mpid, fhleg06.mpid, 200);
     } else {
-      /* load new header */
-      fseek(st->myFile, 0L, SEEK_SET);
-      fread(fhptr, 1, sizeof(struct file_header), st->myFile);
+      /* @todo need to be able to set more detailed error */
+      return EINVAL;
     }
   }
+
+  fseek(st->myFile, fhptr->header_offset, SEEK_SET);
 
   /* read comment */
   st->comment = (char*)malloc(fhptr->comment_size+1);

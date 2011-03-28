@@ -23,5 +23,6 @@ int eth_aton(struct ether_addr* dst, const char* addr);
  */
 int stream_init(struct stream* st, int protocol, int port);
 
+#define CAPUTILS_FILE_MAGIC 0x8f1ae247c53d9b6e
 
 #endif /* CAPUTILS_INT_H */

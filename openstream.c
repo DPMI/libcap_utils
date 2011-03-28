@@ -60,7 +60,7 @@ OUTPUT:
  * warning to stderr if version mismatch.
  * @return Non-zero if version is valid.
  */
-int is_valid_version(struct file_header* fhptr){
+int is_valid_version(struct file_header_t* fhptr){
   if( fhptr->version.major <= VERSION_MAJOR && fhptr->version.minor <= VERSION_MINOR ) {
     return 1;
   }

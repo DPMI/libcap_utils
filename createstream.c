@@ -76,7 +76,7 @@ int createstream_file(struct stream* st, FILE* file, const char* mpid, const cha
   st->FH.comment_size = strlen(comment);
   strncpy(st->FH.mpid, mpid, 200);
 
-  fwrite(&st->FH, 1, sizeof(struct file_header), st->myFile);
+  fwrite(&st->FH, 1, sizeof(struct file_header_t), st->myFile);
   fwrite(comment, 1, strlen(comment), st->myFile);
 
   return 1;
@@ -197,7 +197,7 @@ int createstream(struct stream* myStream, const char *address, int protocol, con
 	}
 
 	myStream->myFile = file;
-	fwrite(&myStream->FH, 1, sizeof(struct file_header), myStream->myFile);
+	fwrite(&myStream->FH, 1, sizeof(struct file_header_t), myStream->myFile);
 	fwrite(comment, 1, strlen(comment), myStream->myFile);
 	
 	return 1;

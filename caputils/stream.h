@@ -19,7 +19,7 @@ typedef int (*destroy_callback)(struct stream* st);
 // Stream structure, used to manage different types of streams
 //
 //
-struct stream{
+struct stream {
   int type;                             // What type of stream do we have?
                                         // 0, a file
                                         // 1, ethernet multicast
@@ -41,7 +41,7 @@ struct stream{
   int ifindex;                          // 
   int if_mtu;                           // The MTU of the interface reading udp/ethernet multicasts.
 
-  struct file_header FH;                //
+  struct file_header_t FH;                //
   char *comment;                        //
 
   /* Callback functions */
@@ -49,7 +49,7 @@ struct stream{
   destroy_callback destroy;
 };
 
-int is_valid_version(struct file_header* fhptr);
+int is_valid_version(struct file_header_t* fhptr);
 
 int stream_udp_init(struct stream* st, const char* address, int port);
 int stream_tcp_init(struct stream* st, const char* address, int port);
