@@ -96,8 +96,7 @@ int stream_file_init(struct stream* st, const char* filename){
       fhptr->header_offset = sizeof(struct file_header_06);
       memcpy(fhptr->mpid, fhleg06.mpid, 200);
     } else {
-      /* @todo need to be able to set more detailed error */
-      return EINVAL;
+      return ERROR_CAPFILE_INVALID;
     }
   }
 
@@ -107,7 +106,7 @@ int stream_file_init(struct stream* st, const char* filename){
   st->comment = (char*)malloc(fhptr->comment_size+1);
   if ( (i = fread(st->comment, 1, fhptr->comment_size, st->myFile)) < fhptr->comment_size ){
     /** @todo need to be able to set more detailed error */
-    return EINVAL;
+    return ERROR_CAPFILE_TRUNCATED;
   }
   st->comment[i] = 0; /* the null-terminator might not be included in file */
 

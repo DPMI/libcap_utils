@@ -25,4 +25,28 @@ int stream_init(struct stream* st, int protocol, int port);
 
 #define CAPUTILS_FILE_MAGIC 0x8f1ae247c53d9b6e
 
+/**
+ * Error enumerations.
+ * The MSB decides if the codes is a regular errno or if it is a custom error.
+ * 0: errno
+ * 1: custom
+ *
+ * Use caputils_error_string to show error description.
+ *
+ * @note Remember to add the error description to error.c
+ */
+enum {
+  NO_ERROR = 0,
+
+  /* errno codes goes here */
+
+  __UNUSED = 0x80000000,
+
+  /* errors related to capfiles */
+  ERROR_CAPFILE_INVALID,
+  ERROR_CAPFILE_TRUNCATED,
+
+  MAX_ERRORS
+};
+
 #endif /* CAPUTILS_INT_H */

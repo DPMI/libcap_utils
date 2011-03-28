@@ -22,7 +22,7 @@ int show_info(const char* filename){
 
   int ret = openstream(&st, filename, 0, NULL, 0);
   if ( ret != 1 ){
-    fprintf(stderr, "%s: %s\n", filename, strerror(errno));
+    fprintf(stderr, "%s: %s\n", filename, caputils_error_string(errno));
     return ret;
   }
 

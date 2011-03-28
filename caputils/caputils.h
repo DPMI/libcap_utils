@@ -215,4 +215,9 @@ int closefilter(struct filter* filter);
 
 int close_cap_stream(int *SD);
 
+/**
+ * Text representation of error code.
+ */
+const char* caputils_error_string(int code);
+
 #endif /* CAP_UTILS */

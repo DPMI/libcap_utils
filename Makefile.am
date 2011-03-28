@@ -14,9 +14,11 @@ pkgconfig_DATA = cap_utils.pc
 libcap_utils_la_LDFLAGS = -shared -version-info 0:1:0
 libcap_utils_la_CFLAGS = -Wall
 libcap_utils_la_SOURCES = \
+	caputils_int.h \
 	closestream.c \
 	createfilter.c \
 	createstream.c \
+	error.c \
 	ethaton.c \
 	filter.c \
 	openstream.c \
