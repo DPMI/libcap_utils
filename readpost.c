@@ -22,6 +22,7 @@
 #include "caputils_int.h"
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 #include <assert.h>
 #include <arpa/inet.h>
 

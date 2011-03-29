@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#include <errno.h>
 #include <sys/socket.h>
 #include <sys/ioctl.h>
 #include <linux/if_packet.h>

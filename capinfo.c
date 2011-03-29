@@ -5,6 +5,7 @@
 #include "caputils/caputils.h"
 #include <getopt.h>
 #include <string.h>
+#include <errno.h>
 
 static int packet_flag = 0;
 

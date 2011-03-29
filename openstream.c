@@ -41,6 +41,7 @@ OUTPUT:
 #include "caputils_int.h"
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 #include <sys/socket.h>
 #include <sys/ioctl.h>
 #include <features.h>

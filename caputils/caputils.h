@@ -24,11 +24,8 @@
 
 #include <stdint.h>
 #include <stdio.h>
-#include <errno.h>
 #include <net/ethernet.h>
 
-#define LLPROTO 0x0810
-#define LISTENPORT 0x0810
 #define buffLen 10000                   // Buffer size
 
 /* Protocol definitions */

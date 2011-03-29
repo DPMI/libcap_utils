@@ -5,6 +5,7 @@
 #include "caputils/caputils.h"
 #include <assert.h>
 #include <string.h>
+#include <errno.h>
 #include <sys/socket.h>
 #include <sys/ioctl.h>
 #include <net/if.h>
