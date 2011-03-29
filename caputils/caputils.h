@@ -36,14 +36,6 @@ enum protocol_t {
   PROTOCOL_TCP_UNICAST,
 };
 
-struct ether_vlan_header{
-  uint8_t  ether_dhost[ETH_ALEN];  /* destination eth addr */
-  uint8_t  ether_shost[ETH_ALEN];  /* source ether addr    */
-  uint16_t vlan_proto;             /* vlan is present if feild begins with 0x8100 */
-  uint16_t vlan_tci;               /* vlan is present if feild begins with 0x8100 */
-  uint16_t h_proto;                /* Ethernet payload protocol */
-};
-
 /* forward declare */
 struct stream;
 struct filter;
