@@ -3,9 +3,14 @@ ACLOCAL_AMFLAGS = -I m4
 lib_LTLIBRARIES = libcap_utils.la
 bin_PROGRAMS = capinfo
 
-nobase_include_HEADERS = \
+nobase_include_HEADERS =    \
+	caputils/picotime.h \
+	caputils/file.h     \
+	caputils/utils.h    \
+	caputils/capture.h  \
+	caputils/filter.h   \
 	caputils/caputils.h \
-	caputils/stream.h \
+	caputils/stream.h   \
 	caputils/version.h
 
 pkgconfigdir = $(libdir)/pkgconfig

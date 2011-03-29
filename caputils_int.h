@@ -49,4 +49,11 @@ enum {
   MAX_ERRORS
 };
 
+int is_valid_version(struct file_header_t* fhptr);
+
+int stream_udp_init(struct stream* st, const char* address, int port);
+int stream_tcp_init(struct stream* st, const char* address, int port);
+int stream_ethernet_init(struct stream* st, const char* address, const char* iface);
+int stream_file_init(struct stream* st, const char* filename);
+
 #endif /* CAPUTILS_INT_H */

@@ -49,11 +49,40 @@ struct stream {
   destroy_callback destroy;
 };
 
-int is_valid_version(struct file_header_t* fhptr);
+/**
+ * Open an existing stream.
+ * @return 1 if successful.
+ */
+int openstream(struct stream* myStream, const char* address, int protocol, const char* nic, int port);
 
-int stream_udp_init(struct stream* st, const char* address, int port);
-int stream_tcp_init(struct stream* st, const char* address, int port);
-int stream_ethernet_init(struct stream* st, const char* address, const char* iface);
-int stream_file_init(struct stream* st, const char* filename);
+/**
+ * Create a new stream.
+ */
+int createstream(struct stream* myStream, const char *address, int protocol, const char* nic, const char* mpid, const char* comment);
+
+/**
+ * Create a filestream.
+ * @param file A stream open for writing.
+ * @return Zero on failures.
+ */
+int createstream_file(struct stream* st, FILE* file, const char* mpid, const char* comment);
+
+/**
+ * Close stream.
+ */
+int closestream(struct stream* myStream);
+
+/**
+ * Write a captured frame to a stream.
+ */
+int write_post(struct stream* myStream, u_char* data, int size);
+
+/**
+ * Read the next matching frame from a stream.
+ * @param st Stream to read from
+ * @param data Returns a pointer to the internal buffer for reading the frame.
+ * @param filter Filter to match frames with.
+ */
+int read_post(struct stream* st, char** data, const struct filter*filter);
 
 #endif /* CAPUTILS__STREAM_H */
