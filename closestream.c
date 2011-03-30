@@ -23,29 +23,32 @@
 #include <stdlib.h>
 #include <errno.h>
 
-int closestream(struct stream *myStream){
-  errno=0;
-  switch(myStream->type){
-    case 3://TCP
-    case 2://UDP
-    case 1://Ethernet
-      if(close(myStream->mySocket)==-1){
-	perror("Close failed.");
-	return(0);
-      }
-      break;
-    case 0:
-    default:
-      if(fclose(myStream->myFile)==EOF){
-	perror("Close failed.");
-	return(0);
-      }
-      break;
-  }
+int closestream(struct stream* st){
+  return st->destroy ? st->destroy(st) : 0;
 
-  free(myStream->address);
-  free(myStream->comment);
-  free(myStream->filename);
+  /* ret */
+  /* errno=0; */
+  /* switch(myStream->type){ */
+  /*   case 3://TCP */
+  /*   case 2://UDP */
+  /*   case 1://Ethernet */
+  /*     if(close(myStream->mySocket)==-1){ */
+  /* 	perror("Close failed."); */
+  /* 	return(0); */
+  /*     } */
+  /*     break; */
+  /*   case 0: */
+  /*   default: */
+  /*     if(fclose(myStream->myFile)==EOF){ */
+  /* 	perror("Close failed."); */
+  /* 	return(0); */
+  /*     } */
+  /*     break; */
+  /* } */
 
-  return(1);
+  /* free(myStream->address); */
+  /* free(myStream->comment); */
+  /* free(myStream->filename); */
+
+  /* return(1); */
 }

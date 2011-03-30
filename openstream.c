@@ -72,41 +72,22 @@ int is_valid_version(struct file_header_t* fhptr){
   return 0;
 }
 
-int openstream(struct stream *myStream, const char* address, int protocol, const char* nic, int port){
-  int ret = 0;
-
-  /* Initialize the structure */
-  if ( (ret=stream_init(myStream, protocol, port)) != 0 ){
-    errno = ret;
-    return 0;
-  }
-
+int openstream(struct stream** stptr, const char* address, enum protocol_t protocol, const char* nic, int port){
   switch(protocol){
-    case PROTOCOL_TCP_UNICAST:
-      ret = stream_tcp_init(myStream, address, port);
-      break;
+    /* case PROTOCOL_TCP_UNICAST: */
+    /*   return stream_tcp_init(myStream, address, port); */
 
-    case PROTOCOL_UDP_MULTICAST:
-      ret = stream_udp_init(myStream, address, port);
-      break;
+    /* case PROTOCOL_UDP_MULTICAST: */
+    /*   return stream_udp_init(myStream, address, port); */
 
-    case PROTOCOL_ETHERNET_MULTICAST:
-      ret = stream_ethernet_init(myStream, address, nic);
-      break;
+    /* case PROTOCOL_ETHERNET_MULTICAST: */
+    /*   return stream_ethernet_init(myStream, address, nic); */
+
     case PROTOCOL_LOCAL_FILE:
-      ret = stream_file_init(myStream, address);
-      break;
+      return stream_file_open(stptr, address);
 
     default:
       fprintf(stderr, "Unhandled protocol %d\n", protocol);
       return 0;
   }
-
-  /* initialize a file stream */
-  if ( ret != 0 ){
-    errno = ret;
-    return 0;
-  }
-
-  return 1;
 }

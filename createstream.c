@@ -55,157 +55,115 @@ OUTPUT:
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-int createstream_file(struct stream* st, FILE* file, const char* mpid, const char* comment){
-  int ret;
-
-  if ( !file ){
-    errno = EINVAL;
-    return 0;
-  }
-
-  /* Initialize the structure */
-  if ( (ret=stream_init(st, 0, LISTENPORT)) != 0 ){
-    fprintf(stderr, "stream_init failed with code %d\n", ret);
-    return 0;
-  }
-
-  st->myFile = file; 
-  st->comment=strdup(comment);
-  st->FH.version.major=VERSION_MAJOR;
-  st->FH.version.minor=VERSION_MINOR;
-  st->FH.comment_size = strlen(comment);
-  strncpy(st->FH.mpid, mpid, 200);
-
-  fwrite(&st->FH, 1, sizeof(struct file_header_t), st->myFile);
-  fwrite(comment, 1, strlen(comment), st->myFile);
-
-  return 1;
+int createstream_file(struct stream** stptr, FILE* file, const char* filename, const char* mpid, const char* comment){
+  return stream_file_create(stptr, file, filename, mpid, comment);
 }
 
-int createstream(struct stream* myStream, const char *address, int protocol, const char *nic, const char* mpid, const char* comment){
-  struct ifreq ifr;
-  int ifindex=0;
-  int socket_descriptor=0;
-  int ret;
-  struct sockaddr_in destination;
-  struct ether_addr ethernet_address;
+int createstream(struct stream** stptr, const char* address, int protocol, const char* nic, const char* mpid, const char* comment){
+  /* struct ifreq ifr; */
+  /* int ifindex=0; */
+  /* int socket_descriptor=0; */
+  /* int ret; */
+  /* struct sockaddr_in destination; */
+  /* struct ether_addr ethernet_address; */
 
-  if(nic!=0) {
-    strncpy(ifr.ifr_name, nic, IFNAMSIZ);
+  /* if(nic!=0) { */
+  /*   strncpy(ifr.ifr_name, nic, IFNAMSIZ); */
+  /* } */
+
+  switch ( protocol ){
+  case PROTOCOL_LOCAL_FILE:
+    return stream_file_create(stptr, NULL, address, mpid, comment);
+  default:
+    return ERROR_NOT_IMPLEMENTED;
   }
 
-  /* Initialize the structure */
-  if ( (ret=stream_init(myStream, protocol, LISTENPORT)) != 0 ){
-    fprintf(stderr, "stream_init failed with code %d\n", ret);
-    return ret;
-  }
- 
-  myStream->comment=strdup(comment);
-  myStream->FH.version.major=VERSION_MAJOR;
-  myStream->FH.version.minor=VERSION_MINOR;
-  myStream->FH.comment_size = strlen(comment);
-  strncpy(myStream->FH.mpid, mpid, 200);
 
-  printf("Creating a %d stream. \n", protocol);
+  /* switch(protocol){ */
+  /*   case 3: // TCP unicast */
+  /*     socket_descriptor=socket(AF_INET,SOCK_STREAM,IPPROTO_TCP); */
+  /*     if(socket_descriptor<0) { */
+  /* 	perror("Cannot open socket. "); */
+  /* 	return(0); */
+  /*     }      */
+  /*     setsockopt(socket_descriptor,SOL_SOCKET,SO_REUSEADDR,(void*)1,sizeof(int)); */
+  /*     destination.sin_family = AF_INET; */
+  /*     destination.sin_port = htons(LISTENPORT); */
+  /*     inet_aton(address,&destination.sin_addr); */
+  /*     if(connect(socket_descriptor,(struct sockaddr*)&(destination),sizeof(destination))!=0){ */
+  /* 	perror("Cannot connect TCP socket."); */
+  /* 	return(0); */
+  /*     } */
+  /*     printf("Connected."); */
+  /*     address=(char*)calloc(strlen(address)+1,1); */
+  /*     strcpy(st->address,address);  */
+
+  /*     break; */
+
+  /*   case 2: // UDP multi/unicast */
+  /*     socket_descriptor=socket(AF_INET,SOCK_DGRAM,IPPROTO_UDP); */
+  /*     if(socket_descriptor<0) { */
+  /* 	perror("Cannot open socket. "); */
+  /* 	return(0); */
+  /*     }      */
+  /*     setsockopt(socket_descriptor,SOL_SOCKET,SO_REUSEADDR,(void*)1,sizeof(int)); */
+  /*     setsockopt(socket_descriptor,SOL_SOCKET,SO_BROADCAST,(void*)1,sizeof(int)); */
+  /*     destination.sin_family = AF_INET; */
+  /*     inet_aton(address,&destination.sin_addr); */
+  /*     destination.sin_port = htons(LISTENPORT); */
+  /*     if(connect(socket_descriptor,(struct sockaddr*)&destination,sizeof(destination))!=0){ */
+  /* 	perror("Cannot connect UDP socket."); */
+  /* 	return(0); */
+  /*     } */
+  /*     address=(char*)calloc(strlen(address)+1,1); */
+  /*     strcpy(st->address,address); */
+  /*     break; */
+
+  /*   case 1: // Ethernet multicast */
+  /*     socket_descriptor=socket(AF_PACKET, SOCK_RAW, htons(LLPROTO)); */
+  /*     if(socket_descriptor<0) { */
+  /* 	perror("Cannot open socket. "); */
+  /* 	return(0); */
+  /*     } */
+  /*     if(ioctl(socket_descriptor, SIOCGIFINDEX, &ifr) == -1 ){ */
+  /* 	perror("SIOCGIFINDEX error. "); */
+  /* 	return(0); */
+  /*     } */
+  /*     ifindex=ifr.ifr_ifindex; */
+  /*     eth_aton(&ethernet_address, address); */
+  /*     struct packet_mreq mcast; */
+  /*     mcast.mr_ifindex = ifindex; */
+  /*     mcast.mr_type = PACKET_MR_MULTICAST; */
+  /*     mcast.mr_alen = ETH_ALEN; */
+  /*     memcpy(mcast.mr_address, &ethernet_address, ETH_ALEN); */
+  /*     if(setsockopt(socket_descriptor, SOL_PACKET, PACKET_ADD_MEMBERSHIP, (void*)&mcast,sizeof(mcast))==-1){ */
+  /* 	perror("Adding multicast address failed.."); */
+  /* 	return(0); */
+  /*     } */
+  /*     struct sockaddr_ll sll; */
+  /*     sll.sll_family=AF_PACKET; */
+  /*     sll.sll_ifindex=ifindex; */
+  /*     sll.sll_protocol=htons(LLPROTO); */
+  /*     sll.sll_pkttype=PACKET_MULTICAST; */
+  /*     memcpy(sll.sll_addr, &ethernet_address, ETH_ALEN); */
+  /*     if (bind(socket_descriptor, (struct sockaddr *) &sll, sizeof(sll)) == -1) { */
+  /* 	perror("Binding to interface."); */
+  /* 	return(0); */
+  /*     } */
+  /*     printf("Ethernet Multicast\nEthernet.type=%04X\Ethernet.dst=%02X:%02X:%02X:%02X:%02X:%02X\nInterface=%s\n", LLPROTO */
+  /* 	     ,mcast.mr_address[0], mcast.mr_address[1], mcast.mr_address[2] */
+  /* 	     ,mcast.mr_address[3], mcast.mr_address[4], mcast.mr_address[5] */
+  /* 	     ,nic); */
+
+  /*     st->address = (char*)malloc(7); /\* 6 chars + null terminator *\/ */
+  /*     strncpy(st->address, (char*)&ethernet_address, ETH_ALEN); */
+  /*     break; */
+  /*   case 0: */
+  /*   default: */
+  /* }  */
+
+  /* //  st->mySocket=socket_descriptor; */
+  /* //  st->ifindex=ifindex; */
   
-  switch(protocol){
-    case 3: // TCP unicast
-      socket_descriptor=socket(AF_INET,SOCK_STREAM,IPPROTO_TCP);
-      if(socket_descriptor<0) {
-	perror("Cannot open socket. ");
-	return(0);
-      }     
-      setsockopt(socket_descriptor,SOL_SOCKET,SO_REUSEADDR,(void*)1,sizeof(int));
-      destination.sin_family = AF_INET;
-      destination.sin_port = htons(LISTENPORT);
-      inet_aton(address,&destination.sin_addr);
-      if(connect(socket_descriptor,(struct sockaddr*)&(destination),sizeof(destination))!=0){
-	perror("Cannot connect TCP socket.");
-	return(0);
-      }
-      printf("Connected.");
-      address=(char*)calloc(strlen(address)+1,1);
-      strcpy(myStream->address,address); 
-
-      break;
-
-    case 2: // UDP multi/unicast
-      socket_descriptor=socket(AF_INET,SOCK_DGRAM,IPPROTO_UDP);
-      if(socket_descriptor<0) {
-	perror("Cannot open socket. ");
-	return(0);
-      }     
-      setsockopt(socket_descriptor,SOL_SOCKET,SO_REUSEADDR,(void*)1,sizeof(int));
-      setsockopt(socket_descriptor,SOL_SOCKET,SO_BROADCAST,(void*)1,sizeof(int));
-      destination.sin_family = AF_INET;
-      inet_aton(address,&destination.sin_addr);
-      destination.sin_port = htons(LISTENPORT);
-      if(connect(socket_descriptor,(struct sockaddr*)&destination,sizeof(destination))!=0){
-	perror("Cannot connect UDP socket.");
-	return(0);
-      }
-      address=(char*)calloc(strlen(address)+1,1);
-      strcpy(myStream->address,address);
-      break;
-
-    case 1: // Ethernet multicast
-      socket_descriptor=socket(AF_PACKET, SOCK_RAW, htons(LLPROTO));
-      if(socket_descriptor<0) {
-	perror("Cannot open socket. ");
-	return(0);
-      }
-      if(ioctl(socket_descriptor, SIOCGIFINDEX, &ifr) == -1 ){
-	perror("SIOCGIFINDEX error. ");
-	return(0);
-      }
-      ifindex=ifr.ifr_ifindex;
-      eth_aton(&ethernet_address, address);
-      struct packet_mreq mcast;
-      mcast.mr_ifindex = ifindex;
-      mcast.mr_type = PACKET_MR_MULTICAST;
-      mcast.mr_alen = ETH_ALEN;
-      memcpy(mcast.mr_address, &ethernet_address, ETH_ALEN);
-      if(setsockopt(socket_descriptor, SOL_PACKET, PACKET_ADD_MEMBERSHIP, (void*)&mcast,sizeof(mcast))==-1){
-	perror("Adding multicast address failed..");
-	return(0);
-      }
-      struct sockaddr_ll sll;
-      sll.sll_family=AF_PACKET;
-      sll.sll_ifindex=ifindex;
-      sll.sll_protocol=htons(LLPROTO);
-      sll.sll_pkttype=PACKET_MULTICAST;
-      memcpy(sll.sll_addr, &ethernet_address, ETH_ALEN);
-      if (bind(socket_descriptor, (struct sockaddr *) &sll, sizeof(sll)) == -1) {
-	perror("Binding to interface.");
-	return(0);
-      }
-      printf("Ethernet Multicast\nEthernet.type=%04X\Ethernet.dst=%02X:%02X:%02X:%02X:%02X:%02X\nInterface=%s\n", LLPROTO
-	     ,mcast.mr_address[0], mcast.mr_address[1], mcast.mr_address[2]
-	     ,mcast.mr_address[3], mcast.mr_address[4], mcast.mr_address[5]
-	     ,nic);
-
-      myStream->address = (char*)malloc(7); /* 6 chars + null terminator */
-      strncpy(myStream->address, (char*)&ethernet_address, ETH_ALEN);
-      break;
-    case 0:
-    default:
-      {
-	FILE* file = fopen(address, "w");
-	if ( !file ){
-	  errno = EINVAL;
-	  return 0;
-	}
-
-	myStream->myFile = file;
-	fwrite(&myStream->FH, 1, sizeof(struct file_header_t), myStream->myFile);
-	fwrite(comment, 1, strlen(comment), myStream->myFile);
-	
-	return 1;
-      }
-  } 
-
-  myStream->mySocket=socket_descriptor;
-  myStream->ifindex=ifindex;
-  
-  return(1);  
+  /* return(1);   */
 }

@@ -9,34 +9,47 @@
 #include <stdlib.h>
 #include <string.h>
 
-static int stream_file_fillbuffer(struct stream* st){
+struct stream_file {
+  struct stream base;
+  FILE* file;
+  const char* filename;
+};
+
+static int stream_file_fillbuffer(struct stream_file* st){
   assert(st);
-  assert(st->myFile);
+  assert(st->file);
 
   size_t available = buffLen;
   size_t offset = 0;
 
   /* copy old content */
-  if ( st->readPos > 0 ){
-    size_t bytes = st->bufferSize - st->readPos;
-    memmove(st->buffer, st->buffer + st->readPos, bytes); /* move content */
-    memset(st->buffer + bytes, 0, buffLen-bytes); /* reset rest */
-    st->bufferSize = bytes;
-    st->readPos = 0;
+  if ( st->base.readPos > 0 ){
+    size_t bytes = st->base.bufferSize - st->base.readPos;
+    memmove(st->base.buffer, st->base.buffer + st->base.readPos, bytes); /* move content */
+    memset(st->base.buffer + bytes, 0, buffLen-bytes); /* reset rest */
+    st->base.bufferSize = bytes;
+    st->base.readPos = 0;
     available = buffLen - bytes;
     offset = bytes;
   }
 
-  char* dst = st->buffer + offset;
-  int readBytes = fread(dst, 1, available, st->myFile);
+  char* dst = st->base.buffer + offset;
+  int readBytes = fread(dst, 1, available, st->file);
 
   /* check if an error occured, EOF is not considered an error. */
-  if ( readBytes < available && ferror(st->myFile) > 0 ){
+  if ( readBytes < available && ferror(st->file) > 0 ){
     return -1;
   }
 
-  st->bufferSize += readBytes;
+  st->base.bufferSize += readBytes;
   return readBytes;
+}
+
+static int write(struct stream_file* st, u_char* data, size_t size){
+  if( fwrite(data, 1, size, st->file) != size ){
+    return errno; /* @bug must check with feof(3) and ferror(3) */
+  }
+  return 0;
 }
 
 int load_legacy_05(struct file_header_05* fh, FILE* src){
@@ -57,8 +70,10 @@ int load_legacy_06(struct file_header_06* fh, FILE* src){
  * Initialize file stream.
  * @return Non-zero on error (see errno(3) for descriptions).
  */
-int stream_file_init(struct stream* st, const char* filename){
+int stream_file_open(struct stream** stptr, const char* filename){
   assert(st);
+  *stptr = NULL;
+  int ret = 0;
 
   /* validate that filename is set */
   if ( !filename ){
@@ -66,16 +81,24 @@ int stream_file_init(struct stream* st, const char* filename){
   }
 
   /* try to open the file */
-  st->myFile = fopen(filename, "rb");
-  if( !st->myFile ){
+  FILE* fp = fopen(filename, "rb");
+  if( !fp ){
     return errno;
   }
 
-  struct file_header_t* fhptr = &(st->FH);
+  /* Initialize the structure */
+  if ( (ret = stream_alloc(stptr, PROTOCOL_LOCAL_FILE, sizeof(struct stream_file)) != 0) ){
+    return ret;
+  }
+  
+  struct stream_file* st = (struct stream_file*)*stptr;
+  struct file_header_t* fhptr = &(st->base.FH);
   int i;
 
+  st->file = fp;
+
   /* load stream file header */
-  fread(fhptr, 1, sizeof(struct file_header_t), st->myFile);
+  fread(fhptr, 1, sizeof(struct file_header_t), st->file);
 
   if ( fhptr->magic != CAPUTILS_FILE_MAGIC ){
     /* try loading legacy headers */
@@ -83,13 +106,13 @@ int stream_file_init(struct stream* st, const char* filename){
     struct file_header_05 fhleg05;
     struct file_header_06 fhleg06;
 
-    if ( load_legacy_05(&fhleg05, st->myFile) ){
+    if ( load_legacy_05(&fhleg05, st->file) ){
       fhptr->comment_size = fhleg05.comment_size;
       fhptr->version.major = 0;
       fhptr->version.minor = 5;
       fhptr->header_offset = sizeof(struct file_header_05);
       memcpy(fhptr->mpid, fhleg05.mpid, 200);
-    } else if ( load_legacy_06(&fhleg06, st->myFile) ){
+    } else if ( load_legacy_06(&fhleg06, st->file) ){
       fhptr->comment_size = fhleg06.comment_size;
       fhptr->version.major = 0;
       fhptr->version.minor = 6;
@@ -100,26 +123,73 @@ int stream_file_init(struct stream* st, const char* filename){
     }
   }
 
-  fseek(st->myFile, fhptr->header_offset, SEEK_SET);
+  fseek(st->file, fhptr->header_offset, SEEK_SET);
 
   /* read comment */
-  st->comment = (char*)malloc(fhptr->comment_size+1);
-  if ( (i = fread(st->comment, 1, fhptr->comment_size, st->myFile)) < fhptr->comment_size ){
+  st->base.comment = (char*)malloc(fhptr->comment_size+1);
+  if ( (i = fread(st->base.comment, 1, fhptr->comment_size, st->file)) < fhptr->comment_size ){
     /** @todo need to be able to set more detailed error */
     return ERROR_CAPFILE_TRUNCATED;
   }
-  st->comment[i] = 0; /* the null-terminator might not be included in file */
+  st->base.comment[i] = 0; /* the null-terminator might not be included in file */
 
   if ( !is_valid_version(fhptr) ){ /* is_valid_version has side-effects */
     return EINVAL;
   }
 
-  /** @bug I think this memory leaks */
   st->filename = strdup(filename);
   
   /* add callbacks */
-  st->fill_buffer = stream_file_fillbuffer;
-  st->destroy = NULL;
+  st->base.fill_buffer = (fill_buffer_callback)stream_file_fillbuffer;
+  st->base.destroy = NULL;
+  st->base.write = (write_callback)write;
+
+  return 0;
+}
+
+int stream_file_create(struct stream** stptr, FILE* fp, const char* filename, const char* mpid, const char* comment){
+  assert(st);
+  *stptr = NULL;
+  int ret = 0;
+
+  /* validate that filename is set */
+  if ( !filename ){
+    return ENOENT;
+  }
+
+  /* try to open the file */
+  if ( !fp ){
+    fp = fopen(filename, "wb");
+    if( !fp ){
+      return errno;
+    }
+  }
+
+  /* Initialize the structure */
+  if ( (ret = stream_alloc(stptr, PROTOCOL_LOCAL_FILE, sizeof(struct stream_file)) != 0) ){
+    return ret;
+  }
+
+  struct stream_file* st = (struct stream_file*)*stptr;
+  
+  st->file = fp;
+  st->filename = strdup(filename);
+
+  st->base.comment = strdup(comment);
+  st->base.FH.magic = CAPUTILS_FILE_MAGIC;
+  st->base.FH.version.major = VERSION_MAJOR;
+  st->base.FH.version.minor = VERSION_MINOR;
+  st->base.FH.header_offset = sizeof(struct file_header_t);
+  st->base.FH.comment_size = strlen(comment);
+  strncpy(st->base.FH.mpid, mpid, 200);
+
+  fwrite(&st->base.FH, 1, sizeof(struct file_header_t), st->file);
+  fwrite(comment, 1, strlen(comment), st->file);
+
+  /* add callbacks */
+  st->base.fill_buffer = (fill_buffer_callback)stream_file_fillbuffer;
+  st->base.destroy = NULL;
+  st->base.write = (write_callback)write;
 
   return 0;
 }

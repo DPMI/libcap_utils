@@ -20,20 +20,5 @@
 #include "caputils/caputils.h"
 
 int write_post(struct stream *outStream, u_char* data, int size){
-//  printf("STREAM is %d myFile=%p mySocket=%d\n",outStream->type,outStream->myFile,outStream->mySocket);
-  switch(outStream->type){
-    case 3:// TCP
-    case 2:// UDP
-      break;
-
-    case 1:// Ethernet
-      break;
-    case 0:// File
-    default:
-      if(fwrite(data, 1, size, outStream->myFile)!=size){
-	perror("Cannot write data to file");
-	return 0;
-      } 
-  }
-  return(1);
+  return outStream->write(outStream, data, size);
 }

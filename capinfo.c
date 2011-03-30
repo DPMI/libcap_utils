@@ -19,23 +19,23 @@ void show_usage(){
 }
 
 int show_info(const char* filename){
-  struct stream st;
+  struct stream* st;
+  int ret;
 
-  int ret = openstream(&st, filename, 0, NULL, 0);
-  if ( ret != 1 ){
+  if ( (ret=openstream(&st, filename, 0, NULL, 0)) != 0 ){
     fprintf(stderr, "%s: %s\n", filename, caputils_error_string(errno));
     return ret;
   }
 
-  printf("%s: caputils %d.%d stream\n", filename, st.FH.version.major, st.FH.version.minor);
-  printf("     mpid: %s\n", st.FH.mpid[0] != 0 ? st.FH.mpid : "(unset)");
-  printf("  comment: %s\n", st.comment ? st.comment : "(unset)");
+  printf("%s: caputils %d.%d stream\n", filename, st->FH.version.major, st->FH.version.minor);
+  printf("     mpid: %s\n", st->FH.mpid[0] != 0 ? st->FH.mpid : "(unset)");
+  printf("  comment: %s\n", st->comment ? st->comment : "(unset)");
 
   if ( packet_flag ){
     
   }
 
-  closestream(&st);
+  closestream(st);
   
   return 0;
 }

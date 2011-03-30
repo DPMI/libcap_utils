@@ -11,6 +11,9 @@ static const char* errstr[MAX_ERRORS - 0x80000000] = {
 
   /* ERROR_CAPFILE_INVALID   */ "not a valid capfile.",
   /* ERROR_CAPFILE_TRUNCATED */ "file is truncated."
+
+  /* ERROR_INVALID_PROTOCOL */  "unsupported protocol",
+  /* ERROR_NOT_IMPLEMENTED */   "feature not implemented.",
 };
 
 const char* caputils_error_string(int code){
