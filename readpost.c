@@ -53,7 +53,6 @@ int fill_buffer(struct stream* st){
       fprintf(stderr, "Failed to read from stream: %s", strerror(errno));
       return 0;
     } else if ( ret == 0 ){ /* EOF, TCP shutdown etc */
-      fprintf(stderr, "EOF reached.\n");
       return 0;
     }
     break;
