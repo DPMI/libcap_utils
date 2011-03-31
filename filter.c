@@ -55,7 +55,6 @@ int checkFilter(const char *pkt, const struct filter* theFilter){
   int packetLength=0;
 
   if(theFilter==0){
-    printf("No filter present. EXIT.\n");
     return(1);
   }
 
