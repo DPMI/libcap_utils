@@ -27,12 +27,7 @@
 #include <arpa/inet.h>
 
 int fill_buffer(struct stream* st){
-#ifdef DEBUG
-  fprintf(stderr, "Filling packet buffer.\n");
-#endif /* DEBUG */
-
   if( st->flushed==1 ){
-    fprintf(stderr, "EOF stream reached.\n");
     return -1;
   }
 
@@ -50,8 +45,7 @@ int fill_buffer(struct stream* st){
     if ( ret > 0 ){ /* common case */
       return 0;
     } else if ( ret < 0 ){ /* failed to read */
-      fprintf(stderr, "Failed to read from stream: %s", strerror(errno));
-      return ERROR_CAPFILE_TRUNCATED;
+      return errno;
     } else if ( ret == 0 ){ /* EOF, TCP shutdown etc */
       return -1;
     }
@@ -59,7 +53,7 @@ int fill_buffer(struct stream* st){
   }
   
   /* not reached */
-  return 1;
+  return 0;
 }
 
 long read_post(struct stream *myStream, char **data, const struct filter *my_Filter){
@@ -83,10 +77,6 @@ long read_post(struct stream *myStream, char **data, const struct filter *my_Fil
 
     // We have some data in the buffer.
     struct cap_header* cp = (struct cap_header*)(myStream->buffer + myStream->readPos);
-#ifdef DEBUG
-    fprintf(stderr, "readPos = %d \t cp->nic: %s, cp->caplen: %d,  cp->len: %d\n", myStream->readPos, cp->nic, cp->caplen, cp->len);
-#endif /* DEBUG */
-
     const size_t packet_size = sizeof(struct cap_header) + cp->caplen;
     const size_t start_pos = myStream->readPos;
     const size_t end_pos = start_pos + packet_size;
@@ -98,9 +88,6 @@ long read_post(struct stream *myStream, char **data, const struct filter *my_Fil
     assert(packet_size > 0);
 
     if( end_pos > myStream->bufferSize ) {
-#ifdef DEBUG
-      fprintf(stderr, "Insufficient data.\n");
-#endif /* DEBUG */
       if ( fill_buffer(myStream) == 0 ){
 	return ERROR_CAPFILE_TRUNCATED; /* could not read */
       }
@@ -113,9 +100,7 @@ long read_post(struct stream *myStream, char **data, const struct filter *my_Fil
     myStream->readPos += packet_size;
 
     filterStatus = checkFilter((myStream->buffer+myStream->readPos), my_Filter);
-    //    printf("[%d]", skip_counter);
   } while(filterStatus==0);
-  //  printf("Skipped %d packets.\n",skip_counter);
   
   return 0;
 }
