@@ -32,7 +32,19 @@ int show_info(const char* filename){
   printf("  comment: %s\n", st->comment ? st->comment : "(unset)");
 
   if ( packet_flag ){
-    
+    struct cap_header* cp;
+    long int packets = 0;
+    long ret = 0;
+    while ( (ret=read_post(st, (char**)&cp, NULL)) == 0 ){
+      packets++;
+    }
+
+    if ( ret > 0 ){
+      fprintf(stderr, "read_post() returned 0x%08lx: %s\n", ret, caputils_error_string(ret));
+      return ret;
+    }
+
+    printf("  packets: %ld\n", packets);
   }
 
   closestream(st);
