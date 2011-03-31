@@ -98,7 +98,11 @@ int stream_file_open(struct stream** stptr, const char* filename){
   st->file = fp;
 
   /* load stream file header */
-  fread(fhptr, 1, sizeof(struct file_header_t), st->file);
+  ret = fread(fhptr, 1, sizeof(struct file_header_t), st->file);
+  if ( ret < sizeof(struct file_header_t) ){ /* even if this struct is larger */
+    return ERROR_CAPFILE_INVALID;            /* than legacy, the file would be */
+                                             /* to small to be anything useful anyway. */
+  }
 
   if ( fhptr->magic != CAPUTILS_FILE_MAGIC ){
     /* try loading legacy headers */
