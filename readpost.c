@@ -33,7 +33,7 @@ int fill_buffer(struct stream* st){
 
   if( st->flushed==1 ){
     fprintf(stderr, "EOF stream reached.\n");
-    return(0);
+    return -1;
   }
 
   int ret;
@@ -48,12 +48,12 @@ int fill_buffer(struct stream* st){
   case PROTOCOL_LOCAL_FILE:
     ret = st->fill_buffer(st);
     if ( ret > 0 ){ /* common case */
-      return 1;
+      return 0;
     } else if ( ret < 0 ){ /* failed to read */
       fprintf(stderr, "Failed to read from stream: %s", strerror(errno));
-      return 0;
+      return ERROR_CAPFILE_TRUNCATED;
     } else if ( ret == 0 ){ /* EOF, TCP shutdown etc */
-      return 0;
+      return -1;
     }
     break;
   }
@@ -62,9 +62,10 @@ int fill_buffer(struct stream* st){
   return 1;
 }
 
-int read_post(struct stream *myStream, char **data, const struct filter *my_Filter){
+long read_post(struct stream *myStream, char **data, const struct filter *my_Filter){
   int filterStatus=0;
   int skip_counter=-1;
+  int ret = 0;
 
   /* as a precaution, reset the datapoint to NULL so errors will be easier to track down */
   *data = NULL;
@@ -74,8 +75,8 @@ int read_post(struct stream *myStream, char **data, const struct filter *my_Filt
 
     /* bufferSize tells how much data there is available in the buffer */
     if( myStream->bufferSize == myStream->readPos ){
-      if ( fill_buffer(myStream) == 0 ){
-	return 0; /* could not read */
+      if ( (ret=fill_buffer(myStream)) != 0 ){
+	return ret; /* could not read */
       }
       continue;
     }
@@ -90,7 +91,10 @@ int read_post(struct stream *myStream, char **data, const struct filter *my_Filt
     const size_t start_pos = myStream->readPos;
     const size_t end_pos = start_pos + packet_size;
 
-    assert(cp->caplen > 0);
+    if ( cp->caplen == 0 ){
+      return ERROR_CAPFILE_INVALID;
+    }
+
     assert(packet_size > 0);
 
     if( end_pos > myStream->bufferSize ) {
@@ -98,7 +102,7 @@ int read_post(struct stream *myStream, char **data, const struct filter *my_Filt
       fprintf(stderr, "Insufficient data.\n");
 #endif /* DEBUG */
       if ( fill_buffer(myStream) == 0 ){
-	return 0; /* could not read */
+	return ERROR_CAPFILE_TRUNCATED; /* could not read */
       }
 
       continue;
@@ -113,5 +117,5 @@ int read_post(struct stream *myStream, char **data, const struct filter *my_Filt
   } while(filterStatus==0);
   //  printf("Skipped %d packets.\n",skip_counter);
   
-  return(1);
+  return 0;
 }

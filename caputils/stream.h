@@ -83,7 +83,8 @@ int write_post(struct stream* myStream, u_char* data, int size);
  * @param st Stream to read from
  * @param data Returns a pointer to the internal buffer for reading the frame.
  * @param filter Filter to match frames with.
+ * @return Zero if successful, -1 when finished, positive int on error.
  */
-int read_post(struct stream* st, char** data, const struct filter*filter);
+long read_post(struct stream* st, char** data, const struct filter*filter);
 
 #endif /* CAPUTILS__STREAM_H */
