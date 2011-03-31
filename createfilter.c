@@ -23,6 +23,7 @@
 
 #include <unistd.h>
 #include <time.h>
+#include <inttypes.h>
 #include <stdlib.h>
 #include <string.h>
 #include <netinet/in.h>
@@ -146,7 +147,7 @@ struct filter* createfilter(int argc, char** argv){
 	    }
 	    myfilter->index+=4096;
 #ifdef DEBUG      
-	    printf("Start time: %d.%012llu \n",(int)myfilter->starttime.tv_sec,myfilter->starttime.tv_psec);
+	    printf("Start time: %d.%012"PRId64" \n",(int)myfilter->starttime.tv_sec,myfilter->starttime.tv_psec);
 #endif
 	  }
 	  break;
@@ -171,7 +172,7 @@ struct filter* createfilter(int argc, char** argv){
 	    myfilter->index+=2048;
 	  }
 #ifdef DEBUG      
-	  printf("End time: %d.%012llu \n",(int)myfilter->endtime.tv_sec,myfilter->endtime.tv_psec);
+	  printf("End time: %d.%012"PRId64" \n",(int)myfilter->endtime.tv_sec,myfilter->endtime.tv_psec);
 #endif
 	  break;
 	  
@@ -240,14 +241,6 @@ struct filter* createfilter(int argc, char** argv){
 	    *(maskstring)='\0';
 	  }
 	  eth_aton(&myfilter->eth_src, argv[i+1]);
-#ifdef DEBUG
-	  printf("eth.src = %02x:%02x:%02x:%02x:%02x:%02x: / %02x:%02x:%02x:%02x:%02x:%02x\n"
-		 ,myfilter->eth_src[0],myfilter->eth_src[1],myfilter->eth_src[2]
-		 ,myfilter->eth_src[3],myfilter->eth_src[4],myfilter->eth_src[5]
-		 ,myfilter->eth_src_mask[0],myfilter->eth_src_mask[1],myfilter->eth_src_mask[2]
-		 ,myfilter->eth_src_mask[3],myfilter->eth_src_mask[4],myfilter->eth_src_mask[5]);
-#endif	  
-	  
 	  break;
 
 	case 32:// Set Ethernet destination
@@ -260,15 +253,6 @@ struct filter* createfilter(int argc, char** argv){
 	    *(maskstring)='\0';
 	  }
 	  eth_aton(&myfilter->eth_dst, argv[i+1]);
-#ifdef DEBUG
-	  printf("eth.dst = %02x:%02x:%02x:%02x:%02x:%02x: / %02x:%02x:%02x:%02x:%02x:%02x\n"
-		 ,myfilter->eth_dst[0],myfilter->eth_dst[1],myfilter->eth_dst[2]
-		 ,myfilter->eth_dst[3],myfilter->eth_dst[4],myfilter->eth_dst[5]
-		 ,myfilter->eth_dst_mask[0],myfilter->eth_dst_mask[1],myfilter->eth_dst_mask[2]
-		 ,myfilter->eth_dst_mask[3],myfilter->eth_dst_mask[4],myfilter->eth_dst_mask[5]);
-#endif	  
-	  
-
 	  break;
 
 	case 16:// Set IP protocol
