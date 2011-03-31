@@ -88,8 +88,8 @@ long read_post(struct stream *myStream, char **data, const struct filter *my_Fil
     assert(packet_size > 0);
 
     if( end_pos > myStream->bufferSize ) {
-      if ( fill_buffer(myStream) != 0 ){
-	return ERROR_CAPFILE_TRUNCATED; /* could not read */
+      if ( (ret=fill_buffer(myStream)) != 0 ){
+	return ret; /* could not read */
       }
 
       continue;
