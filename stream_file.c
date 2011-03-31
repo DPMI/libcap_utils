@@ -71,7 +71,7 @@ int load_legacy_06(struct file_header_06* fh, FILE* src){
  * @return Non-zero on error (see errno(3) for descriptions).
  */
 int stream_file_open(struct stream** stptr, const char* filename){
-  assert(st);
+  assert(stptr);
   *stptr = NULL;
   int ret = 0;
 
@@ -148,7 +148,7 @@ int stream_file_open(struct stream** stptr, const char* filename){
 }
 
 int stream_file_create(struct stream** stptr, FILE* fp, const char* filename, const char* mpid, const char* comment){
-  assert(st);
+  assert(stptr);
   *stptr = NULL;
   int ret = 0;
 
