@@ -57,9 +57,17 @@ enum {
 
 int is_valid_version(struct file_header_t* fhptr);
 
+/**
+ * Check and increment sequencenumber.
+ * prints to stderr on mismatch.
+ */
+void match_inc_seqnr(struct stream* restrict st, const struct sendhead* restrict sh);
+
 int stream_udp_init(struct stream* st, const char* address, int port);
 int stream_tcp_init(struct stream* st, const char* address, int port);
-int stream_ethernet_init(struct stream* st, const char* address, const char* iface);
+
+long stream_ethernet_open(struct stream** stptr, const char* address, const char* iface);
+long stream_ethernet_create(struct stream** stptr, const char* address, const char* iface, const char* mpid, const char* comment);
 
 int stream_file_open(struct stream** stptr, const char* filename);
 

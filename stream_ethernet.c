@@ -17,7 +17,17 @@
 
 static char osrBuffer[buffLen] = {0,};
 
-static int fill_buffer(struct stream* st, size_t len){
+struct stream_ethernet {
+  struct stream base;
+  int socket;
+  int port;
+  int if_index;
+  int if_mtu;
+  struct sockaddr_ll sll;
+  char* address;
+};
+
+static int fill_buffer(struct stream_ethernet* st, size_t len){
   int readBytes;
 
   const char* ether = osrBuffer;
@@ -25,7 +35,7 @@ static int fill_buffer(struct stream* st, size_t len){
   const struct sendhead *sh=(const struct sendhead *)(ether + sizeof(struct ethhdr));
   
   while ( 1 ){
-    readBytes=recvfrom(st->mySocket, osrBuffer, len, 0, NULL, NULL);
+    readBytes=recvfrom(st->socket, osrBuffer, len, 0, NULL, NULL);
 
 #ifdef DEBUG
     printf("eth.type=%04x %02X:%02X:%02X:%02X:%02X:%02X --> %02X:%02X:%02X:%02X:%02X:%02X",ntohs(eh->h_proto),eh->h_source[0],eh->h_source[1],eh->h_source[2],eh->h_source[3],eh->h_source[4],eh->h_source[5],eh->h_dest[0],eh->h_dest[1],eh->h_dest[2],eh->h_dest[3],eh->h_dest[4],eh->h_dest[5]);
@@ -50,51 +60,40 @@ static int fill_buffer(struct stream* st, size_t len){
     }
 
     /* increase packet count */
-    st->pktCount += ntohs(sh->nopkts);
+    st->base.pktCount += ntohs(sh->nopkts);
 
     /* if no sequencenr is set some additional checks are made.
      * they will also run when the sequence number wraps, but that ok since the
      * sequence number will match in that case anyway. */
-    if ( st->expSeqnr == 0 ){
-      st->expSeqnr = ntohl(sh->sequencenr);
+    if ( st->base.expSeqnr == 0 ){
+      st->base.expSeqnr = ntohl(sh->sequencenr);
 
       /* read stream version */
-      st->FH.version.major=ntohs(sh->version.major);
-      st->FH.version.minor=ntohs(sh->version.minor);
+      struct file_header_t FH;
+      FH.version.major=ntohs(sh->version.major);
+      FH.version.minor=ntohs(sh->version.minor);
 
       /* ensure we can read this version */
-      if ( !is_valid_version(&st->FH) ){
+      if ( !is_valid_version(&FH) ){
 	return -1;
       }
     }
 
-    /* validate sequence number */
-    if( st->expSeqnr != ntohl(sh->sequencenr) ){
-      fprintf(stderr,"Missmatch of sequence numbers. Expeced %ld got %d\n",st->expSeqnr, ntohl(sh->sequencenr));
-      st->expSeqnr = ntohl(sh->sequencenr); /* reset sequence number */
-    }
-
-    /* increment sequence number (next packet is expected to have +1) */
-    st->expSeqnr++;
-
-    /* wrap sequence number */
-    if( st->expSeqnr>=0xFFFF ){
-      st->expSeqnr=0;
-    }
+    match_inc_seqnr(&st->base, sh);
 
     /* copy packets to stream buffer */
     size_t header_size = sizeof(struct ethhdr)+sizeof(struct sendhead);
-    memcpy(st->buffer + st->bufferSize, osrBuffer + header_size, readBytes - header_size);
-    st->bufferSize += readBytes - header_size;
+    memcpy(st->base.buffer + st->base.bufferSize, osrBuffer + header_size, readBytes - header_size);
+    st->base.bufferSize += readBytes - header_size;
 
 #ifdef DEBUG
-    printf("Packet contained %d bytes (Eth %d, Send %d, Cap %d) Buffer Size = %d / %d  Pkts %ld \n",readBytes,sizeof(struct ethhdr), sizeof(struct sendhead),sizeof(struct cap_header),st->bufferSize, buffLen, st->pktCount);
+    printf("Packet contained %d bytes (Eth %zd, Send %zd, Cap %zd) Buffer Size = %d / %d  Pkts %ld \n",readBytes,sizeof(struct ethhdr), sizeof(struct sendhead),sizeof(struct cap_header),st->base.bufferSize, buffLen, st->base.pktCount);
 #endif
 
     /* This indicates a flush from the sender.. */
     if( ntohs(sh->flush) == 1 ){
       printf("Sender terminated. \n");
-      st->flushed=1;
+      st->base.flushed=1;
     }
 
     break; //Break the while loop.
@@ -103,12 +102,20 @@ static int fill_buffer(struct stream* st, size_t len){
   return readBytes;
 }
 
-int stream_ethernet_init(struct stream* st, const char* address, const char* iface){
+long stream_write(struct stream_ethernet* st, u_char* data, size_t size){
+  if ( sendto(st->socket, data, size, 0, (struct sockaddr*)&st->sll, sizeof(st->sll)) < 0 ){
+    return errno;
+  }
+  return 0;
+}
+
+long stream_ethernet_init(struct stream** stptr, const char* address, const char* iface, uint16_t proto){
   struct ifreq ifr;
   struct packet_mreq mcast;
-  struct sockaddr_ll sll;
 
-  assert(st);
+  long ret = 0;
+  
+  assert(stptr);
   assert(address);
   assert(iface);
 
@@ -116,43 +123,51 @@ int stream_ethernet_init(struct stream* st, const char* address, const char* ifa
   strncpy(ifr.ifr_name, iface, IFNAMSIZ);
 
   /* open raw socket */
-  st->mySocket = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL));//LLPROTO));
-  if ( st->mySocket < 0 ){
-    perror("socket open failed");
+  int fd = socket(AF_PACKET, SOCK_RAW, htons(proto));
+  if ( fd < 0 ){
     return errno;
   }
 
-  if ( ioctl(st->mySocket, SIOCGIFINDEX, &ifr) == -1 ){
-    perror("SIOCGIFINDEX failed");
+  /* Initialize the structure */
+  if ( (ret = stream_alloc(stptr, PROTOCOL_ETHERNET_MULTICAST, sizeof(struct stream_ethernet)) != 0) ){
+    return ret;
+  }
+  struct stream_ethernet* st = (struct stream_ethernet*)*stptr;
+  st->socket = fd;
+
+  /* get iface index */
+  if ( ioctl(fd, SIOCGIFINDEX, &ifr) == -1 ){
     return errno;
   }
-  st->ifindex = ifr.ifr_ifindex;
+  st->if_index = ifr.ifr_ifindex;
 
-  if ( ioctl(st->mySocket, SIOCGIFMTU, &ifr) == -1 ){
-    perror("SIOCGIFMTU failed");
+  /* get iface MTU */
+  if ( ioctl(fd, SIOCGIFMTU, &ifr) == -1 ){
     return errno;
   }
   st->if_mtu = ifr.ifr_mtu;
 
+  /* setup multicast address */
   struct ether_addr* myaddress = ether_aton(address);
-  mcast.mr_ifindex = st->ifindex;
+  mcast.mr_ifindex = st->if_index;
   mcast.mr_type = PACKET_MR_MULTICAST;
   mcast.mr_alen = ETH_ALEN;
   memcpy(mcast.mr_address, myaddress, ETH_ALEN);
 
-  if ( setsockopt(st->mySocket, SOL_PACKET, PACKET_ADD_MEMBERSHIP, (void*)&mcast,sizeof(mcast)) == -1 ){
+  /* setup ethernet multicast */
+  if ( setsockopt(fd, SOL_PACKET, PACKET_ADD_MEMBERSHIP, (void*)&mcast,sizeof(mcast)) == -1 ){
     perror("Adding multicast address failed");
     free(myaddress);
     return errno;
   }
 
-  sll.sll_family=AF_PACKET;
-  sll.sll_ifindex=st->ifindex;
-  sll.sll_protocol=htons(ETH_P_ALL);//LLPROTO);
-  sll.sll_pkttype=PACKET_MULTICAST;
-  memcpy(sll.sll_addr,myaddress,ETH_ALEN);
+  st->sll.sll_family=AF_PACKET;
+  st->sll.sll_ifindex=st->if_index;
+  st->sll.sll_protocol=htons(proto);
+  st->sll.sll_pkttype=PACKET_MULTICAST;
+  memcpy(st->sll.sll_addr, myaddress,ETH_ALEN);
 
-  if ( bind(st->mySocket, (struct sockaddr *) &sll, sizeof(sll)) == -1 ) {
+  if ( bind(fd, (struct sockaddr *) &st->sll, sizeof(st->sll)) == -1 ) {
     perror("Binding to interface.");
     free(myaddress);
     return errno;
@@ -164,13 +179,48 @@ int stream_ethernet_init(struct stream* st, const char* address, const char* ifa
 	 ,mcast.mr_address[3], mcast.mr_address[4], mcast.mr_address[5]
 	 ,iface, mcast.mr_ifindex);
 #endif
-  
-  st->FH.comment_size=0;
-  st->comment=0;
+
+  return 0;
+}
+
+
+long stream_ethernet_create(struct stream** stptr, const char* address, const char* iface, const char* mpid, const char* comment){
+  long ret = 0;
+
+  if ( (ret=stream_ethernet_init(stptr, address, iface, LLPROTO)) != 0 ){
+    return ret;
+  }
+
+  struct stream_ethernet* st = (struct stream_ethernet*)*stptr;  
+
+  st->base.FH.comment_size = strlen(comment);
+  st->base.comment = strdup(comment);
+  st->address = strdup(address);
 
   /* callbacks */
-  st->fill_buffer = fill_buffer;
-  st->destroy = NULL;
+  st->base.fill_buffer = (fill_buffer_callback)fill_buffer;
+  st->base.destroy = NULL;
+  st->base.write = (write_callback)stream_write;
+
+  return 0;
+}
+
+long stream_ethernet_open(struct stream** stptr, const char* address, const char* iface){
+  long ret = 0;
+
+  if ( (ret=stream_ethernet_init(stptr, address, iface, ETH_P_ALL)) != 0 ){
+    return ret;
+  }
+
+  struct stream_ethernet* st = (struct stream_ethernet*)*stptr;  
+  
+  st->base.FH.comment_size = 0;
+  st->base.comment = NULL;
+  st->address = strdup(address);
+
+  /* callbacks */
+  st->base.fill_buffer = (fill_buffer_callback)fill_buffer;
+  st->base.destroy = NULL;
 
   return 0;
 }
