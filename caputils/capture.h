@@ -12,7 +12,11 @@ struct cap_header{
   uint32_t caplen;                           // Identifies how much of the frame that we find here
 
   /* convenience accessor (since array size is 0 it won't affect sizeof) */
-  char payload[0];
+  union {
+    char payload[0];
+    struct ethhdr ethhdr[0];
+    struct ether_vlan_header ethvlanhdr[0];
+  };
 };
 typedef struct cap_header  cap_head;
 
