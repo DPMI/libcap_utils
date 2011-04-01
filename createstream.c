@@ -55,11 +55,11 @@ OUTPUT:
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-int createstream_file(struct stream** stptr, FILE* file, const char* filename, const char* mpid, const char* comment){
+long createstream_file(struct stream** stptr, FILE* file, const char* filename, const char* mpid, const char* comment){
   return stream_file_create(stptr, file, filename, mpid, comment);
 }
 
-int createstream(struct stream** stptr, const char* address, int protocol, const char* nic, const char* mpid, const char* comment){
+long createstream(struct stream** stptr, const char* address, int protocol, const char* nic, const char* mpid, const char* comment){
   /* struct ifreq ifr; */
   /* int ifindex=0; */
   /* int socket_descriptor=0; */

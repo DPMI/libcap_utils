@@ -19,6 +19,6 @@
  ***************************************************************************/
 #include "caputils/caputils.h"
 
-int write_post(struct stream *outStream, u_char* data, int size){
+long write_post(struct stream *outStream, u_char* data, int size){
   return outStream->write(outStream, data, size);
 }

@@ -23,7 +23,7 @@
 #include <stdlib.h>
 #include <errno.h>
 
-int closestream(struct stream* st){
+long closestream(struct stream* st){
   return st->destroy ? st->destroy(st) : 0;
 
   /* ret */

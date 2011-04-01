@@ -54,29 +54,29 @@ struct stream {
  * Open an existing stream.
  * @return 1 if successful.
  */
-int openstream(struct stream** stptr, const char* address, enum protocol_t protocol, const char* nic, int port);
+long openstream(struct stream** stptr, const char* address, enum protocol_t protocol, const char* nic, int port);
 
 /**
  * Create a new stream.
  */
-int createstream(struct stream** st, const char* address, int protocol, const char* nic, const char* mpid, const char* comment);
+long createstream(struct stream** st, const char* address, int protocol, const char* nic, const char* mpid, const char* comment);
 
 /**
  * Create a filestream.
  * @param file A stream open for writing.
  * @return Zero on failures.
  */
-int createstream_file(struct stream** stptr, FILE* file, const char* filename, const char* mpid, const char* comment);
+long createstream_file(struct stream** stptr, FILE* file, const char* filename, const char* mpid, const char* comment);
 
 /**
  * Close stream.
  */
-int closestream(struct stream* st);
+long closestream(struct stream* st);
 
 /**
  * Write a captured frame to a stream.
  */
-int write_post(struct stream* myStream, u_char* data, int size);
+long write_post(struct stream* myStream, u_char* data, int size);
 
 /**
  * Read the next matching frame from a stream.

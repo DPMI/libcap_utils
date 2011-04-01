@@ -72,7 +72,7 @@ int is_valid_version(struct file_header_t* fhptr){
   return 0;
 }
 
-int openstream(struct stream** stptr, const char* address, enum protocol_t protocol, const char* nic, int port){
+long openstream(struct stream** stptr, const char* address, enum protocol_t protocol, const char* nic, int port){
   switch(protocol){
     /* case PROTOCOL_TCP_UNICAST: */
     /*   return stream_tcp_init(myStream, address, port); */
