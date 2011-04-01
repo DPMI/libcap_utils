@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <arpa/inet.h>
 
 int stream_alloc(struct stream** stptr, enum protocol_t protocol, size_t size){
   assert(stptr);
@@ -37,4 +38,20 @@ int stream_alloc(struct stream** stptr, enum protocol_t protocol, size_t size){
   memset(st->FH.mpid, 0, 200); /* @bug what is 200? why is not [0] = 0 enought? */
 
   return 0;
+}
+
+void match_inc_seqnr(struct stream* restrict st, const struct sendhead* restrict sh){
+    /* validate sequence number */
+    if( st->expSeqnr != ntohl(sh->sequencenr) ){
+      fprintf(stderr,"Missmatch of sequence numbers. Expeced %ld got %d\n", st->expSeqnr, ntohl(sh->sequencenr));
+      st->expSeqnr = ntohl(sh->sequencenr); /* reset sequence number */
+    }
+
+    /* increment sequence number (next packet is expected to have +1) */
+    st->expSeqnr++;
+
+    /* wrap sequence number */
+    if( st->expSeqnr>=0xFFFF ){
+      st->expSeqnr=0;
+    }
 }
