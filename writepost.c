@@ -18,7 +18,10 @@
  This function writes a packet to file.
  ***************************************************************************/
 #include "caputils/caputils.h"
+#include <assert.h>
 
 long write_post(struct stream *outStream, u_char* data, int size){
+  assert(outStream);
+  assert(outStream->write);
   return outStream->write(outStream, data, size);
 }
