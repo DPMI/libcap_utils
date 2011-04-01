@@ -88,6 +88,6 @@ long openstream(struct stream** stptr, const char* address, enum protocol_t prot
 
     default:
       fprintf(stderr, "Unhandled protocol %d\n", protocol);
-      return 0;
+      return ERROR_NOT_IMPLEMENTED;
   }
 }
