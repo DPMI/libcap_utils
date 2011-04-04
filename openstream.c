@@ -80,8 +80,8 @@ long openstream(struct stream** stptr, const char* address, enum protocol_t prot
     /* case PROTOCOL_UDP_MULTICAST: */
     /*   return stream_udp_init(myStream, address, port); */
 
-    /* case PROTOCOL_ETHERNET_MULTICAST: */
-    /*   return stream_ethernet_init(myStream, address, nic); */
+    case PROTOCOL_ETHERNET_MULTICAST:
+      return stream_ethernet_open(stptr, address, nic);
 
     case PROTOCOL_LOCAL_FILE:
       return stream_file_open(stptr, address);

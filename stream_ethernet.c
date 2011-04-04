@@ -24,7 +24,7 @@ struct stream_ethernet {
   int if_index;
   int if_mtu;
   struct sockaddr_ll sll;
-  char* address;
+  struct ether_addr address;
 };
 
 static int fill_buffer(struct stream_ethernet* st, size_t len){
@@ -38,8 +38,27 @@ static int fill_buffer(struct stream_ethernet* st, size_t len){
     readBytes=recvfrom(st->socket, osrBuffer, len, 0, NULL, NULL);
 
 #ifdef DEBUG
-    printf("eth.type=%04x %02X:%02X:%02X:%02X:%02X:%02X --> %02X:%02X:%02X:%02X:%02X:%02X",ntohs(eh->h_proto),eh->h_source[0],eh->h_source[1],eh->h_source[2],eh->h_source[3],eh->h_source[4],eh->h_source[5],eh->h_dest[0],eh->h_dest[1],eh->h_dest[2],eh->h_dest[3],eh->h_dest[4],eh->h_dest[5]);
-    printf("st->address = %02x:%02x:%02x:%02x:%02x:%02x \n",st->address[0],st->address[1],st->address[2],st->address[3],st->address[4],st->address[5]);
+    printf("eth.type=%04x\n", ntohs(eh->h_proto));
+    printf("\t%02X:%02X:%02X:%02X:%02X:%02X --> %02X:%02X:%02X:%02X:%02X:%02X\n",
+	   eh->h_source[0],
+	   eh->h_source[1],
+	   eh->h_source[2],
+	   eh->h_source[3],
+	   eh->h_source[4],
+	   eh->h_source[5],
+	   eh->h_dest[0],
+	   eh->h_dest[1],
+	   eh->h_dest[2],
+	   eh->h_dest[3],
+	   eh->h_dest[4],
+	   eh->h_dest[5]);
+    printf("\tst->address = %02x:%02x:%02x:%02x:%02x:%02x\n",
+	   st->address.ether_addr_octet[0],
+	   st->address.ether_addr_octet[1],
+	   st->address.ether_addr_octet[2],
+	   st->address.ether_addr_octet[3],
+	   st->address.ether_addr_octet[4],
+	   st->address.ether_addr_octet[5]);
 #endif
 	
     /* terminated */
@@ -55,7 +74,12 @@ static int fill_buffer(struct stream_ethernet* st, size_t len){
     }
 
     /* check protocol and destination */
-    if( ntohs(eh->h_proto) != LLPROTO || memcmp((const void*)eh->h_dest,(const void*)st->address, ETH_ALEN) != 0 ){
+    int match_proto = ntohs(eh->h_proto) == LLPROTO;
+    int match_addr = memcmp((const void*)eh->h_dest, st->address.ether_addr_octet, ETH_ALEN) == 0;
+    if( !(match_proto && match_addr) ){
+#ifdef DEBUG
+      printf("\tskipping (proto: %d, addr: %d)\n", match_proto, match_addr);
+#endif /* DEBUG */
       continue;
     }
 
@@ -147,8 +171,10 @@ long stream_ethernet_init(struct stream** stptr, const char* address, const char
   }
   st->if_mtu = ifr.ifr_mtu;
 
-  /* setup multicast address */
   struct ether_addr* myaddress = ether_aton(address);
+  memcpy(&st->address, myaddress, ETH_ALEN);
+
+  /* setup multicast address */
   mcast.mr_ifindex = st->if_index;
   mcast.mr_type = PACKET_MR_MULTICAST;
   mcast.mr_alen = ETH_ALEN;
@@ -157,7 +183,6 @@ long stream_ethernet_init(struct stream** stptr, const char* address, const char
   /* setup ethernet multicast */
   if ( setsockopt(fd, SOL_PACKET, PACKET_ADD_MEMBERSHIP, (void*)&mcast,sizeof(mcast)) == -1 ){
     perror("Adding multicast address failed");
-    free(myaddress);
     return errno;
   }
 
@@ -169,7 +194,6 @@ long stream_ethernet_init(struct stream** stptr, const char* address, const char
 
   if ( bind(fd, (struct sockaddr *) &st->sll, sizeof(st->sll)) == -1 ) {
     perror("Binding to interface.");
-    free(myaddress);
     return errno;
   }
   
@@ -195,7 +219,6 @@ long stream_ethernet_create(struct stream** stptr, const char* address, const ch
 
   st->base.FH.comment_size = strlen(comment);
   st->base.comment = strdup(comment);
-  st->address = strdup(address);
 
   /* callbacks */
   st->base.fill_buffer = (fill_buffer_callback)fill_buffer;
@@ -216,7 +239,6 @@ long stream_ethernet_open(struct stream** stptr, const char* address, const char
   
   st->base.FH.comment_size = 0;
   st->base.comment = NULL;
-  st->address = strdup(address);
 
   /* callbacks */
   st->base.fill_buffer = (fill_buffer_callback)fill_buffer;
