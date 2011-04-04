@@ -90,8 +90,6 @@ static int fill_buffer(struct stream_ethernet* st, size_t len){
      * they will also run when the sequence number wraps, but that ok since the
      * sequence number will match in that case anyway. */
     if ( st->base.expSeqnr == 0 ){
-      st->base.expSeqnr = ntohl(sh->sequencenr);
-
       /* read stream version */
       struct file_header_t FH;
       FH.version.major=ntohs(sh->version.major);
@@ -101,6 +99,10 @@ static int fill_buffer(struct stream_ethernet* st, size_t len){
       if ( !is_valid_version(&FH) ){
 	return -1;
       }
+
+      /* this is set last, as we want to wait until a packet with valid version
+       * arrives before proceeding. */
+      st->base.expSeqnr = ntohl(sh->sequencenr);
     }
 
     match_inc_seqnr(&st->base, sh);
