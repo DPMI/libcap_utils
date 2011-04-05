@@ -34,6 +34,15 @@ static int fill_buffer(struct stream_ethernet* st, size_t len){
   const struct ethhdr *eh=(const struct ethhdr *)ether;
   const struct sendhead *sh=(const struct sendhead *)(ether + sizeof(struct ethhdr));
   
+  /* copy old content */
+  if ( st->base.readPos > 0 ){
+    size_t bytes = st->base.bufferSize - st->base.readPos;
+    memmove(st->base.buffer, st->base.buffer + st->base.readPos, bytes); /* move content */
+    memset(st->base.buffer + bytes, 0, buffLen-bytes); /* reset rest */
+    st->base.bufferSize = bytes;
+    st->base.readPos = 0;
+  }
+
   while ( 1 ){
     readBytes=recvfrom(st->socket, osrBuffer, len, 0, NULL, NULL);
 
