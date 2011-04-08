@@ -146,7 +146,7 @@ long stream_write(struct stream_ethernet* st, u_char* data, size_t size){
 
 long stream_ethernet_init(struct stream** stptr, const char* address, const char* iface, uint16_t proto){
   struct ifreq ifr;
-  struct packet_mreq mcast;
+  struct packet_mreq mcast = {0,};
 
   long ret = 0;
   
@@ -192,11 +192,12 @@ long stream_ethernet_init(struct stream** stptr, const char* address, const char
   memcpy(mcast.mr_address, myaddress, ETH_ALEN);
 
   /* setup ethernet multicast */
-  if ( setsockopt(fd, SOL_PACKET, PACKET_ADD_MEMBERSHIP, (void*)&mcast,sizeof(mcast)) == -1 ){
+  if ( setsockopt(fd, SOL_PACKET, PACKET_ADD_MEMBERSHIP, (void*)&mcast, sizeof(mcast)) == -1 ){
     perror("Adding multicast address failed");
     return errno;
   }
 
+  memset(&st->sll, 0, sizeof(st->sll));
   st->sll.sll_family=AF_PACKET;
   st->sll.sll_ifindex=st->if_index;
   st->sll.sll_protocol=htons(proto);
