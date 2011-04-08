@@ -219,6 +219,11 @@ long stream_ethernet_init(struct stream** stptr, const char* address, const char
   return 0;
 }
 
+long destroy(struct stream_ethernet* st){
+  free(st->base.comment);
+  free(st);
+  return 0;
+}
 
 long stream_ethernet_create(struct stream** stptr, const char* address, const char* iface, const char* mpid, const char* comment){
   long ret = 0;
@@ -234,7 +239,7 @@ long stream_ethernet_create(struct stream** stptr, const char* address, const ch
 
   /* callbacks */
   st->base.fill_buffer = (fill_buffer_callback)fill_buffer;
-  st->base.destroy = NULL;
+  st->base.destroy = (destroy_callback)destroy;
   st->base.write = (write_callback)stream_write;
 
   return 0;
@@ -254,7 +259,7 @@ long stream_ethernet_open(struct stream** stptr, const char* address, const char
 
   /* callbacks */
   st->base.fill_buffer = (fill_buffer_callback)fill_buffer;
-  st->base.destroy = NULL;
+  st->base.destroy = (destroy_callback)destroy;
 
   return 0;
 }

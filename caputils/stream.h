@@ -11,7 +11,7 @@ typedef int (*fill_buffer_callback)(struct stream* st);
 /**
  * Stream destructor.
  */
-typedef int (*destroy_callback)(struct stream* st);
+typedef long (*destroy_callback)(struct stream* st);
 
 typedef int (*write_callback)(struct stream* st, u_char* data, size_t size);
 
