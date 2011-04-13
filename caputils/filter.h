@@ -1,6 +1,8 @@
 #ifndef CAPUTILS_FILTER_H
 #define CAPUTILS_FILTER_H
 
+#include <caputils/picotime.h>
+
 struct ether_vlan_header{
   uint8_t  ether_dhost[ETH_ALEN];  /* destination eth addr */
   uint8_t  ether_shost[ETH_ALEN];  /* source ether addr    */
