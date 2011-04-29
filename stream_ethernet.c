@@ -27,12 +27,28 @@ struct stream_ethernet {
   struct ether_addr address;
 };
 
-static int fill_buffer(struct stream_ethernet* st, size_t len){
+static int fill_buffer(struct stream_ethernet* st, struct timeval* timeout){
   int readBytes;
+
+  size_t available = buffLen;
 
   const char* ether = osrBuffer;
   const struct ethhdr *eh=(const struct ethhdr *)ether;
   const struct sendhead *sh=(const struct sendhead *)(ether + sizeof(struct ethhdr));
+
+  fd_set fds;
+  FD_ZERO(&fds);
+  FD_SET(st->socket, &fds);
+
+  switch ( select(st->socket+1, &fds, NULL, NULL, timeout) ){
+  case -1:
+    return errno;
+  case 0:
+    errno = EAGAIN;
+    return -1;
+  case 1:
+    break;
+  }
   
   /* copy old content */
   if ( st->base.readPos > 0 ){
@@ -41,10 +57,11 @@ static int fill_buffer(struct stream_ethernet* st, size_t len){
     memset(st->base.buffer + bytes, 0, buffLen-bytes); /* reset rest */
     st->base.bufferSize = bytes;
     st->base.readPos = 0;
+    available = buffLen - bytes;
   }
 
   while ( 1 ){
-    readBytes=recvfrom(st->socket, osrBuffer, len, 0, NULL, NULL);
+    readBytes=recvfrom(st->socket, osrBuffer, available, 0, NULL, NULL);
 
 #ifdef DEBUG
     printf("eth.type=%04x\n", ntohs(eh->h_proto));

@@ -32,7 +32,8 @@ int fill_buffer(struct stream* st){
   }
 
   int ret;
-  
+  struct timeval timeout = {0, 0};
+
   switch(st->type){
   case PROTOCOL_TCP_UNICAST://TCP
   case PROTOCOL_UDP_MULTICAST://UDP
@@ -41,7 +42,7 @@ int fill_buffer(struct stream* st){
     break;
   case PROTOCOL_ETHERNET_MULTICAST://ETHERNET
   case PROTOCOL_LOCAL_FILE:
-    ret = st->fill_buffer(st);
+    ret = st->fill_buffer(st, &timeout);
     if ( ret > 0 ){ /* common case */
       return 0;
     } else if ( ret < 0 ){ /* failed to read */

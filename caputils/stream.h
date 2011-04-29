@@ -6,7 +6,7 @@
  * @return Number of bytes actually read, zero if there is nothing more to read
  *         and negative on errors.
  */
-typedef int (*fill_buffer_callback)(struct stream* st);
+typedef int (*fill_buffer_callback)(struct stream* st, struct timeval* timeout);
 
 /**
  * Stream destructor.
