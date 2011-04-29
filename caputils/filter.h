@@ -3,6 +3,10 @@
 
 #include <caputils/picotime.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct ether_vlan_header{
   uint8_t  ether_dhost[ETH_ALEN];  /* destination eth addr */
   uint8_t  ether_shost[ETH_ALEN];  /* source ether addr    */
@@ -45,5 +49,8 @@ struct filter{
 struct filter* createfilter(int argc, char** argv);
 int closefilter(struct filter* filter);
 
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* CAPUTILS_FILTER_H */
