@@ -2,8 +2,8 @@
 #define CAPUTILS_CAPTURE_H
 
 enum CaptureFlags {
-  CAPFLAGS_INGRESS = (1<<0),
-  CAPFLAGS_EGRESS  = (1<<1),
+  CAPFLAGS_PACKET_IN  = (1<<0),
+  CAPFLAGS_PACKET_OUT = (1<<1),
 };
 
 // Capture Header. This header is attached to each packet that we keep, i.e. it matched a filter.
