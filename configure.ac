@@ -29,7 +29,7 @@ AC_ARG_ENABLE([debug],
 	[AS_HELP_STRING([--enable-debug], [will print debugging information during runtime @<:@default=disabled@:>@])]
 )
 
-AS_IF([test "x$enable_debug" != "xno"],
+AS_IF([test "x$enable_debug" == "xyes"],
 	[AC_DEFINE([DEBUG])],
 	[AC_DEFINE([NDEBUG])]
 )
