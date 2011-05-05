@@ -36,20 +36,6 @@ static int fill_buffer(struct stream_ethernet* st, struct timeval* timeout){
   const struct ethhdr *eh=(const struct ethhdr *)ether;
   const struct sendhead *sh=(const struct sendhead *)(ether + sizeof(struct ethhdr));
 
-  fd_set fds;
-  FD_ZERO(&fds);
-  FD_SET(st->socket, &fds);
-
-  switch ( select(st->socket+1, &fds, NULL, NULL, timeout) ){
-  case -1:
-    return errno;
-  case 0:
-    errno = EAGAIN;
-    return -1;
-  case 1:
-    break;
-  }
-  
   /* copy old content */
   if ( st->base.readPos > 0 ){
     size_t bytes = st->base.bufferSize - st->base.readPos;
@@ -61,6 +47,20 @@ static int fill_buffer(struct stream_ethernet* st, struct timeval* timeout){
   }
 
   while ( 1 ){
+    fd_set fds;
+    FD_ZERO(&fds);
+    FD_SET(st->socket, &fds);
+    
+    switch ( select(st->socket+1, &fds, NULL, NULL, timeout) ){
+    case -1:
+      return errno;
+    case 0:
+      errno = EAGAIN;
+      return -1;
+    case 1:
+      break;
+    }
+
     readBytes=recvfrom(st->socket, osrBuffer, available, 0, NULL, NULL);
 
 #ifdef DEBUG
