@@ -39,17 +39,6 @@ struct stream {
   write_callback write;
 };
 
-// FILE *myFile;                         // File pointer
-// 
-// int mySocket;                         // Socket descriptor  
-//
-// char *address;                        // network address to listen, used when opening socket. 
-// char *filename;                       // filename
-// int portnr;                           // port number to listen to.
-// int ifindex;                          // 
-// int if_mtu;                           // The MTU of the interface reading udp/ethernet multicasts.
-//;
-
 /**
  * Open an existing stream.
  * @return 1 if successful.
