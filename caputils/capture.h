@@ -1,21 +1,11 @@
 #ifndef CAPUTILS_CAPTURE_H
 #define CAPUTILS_CAPTURE_H
 
-enum CaptureFlags {
-  CAPFLAGS_PACKET_IN  = (1<<0),
-  CAPFLAGS_PACKET_OUT = (1<<1),
-};
-
 // Capture Header. This header is attached to each packet that we keep, i.e. it matched a filter.
-// 
-// 
-// ChangeLog
-// 0.7.0 - Using a byte from nic to add a 8-bit bitmask to store additional properties.
 //
-struct cap_header {
-  char nic[4];                          // Identifies the CI where the frame was caught
-  char __unused[3]; 
-  uint8_t flags;                        // Packet flags (bitmask, see CaptureFlags)
+//
+struct cap_header{ 
+  char nic[8];                          // Identifies the CI where the frame was caught
   char mampid[8];                       // Identifies the MP where the frame was caught, 
   timepico ts;                          // Identifies when the frame was caught
   uint32_t len;                         // Identifies the lenght of the frame
