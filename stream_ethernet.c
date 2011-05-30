@@ -207,7 +207,7 @@ long stream_ethernet_init(struct stream** stptr, const char* address, const char
   if ( !myaddress ){
     return ERROR_INVALID_HWADDR;
   }
-  if ( myaddress->ether_addr_octet[0] & 0x01 == 0 ){
+  if ( (myaddress->ether_addr_octet[0] & 0x01) == 0 ){
     return ERROR_INVALID_HWADDR_MULTICAST;
   }
   
