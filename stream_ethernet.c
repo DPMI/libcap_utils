@@ -202,7 +202,13 @@ long stream_ethernet_init(struct stream** stptr, const char* address, const char
   }
   st->if_mtu = ifr.ifr_mtu;
 
+  /* parse hwaddr from user */
   struct ether_addr* myaddress = ether_aton(address);
+  if ( !myaddress ){
+    return ERROR_INVALID_HWADDR;
+  }
+  
+  /* store parsed address */
   memcpy(&st->address, myaddress, ETH_ALEN);
 
   /* setup multicast address */
