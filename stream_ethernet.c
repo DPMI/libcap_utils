@@ -168,8 +168,11 @@ long stream_ethernet_init(struct stream** stptr, const char* address, const char
   long ret = 0;
   
   assert(stptr);
-  assert(address);
-  assert(iface);
+
+  /* validate arguments */
+  if ( !(address && iface) ){
+    return EINVAL;
+  }
 
   /* store the iface name */
   strncpy(ifr.ifr_name, iface, IFNAMSIZ);
