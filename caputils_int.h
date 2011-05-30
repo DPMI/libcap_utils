@@ -51,6 +51,7 @@ enum {
   /* misc */
   ERROR_INVALID_PROTOCOL,
   ERROR_INVALID_HWADDR,
+  ERROR_INVALID_HWADDR_MULTICAST,
   ERROR_INVALID_IFACE,
   ERROR_NOT_IMPLEMENTED, /* should not normally be used but during the transition period it is useful */
 
