@@ -18,6 +18,11 @@
  This function takes arguments from a option string in the original program
  call and creates a filter to be used in all programs based on cap_utils.
  ***************************************************************************/
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include "caputils/caputils.h"
 #include "caputils/picotime.h"
 #include "caputils_int.h"

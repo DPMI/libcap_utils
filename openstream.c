@@ -37,6 +37,10 @@ OUTPUT:
   int 1 if ok.
 */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include "caputils/caputils.h"
 #include "caputils_int.h"
 #include <stdlib.h>

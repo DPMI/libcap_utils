@@ -8,9 +8,9 @@ VERSION_MAJOR=__VERSION_MAJOR__
 VERSION_MINOR=__VERSION_MINOR__
 VERSION_MICRO=__VERSION_MICRO__
 
-AC_DEFINE_UNQUOTED([VERSION_MAJOR], [${VERSION_MAJOR}])
-AC_DEFINE_UNQUOTED([VERSION_MINOR], [${VERSION_MINOR}])
-AC_DEFINE_UNQUOTED([VERSION_MICRO], [${VERSION_MICRO}])
+AC_DEFINE_UNQUOTED([VERSION_MAJOR], [${VERSION_MAJOR}], [Major version number of package])
+AC_DEFINE_UNQUOTED([VERSION_MINOR], [${VERSION_MINOR}], [Minor version number of package])
+AC_DEFINE_UNQUOTED([VERSION_MICRO], [${VERSION_MICRO}], [Micro version number of package])
 AC_SUBST([VERSION_MAJOR])
 AC_SUBST([VERSION_MINOR])
 AC_SUBST([VERSION_MICRO])
@@ -19,6 +19,7 @@ AC_CONFIG_AUX_DIR([build-aux])
 AM_INIT_AUTOMAKE([-Wall foreign])
 AM_SILENT_RULES([yes])
 AC_CONFIG_MACRO_DIR([m4])
+AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_FILES([
 	cap_utils.pc
 	cap_filter.pc
@@ -37,8 +38,8 @@ AC_ARG_ENABLE([debug],
 )
 
 AS_IF([test "x$enable_debug" == "xyes"],
-	[AC_DEFINE([DEBUG])],
-	[AC_DEFINE([NDEBUG])]
+	[AC_DEFINE([DEBUG],  [1], [Define to enable extra debug prints])],
+	[AC_DEFINE([NDEBUG], [1], [Define to disable extra debug prints])]
 )
 
 AC_OUTPUT
