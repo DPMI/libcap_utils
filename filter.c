@@ -151,7 +151,7 @@ static int filter_dst_port(const struct filter* filter, uint16_t port){
   return !(filter->index & FILTER_DST_PORT) || filter->dst_port == port;
 }
 
-static int filter_mampid(const struct filter* filter, mampid_t mampid){
+static int filter_mampid(const struct filter* filter, char mampid[]){
   return !(filter->index & FILTER_MAMPID) || strncmp(filter->mampid, mampid, 8) == 0;
 }
 

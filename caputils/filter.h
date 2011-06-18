@@ -13,7 +13,6 @@ extern "C" {
 #endif
 
   typedef char CI_handle_t[8];
-  typedef char mampid_t[8];
 
   enum FilterBitmask {
     /* filter 0.7 extensions */
@@ -71,7 +70,7 @@ extern "C" {
   /* filter 0.7 extensions */                                           \
   timepico starttime;                /* 4096: Time of first packet. */  \
   timepico endtime;                  /* 2048: Time of last packet. */   \
-  mampid_t mampid;                   /* 1024: Match MAMPid */           \
+  char mampid[8];                    /* 1024: Match MAMPid */           \
   struct in_addr ip_src;             /*    8: IP source */              \
   struct in_addr ip_src_mask;                                           \
   struct in_addr ip_dst;             /*    4: IP destination */         \
