@@ -33,27 +33,25 @@
 #include <getopt.h>
 
 void filter_from_argv_usage(){
-  printf("Libcap_filter version %d.%d\n",VERSION_MAJOR, VERSION_MINOR);
-  printf("Filter Options\n");
-  printf("  -A, --starttime=DATETIME\n");
-  printf("                  Filter on all packets after starttime\n");
-  printf("      --begin     Alias for --starttime\n");
-  printf("      --endtime   filter on all packets before endtime in ISO-8601 format\n");
-  printf("                  ISO 8601 YYYY-MM-DD hh:mm:ss.x, x can be upto 12 digits,\n");	  
-  printf("	--mpid	    filter on mpid\n");
-  printf("	--if	    filter on networkinterface on MP\n");
-  printf("	--eth.vlan  filter on vlan				     value/[mask]\n");
-  printf("	--eth.type  filter on carrier protocol (ip, arp,rarp)	     value/[mask]\n");
-  printf("	--eth.src   filter on ethernet source			     value/[mask]\n");
-  printf("	--eth.dst   filter on ethernet destination		     value/[mask]\n");
-  printf("	--ip.proto  filter on ip protocol (tcp, udp, icmp,)	     value/[mask]\n");
-  printf("	--ip.src    filter on source ip address, dotted decimal	     value/[mask]\n");
-  printf("	--ip.dst    filter on destination ip address, dotted decimal value/[mask]\n");
-  printf("	--tp.sport  filter on source portnumber			     value/[mask]\n");
-  printf("	--tp.dport  filter on destination portnumber		     value/[mask]\n");
-  printf("\n");
-  printf("Datetime format\n");
-  printf("in ISO-8601 format");
+  printf("libcap_filter-" VERSION " options\n");
+  printf("      --starttime=DATETIME    Discard all packages before starttime described by\n");
+  printf("                              the unix timestamp. See libcap_filter(3) for\n");
+  printf("                              additional accepted formats.\n");
+  printf("      --endtime=DATETIME      Discard all packets after endtime.\n");
+  printf("      --begin                 Alias for --starttime\n");
+  printf("      --end                   Alias for --endtime\n");
+  printf("      --mpid=STRING           Filter on MAMPid\n");
+  printf("      --iface=STRING          Filter on networkinterface on MP\n");
+  printf("      --if=STRING             Alias for --iface\n");
+  printf("      --eth.vlan=TCI[/MASK]   Filter on VLAN TCI and mask\n");
+  printf("      --eth.type=STRING[/MASK]Filter on carrier protocol (ip, arp,rarp)\n");
+  printf("      --eth.src=ADDR[/MASK]   Filter on ethernet source\n");
+  printf("      --eth.dst=ADDR[/MASK]   Filter on ethernet destination\n");
+  printf("      --ip.proto=STRING       Filter on ip protocol (tcp, udp, icmp,)\n");
+  printf("      --ip.src=ADDR[/MASK]    Filter on source ip address, dotted decimal\n");
+  printf("      --ip.dst=ADDR[/MASK]    Filter on destination ip address, dotted decimal\n");
+  printf("      --tp.sport=PORT[/MASK]  Filter on source portnumber\n");
+  printf("      --tp.dport=PORT[/MASK]  Filter on destination portnumber\n");
 }
 
 struct filter* createfilter(int argc, char** argv){
@@ -63,6 +61,7 @@ struct filter* createfilter(int argc, char** argv){
     {"endtime",   1, 0, 2048},
     {"end",       1, 0, 2048},
     {"mpid",      1, 0, 1024},
+    {"iface",     1, 0,  512},
     {"if",        1, 0,  512},
     {"eth.vlan",  1, 0,  256},
     {"eth.type",  1, 0,  128},
