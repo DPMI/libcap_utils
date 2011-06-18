@@ -1,6 +1,9 @@
 #ifndef CAPUTILS_PICOTIME_H
 #define CAPUTILS_PICOTIME_H
 
+#include <stdint.h>
+#include <sys/time.h>
+
 // Time struct for precision down to picoseconds
 struct picotime {
     uint32_t tv_sec;

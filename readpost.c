@@ -100,7 +100,7 @@ long read_post(struct stream *myStream, char **data, const struct filter *my_Fil
     *data = myStream->buffer + myStream->readPos;
     myStream->readPos += packet_size;
 
-    filterStatus = checkFilter((myStream->buffer+myStream->readPos), my_Filter);
+    filterStatus = filter_match(my_Filter, cp->payload, cp);
   } while(filterStatus==0);
   
   return 0;

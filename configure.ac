@@ -1,6 +1,6 @@
 m4_define([__VERSION_MAJOR__], [0])
 m4_define([__VERSION_MINOR__], [7])
-m4_define([__VERSION_MICRO__], [0])
+m4_define([__VERSION_MICRO__], [1])
 
 AC_INIT([libcap_utils],[__VERSION_MAJOR__.__VERSION_MINOR__.__VERSION_MICRO__], [dsv@bth.se])
 
@@ -16,9 +16,15 @@ AC_SUBST([VERSION_MINOR])
 AC_SUBST([VERSION_MICRO])
 
 AC_CONFIG_AUX_DIR([build-aux])
-AM_INIT_AUTOMAKE([-Wall 1.11 silent-rules foreign])
+AM_INIT_AUTOMAKE([-Wall foreign])
+AM_SILENT_RULES([yes])
 AC_CONFIG_MACRO_DIR([m4])
-AC_CONFIG_FILES([cap_utils.pc caputils/version.h Makefile])
+AC_CONFIG_FILES([
+	cap_utils.pc
+	cap_filter.pc
+	caputils/version.h
+	Makefile
+])
 
 AC_PROG_CC_C_O
 AC_PROG_CC_C99

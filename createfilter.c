@@ -186,7 +186,7 @@ struct filter* createfilter(int argc, char** argv){
 
 	case 512:// Set Nic
 	  myfilter->index+=512;
-	  strncpy(myfilter->nic,argv[i+1],8);
+	  strncpy(myfilter->iface, argv[i+1], 8);
 #ifdef DEBUG
 	  printf("if = %s\n",myfilter->nic);
 #endif
@@ -196,12 +196,12 @@ struct filter* createfilter(int argc, char** argv){
 	  myfilter->index+=256;
 	  maskstring=index(argv[i+1],'/');
 	  if(maskstring==NULL){// No mask was given set default. 
-	    myfilter->vlan_mask=65535;
+	    myfilter->vlan_tci_mask=65535;
 	  } else {
-	    myfilter->vlan_mask=atoi(maskstring+1);
+	    myfilter->vlan_tci_mask=atoi(maskstring+1);
 	    *(maskstring)='\0';
 	  }
-	  myfilter->vlan=atoi(argv[i+1]);
+	  myfilter->vlan_tci=atoi(argv[i+1]);
 #ifdef DEBUG
 	  printf("eth.vlan = %04x / %04x \n",myfilter->vlan,myfilter->vlan_mask);
 #endif
@@ -278,12 +278,12 @@ struct filter* createfilter(int argc, char** argv){
 	case 8:// Set source host ip, or host net
 	  maskstring=index(argv[i+1],'/');
 	  if(maskstring==NULL){// No mask was given set default. 
-	    strncpy(myfilter->ip_src_mask,"255.255.255.255",16);
+	    strncpy((char*)myfilter->ip_src_mask,"255.255.255.255", 16);
 	  } else {
-	    strncpy(myfilter->ip_src_mask,(maskstring+1),16);
+	    strncpy((char*)myfilter->ip_src_mask,(maskstring+1),16);
 	    *(maskstring)='\0';
 	  }
-	  strncpy(myfilter->ip_src,argv[i+1],16);
+	  strncpy((char*)myfilter->ip_src,argv[i+1],16);
 	  myfilter->index+=8;
 #ifdef DEBUG
 	  printf("ip.src = %s / %s \n",myfilter->ip_src,myfilter->ip_src_mask);
@@ -294,12 +294,12 @@ struct filter* createfilter(int argc, char** argv){
 	case 4:// Set destination host ip, or host net
 	  maskstring=index(argv[i+1],'/');
 	  if(maskstring==NULL){// No mask was given set default. 
-	    strncpy(myfilter->ip_dst_mask,"255.255.255.255",16);
+	    strncpy((char*)myfilter->ip_dst_mask,"255.255.255.255",16);
 	  } else {
-	    strncpy(myfilter->ip_dst_mask,(maskstring+1),16);
+	    strncpy((char*)myfilter->ip_dst_mask,(maskstring+1),16);
 	    *(maskstring)='\0';
 	  }
-	  strncpy(myfilter->ip_dst,argv[i+1],16);
+	  strncpy((char*)myfilter->ip_dst,argv[i+1],16);
 #ifdef DEBUG
 	  printf("ip.dst = %s / %s \n",myfilter->ip_dst,myfilter->ip_dst_mask);
 #endif
@@ -310,12 +310,12 @@ struct filter* createfilter(int argc, char** argv){
 	case 2:// Set source port
 	  maskstring=index(argv[i+1],'/');
 	  if(maskstring==NULL){// No mask was given set default. 
-	    myfilter->tp_sport_mask=65535;
+	    myfilter->src_port_mask=65535;
 	  } else {
-	    myfilter->tp_sport_mask=atoi(maskstring+1);
+	    myfilter->src_port_mask=atoi(maskstring+1);
 	    *(maskstring)='\0';
 	  }
-	  myfilter->tp_sport=atoi(argv[i+1]);
+	  myfilter->src_port=atoi(argv[i+1]);
 	  myfilter->index+=2;
 #ifdef DEBUG
 	  printf("tp.sport = %d / %d \n",myfilter->tp_sport, myfilter->tp_sport_mask);
@@ -325,12 +325,12 @@ struct filter* createfilter(int argc, char** argv){
 	case 1:// Set destination port
 	  maskstring=index(argv[i+1],'/');
 	  if(maskstring==NULL){// No mask was given set default. 
-	    myfilter->tp_dport_mask=65535;
+	    myfilter->dst_port_mask=65535;
 	  } else {
-	    myfilter->tp_dport_mask=atoi(maskstring+1);
+	    myfilter->dst_port_mask=atoi(maskstring+1);
 	    *(maskstring)='\0';
 	  }
-	  myfilter->tp_dport=atoi(argv[i+1]);
+	  myfilter->dst_port=atoi(argv[i+1]);
 #ifdef DEBUG
 	  printf("tp.dport = %d / %d \n",myfilter->tp_dport, myfilter->tp_dport_mask);
 #endif

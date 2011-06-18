@@ -1,0 +1,10 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@
+
+Name: libcap_filter
+Description: Part of libcap_utils. Deals with packet filtering.
+Version: @VERSION@
+Libs: -L${libdir} -lcap_filter
+Cflags: -I${includedir}

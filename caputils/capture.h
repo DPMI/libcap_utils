@@ -1,6 +1,20 @@
 #ifndef CAPUTILS_CAPTURE_H
 #define CAPUTILS_CAPTURE_H
 
+#include <caputils/picotime.h>
+#include <caputils/file.h>
+
+#include <stdint.h>
+#include <netinet/if_ether.h>
+
+struct ether_vlan_header{
+  uint8_t  ether_dhost[ETH_ALEN];  /* destination eth addr */
+  uint8_t  ether_shost[ETH_ALEN];  /* source ether addr    */
+  uint16_t vlan_proto;             /* vlan is present if feild begins with 0x8100 */
+  uint16_t vlan_tci;               /* vlan is present if feild begins with 0x8100 */
+  uint16_t h_proto;                /* Ethernet payload protocol */
+};
+
 // Capture Header. This header is attached to each packet that we keep, i.e. it matched a filter.
 //
 //
