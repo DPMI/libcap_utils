@@ -25,13 +25,11 @@ libcap_utils_la_SOURCES = \
 	error.c \
 	ethaton.c \
 	openstream.c \
+	picotime.c \
 	readpost.c \
-	spectopico.c \
 	stream.c \
 	stream_ethernet.c \
 	stream_file.c \
-	timecmp.c \
-	valtopico.c \
 	writepost.c
 
 #	stream_udp.c \

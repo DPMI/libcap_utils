@@ -22,7 +22,8 @@ extern "C" {
     FILTER_MAMPID   = (1<<10),
 
     /* original */
-    FILTER_CI       = (1<<9),
+    FILTER_CI       = (1<<9), /* alias for FILTER_IFACE */
+    FILTER_IFACE    = (1<<9),
     FILTER_VLAN     = (1<<8),
     FILTER_ETH_TYPE = (1<<7),
     FILTER_ETH_SRC  = (1<<6),
@@ -71,10 +72,10 @@ extern "C" {
   timepico starttime;                /* 4096: Time of first packet. */  \
   timepico endtime;                  /* 2048: Time of last packet. */   \
   mampid_t mampid;                   /* 1024: Match MAMPid */           \
-  in_addr_t ip_src;                  /*    8: IP source */              \
-  in_addr_t ip_src_mask;                                                \
-  in_addr_t ip_dst;                  /*    4: IP destination */         \
-  in_addr_t ip_dst_mask;                                                \
+  struct in_addr ip_src;             /*    8: IP source */              \
+  struct in_addr ip_src_mask;                                           \
+  struct in_addr ip_dst;             /*    4: IP destination */         \
+  struct in_addr ip_dst_mask;                                           \
 
   /* filter end */
 

@@ -136,11 +136,11 @@ static int filter_ip_proto(const struct filter* filter, const struct ip* ip){
 }
 
 static int filter_ip_src(const struct filter* filter, const struct ip* ip){
-  return !(filter->index & FILTER_IP_SRC) || ((ip->ip_src.s_addr & filter->ip_src_mask) & filter->ip_src);
+  return !(filter->index & FILTER_IP_SRC) || ((ip->ip_src.s_addr & filter->ip_src_mask.s_addr) & filter->ip_src.s_addr);
 }
 
 static int filter_ip_dst(const struct filter* filter, const struct ip* ip){
-  return !(filter->index & FILTER_IP_DST) || ((ip->ip_dst.s_addr & filter->ip_dst_mask) & filter->ip_dst);
+  return !(filter->index & FILTER_IP_DST) || ((ip->ip_dst.s_addr & filter->ip_dst_mask.s_addr) & filter->ip_dst.s_addr);
 }
 
 static int filter_src_port(const struct filter* filter, uint16_t port){
