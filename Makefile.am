@@ -1,7 +1,9 @@
 ACLOCAL_AMFLAGS = -I m4
 
 lib_LTLIBRARIES = libcap_utils.la libcap_filter.la
-bin_PROGRAMS = capinfo
+bin_PROGRAMS = capinfo capfilter
+man1_MANS = man/capfilter.1
+man3_MANS = man/libcap_filter.3
 
 nobase_include_HEADERS =    \
 	caputils/picotime.h \
@@ -42,3 +44,6 @@ libcap_filter_la_SOURCES = createfilter.c filter.c
 
 capinfo_CFLAGS = -Wall
 capinfo_LDADD = libcap_utils.la libcap_filter.la
+
+capfilter_CFLAGS = -Wall
+capfilter_LDADD = libcap_filter.la libcap_utils.la

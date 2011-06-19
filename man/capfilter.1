@@ -1,0 +1,61 @@
+.TH capfilter 1 "18 Jun 2011" "BTH" "Measurement Area Manual"
+.SH NAME
+capfilter \- Filter packages in a capfile.
+.SH SYNOPSIS
+.nf
+.B capfilter [-i \fIFILE\fP] [-o \fIFILE\fP] [\fIOPTIONS...\fP]
+.SH DESCRIPTION
+.BR capfilter
+is used to filter packages in an existing capture and store the result in a new
+file. \fIcapfilter\fP without a filter can be used to convert a capture from an
+old format to the latest.
+.TP
+\fB\-i\fR, \fB\-\-input\fR=\fIFILE\fR
+Read capture from FILE or use \- to read from stdin (default)
+.TP
+\fB\-o\fR, \fB\-\-output\fR=\fIFILE\fR
+Store result into FILE or use \- to write to stdout (default if not a TTY)
+.SH FILTER
+.TP
+\fB\-\-starttime\fR=\fIDATETIME\fR
+Discard all packages before DATETIME. See DATE FORMAT for a description of
+accepted formats.
+.TP
+\fB\-\-endtime\fR=\fIDATETIME\fR
+Discard all packages after DATETIME. See DATE FORMAT for a description of
+accepted formats. This will also stop the filtering as no more packages can
+match.
+.TP
+\fB\-\-begin\fR=\fIDATETIME\fR
+Alias for --starttime.
+.TP
+\fB\-\-end\fR=\fIDATETIME\fR
+Alias for --endtime.
+.TP
+\fB\-\-iface\fR=\fISTRING\fR
+Discard all packages which isn't captured on the interface give by STRING.
+.TP
+\fB\-\-ip.src\fR=\fIADDRESS\fR[/\fINETMASK\fP]
+Discard all packages where source address doesn't match ADDRESS. A mask can be
+specified to match a network. Either pass a netmask (e.g. /255.255.255.0) or
+CIDR-notation (e.g. /24).
+.TP
+\fB\-\-ip.dst\fR=\fIADDRESS\fR[/\fINETMASK\fP]
+Discard all packages where destination address doesn't match ADDRESS. See
+\-\-ip.src for format.
+.SH DATE FORMAT
+Valid date formats are:
+.sp
+UNIX timestamp.x
+.br
+YYYY-MM-DD hh:mm:ss.x
+.br
+YYYYMMDD hh:mm:ss.x
+.br
+YYMMDD hh:mm:ss.x
+.TP
+where x describes picoseconds and can be up to 12 digits.
+.SH AUTHOR
+Written by David Sveningsson <david.sveningsson@bth.se>.
+.SH "SEE ALSO"
+mp(1), capplay(1)

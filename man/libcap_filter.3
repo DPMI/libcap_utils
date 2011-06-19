@@ -1,0 +1,25 @@
+.TH libcap_filter 3 "18 Jun 2011" "BTH" "Measurement Area Manual"
+.SH NAME
+libcap_filter \- MA Package filter engine.
+.SH SYNOPSIS
+.nf
+.B #include <caputils/filter.h>
+.sp
+.BI "struct filter* filter_from_argv(int " argc ", char** " argv );
+.sp
+.BI "int filter_close(struct filter* " filter );
+.sp
+.BI "int filter_match(const struct filter* " filter ", const void* " pkt ", struct cap_header* " head );
+.SH DESCRIPTION
+.BR filter_from_argv()
+creates a new filter. Returns NULL if invalid input was provided.
+.PP
+.BR filter_close()
+destroys a previously created filter.
+.PP
+.BR filter_match()
+matches the packet described by \fIpkt\fP and capture header \fIhead\fP with the filter and returns non-zero if it matches the filter.
+.SH AUTHOR
+Written by David Sveningsson <david.sveningsson@bth.se>.
+.SH "SEE ALSO"
+mp(1), capfilter(1)
