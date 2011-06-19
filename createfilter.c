@@ -60,8 +60,11 @@ static struct option options[]= {
 /* Remove the consumed arguments from argv by shifting the others until all
  * consumed ones are at the and, and decrement argc. */
 static void split_argv(int* src_argc, char** src_argv, int* dst_argc, char** dst_argv){
-  char** ptr = src_argv;
-  int i = 0;
+  /* always copy program_name */
+  dst_argv[(*dst_argc)++] = src_argv[0];
+
+  char** ptr = &src_argv[1];
+  int i = 1;
   do {
     const char* arg = *ptr;
 
@@ -143,7 +146,7 @@ int filter_from_argv(int* argcptr, char** argv, struct filter* filter){
   extern int optind;
   int opterr_save = opterr;
   int optind_save = optind;
-  opterr = 0;
+  opterr = 1;
 
   int index;
   int op;
