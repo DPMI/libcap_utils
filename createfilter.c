@@ -107,6 +107,45 @@ static void split_argv(int* src_argc, char** src_argv, int* dst_argc, char** dst
   } while ( i < *src_argc );
 }
 
+/**
+ * Parse a string as IP address and mask. Mask does not have to correspond to valid netmask.
+ * CIDR-notation works.
+ */
+static int parse_inet_addr(const char* src, struct in_addr* addr, struct in_addr* mask){
+  static char* mask_default = "255.255.255.255";
+  const char* buf_addr = src;
+  const char* buf_mask = mask_default;
+
+  /* test if mask was passed */
+  char* separator = strchr(src, '/');
+  if ( separator ){
+    separator[0] = 0;
+    buf_mask = separator+1;
+  }
+
+  if ( inet_aton(buf_addr, addr) == 0 ){
+    fprintf(stderr, "Invalid IP address passed to --ip.src: %s. Ignoring\n", buf_addr);
+    return 0;
+  }
+
+  /* first try CIDR */
+  uint32_t bits;
+  if ( strchr(buf_mask, '.') == NULL && (bits=atoi(buf_mask)) <= 32 ){
+    mask->s_addr = 0;
+    while ( bits-- ){
+      mask->s_addr = (mask->s_addr >> 1) | (1<<31);
+    }
+    mask->s_addr = htonl(mask->s_addr);
+  } else { /* regular address */
+    if ( inet_aton(buf_mask, mask) == 0 ){
+      fprintf(stderr, "Invalid IP mask passed to --ip.src: %s. Ignoring\n", buf_mask);
+      return 0;
+    }
+  }
+
+  return 1;
+}
+
 void filter_from_argv_usage(){
   printf("libcap_filter-" VERSION " options\n");
   printf("      --starttime=DATETIME    Discard all packages before starttime described by\n");
@@ -246,20 +285,12 @@ int filter_from_argv(int* argcptr, char** argv, struct filter* filter){
       break;
 
     case FILTER_IP_SRC:
-      {
-	char addr[25], mask[25] = "255.255.255.255";
-	sscanf(optarg, "%24s/%24s", addr, mask);
-	strcpy((char*)filter->_ip_src, addr);
-	strcpy((char*)filter->_ip_src_mask, mask);
-	if ( inet_aton(addr, &filter->ip_src) == 0 ){
-	  fprintf(stderr, "Invalid IP address passed to --ip.src: %s. Ignoring\n", addr);
-	  continue;
-	}
-	if ( inet_aton(mask, &filter->ip_src_mask) == 0 ){
-	  fprintf(stderr, "Invalid IP mask passed to --ip.src: %s. Ignoring\n", mask);
-	  continue;
-	}
+      if ( !parse_inet_addr(optarg, &filter->ip_src, &filter->ip_src_mask) ){
+	continue;
       }
+      /* copy to text for legacy code */
+      strcpy((char*)filter->_ip_src, inet_ntoa(filter->ip_src));
+      strcpy((char*)filter->_ip_src_mask, inet_ntoa(filter->ip_src_mask));
       break;
 
     case FILTER_IP_DST:
