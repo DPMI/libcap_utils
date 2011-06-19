@@ -37,6 +37,73 @@
 #include <netdb.h>
 #include <getopt.h>
 
+static struct option options[]= {
+  {"starttime", 1, 0, 4096},
+  {"begin",     1, 0, 4096},
+  {"endtime",   1, 0, 2048},
+  {"end",       1, 0, 2048},
+  {"mpid",      1, 0, 1024},
+  {"iface",     1, 0,  512},
+  {"if",        1, 0,  512},
+  {"eth.vlan",  1, 0,  256},
+  {"eth.type",  1, 0,  128},
+  {"eth.src",   1, 0,   64},
+  {"eth.dst",   1, 0,   32},
+  {"ip.proto",  1, 0,   16},
+  {"ip.src",    1, 0,    8},
+  {"ip.dst",    1, 0,    4},
+  {"tp.sport",  1, 0,    2},
+  {"tp.dport",  1, 0,    1},
+  {0, 0, 0, 0}
+};
+
+/* Remove the consumed arguments from argv by shifting the others until all
+ * consumed ones are at the and, and decrement argc. */
+static void split_argv(int* src_argc, char** src_argv, int* dst_argc, char** dst_argv){
+  char** ptr = src_argv;
+  int i = 0;
+  do {
+    const char* arg = *ptr;
+
+    /* check if it is consumed */
+    struct option* cur = options;
+    while ( cur->name ){
+      if ( strcmp(cur->name, &arg[2]) != 0 ){
+	cur++;
+	continue;
+      }
+
+      /* got a match, proceed with copy and shift argument */
+      size_t n = 2;
+
+      /* ensure valid argument follows */
+      if ( (i+1) == *src_argc || ptr[1][0] == '-' ){
+	fprintf(stderr, "%s: option '--%s' requires an argument\n", src_argv[0], cur->name);
+	n = 1;
+      }
+
+      dst_argv[(*dst_argc)++] = ptr[0];
+      if ( n == 2 ) dst_argv[(*dst_argc)++] = ptr[1];
+
+      /* shift arguments */
+      void* dst = ptr;
+      void* src = ptr+n;
+      size_t bytes = (&src_argv[*src_argc] - (ptr+n)) * sizeof(char*);
+      memmove(dst, src, bytes);
+      
+      *src_argc -= n;
+      ptr += n;
+      break;
+    }
+    
+    /* no match */
+    if ( !cur->name ){
+      i++;
+      ptr++;
+    }
+  } while ( i < *src_argc );
+}
+
 void filter_from_argv_usage(){
   printf("libcap_filter-" VERSION " options\n");
   printf("      --starttime=DATETIME    Discard all packages before starttime described by\n");
@@ -60,29 +127,16 @@ void filter_from_argv_usage(){
 }
 
 int filter_from_argv(int* argcptr, char** argv, struct filter* filter){
-  static struct option options[]= {
-    {"starttime", 1, 0, 4096},
-    {"begin",     1, 0, 4096},
-    {"endtime",   1, 0, 2048},
-    {"end",       1, 0, 2048},
-    {"mpid",      1, 0, 1024},
-    {"iface",     1, 0,  512},
-    {"if",        1, 0,  512},
-    {"eth.vlan",  1, 0,  256},
-    {"eth.type",  1, 0,  128},
-    {"eth.src",   1, 0,   64},
-    {"eth.dst",   1, 0,   32},
-    {"ip.proto",  1, 0,   16},
-    {"ip.src",    1, 0,    8},
-    {"ip.dst",    1, 0,    4},
-    {"tp.sport",  1, 0,    2},
-    {"tp.dport",  1, 0,    1},
-    {0, 0, 0, 0}
-  };
   int argc = *argcptr;
 
   /* reset filter */
   memset(filter, 0, sizeof(struct filter));
+
+  int filter_argc = 0;
+  char* filter_argv[argc];
+
+  /* take all valid arguments and put into filter_argv */
+  split_argv(&argc, argv, &filter_argc, filter_argv);
 
   /* save getopt settings */
   extern int opterr;
@@ -93,13 +147,10 @@ int filter_from_argv(int* argcptr, char** argv, struct filter* filter){
 
   int index;
   int op;
-  while ( (op=getopt_long(argc, argv, "", options, &index)) != -1 ){
+  while ( (op=getopt_long(filter_argc, filter_argv, "", options, &index)) != -1 ){
     const enum FilterBitmask bitmask = (enum FilterBitmask)bitmask;
 
     switch (op){
-    case '?': /* ignore unknown args */
-      continue;
-
     case FILTER_START_TIME:
       if ( timepico_from_string(&filter->starttime, optarg) != 0 ){
 	fprintf(stderr, "Invalid dated passed to --%s: %s. Ignoring.", options[index].name, optarg);
@@ -266,27 +317,6 @@ int filter_from_argv(int* argcptr, char** argv, struct filter* filter){
     argv[optind-1][0] = 0; /* value */
     argv[optind-2][0] = 0; /* --flag */
   }
-
-  /* Remove the consumed arguments from argv by shifting the others until all
-   * consumed ones are at the and, and decrement argc. */
-  char** ptr = argv;
-  int i = 0;
-  do {
-    /* check if it is consumed */
-    if ( (*ptr)[0] != 0 ){
-      ptr++;
-      i++;
-      continue;
-    }
-
-    /* shift arguments */
-    void* dst = ptr;
-    void* src = ptr+1;
-    size_t bytes = (&argv[argc] - (ptr+1)) * sizeof(char*);
-    memmove(dst, src, bytes);
-
-    argc--;
-  } while ( i < argc );
 
   /* restore getopt */
   opterr = opterr_save;
