@@ -347,10 +347,6 @@ int filter_from_argv(int* argcptr, char** argv, struct filter* filter){
 
     /* update index bitmask */
     filter->index |= bitmask;
-
-    /* clear argument */
-    argv[optind-1][0] = 0; /* value */
-    argv[optind-2][0] = 0; /* --flag */
   }
 
   /* restore getopt */
