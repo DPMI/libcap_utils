@@ -16,7 +16,7 @@ AC_SUBST([VERSION_MINOR])
 AC_SUBST([VERSION_MICRO])
 
 AC_CONFIG_AUX_DIR([build-aux])
-AM_INIT_AUTOMAKE([-Wall foreign])
+AM_INIT_AUTOMAKE([-Wall foreign color-tests])
 AM_SILENT_RULES([yes])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_HEADERS([config.h])
@@ -29,6 +29,7 @@ AC_CONFIG_FILES([
 
 AC_PROG_CC_C_O
 AC_PROG_CC_C99
+AC_PROG_CXX
 AC_GNU_SOURCE
 AM_DISABLE_STATIC
 LT_INIT
@@ -41,5 +42,7 @@ AS_IF([test "x$enable_debug" == "xyes"],
 	[AC_DEFINE([DEBUG],  [1], [Define to enable extra debug prints])],
 	[AC_DEFINE([NDEBUG], [1], [Define to disable extra debug prints])]
 )
+
+AM_PATH_CPPUNIT(1.9.6)
 
 AC_OUTPUT

@@ -207,7 +207,8 @@ int filter_match(const struct filter* filter, const void* pkt, struct cap_header
   return match;
 }
 
-static const char* hexdump_address_r(const struct ether_addr* address, char buf[IFHWADDRLEN*3]){
+/* not static because it is used by unittests */
+const char* hexdump_address_r(const struct ether_addr* address, char buf[IFHWADDRLEN*3]){
   int i;
 
   for ( i = 0; i < IFHWADDRLEN - 1; i++ ) {

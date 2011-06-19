@@ -5,6 +5,9 @@ bin_PROGRAMS = capinfo capfilter
 man1_MANS = man/capfilter.1
 man3_MANS = man/libcap_filter.3
 
+TESTS = tests/filter_argv
+check_PROGRAMS = ${TESTS}
+
 nobase_include_HEADERS =    \
 	caputils/picotime.h \
 	caputils/file.h     \
@@ -47,3 +50,8 @@ capinfo_LDADD = libcap_utils.la libcap_filter.la
 
 capfilter_CFLAGS = -Wall
 capfilter_LDADD = libcap_filter.la libcap_utils.la
+
+tests_filter_argv_CXXFLAGS = -Wall $(CPPUNIT_CFLAGS)
+tests_filter_argv_LDFLAGS = $(CPPUNIT_LIBS)
+tests_filter_argv_LDADD = libcap_filter.la libcap_utils.la
+tests_filter_argv_SOURCES = tests/filter_argv.cpp

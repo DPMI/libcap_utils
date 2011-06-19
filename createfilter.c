@@ -30,6 +30,7 @@
 #include <unistd.h>
 #include <ctype.h>
 #include <time.h>
+#include <errno.h>
 #include <inttypes.h>
 #include <stdlib.h>
 #include <string.h>
@@ -171,10 +172,23 @@ void filter_from_argv_usage(){
 }
 
 int filter_from_argv(int* argcptr, char** argv, struct filter* filter){
+  if ( !(argcptr && filter) ){
+    return EINVAL;
+  }
+  
   int argc = *argcptr;
 
   /* reset filter */
   memset(filter, 0, sizeof(struct filter));
+
+  /* fast path */
+  if ( argc == 0 ){
+    return 0;
+  }
+
+  if ( !argv ){ /* argv is required when argc > 0 */
+    return EINVAL;
+  }
 
   int filter_argc = 0;
   char* filter_argv[argc];
