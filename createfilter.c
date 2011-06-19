@@ -117,7 +117,7 @@ static int parse_inet_addr(const char* src, struct in_addr* addr, struct in_addr
   static char* mask_default = "255.255.255.255";
   const char* buf_addr = src;
   const char* buf_mask = mask_default;
-
+ 
   /* test if mask was passed */
   char* separator = strchr(src, '/');
   if ( separator ){
@@ -143,6 +143,29 @@ static int parse_inet_addr(const char* src, struct in_addr* addr, struct in_addr
       fprintf(stderr, "Invalid mask passed to --%s: %s. Ignoring\n", flag, buf_mask);
       return 0;
     }
+  }
+
+  return 1;
+}
+
+static int parse_port(const char* src, uint16_t* port, uint16_t* mask, const char* flag){
+  *mask = 0xFFFF;
+
+  /* test if mask was passed */
+  char* separator = strchr(src, '/');
+  if ( separator ){
+    separator[0] = 0;
+    *mask = atoi(separator+1);
+  }
+
+  struct servent* service = getservbyname(src, NULL);
+  if ( service ){
+    *port = ntohs(service->s_port);
+  } else if ( isdigit(optarg[0]) ) {
+    *port = atoi(optarg);
+  } else {
+    fprintf(stderr, "Invalid port number passed to %s: %s. Ignoring\n", flag, src);
+    return 0;
   }
 
   return 1;
@@ -319,38 +342,16 @@ int filter_from_argv(int* argcptr, char** argv, struct filter* filter){
       break;
 
     case FILTER_SRC_PORT:
-      {
-	filter->src_port_mask = 0xFFFF;
-	char name[64];
-	sscanf(optarg, "%64s/%hd", name, &filter->src_port_mask);
-
-	struct servent* service = getservbyname(name, NULL);
-	if ( service ){
-	  filter->src_port = service->s_port;
-	} else if ( isdigit(optarg[0]) ) {
-	  filter->src_port = atoi(optarg);
-	} else {
-	  fprintf(stderr, "Invalid port number passed to tp.sport: %s. Ignoring\n", name);
-	  continue;
-	}
+      if ( !parse_port(optarg, &filter->src_port, &filter->src_port_mask, "tp.sport") ){
+	continue;
       }
+      break;
 
     case FILTER_DST_PORT:
-      {
-	filter->dst_port_mask = 0xFFFF;
-	char name[64];
-	sscanf(optarg, "%64s/%hd", name, &filter->dst_port_mask);
-
-	struct servent* service = getservbyname(name, NULL);
-	if ( service ){
-	  filter->dst_port = service->s_port;
-	} else if ( isdigit(optarg[0]) ) {
-	  filter->dst_port = atoi(optarg);
-	} else {
-	  fprintf(stderr, "Invalid port number passed to tp.dport: %s. Ignoring\n", name);
-	  continue;
-	}
+      if ( !parse_port(optarg, &filter->dst_port, &filter->dst_port_mask, "tp.dport") ){
+	continue;
       }
+      break;
     }
 
     /* update index bitmask */

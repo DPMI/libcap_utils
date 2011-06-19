@@ -267,14 +267,28 @@ public:
     CPPUNIT_ASSERT_EQUAL((uint32_t)FILTER_SRC_PORT, filter.index);
     CPPUNIT_ASSERT_EQUAL((uint16_t)80,  filter.src_port);
     CPPUNIT_ASSERT_EQUAL((uint16_t)123, filter.src_port_mask);
+
+    argc = generate_argv(argv, "programname", "--tp.sport", "http/123", NULL);
+    CPPUNIT_ASSERT_SUCCESS(filter_from_argv(&argc, argv, &filter), 1);
+
+    CPPUNIT_ASSERT_EQUAL((uint32_t)FILTER_SRC_PORT, filter.index);
+    CPPUNIT_ASSERT_EQUAL((uint16_t)80,  filter.src_port);
+    CPPUNIT_ASSERT_EQUAL((uint16_t)123, filter.src_port_mask);
   }
 
   void test_tp_dport(){
-    argc = generate_argv(argv, "programname", "--tp.dport", "80/123", NULL);
+    argc = generate_argv(argv, "programname", "--tp.dport", "22/123", NULL);
     CPPUNIT_ASSERT_SUCCESS(filter_from_argv(&argc, argv, &filter), 1);
 
     CPPUNIT_ASSERT_EQUAL((uint32_t)FILTER_DST_PORT, filter.index);
-    CPPUNIT_ASSERT_EQUAL((uint16_t)80,  filter.dst_port);
+    CPPUNIT_ASSERT_EQUAL((uint16_t)22,  filter.dst_port);
+    CPPUNIT_ASSERT_EQUAL((uint16_t)123, filter.dst_port_mask);
+
+    argc = generate_argv(argv, "programname", "--tp.dport", "ssh/123", NULL);
+    CPPUNIT_ASSERT_SUCCESS(filter_from_argv(&argc, argv, &filter), 1);
+
+    CPPUNIT_ASSERT_EQUAL((uint32_t)FILTER_DST_PORT, filter.index);
+    CPPUNIT_ASSERT_EQUAL((uint16_t)22,  filter.dst_port);
     CPPUNIT_ASSERT_EQUAL((uint16_t)123, filter.dst_port_mask);
   }
 };
