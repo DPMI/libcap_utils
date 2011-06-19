@@ -86,7 +86,7 @@ extern "C" {
     LIBMARC_FILTER_DEF
   }  __attribute__((packed));
 
-  struct filter* filter_from_argv(int argc, char** argv);
+  int filter_from_argv(int* argc, char** argv, struct filter*);
   void filter_from_argv_usage();
 
   /**

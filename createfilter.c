@@ -40,7 +40,7 @@
 void filter_from_argv_usage(){
   printf("libcap_filter-" VERSION " options\n");
   printf("      --starttime=DATETIME    Discard all packages before starttime described by\n");
-  printf("                              the unix timestamp. See libcap_filter(3) for\n");
+  printf("                              the unix timestamp. See capfilter(1) for\n");
   printf("                              additional accepted formats.\n");
   printf("      --endtime=DATETIME      Discard all packets after endtime.\n");
   printf("      --begin                 Alias for --starttime\n");
@@ -59,7 +59,7 @@ void filter_from_argv_usage(){
   printf("      --tp.dport=PORT[/MASK]  Filter on destination portnumber\n");
 }
 
-struct filter* createfilter(int argc, char** argv){
+int filter_from_argv(int* argcptr, char** argv, struct filter* filter){
   static struct option options[]= {
     {"starttime", 1, 0, 4096},
     {"begin",     1, 0, 4096},
@@ -77,17 +77,29 @@ struct filter* createfilter(int argc, char** argv){
     {"ip.dst",    1, 0,    4},
     {"tp.sport",  1, 0,    2},
     {"tp.dport",  1, 0,    1},
+    {0, 0, 0, 0}
   };
+  int argc = *argcptr;
 
-  struct filter* filter = (struct filter*)malloc(sizeof(struct filter));
+  /* reset filter */
   memset(filter, 0, sizeof(struct filter));
+
+  /* save getopt settings */
+  extern int opterr;
+  extern int optind;
+  int opterr_save = opterr;
+  int optind_save = optind;
+  opterr = 0;
 
   int index;
   int op;
   while ( (op=getopt_long(argc, argv, "", options, &index)) != -1 ){
     const enum FilterBitmask bitmask = (enum FilterBitmask)bitmask;
 
-    switch (bitmask){
+    switch (op){
+    case '?': /* ignore unknown args */
+      continue;
+
     case FILTER_START_TIME:
       if ( timepico_from_string(&filter->starttime, optarg) != 0 ){
 	fprintf(stderr, "Invalid dated passed to --%s: %s. Ignoring.", options[index].name, optarg);
@@ -246,16 +258,45 @@ struct filter* createfilter(int argc, char** argv){
 	  continue;
 	}
       }
-
     }
 
     filter->index |= bitmask;
+
+    /* clear argument */
+    argv[optind-1][0] = 0; /* value */
+    argv[optind-2][0] = 0; /* --flag */
   }
-  
-  return filter;
+
+  /* Remove the consumed arguments from argv by shifting the others until all
+   * consumed ones are at the and, and decrement argc. */
+  char** ptr = argv;
+  int i = 0;
+  do {
+    /* check if it is consumed */
+    if ( (*ptr)[0] != 0 ){
+      ptr++;
+      i++;
+      continue;
+    }
+
+    /* shift arguments */
+    void* dst = ptr;
+    void* src = ptr+1;
+    size_t bytes = (&argv[argc] - (ptr+1)) * sizeof(char*);
+    memmove(dst, src, bytes);
+
+    argc--;
+  } while ( i < argc );
+
+  /* restore getopt */
+  opterr = opterr_save;
+  optind = optind_save;
+
+  /* save argc */
+  *argcptr = argc;
+  return 0;
 }
 
-int closefilter(struct filter* filter){
-  free(filter);
+int filter_close(struct filter* filter){
   return 0;
 }
