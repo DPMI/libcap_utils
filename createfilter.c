@@ -151,7 +151,7 @@ int filter_from_argv(int* argcptr, char** argv, struct filter* filter){
   int index;
   int op;
   while ( (op=getopt_long(filter_argc, filter_argv, "", options, &index)) != -1 ){
-    const enum FilterBitmask bitmask = (enum FilterBitmask)bitmask;
+    const enum FilterBitmask bitmask = (enum FilterBitmask)op;
 
     switch (op){
     case FILTER_START_TIME:
@@ -314,6 +314,7 @@ int filter_from_argv(int* argcptr, char** argv, struct filter* filter){
       }
     }
 
+    /* update index bitmask */
     filter->index |= bitmask;
 
     /* clear argument */
