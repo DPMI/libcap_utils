@@ -85,17 +85,17 @@ static void split_argv(int* src_argc, char** src_argv, int* dst_argc, char** dst
 	n = 1;
       }
 
+      /* copy arguments to dst_argv */
       dst_argv[(*dst_argc)++] = ptr[0];
       if ( n == 2 ) dst_argv[(*dst_argc)++] = ptr[1];
 
-      /* shift arguments */
+      /* shift arguments in src_argv */
       void* dst = ptr;
       void* src = ptr+n;
       size_t bytes = (&src_argv[*src_argc] - (ptr+n)) * sizeof(char*);
       memmove(dst, src, bytes);
       
       *src_argc -= n;
-      ptr += n;
       break;
     }
     
@@ -111,7 +111,7 @@ static void split_argv(int* src_argc, char** src_argv, int* dst_argc, char** dst
  * Parse a string as IP address and mask. Mask does not have to correspond to valid netmask.
  * CIDR-notation works.
  */
-static int parse_inet_addr(const char* src, struct in_addr* addr, struct in_addr* mask){
+static int parse_inet_addr(const char* src, struct in_addr* addr, struct in_addr* mask, const char* flag){
   static char* mask_default = "255.255.255.255";
   const char* buf_addr = src;
   const char* buf_mask = mask_default;
@@ -124,7 +124,7 @@ static int parse_inet_addr(const char* src, struct in_addr* addr, struct in_addr
   }
 
   if ( inet_aton(buf_addr, addr) == 0 ){
-    fprintf(stderr, "Invalid IP address passed to --ip.src: %s. Ignoring\n", buf_addr);
+    fprintf(stderr, "Invalid IP address passed to --%s: %s. Ignoring\n", flag, buf_addr);
     return 0;
   }
 
@@ -138,7 +138,7 @@ static int parse_inet_addr(const char* src, struct in_addr* addr, struct in_addr
     mask->s_addr = htonl(mask->s_addr);
   } else { /* regular address */
     if ( inet_aton(buf_mask, mask) == 0 ){
-      fprintf(stderr, "Invalid IP mask passed to --ip.src: %s. Ignoring\n", buf_mask);
+      fprintf(stderr, "Invalid mask passed to --%s: %s. Ignoring\n", flag, buf_mask);
       return 0;
     }
   }
@@ -285,7 +285,7 @@ int filter_from_argv(int* argcptr, char** argv, struct filter* filter){
       break;
 
     case FILTER_IP_SRC:
-      if ( !parse_inet_addr(optarg, &filter->ip_src, &filter->ip_src_mask) ){
+      if ( !parse_inet_addr(optarg, &filter->ip_src, &filter->ip_src_mask, "ip.src") ){
 	continue;
       }
       /* copy to text for legacy code */
@@ -294,20 +294,12 @@ int filter_from_argv(int* argcptr, char** argv, struct filter* filter){
       break;
 
     case FILTER_IP_DST:
-      {
-	char addr[25], mask[25] = "255.255.255.255";
-	sscanf(optarg, "%24s/%24s", addr, mask);
-	strcpy((char*)filter->_ip_dst, addr);
-	strcpy((char*)filter->_ip_dst_mask, mask);
-	if ( inet_aton(addr, &filter->ip_dst) == 0 ){
-	  fprintf(stderr, "Invalid IP address passed to --ip.dst: %s. Ignoring\n", addr);
-	  continue;
-	}
-	if ( inet_aton(mask, &filter->ip_dst_mask) == 0 ){
-	  fprintf(stderr, "Invalid IP mask passed to --ip.dst: %s. Ignoring\n", mask);
-	  continue;
-	}
+      if ( !parse_inet_addr(optarg, &filter->ip_dst, &filter->ip_dst_mask, "ip.dst") ){
+	continue;
       }
+      /* copy to text for legacy code */
+      strcpy((char*)filter->_ip_dst, inet_ntoa(filter->ip_dst));
+      strcpy((char*)filter->_ip_dst_mask, inet_ntoa(filter->ip_dst_mask));
       break;
 
     case FILTER_SRC_PORT:
