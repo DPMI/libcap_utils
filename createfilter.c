@@ -251,11 +251,11 @@ int filter_from_argv(int* argcptr, char** argv, struct filter* filter){
 	sscanf(optarg, "%24s/%24s", addr, mask);
 	strcpy((char*)filter->_ip_src, addr);
 	strcpy((char*)filter->_ip_src_mask, mask);
-	if ( inet_aton(addr, &filter->ip_src) != 0 ){
+	if ( inet_aton(addr, &filter->ip_src) == 0 ){
 	  fprintf(stderr, "Invalid IP address passed to --ip.src: %s. Ignoring\n", addr);
 	  continue;
 	}
-	if ( inet_aton(mask, &filter->ip_src_mask) != 0 ){
+	if ( inet_aton(mask, &filter->ip_src_mask) == 0 ){
 	  fprintf(stderr, "Invalid IP mask passed to --ip.src: %s. Ignoring\n", mask);
 	  continue;
 	}
@@ -268,11 +268,11 @@ int filter_from_argv(int* argcptr, char** argv, struct filter* filter){
 	sscanf(optarg, "%24s/%24s", addr, mask);
 	strcpy((char*)filter->_ip_dst, addr);
 	strcpy((char*)filter->_ip_dst_mask, mask);
-	if ( inet_aton(addr, &filter->ip_dst) != 0 ){
+	if ( inet_aton(addr, &filter->ip_dst) == 0 ){
 	  fprintf(stderr, "Invalid IP address passed to --ip.dst: %s. Ignoring\n", addr);
 	  continue;
 	}
-	if ( inet_aton(mask, &filter->ip_dst_mask) != 0 ){
+	if ( inet_aton(mask, &filter->ip_dst_mask) == 0 ){
 	  fprintf(stderr, "Invalid IP mask passed to --ip.dst: %s. Ignoring\n", mask);
 	  continue;
 	}
