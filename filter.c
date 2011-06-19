@@ -218,6 +218,12 @@ static const char* hexdump_address_r(const struct ether_addr* address, char buf[
   return buf;
 }
 
+static const char* inet_ntoa_r(const struct in_addr in, char* buf){
+  const char* tmp = inet_ntoa(in);
+  strcpy(buf, tmp);
+  return buf;
+}
+
 void filter_print(const struct filter* filter, FILE* fp, int verbose){
   static char buf[100];
 
@@ -274,13 +280,13 @@ void filter_print(const struct filter* filter, FILE* fp, int verbose){
   }
 
   if ( filter->index&8 ){
-    fprintf(fp, "\tIP_SRC        : %s (MASK: %s)\n", filter->_ip_src, filter->_ip_src_mask);
+    fprintf(fp, "\tIP_SRC        : %s (MASK: %s)\n", inet_ntoa_r(filter->ip_src, &buf[0]), inet_ntoa_r(filter->ip_src_mask, &buf[50]));
   } else if ( verbose ) {
     fprintf(fp, "\tIP_SRC        : NULL\n");
   }
 
   if ( filter->index&4 ){
-    fprintf(fp, "\tIP_DST        : %s (MASK: %s)\n", filter->_ip_dst, filter->_ip_dst_mask);
+    fprintf(fp, "\tIP_DST        : %s (MASK: %s)\n", inet_ntoa_r(filter->ip_dst, &buf[0]), inet_ntoa_r(filter->ip_dst_mask, &buf[50]));
   } else if ( verbose ) {
     fprintf(fp, "\tIP_DST        : NULL\n");
   }
