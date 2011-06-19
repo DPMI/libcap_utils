@@ -42,6 +42,7 @@ static struct option options[]= {
   {"begin",     1, 0, 4096},
   {"endtime",   1, 0, 2048},
   {"end",       1, 0, 2048},
+  {"mampid",    1, 0, 1024},
   {"mpid",      1, 0, 1024},
   {"iface",     1, 0,  512},
   {"if",        1, 0,  512},
@@ -154,7 +155,8 @@ void filter_from_argv_usage(){
   printf("      --endtime=DATETIME      Discard all packets after endtime.\n");
   printf("      --begin                 Alias for --starttime\n");
   printf("      --end                   Alias for --endtime\n");
-  printf("      --mpid=STRING           Filter on MAMPid\n");
+  printf("      --mampid=STRING         Filter on MAMPid\n");
+  printf("      --mpid=STRING           Alias for --mampid\n");
   printf("      --iface=STRING          Filter on networkinterface on MP\n");
   printf("      --if=STRING             Alias for --iface\n");
   printf("      --eth.vlan=TCI[/MASK]   Filter on VLAN TCI and mask\n");

@@ -243,6 +243,12 @@ void filter_print(const struct filter* filter, FILE* fp, int verbose){
   fprintf(fp, "\tCAPLEN        : %d\n", filter->caplen);
   fprintf(fp, "\tindex         : %d\n", filter->index);
 
+  if ( verbose || filter->index & FILTER_MAMPID ){
+    fprintf(fp, "\tMAMPid        : %s\n", filter->mampid);
+  } else if ( verbose ){
+    fprintf(fp, "\tMAMPid        : NULL\n");
+  }
+
   if ( verbose || filter->index&512 ){
     fprintf(fp, "\tCI_ID         : %s\n", filter->iface);
   } else if ( verbose ) {

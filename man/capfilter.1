@@ -35,6 +35,12 @@ Alias for --endtime.
 \fB\-\-iface\fR=\fISTRING\fR
 Discard all packages which isn't captured on the interface give by STRING.
 .TP
+\fB\-\-mampid\fR=\fISTRING\fR
+Discard all packages not originating from MP with MAMPid STRING.
+.TP
+\fB\-\-mpid\fR=\fISTRING\fR (deprecated)
+Alias for --mampid.
+.TP
 \fB\-\-ip.src\fR=\fIADDRESS\fR[/\fINETMASK\fP]
 Discard all packages where source address doesn't match ADDRESS. A mask can be
 specified to match a network. Either pass a netmask (e.g. /255.255.255.0) or
