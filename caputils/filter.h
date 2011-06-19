@@ -3,6 +3,7 @@
 
 #include <caputils/capture.h>
 #include <caputils/picotime.h>
+#include <stdio.h>
 #include <sys/socket.h>
 #include <netinet/ether.h>
 #include <netinet/in.h>
@@ -88,6 +89,11 @@ extern "C" {
 
   int filter_from_argv(int* argc, char** argv, struct filter*);
   void filter_from_argv_usage();
+
+  /**
+   * Display a representation of the filter.
+   */
+  void filter_print(const struct filter* filter, FILE* fp, int verbose);
 
   /**
    * Try to match a packet against the filter.

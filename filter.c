@@ -24,10 +24,12 @@
 #include <string.h>
 #include <assert.h>
 #include <arpa/inet.h>
+#include <net/if.h>
 #include <netinet/in.h>
 #include <netinet/ip.h>
 #include <netinet/udp.h>
 #include <netinet/tcp.h>
+#include <netinet/ether.h>
 
 /**
  * Match ethernet address.
@@ -203,4 +205,95 @@ int filter_match(const struct filter* filter, const void* pkt, struct cap_header
   match &= filter_end_time(filter, &head->ts);  /* End time vs packet timestamp */
 
   return match;
+}
+
+static const char* hexdump_address_r(const struct ether_addr* address, char buf[IFHWADDRLEN*3]){
+  int i;
+
+  for ( i = 0; i < IFHWADDRLEN - 1; i++ ) {
+    sprintf (buf + 3*i, "%2.2X:", address->ether_addr_octet[i]);
+  }  
+  sprintf (buf + 15, "%2.2X", address->ether_addr_octet[i]);
+
+  return buf;
+}
+
+void filter_print(const struct filter* filter, FILE* fp, int verbose){
+  static char buf[100];
+
+  fprintf(fp, "FILTER {%02d}\n", filter->filter_id);
+  switch(filter->type){
+    case 3:
+    case 2:
+      fprintf(fp, "\tDESTADDRESS   : %s://%s:%d\n", filter->type == 2 ? "udp" : "tcp", filter->destaddr, filter->destport);
+      break;
+    case 1:
+      fprintf(fp, "\tDESTADDRESS   : %02X:%02X:%02X:%02X:%02X:%02X\n",filter->destaddr[0],filter->destaddr[1],filter->destaddr[2],filter->destaddr[3],filter->destaddr[4],filter->destaddr[5]);
+      break;
+    case 0:
+      fprintf(fp, "\tDESTFILE      : %s\n", filter->destaddr);
+      break;
+  }
+  fprintf(fp, "\tCAPLEN        : %d\n", filter->caplen);
+  fprintf(fp, "\tindex         : %d\n", filter->index);
+
+  if ( verbose || filter->index&512 ){
+    fprintf(fp, "\tCI_ID         : %s\n", filter->iface);
+  } else if ( verbose ) {
+    fprintf(fp, "\tCI_ID         : NULL\n");
+  }
+
+  if ( filter->index&256 ){
+    fprintf(fp, "\tVLAN_TCI      : %d MASK (%d)", filter->vlan_tci, filter->vlan_tci_mask);
+  } else if ( verbose ) {
+    fprintf(fp, "\tVLAN_TCI      : NULL\n");
+  }
+
+  if ( filter->index&128 ){
+    fprintf(fp, "\tETH_TYPE      : %d (MASK: %d)\n", filter->eth_type, filter->eth_type_mask);
+  } else if ( verbose ) {
+    fprintf(fp, "\tETH_TYPE      : NULL\n");
+  }
+  
+  if ( filter->index&64 ){
+    fprintf(fp, "\tETH_SRC       : %s (MASK: %s)\n", hexdump_address_r(&filter->eth_src, &buf[0]), hexdump_address_r(&filter->eth_src_mask, &buf[19]));
+  } else if ( verbose ) {
+    fprintf(fp, "\tETH_SRC       : NULL\n");
+  }
+
+  if ( filter->index&32 ){
+    fprintf(fp, "\tETH_DST       : %s (MASK: %s)\n", hexdump_address_r(&filter->eth_dst, &buf[0]), hexdump_address_r(&filter->eth_dst_mask, &buf[19]));
+  } else if ( verbose ) {
+    fprintf(fp, "\tETH_DST       : NULL\n");
+  }
+  
+  if ( filter->index&16 ){
+    fprintf(fp, "\tIP_PROTO      : %d\n", filter->ip_proto);
+  } else if ( verbose ) {
+    fprintf(fp, "\tIP_PROTO      : NULL\n");
+  }
+
+  if ( filter->index&8 ){
+    fprintf(fp, "\tIP_SRC        : %s (MASK: %s)\n", filter->_ip_src, filter->_ip_src_mask);
+  } else if ( verbose ) {
+    fprintf(fp, "\tIP_SRC        : NULL\n");
+  }
+
+  if ( filter->index&4 ){
+    fprintf(fp, "\tIP_DST        : %s (MASK: %s)\n", filter->_ip_dst, filter->_ip_dst_mask);
+  } else if ( verbose ) {
+    fprintf(fp, "\tIP_DST        : NULL\n");
+  }
+
+  if ( filter->index&2 ){
+    fprintf(fp, "\tPORT_SRC      : %d (MASK: %d)\n", filter->src_port, filter->src_port_mask);
+  } else if ( verbose ) {
+    fprintf(fp, "\tPORT_SRC      : NULL\n");
+  }
+
+  if ( filter->index&1  ){
+    fprintf(fp, "\tPORT_DST      : %d (MASK: %d)\n", filter->dst_port, filter->dst_port_mask);
+  } else if ( verbose ) {
+    fprintf(fp, "\tPORT_DST      : NULL\n");
+  }
 }
