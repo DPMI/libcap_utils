@@ -128,6 +128,7 @@ public:
   }
 
   void test_starttime(){
+    /**@todo Check all supported date formats */
     argc = generate_argv(argv, "programname", "--begin", "123.4007", NULL);
     CPPUNIT_ASSERT_SUCCESS(filter_from_argv(&argc, argv, &filter), 1);
 
@@ -137,6 +138,7 @@ public:
   }
 
   void test_endtime(){
+    /**@todo Check all supported date formats */
     argc = generate_argv(argv, "programname", "--end", "123.4007", NULL);
     CPPUNIT_ASSERT_SUCCESS(filter_from_argv(&argc, argv, &filter), 1);
 
@@ -187,15 +189,23 @@ public:
   }
 
   void test_eth_src(){
-    argc = generate_argv(argv, "programname", "--eth.src", "01:00:00:00:00:02/FF:FF:FF:FF:FF:00", NULL);
-    CPPUNIT_ASSERT_SUCCESS(filter_from_argv(&argc, argv, &filter), 1);
-
     struct ether_addr addr = *ether_aton("01:00:00:00:00:02");
-    struct ether_addr mask = *ether_aton("FF:FF:FF:FF:FF:00");
+    struct ether_addr mask1 = *ether_aton("FF:FF:FF:FF:FF:FF");
+    struct ether_addr mask2 = *ether_aton("12:34:56:78:9a:bc");
+
+    argc = generate_argv(argv, "programname", "--eth.src", "01:00:00:00:00:02", NULL);
+    CPPUNIT_ASSERT_SUCCESS(filter_from_argv(&argc, argv, &filter), 1);
    
     CPPUNIT_ASSERT_EQUAL((uint32_t)FILTER_ETH_SRC, filter.index);
-    CPPUNIT_ASSERT_ETH_ADDR(addr, filter.eth_src);
-    CPPUNIT_ASSERT_ETH_ADDR(mask, filter.eth_src_mask);
+    CPPUNIT_ASSERT_ETH_ADDR(addr,  filter.eth_src);
+    CPPUNIT_ASSERT_ETH_ADDR(mask1, filter.eth_src_mask);
+
+    argc = generate_argv(argv, "programname", "--eth.src", "01:00:00:00:00:02/12:34:56:78:9a:bc", NULL);
+    CPPUNIT_ASSERT_SUCCESS(filter_from_argv(&argc, argv, &filter), 1);
+   
+    CPPUNIT_ASSERT_EQUAL((uint32_t)FILTER_ETH_SRC, filter.index);
+    CPPUNIT_ASSERT_ETH_ADDR(addr,  filter.eth_src);
+    CPPUNIT_ASSERT_ETH_ADDR(mask2, filter.eth_src_mask);
   }
 
   void test_eth_dst(){

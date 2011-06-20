@@ -248,6 +248,30 @@ static int parse_eth_type(const char* src, uint16_t* type, uint16_t* mask, const
   return 1;
 }
 
+static int parse_eth_addr(const char* src, struct ether_addr* addr, struct ether_addr* mask, const char* flag){
+  static char* mask_default = "FF:FF:FF:FF:FF:FF";
+  const char* buf_addr = src;
+  const char* buf_mask = mask_default;
+ 
+  /* test if mask was passed */
+  char* separator = strchr(src, '/');
+  if ( separator ){
+    separator[0] = 0;
+    buf_mask = separator+1;
+  }
+
+  if ( !eth_aton(addr, buf_addr) ){
+    fprintf(stderr, "Invalid ethernet address passed to --%s: %s. Ignoring\n", flag, buf_addr);
+    return 0;
+  }
+  if ( !eth_aton(mask, buf_mask) ){
+    fprintf(stderr, "Invalid ethernet mask passed to --%s: %s. Ignoring\n", flag, buf_mask);
+    return 0;
+  }
+
+  return 1;
+}
+
 void filter_from_argv_usage(){
   printf("libcap_filter-" VERSION " options\n");
   printf("      --starttime=DATETIME    Discard all packages before starttime described by\n");
@@ -346,32 +370,14 @@ int filter_from_argv(int* argcptr, char** argv, struct filter* filter){
       break;
 
     case FILTER_ETH_SRC:
-      {
-	char addr[18], mask[18] = "FF:FF:FF:FF:FF:FF";
-	sscanf(optarg, "%18s/%18s", addr, mask);
-	if ( !eth_aton(&filter->eth_src, addr) ){
-	  fprintf(stderr, "Invalid ethernet address passed to --eth.src: %s. Ignoring\n", addr);
-	  continue;
-	}
-	if ( !eth_aton(&filter->eth_src_mask, mask) ){
-	  fprintf(stderr, "Invalid ethernet mask passed to --eth.src: %s. Ignoring\n", mask);
-	  continue;
-	}
+      if ( !parse_eth_addr(optarg, &filter->eth_src, &filter->eth_src_mask, "eth.src") ){
+	continue;
       }
       break;
 
     case FILTER_ETH_DST:
-      {
-	char addr[18], mask[18] = "FF:FF:FF:FF:FF:FF";
-	sscanf(optarg, "%18s/%18s", addr, mask);
-	if ( !eth_aton(&filter->eth_dst, addr) ){
-	  fprintf(stderr, "Invalid ethernet address passed to --eth.dst: %s. Ignoring\n", addr);
-	  continue;
-	}
-	if ( !eth_aton(&filter->eth_dst_mask, mask) ){
-	  fprintf(stderr, "Invalid ethernet mask passed to --eth.dst: %s. Ignoring\n", mask);
-	  continue;
-	}
+      if ( !parse_eth_addr(optarg, &filter->eth_dst, &filter->eth_dst_mask, "eth.dst") ){
+	continue;
       }
       break;
 
