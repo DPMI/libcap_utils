@@ -171,17 +171,19 @@ public:
   }
 
   void test_eth_type(){
-    argc = generate_argv(argv, "programname", "--eth.type", "ip", NULL);
+    argc = generate_argv(argv, "programname", "--eth.type", "ip/1234", NULL);
     CPPUNIT_ASSERT_SUCCESS(filter_from_argv(&argc, argv, &filter), 1);
 
     CPPUNIT_ASSERT_EQUAL((uint32_t)FILTER_ETH_TYPE, filter.index);
     CPPUNIT_ASSERT_EQUAL((uint16_t)ETH_P_IP, filter.eth_type);
+    CPPUNIT_ASSERT_EQUAL((uint16_t)1234, filter.eth_type_mask);
 
-    argc = generate_argv(argv, "programname", "--eth.type", "2048", NULL);
+    argc = generate_argv(argv, "programname", "--eth.type", "2048/1234", NULL);
     CPPUNIT_ASSERT_SUCCESS(filter_from_argv(&argc, argv, &filter), 1);
 
     CPPUNIT_ASSERT_EQUAL((uint32_t)FILTER_ETH_TYPE, filter.index);
     CPPUNIT_ASSERT_EQUAL((uint16_t)ETH_P_IP, filter.eth_type);
+    CPPUNIT_ASSERT_EQUAL((uint16_t)1234, filter.eth_type_mask);
   }
 
   void test_eth_src(){
