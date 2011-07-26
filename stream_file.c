@@ -52,16 +52,24 @@ static int write(struct stream_file* st, const void* data, size_t size){
   return 0;
 }
 
+/* Try to load a v05 file header */
 int load_legacy_05(struct file_header_05* fh, FILE* src){
   fseek(src, 0L, SEEK_SET);
-  fread(fh, 1, sizeof(struct file_header_05), src);
 
+  /* silence gcc [-Wunused-result] */
+  int __attribute__((unused)) bytes =			\
+    fread(fh, 1, sizeof(struct file_header_05), src);
+  
   return fh->version.major == 0 && fh->version.minor == 5;
 }
 
+/* Try to load a v06 file header */
 int load_legacy_06(struct file_header_06* fh, FILE* src){
   fseek(src, 0L, SEEK_SET);
-  fread(fh, 1, sizeof(struct file_header_06), src);
+
+  /* silence gcc [-Wunused-result] */
+  int __attribute__((unused)) bytes =			\
+    fread(fh, 1, sizeof(struct file_header_06), src);
 
   return fh->version.major == 0 && fh->version.minor == 6;
 }
@@ -187,8 +195,13 @@ int stream_file_create(struct stream** stptr, FILE* fp, const char* filename, co
   st->base.FH.comment_size = strlen(comment);
   strncpy(st->base.FH.mpid, mpid, 200);
 
-  fwrite(&st->base.FH, 1, sizeof(struct file_header_t), st->file);
-  fwrite(comment, 1, strlen(comment), st->file);
+  if ( fwrite(&st->base.FH, 1, sizeof(struct file_header_t), st->file) < sizeof(struct file_header_t) ){
+    return EIO;
+  }
+
+  if ( fwrite(comment, 1, strlen(comment), st->file) < strlen(comment) ){
+    return EIO;
+  }
 
   /* add callbacks */
   st->base.fill_buffer = (fill_buffer_callback)stream_file_fillbuffer;
