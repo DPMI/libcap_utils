@@ -13,7 +13,7 @@ typedef int (*fill_buffer_callback)(struct stream* st, struct timeval* timeout);
  */
 typedef long (*destroy_callback)(struct stream* st);
 
-typedef int (*write_callback)(struct stream* st, u_char* data, size_t size);
+typedef int (*write_callback)(struct stream* st, const void* data, size_t size);
 
 // Stream structure, used to manage different types of streams
 //

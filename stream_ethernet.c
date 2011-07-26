@@ -154,7 +154,7 @@ static int fill_buffer(struct stream_ethernet* st, struct timeval* timeout){
   return readBytes;
 }
 
-long stream_write(struct stream_ethernet* st, u_char* data, size_t size){
+long stream_write(struct stream_ethernet* st, const void* data, size_t size){
   if ( sendto(st->socket, data, size, 0, (struct sockaddr*)&st->sll, sizeof(st->sll)) < 0 ){
     return errno;
   }
