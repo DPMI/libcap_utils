@@ -15,6 +15,30 @@ extern "C" {
 
   typedef char CI_handle_t[8];
 
+  union destination {
+    /* raw buffer (for backwards compability) */
+    unsigned char buffer[22];
+
+    /* for ethernet streams */
+    struct ether_addr ether_addr;
+
+    /* for capfiles */
+    char filename[22];
+
+    /* for TCP/UDP streams */
+    struct {
+      struct in_addr in_addr;
+      uint16_t in_port;
+    };
+  };
+
+  enum DestinationType {
+    DEST_CAPFILE = 0,
+    DEST_ETHERNET,
+    DEST_UDP,
+    DEST_TCP,
+  };
+
   enum FilterBitmask {
     /* filter 0.7 extensions */
     FILTER_START_TIME=(1<<12),
@@ -64,8 +88,8 @@ extern "C" {
   uint32_t consumer;                 /* Destination Consumer */		\
   uint32_t caplen;                   /* Amount of data to capture. */	\
 									\
-  unsigned char destaddr[22];        /* Destination Address. */		\
-  uint32_t destport;                 /* Destination Port, used for udp and tcp sockets. */ \
+  union destination dest;            /* Destination Address. */		\
+  uint32_t _destport;                /* DO NOT USE. FOR COMPAT ONLY */	\
   uint32_t type;                     /* Consumer Stream Type; 0-file, 1-ethernet multicast, 2-udp, 3-tcp */ \
                                                                         \
   /* filter 0.7 extensions */                                           \

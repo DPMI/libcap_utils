@@ -209,6 +209,7 @@ int filter_match(const struct filter* filter, const void* pkt, struct cap_header
 
 /* not static because it is used by unittests */
 const char* hexdump_address_r(const struct ether_addr* address, char buf[IFHWADDRLEN*3]){
+  /* this is basically the same as ether_ntoa but it pads with zeroes which ether_ntoa doesn't */
   int i;
 
   for ( i = 0; i < IFHWADDRLEN - 1; i++ ) {
@@ -217,6 +218,10 @@ const char* hexdump_address_r(const struct ether_addr* address, char buf[IFHWADD
   sprintf (buf + 15, "%2.2X", address->ether_addr_octet[i]);
 
   return buf;
+}
+const char* hexdump_address(const struct ether_addr* address){
+  static char buf[IFHWADDRLEN*3];
+  return hexdump_address_r(address, buf);
 }
 
 static const char* inet_ntoa_r(const struct in_addr in, char* buf){
@@ -230,15 +235,15 @@ void filter_print(const struct filter* filter, FILE* fp, int verbose){
 
   fprintf(fp, "FILTER {%02d}\n", filter->filter_id);
   switch(filter->type){
-    case 3:
-    case 2:
-      fprintf(fp, "\tDESTADDRESS   : %s://%s:%d\n", filter->type == 2 ? "udp" : "tcp", filter->destaddr, filter->destport);
+    case DEST_TCP:
+    case DEST_UDP:
+      fprintf(fp, "\tDESTADDRESS   : %s://%s:%d\n", filter->type == DEST_UDP ? "udp" : "tcp", inet_ntoa(filter->dest.in_addr), filter->dest.in_port);
       break;
-    case 1:
-      fprintf(fp, "\tDESTADDRESS   : %02X:%02X:%02X:%02X:%02X:%02X\n",filter->destaddr[0],filter->destaddr[1],filter->destaddr[2],filter->destaddr[3],filter->destaddr[4],filter->destaddr[5]);
+    case DEST_ETHERNET:
+      fprintf(fp, "\tDESTADDRESS   : %s\n", hexdump_address(&filter->dest.ether_addr));
       break;
-    case 0:
-      fprintf(fp, "\tDESTFILE      : %s\n", filter->destaddr);
+    case DEST_CAPFILE:
+      fprintf(fp, "\tDESTFILE      : %s\n", filter->dest.filename);
       break;
   }
   fprintf(fp, "\tCAPLEN        : %d\n", filter->caplen);
