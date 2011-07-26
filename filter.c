@@ -273,12 +273,12 @@ int destination_aton(destination_t* dst, const char* src, enum DestinationType t
       char* ip = buf;
       strncpy(buf, src, 48);
 
-      dst->in_port = 0x0810; /* default port */
+      dst->in_port = htonl(0x0810); /* default port */
 
       char* separator = strchr(buf, ':');
       if( separator ) {
 	*separator = 0;
-	dst->in_port = atoi(separator+1);
+	dst->in_port = htonl(atoi(separator+1));
       }
 
       dst->in_addr.s_addr = inet_addr(ip);
