@@ -65,6 +65,11 @@ static void split_argv(int* src_argc, char** src_argv, int* dst_argc, char** dst
   /* always copy program_name */
   dst_argv[(*dst_argc)++] = src_argv[0];
 
+  /* no arguments passed */
+  if ( *src_argc == 1 ){
+    return;
+  }
+
   char** ptr = &src_argv[1];
   int i = 1;
   do {
