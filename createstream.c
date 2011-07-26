@@ -59,7 +59,7 @@ long createstream_file(struct stream** stptr, FILE* file, const char* filename, 
   return stream_file_create(stptr, file, filename, mpid, comment);
 }
 
-long createstream(struct stream** stptr, const char* address, int protocol, const char* nic, const char* mpid, const char* comment){
+long createstream(struct stream** stptr, const destination_t* dest, const char* nic, const char* mpid, const char* comment){
   /* struct ifreq ifr; */
   /* int ifindex=0; */
   /* int socket_descriptor=0; */
@@ -67,12 +67,12 @@ long createstream(struct stream** stptr, const char* address, int protocol, cons
   /* struct sockaddr_in destination; */
   /* struct ether_addr ethernet_address; */
 
-  switch ( protocol ){
+  switch ( dest->type ){
   case PROTOCOL_ETHERNET_MULTICAST:
-    return stream_ethernet_create(stptr, address, nic, mpid, comment);
+    return stream_ethernet_create(stptr, &dest->ether_addr, nic, mpid, comment);
 
   case PROTOCOL_LOCAL_FILE:
-    return stream_file_create(stptr, NULL, address, mpid, comment);
+    return stream_file_create(stptr, NULL, dest->filename, mpid, comment);
 
   default:
     return ERROR_NOT_IMPLEMENTED;

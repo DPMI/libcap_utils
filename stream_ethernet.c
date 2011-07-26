@@ -161,7 +161,7 @@ long stream_write(struct stream_ethernet* st, const void* data, size_t size){
   return 0;
 }
 
-long stream_ethernet_init(struct stream** stptr, const char* address, const char* iface, uint16_t proto){
+long stream_ethernet_init(struct stream** stptr, const struct ether_addr* addr, const char* iface, uint16_t proto){
   struct ifreq ifr;
   struct packet_mreq mcast = {0,};
 
@@ -170,7 +170,7 @@ long stream_ethernet_init(struct stream** stptr, const char* address, const char
   assert(stptr);
 
   /* validate arguments */
-  if ( !(address && iface) ){
+  if ( !(addr && iface) ){
     return EINVAL;
   }
 
@@ -203,22 +203,18 @@ long stream_ethernet_init(struct stream** stptr, const char* address, const char
   st->if_mtu = ifr.ifr_mtu;
 
   /* parse hwaddr from user */
-  struct ether_addr* myaddress = ether_aton(address);
-  if ( !myaddress ){
-    return ERROR_INVALID_HWADDR;
-  }
-  if ( (myaddress->ether_addr_octet[0] & 0x01) == 0 ){
+  if ( (addr->ether_addr_octet[0] & 0x01) == 0 ){
     return ERROR_INVALID_HWADDR_MULTICAST;
   }
   
   /* store parsed address */
-  memcpy(&st->address, myaddress, ETH_ALEN);
+  memcpy(&st->address, addr, ETH_ALEN);
 
   /* setup multicast address */
   mcast.mr_ifindex = st->if_index;
   mcast.mr_type = PACKET_MR_MULTICAST;
   mcast.mr_alen = ETH_ALEN;
-  memcpy(mcast.mr_address, myaddress, ETH_ALEN);
+  memcpy(mcast.mr_address, &st->address, ETH_ALEN);
 
   /* setup ethernet multicast */
   if ( setsockopt(fd, SOL_PACKET, PACKET_ADD_MEMBERSHIP, (void*)&mcast, sizeof(mcast)) == -1 ){
@@ -231,7 +227,7 @@ long stream_ethernet_init(struct stream** stptr, const char* address, const char
   st->sll.sll_ifindex=st->if_index;
   st->sll.sll_protocol=htons(proto);
   st->sll.sll_pkttype=PACKET_MULTICAST;
-  memcpy(st->sll.sll_addr, myaddress,ETH_ALEN);
+  memcpy(st->sll.sll_addr, &st->address, ETH_ALEN);
 
   if ( bind(fd, (struct sockaddr *) &st->sll, sizeof(st->sll)) == -1 ) {
     perror("Binding to interface.");
@@ -254,10 +250,10 @@ long destroy(struct stream_ethernet* st){
   return 0;
 }
 
-long stream_ethernet_create(struct stream** stptr, const char* address, const char* iface, const char* mpid, const char* comment){
+long stream_ethernet_create(struct stream** stptr, const struct ether_addr* addr, const char* iface, const char* mpid, const char* comment){
   long ret = 0;
 
-  if ( (ret=stream_ethernet_init(stptr, address, iface, LLPROTO)) != 0 ){
+  if ( (ret=stream_ethernet_init(stptr, addr, iface, LLPROTO)) != 0 ){
     return ret;
   }
 
@@ -274,10 +270,10 @@ long stream_ethernet_create(struct stream** stptr, const char* address, const ch
   return 0;
 }
 
-long stream_ethernet_open(struct stream** stptr, const char* address, const char* iface){
+long stream_ethernet_open(struct stream** stptr, const struct ether_addr* addr, const char* iface){
   long ret = 0;
 
-  if ( (ret=stream_ethernet_init(stptr, address, iface, ETH_P_ALL)) != 0 ){
+  if ( (ret=stream_ethernet_init(stptr, addr, iface, ETH_P_ALL)) != 0 ){
     return ret;
   }
 

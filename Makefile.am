@@ -5,7 +5,7 @@ bin_PROGRAMS = capinfo capfilter
 man1_MANS = man/capfilter.1
 man3_MANS = man/libcap_filter.3
 
-TESTS = tests/filter_argv
+TESTS = tests/filter_argv tests/destination
 check_PROGRAMS = ${TESTS}
 
 nobase_include_HEADERS =    \
@@ -28,9 +28,7 @@ libcap_utils_la_SOURCES = \
 	closestream.c \
 	createstream.c \
 	error.c \
-	ethaton.c \
 	openstream.c \
-	picotime.c \
 	readpost.c \
 	stream.c \
 	stream_ethernet.c \
@@ -43,7 +41,7 @@ libcap_utils_la_SOURCES = \
 
 libcap_filter_la_LDFLAGS = -version-info 0:0:0
 libcap_filter_la_CFLAGS = -Wall
-libcap_filter_la_SOURCES = createfilter.c filter.c
+libcap_filter_la_SOURCES = createfilter.c filter.c ethaton.c picotime.c
 
 capinfo_CFLAGS = -Wall
 capinfo_LDADD = libcap_utils.la libcap_filter.la
@@ -55,3 +53,8 @@ tests_filter_argv_CXXFLAGS = -Wall $(CPPUNIT_CFLAGS)
 tests_filter_argv_LDFLAGS = $(CPPUNIT_LIBS)
 tests_filter_argv_LDADD = libcap_filter.la libcap_utils.la
 tests_filter_argv_SOURCES = tests/filter_argv.cpp
+
+tests_destination_CXXFLAGS = -Wall $(CPPUNIT_CFLAGS)
+tests_destination_LDFLAGS = $(CPPUNIT_LIBS)
+tests_destination_LDADD = libcap_filter.la
+tests_destination_SOURCES = tests/destination.cpp

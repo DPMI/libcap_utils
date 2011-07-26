@@ -76,8 +76,8 @@ int is_valid_version(struct file_header_t* fhptr){
   return 0;
 }
 
-long openstream(struct stream** stptr, const char* address, enum protocol_t protocol, const char* nic, int port){
-  switch(protocol){
+long openstream(struct stream** stptr, const destination_t* dest, const char* nic, int port){
+  switch(dest->type){
     /* case PROTOCOL_TCP_UNICAST: */
     /*   return stream_tcp_init(myStream, address, port); */
 
@@ -85,13 +85,13 @@ long openstream(struct stream** stptr, const char* address, enum protocol_t prot
     /*   return stream_udp_init(myStream, address, port); */
 
     case PROTOCOL_ETHERNET_MULTICAST:
-      return stream_ethernet_open(stptr, address, nic);
+      return stream_ethernet_open(stptr, &dest->ether_addr, nic);
 
     case PROTOCOL_LOCAL_FILE:
-      return stream_file_open(stptr, address);
+      return stream_file_open(stptr, dest->filename);
 
     default:
-      fprintf(stderr, "Unhandled protocol %d\n", protocol);
+      fprintf(stderr, "Unhandled protocol %d\n", dest->type);
       return ERROR_NOT_IMPLEMENTED;
   }
 }

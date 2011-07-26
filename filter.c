@@ -21,7 +21,10 @@
 #endif
 
 #include "caputils/filter.h"
+#include "caputils_int.h"
+#include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 #include <assert.h>
 #include <arpa/inet.h>
 #include <net/if.h>
@@ -230,22 +233,110 @@ static const char* inet_ntoa_r(const struct in_addr in, char* buf){
   return buf;
 }
 
+static void homogenize_eth_addr(char* buf){
+  /* eth addr with : */
+  if ( buf[2] == ':' ){
+    return; /* do nothing */
+  }
+
+  /* convert - to : */
+  if ( buf[2] == '-' ){
+    for ( int i = 0; i < 6; i++ ){
+      buf[i*3+2] = ':';
+    }
+    return;
+  }
+
+  /* if no : or - is found, insert : into the buffer by starting at the
+   * first pair (LSB) and moving it to the new position. */
+  
+  char* tmp = &buf[3*5+2];
+  *(tmp--) = 0;
+  for ( int i = 5; i >= 1; i-- ){
+    *(tmp--) = buf[1+i*2];
+    *(tmp--) = buf[  i*2];
+    *(tmp--) = ':';
+  }
+}
+
+int destination_aton(destination_t* dst, const char* src, enum DestinationType type){
+  char buf[48];          /* larger than max, just in case user provides large */
+  strncpy(buf, src, 48); /* input, will bail out later on bad data. */
+
+  dst->type = type;
+
+  switch( type ){
+  case DEST_TCP: // TCP
+  case DEST_UDP: // UDP
+    // DESTADDR is ipaddress:port
+    {
+      char* ip = buf;
+      strncpy(buf, src, 48);
+
+      dst->in_port = 0x0810; /* default port */
+
+      char* separator = strchr(buf, ':');
+      if( separator ) {
+	*separator = 0;
+	dst->in_port = atoi(separator+1);
+      }
+
+      dst->in_addr.s_addr = inet_addr(ip);
+
+      if ( dst->in_addr.s_addr == INADDR_NONE ){
+	return EINVAL;
+      }
+    }
+    break;
+
+  case DEST_ETHERNET: // Ethernet
+    homogenize_eth_addr(buf);
+    
+    if ( !eth_aton(&dst->ether_addr, buf) ){
+      return EINVAL;
+    }
+    break;
+
+  case DEST_CAPFILE: // File
+    strncpy(dst->filename, src, 22);
+    dst->filename[21] = 0; /* force null-terminator */
+    break;
+  }
+
+  return 0;
+}
+
+
+const char* destination_ntoa(const destination_t* src){
+  static char buf[22];
+  return destination_ntoa_r(src, buf);
+}
+
+const char* destination_ntoa_r(const destination_t* src, char buf[22]){
+  int __attribute__((unused)) bytes = 0;
+
+  switch(src->type){
+    case DEST_TCP:
+    case DEST_UDP:
+      bytes = snprintf(buf, 22, "%s://%s:%d", src->type == DEST_UDP ? "udp" : "tcp", inet_ntoa(src->in_addr), src->in_port);
+      break;
+    case DEST_ETHERNET:
+      hexdump_address_r(&src->ether_addr, buf);
+      break;
+    case DEST_CAPFILE:
+      strcpy(buf, src->filename);
+      break;
+  }
+
+  assert(bytes < 22);
+  return buf;
+}
+
 void filter_print(const struct filter* filter, FILE* fp, int verbose){
   static char buf[100];
 
   fprintf(fp, "FILTER {%02d}\n", filter->filter_id);
-  switch(filter->type){
-    case DEST_TCP:
-    case DEST_UDP:
-      fprintf(fp, "\tDESTADDRESS   : %s://%s:%d\n", filter->type == DEST_UDP ? "udp" : "tcp", inet_ntoa(filter->dest.in_addr), filter->dest.in_port);
-      break;
-    case DEST_ETHERNET:
-      fprintf(fp, "\tDESTADDRESS   : %s\n", hexdump_address(&filter->dest.ether_addr));
-      break;
-    case DEST_CAPFILE:
-      fprintf(fp, "\tDESTFILE      : %s\n", filter->dest.filename);
-      break;
-  }
+  fprintf(fp, "\t%.14s: %s\n", filter->dest.type == DEST_CAPFILE ? "DESTFILE" : "DESTADDRESS", destination_ntoa(&filter->dest));
   fprintf(fp, "\tCAPLEN        : %d\n", filter->caplen);
   fprintf(fp, "\tindex         : %d\n", filter->index);
 

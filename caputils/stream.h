@@ -43,12 +43,12 @@ struct stream {
  * Open an existing stream.
  * @return 1 if successful.
  */
-long openstream(struct stream** stptr, const char* address, enum protocol_t protocol, const char* nic, int port);
+long openstream(struct stream** stptr, const destination_t* dest, const char* nic, int port);
 
 /**
  * Create a new stream.
  */
-long createstream(struct stream** st, const char* address, int protocol, const char* nic, const char* mpid, const char* comment);
+long createstream(struct stream** st, const destination_t* dest, const char* nic, const char* mpid, const char* comment);
 
 /**
  * Create a filestream.

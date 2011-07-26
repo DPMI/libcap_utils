@@ -15,22 +15,31 @@ extern "C" {
 
   typedef char CI_handle_t[8];
 
-  union destination {
-    /* raw buffer (for backwards compability) */
-    unsigned char buffer[22];
+  struct destination {
+    union {
+      /* raw buffer for backwards compability (may not be null-terminated) (includes old port) */
+      unsigned char buffer[22 + 4];
+      
+      /* for ethernet streams */
+      struct ether_addr ether_addr;
+      
+      /* for capfiles (null-terminated) */
+      char filename[22];
 
-    /* for ethernet streams */
-    struct ether_addr ether_addr;
-
-    /* for capfiles */
-    char filename[22];
-
-    /* for TCP/UDP streams */
-    struct {
-      struct in_addr in_addr;
-      uint16_t in_port;
+      /* for locally stored capfiles (null-terminated) */
+      /* these cannot be sent across network */
+      const char* local_filename;
+      
+      /* for TCP/UDP streams */
+      struct {
+	struct in_addr in_addr;
+	uint16_t in_port;
+      };
     };
+
+    uint32_t type;
   };
+  typedef struct destination destination_t;
 
   enum DestinationType {
     DEST_CAPFILE = 0,
@@ -88,11 +97,10 @@ extern "C" {
   uint32_t consumer;                 /* Destination Consumer */		\
   uint32_t caplen;                   /* Amount of data to capture. */	\
 									\
-  union destination dest;            /* Destination Address. */		\
-  uint32_t _destport;                /* DO NOT USE. FOR COMPAT ONLY */	\
-  uint32_t type;                     /* Consumer Stream Type; 0-file, 1-ethernet multicast, 2-udp, 3-tcp */ \
+  destination_t dest;                /* Destination. */			\
                                                                         \
   /* filter 0.7 extensions */                                           \
+  uint32_t version;                  /* filter version */		\
   timepico starttime;                /* 4096: Time of first packet. */  \
   timepico endtime;                  /* 2048: Time of last packet. */   \
   char mampid[8];                    /* 1024: Match MAMPid */           \
@@ -113,6 +121,22 @@ extern "C" {
 
   int filter_from_argv(int* argc, char** argv, struct filter*);
   void filter_from_argv_usage();
+
+  /**
+   * Convert string to destination.
+   */
+  int destination_aton(destination_t* dst, const char* src, enum DestinationType type);
+
+  /**
+   * Convert destination to string. The string is returned in a statically
+   * allocated buffer, which subsequent calls will overwrite.
+   */
+  const char* destination_ntoa(const destination_t* src);
+
+  /**
+   * Like destination_ntoa but writes into buf.
+   */
+  const char* destination_ntoa_r(const destination_t* src, char buf[22]);
 
   /**
    * Display a representation of the filter.
