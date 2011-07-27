@@ -38,6 +38,16 @@
 #include <netdb.h>
 #include <getopt.h>
 
+/* uint32_t MSB */
+#define PARAM_BIT (~((uint32_t)-1 >> 1))
+
+/**
+ * Parameters are added with the MSB high so they can be distinguished from the
+ * regular filter. */
+enum Parameters {
+  PARAM_CAPLEN = 1,
+};
+
 static struct option options[]= {
   {"starttime", 1, 0, 4096},
   {"begin",     1, 0, 4096},
@@ -56,6 +66,7 @@ static struct option options[]= {
   {"ip.dst",    1, 0,    4},
   {"tp.sport",  1, 0,    2},
   {"tp.dport",  1, 0,    1},
+  {"caplen",    1, 0,    PARAM_CAPLEN | PARAM_BIT},
   {0, 0, 0, 0}
 };
 
@@ -298,6 +309,7 @@ void filter_from_argv_usage(){
   printf("      --ip.dst=ADDR[/MASK]    Filter on destination ip address, dotted decimal\n");
   printf("      --tp.sport=PORT[/MASK]  Filter on source portnumber\n");
   printf("      --tp.dport=PORT[/MASK]  Filter on destination portnumber\n");
+  printf("      --caplen=BYTES          Store BYTES of the captured packet. [default=ALL]\n");
 }
 
 int filter_from_argv(int* argcptr, char** argv, struct filter* filter){
@@ -309,6 +321,7 @@ int filter_from_argv(int* argcptr, char** argv, struct filter* filter){
 
   /* reset filter */
   memset(filter, 0, sizeof(struct filter));
+  filter->caplen = -1; /* capture everything (-1 overflows to a very large int) */
 
   /* fast path */
   if ( argc == 0 ){
@@ -335,9 +348,19 @@ int filter_from_argv(int* argcptr, char** argv, struct filter* filter){
   int index;
   int op;
   while ( (op=getopt_long(filter_argc, filter_argv, "", options, &index)) != -1 ){
+    if ( op & PARAM_BIT ){
+      switch ((enum Parameters)(op ^ PARAM_BIT)){
+      case PARAM_CAPLEN:
+	filter->caplen = atoi(optarg);
+	printf("caplen: %d\n", filter->caplen);
+      }
+
+      continue;
+    }
+
     const enum FilterBitmask bitmask = (enum FilterBitmask)op;
 
-    switch (op){
+    switch (bitmask){
     case FILTER_START_TIME:
       if ( timepico_from_string(&filter->starttime, optarg) != 0 ){
 	fprintf(stderr, "Invalid dated passed to --%s: %s. Ignoring.", options[index].name, optarg);
