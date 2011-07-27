@@ -259,11 +259,12 @@ static void homogenize_eth_addr(char* buf){
   }
 }
 
-int destination_aton(destination_t* dst, const char* src, enum DestinationType type){
+int destination_aton(destination_t* dst, const char* src, enum DestinationType type, int flags){
   char buf[48];          /* larger than max, just in case user provides large */
   strncpy(buf, src, 48); /* input, will bail out later on bad data. */
 
   dst->type = type;
+  dst->flags = flags;
 
   switch( type ){
   case DEST_TCP: // TCP
@@ -298,8 +299,12 @@ int destination_aton(destination_t* dst, const char* src, enum DestinationType t
     break;
 
   case DEST_CAPFILE: // File
-    strncpy(dst->filename, src, 22);
-    dst->filename[21] = 0; /* force null-terminator */
+    if ( flags & DEST_LOCAL ){
+      dst->local_filename = src;
+    } else {
+      strncpy(dst->filename, src, 22);
+      dst->filename[21] = 0; /* force null-terminator */
+    }
     break;
   }
 
@@ -308,27 +313,28 @@ int destination_aton(destination_t* dst, const char* src, enum DestinationType t
 
 
 const char* destination_ntoa(const destination_t* src){
-  static char buf[22];
-  return destination_ntoa_r(src, buf);
+  static char buf[1024];
+  return destination_ntoa_r(src, buf, 1024);
 }
 
-const char* destination_ntoa_r(const destination_t* src, char buf[22]){
-  int __attribute__((unused)) bytes = 0;
+const char* destination_ntoa_r(const destination_t* src, char* buf, size_t bytes){
+  int __attribute__((unused)) written = 0;
 
   switch(src->type){
     case DEST_TCP:
     case DEST_UDP:
-      bytes = snprintf(buf, 22, "%s://%s:%d", src->type == DEST_UDP ? "udp" : "tcp", inet_ntoa(src->in_addr), src->in_port);
+      written = snprintf(buf, bytes, "%s://%s:%d", src->type == DEST_UDP ? "udp" : "tcp", inet_ntoa(src->in_addr), src->in_port);
       break;
     case DEST_ETHERNET:
       hexdump_address_r(&src->ether_addr, buf);
       break;
     case DEST_CAPFILE:
-      strcpy(buf, src->filename);
+      strncpy(buf, src->filename, bytes);
+      buf[bytes-1] = 0;
       break;
   }
 
-  assert(bytes < 22);
+  assert(written < bytes);
   return buf;
 }
 

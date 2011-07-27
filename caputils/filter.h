@@ -51,7 +51,9 @@ extern "C" {
 
   enum DestinationFlags {
     /* set to indicate that the capfile path is local (and can thus be longer
-     * than a regular filename of 22 chars) */
+     * than a regular filename of 22 chars). Memory is referenced so the caller
+     * must ensure the lifetime of the string is as long as the lifetime as the
+     * filter holding this address. */
     DEST_LOCAL = (1<<0),
   };
 
@@ -131,8 +133,13 @@ extern "C" {
 
   /**
    * Convert string to destination.
+   * @param dst Pointer to an existig destination_t.
+   * @param src String representing an address.
+   * @param type What kind of address it represents.
+   * @param flags Special flags, can be set to zero. @see DestinationFlags.
+   * @return Zero if successful, errno on errors.
    */
-  int destination_aton(destination_t* dst, const char* src, enum DestinationType type);
+  int destination_aton(destination_t* dst, const char* src, enum DestinationType type, int flags);
 
   /**
    * Convert destination to string. The string is returned in a statically
@@ -142,8 +149,9 @@ extern "C" {
 
   /**
    * Like destination_ntoa but writes into buf.
+   * @param bytes Size of buf.
    */
-  const char* destination_ntoa_r(const destination_t* src, char buf[22]);
+  const char* destination_ntoa_r(const destination_t* src, char* buf, size_t bytes);
 
   /**
    * Display a representation of the filter.
