@@ -72,7 +72,7 @@ long createstream(struct stream** stptr, const destination_t* dest, const char* 
     return stream_ethernet_create(stptr, &dest->ether_addr, nic, mpid, comment);
 
   case PROTOCOL_LOCAL_FILE:
-    return stream_file_create(stptr, NULL, dest->filename, mpid, comment);
+    return stream_file_create(stptr, NULL, (dest->flags & DEST_LOCAL) ? dest->local_filename : dest->filename, mpid, comment);
 
   default:
     return ERROR_NOT_IMPLEMENTED;

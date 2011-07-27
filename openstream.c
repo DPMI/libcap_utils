@@ -88,7 +88,7 @@ long openstream(struct stream** stptr, const destination_t* dest, const char* ni
       return stream_ethernet_open(stptr, &dest->ether_addr, nic);
 
     case PROTOCOL_LOCAL_FILE:
-      return stream_file_open(stptr, dest->filename);
+      return stream_file_open(stptr, (dest->flags & DEST_LOCAL) ? dest->local_filename : dest->filename);
 
     default:
       fprintf(stderr, "Unhandled protocol %d\n", dest->type);

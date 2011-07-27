@@ -26,7 +26,10 @@ void show_usage(){
 
 int show_info(const char* filename){
   struct stream* st;
-  const destination_t dest = { .local_filename = filename, .type = DEST_CAPFILE };
+  destination_t dest;
+  dest.local_filename = filename;
+  dest.type = DEST_CAPFILE;
+  dest.flags = DEST_LOCAL;
   long ret = 0;
 
   if ( (ret=openstream(&st, &dest, NULL, 0)) != 0 ){

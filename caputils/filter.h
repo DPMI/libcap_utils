@@ -37,7 +37,8 @@ extern "C" {
       };
     };
 
-    uint32_t type;
+    uint16_t type;
+    uint16_t flags;
   };
   typedef struct destination destination_t;
 
@@ -46,6 +47,12 @@ extern "C" {
     DEST_ETHERNET,
     DEST_UDP,
     DEST_TCP,
+  };
+
+  enum DestinationFlags {
+    /* set to indicate that the capfile path is local (and can thus be longer
+     * than a regular filename of 22 chars) */
+    DEST_LOCAL = (1<<0),
   };
 
   enum FilterBitmask {
