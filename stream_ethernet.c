@@ -155,7 +155,7 @@ static int fill_buffer(struct stream_ethernet* st, struct timeval* timeout){
   return readBytes;
 }
 
-long stream_write(struct stream_ethernet* st, const void* data, size_t size){
+static long stream_ethernet_write(struct stream_ethernet* st, const void* data, size_t size){
   if ( sendto(st->socket, data, size, 0, (struct sockaddr*)&st->sll, sizeof(st->sll)) < 0 ){
     return errno;
   }
@@ -266,7 +266,7 @@ long stream_ethernet_create(struct stream** stptr, const struct ether_addr* addr
   /* callbacks */
   st->base.fill_buffer = (fill_buffer_callback)fill_buffer;
   st->base.destroy = (destroy_callback)destroy;
-  st->base.write = (write_callback)stream_write;
+  st->base.write = (write_callback)stream_ethernet_write;
 
   return 0;
 }

@@ -46,7 +46,7 @@ const char* stream_get_mampid(const struct stream* st);
 /**
  * Write a captured frame to a stream.
  */
-long write_post(struct stream* myStream, u_char* data, int size);
+long stream_write(struct stream* st, void* data, size_t size);
 
 /**
  * Read the next matching frame from a stream.
@@ -55,6 +55,6 @@ long write_post(struct stream* myStream, u_char* data, int size);
  * @param filter Filter to match frames with.
  * @return Zero if successful, -1 when finished, positive int on error.
  */
-long read_post(struct stream* st, char** data, const struct filter*filter);
+long stream_read(struct stream* st, char** data, const struct filter* filter);
 
 #endif /* CAPUTILS__STREAM_H */
