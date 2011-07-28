@@ -1,6 +1,8 @@
 #ifndef CAPUTILS__STREAM_H
 #define CAPUTILS__STREAM_H
 
+#include <caputils/filter.h>
+
 struct stream;
 
 /**
