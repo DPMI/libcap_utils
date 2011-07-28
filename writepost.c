@@ -26,7 +26,7 @@
 #include "stream.h"
 #include <assert.h>
 
-long stream_write(struct stream *outStream, void* data, size_t size){
+long stream_write(struct stream *outStream, const void* data, size_t size){
   assert(outStream);
   assert(outStream->write);
   return outStream->write(outStream, data, size);

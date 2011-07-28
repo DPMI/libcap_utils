@@ -46,7 +46,7 @@ const char* stream_get_mampid(const struct stream* st);
 /**
  * Write a captured frame to a stream.
  */
-long stream_write(struct stream* st, void* data, size_t size);
+long stream_write(struct stream* st, const void* data, size_t size);
 
 /**
  * Read the next matching frame from a stream.
