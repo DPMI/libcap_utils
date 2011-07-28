@@ -37,9 +37,14 @@ int show_info(const char* filename){
     return ret;
   }
 
-  printf("%s: caputils %d.%d stream\n", filename, st->FH.version.major, st->FH.version.minor);
-  printf("     mpid: %s\n", st->FH.mpid[0] != 0 ? st->FH.mpid : "(unset)");
-  printf("  comment: %s\n", st->comment ? st->comment : "(unset)");
+  struct file_version version;
+  const char* mampid = stream_get_mampid(st);
+  const char* comment = stream_get_comment(st);
+  stream_get_version(st, &version);
+
+  printf("%s: caputils %d.%d stream\n", filename, version.major, version.minor);
+  printf("     mpid: %s\n", mampid != 0 ? mampid : "(unset)");
+  printf("  comment: %s\n", comment ? comment : "(unset)");
 
   struct cap_header* cp;
   long int packets = 0;

@@ -17,7 +17,13 @@
 /***************************************************************************
  This function writes a packet to file.
  ***************************************************************************/
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include "caputils/caputils.h"
+#include "stream.h"
 #include <assert.h>
 
 long write_post(struct stream *outStream, u_char* data, int size){

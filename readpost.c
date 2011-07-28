@@ -18,8 +18,14 @@
  This function reads a captured packet from the file and stores it in data.
   The function returns 1 until the file ends and a 0 is returned.
  ***************************************************************************/
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include "caputils/caputils.h"
 #include "caputils_int.h"
+#include "stream.h"
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>

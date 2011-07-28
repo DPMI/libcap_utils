@@ -1,43 +1,7 @@
 #ifndef CAPUTILS__STREAM_H
 #define CAPUTILS__STREAM_H
 
-/**
- * Fill the stream buffer.
- * @return Number of bytes actually read, zero if there is nothing more to read
- *         and negative on errors.
- */
-typedef int (*fill_buffer_callback)(struct stream* st, struct timeval* timeout);
-
-/**
- * Stream destructor.
- */
-typedef long (*destroy_callback)(struct stream* st);
-
-typedef int (*write_callback)(struct stream* st, const void* data, size_t size);
-
-// Stream structure, used to manage different types of streams
-//
-//
-struct stream {
-  enum protocol_t type;                 // What type of stream do we have?
-
-  /* header related */
-  struct file_header_t FH;
-  char *comment;
-
-  /* common fields */
-  char* buffer;
-  long expSeqnr;                        // Expected sequence number
-  long pktCount;                        // Received packets
-  int bufferSize;                       // Amount of data in buffer.
-  int readPos;                          // Read position
-  int flushed;                          // Indicate that we got a flush signal.
-
-  /* Callback functions */
-  fill_buffer_callback fill_buffer;
-  destroy_callback destroy;
-  write_callback write;
-};
+struct stream;
 
 /**
  * Open an existing stream.
@@ -61,6 +25,23 @@ long createstream_file(struct stream** stptr, FILE* file, const char* filename, 
  * Close stream.
  */
 long closestream(struct stream* st);
+
+/**
+ * Get verion of this stream.
+ */
+void stream_get_version(const struct stream* st, struct file_version* dst);
+
+/**
+ * Get stream comment.
+ * @return Internal reference to comment.
+ */
+const char* stream_get_comment(const struct stream* st);
+
+/**
+ * Get MAMPid of stream or NULL if unknown.
+ * @return Internal reference to MAMPid.
+ */
+const char* stream_get_mampid(const struct stream* st);
 
 /**
  * Write a captured frame to a stream.

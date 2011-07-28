@@ -4,6 +4,7 @@
 
 #include <caputils/caputils.h>
 #include "caputils_int.h"
+#include "stream.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -54,4 +55,17 @@ void match_inc_seqnr(struct stream* restrict st, const struct sendhead* restrict
     if( st->expSeqnr>=0xFFFF ){
       st->expSeqnr=0;
     }
+}
+
+void stream_get_version(const struct stream* st, struct file_version* dst){
+  dst->major = st->FH.version.major;
+  dst->minor = st->FH.version.minor;
+}
+
+const char* stream_get_comment(const struct stream* st){
+  return st->comment;
+}
+
+const char* stream_get_mampid(const struct stream* st){
+  return st->FH.mpid;
 }

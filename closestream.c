@@ -18,7 +18,12 @@
  This function closes a socket  and returns 1 on complition, else 0.
  ***************************************************************************/
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include "caputils/caputils.h"
+#include "stream.h"
 #include <unistd.h>
 #include <stdlib.h>
 #include <errno.h>
