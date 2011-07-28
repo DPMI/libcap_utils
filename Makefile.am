@@ -1,7 +1,7 @@
 ACLOCAL_AMFLAGS = -I m4
 
 lib_LTLIBRARIES = libcap_utils.la libcap_filter.la
-bin_PROGRAMS = capinfo capfilter
+bin_PROGRAMS = capinfo capfilter capdump
 man1_MANS = man/capfilter.1
 man3_MANS = man/libcap_filter.3
 
@@ -48,6 +48,9 @@ capinfo_LDADD = libcap_utils.la libcap_filter.la
 
 capfilter_CFLAGS = -Wall
 capfilter_LDADD = libcap_filter.la libcap_utils.la
+
+capdump_CFLAGS = -Wall
+capdump_LDADD = libcap_utils.la
 
 tests_filter_argv_CXXFLAGS = -Wall $(CPPUNIT_CFLAGS)
 tests_filter_argv_LDFLAGS = $(CPPUNIT_LIBS)

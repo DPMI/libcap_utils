@@ -2,7 +2,7 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#include "consumer.h"
+#include <caputils/stream.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -11,19 +11,13 @@
 #include <getopt.h>
 #include <errno.h>
 
-struct {
-  int print_content;
-  int cDate;
-  unsigned long long max_pkts;
-} args;
-
-int clone_stream(struct stream* dst, struct stream* src, const struct filter* filter, unsigned long long* matches){
+int clone_stream(struct stream* dst, struct stream* src, unsigned long long* matches){
   cap_head* cp;
   size_t len = sizeof(struct cap_header);
 
   *matches = 0;
   while ( 1 ){
-    long ret = stream_read(src, (char**)&cp, filter);
+    long ret = stream_read(src, &cp, NULL);
     if ( ret == EAGAIN ){
       continue;
     } else if ( ret != 0 ){
@@ -104,134 +98,40 @@ int display_stream(struct stream* src, const struct filter* filter, unsigned lon
   return 0;  
 }
 
+static struct option long_options[]= {
+  {"output",  1, 0, 'o'},
+  {"packets", 1, 0, 'p'},
+  {"help", 0, 0, 'h'},
+  {0, 0, 0, 0}
+};
+
 int main(int argc, char **argv){
   extern int optind, opterr, optopt;
 
   int option_index;
-  static struct option long_options[]= {
-    {"content",0,0,'c'},
-    {"output",1,0, 'o'},
-    {"pkts", 1, 0, 'p'},
-    {"help", 0, 0, 'h'},
-    {"if", 1,0,'i'},
-    {"tcp", 1,0,'t'},
-    {"udp", 1,0,'u'},
-    {"port", 1,0, 'v'},
-    {"calender",0,0,'d'},
-    {0, 0, 0, 0}
-  };
-  
-  /* defaults */
-  args.print_content = 0;
-  args.cDate = 0; /* Way to display date, cDate=0 => seconds since 1970. cDate=1 => calender date */  
-  args.max_pkts = 0; /* 0: all */
 
   char* outFilename=0;
-  int capOutfile=0;
-  int portnumber=0;
-  char* nic = NULL;
-  int streamType = 0; // Default a file
-  unsigned long long pktCount = 0;
-  int ret = 0;
-
-  struct filter myfilter;
-  filter_from_argv(&argc, argv, &myfilter);
-  struct stream* inStream;
-  struct stream* outStream;
+  struct stream* src;
+  struct stream* dst;
   
-  if(argc<2){
-    fprintf(stderr, "use %s -h or --help for help\n",argv[0]);
+  if ( argc < 2 ){
+    show_usage();
     exit(0);
   }
   
-  while (1) {
-    option_index = 0;
-    
-    int op = getopt_long  (argc, argv, "hp:o:cdi:tuv:",
-		       long_options, &option_index);
-    if (op == -1)
-      break;
-
+  while ( (op = getopt_long(argc, argv, "ho:p:", long_options, &option_index)) != -1 )
     switch (op){
     case 0: /* long opt */
       break;
-
-      case 'd':
-	fprintf(stderr, "Calender date\n");
-	args.cDate=1;
-	break;
-      case 'p':
-	fprintf(stderr, "No packets. Argument %s\n", optarg);
-	args.max_pkts=atoi(optarg);
-	break;
-      case 'c':
-	fprintf(stderr, "Content printing..\n");
-	args.print_content=1;
-	break;
-      case 'i':
-	fprintf(stderr, "Ethernet Argument %s\n", optarg);
-	nic=strdup(optarg);
-	streamType=1;
-	break;
-      case 'u':
-	fprintf(stderr, "UDP \n");
-	streamType=2;
-	break;
-      case 't':
-	fprintf(stderr, "TCP \n");
-	streamType=3;
-	break;
-      case 'v':
-	fprintf(stderr, "port %d\n", atoi(optarg));
-	portnumber=atoi(optarg);
-	break;	
-      case 'o':
-	fprintf(stderr, "Output to file.\n");
-	outFilename=strdup(optarg);
-	capOutfile=1;              
-	fprintf(stderr, "Output to data file %s\n",outFilename);
-	break;	  
-      case 'h':
-	fprintf(stderr, "-------------------------------------------------------\n");
-	fprintf(stderr, "Application Version " VERSION "\n");
-	fprintf(stderr, "Application Options\n");
-	fprintf(stderr, "-p or --pkts   <NO>     Number of pkts to show [default all]\n");
-	fprintf(stderr, "-o or --output <name>   Store results to a CAP file. \n");
-	fprintf(stderr, "-d or --calender        Display date/time in YYYY-MM-DD HH:MM:SS.xx.\n");
-	fprintf(stderr, "-i or --if <NIC>        Listen to NIC for Ethernet multicast address,\n");
-	fprintf(stderr, "                        identified by <INPUT> (01:00:00:00:00:01).\n");
-	fprintf(stderr, "-t or --tcp             Listen to a TCP stream.\n");
-	fprintf(stderr, "                        identified by <INPUT> (192.168.0.10). \n");
-	fprintf(stderr, "-u or --udp             Listen to a UDP multicast address.\n");
-	fprintf(stderr, "                        identified by <INPUT> (225.10.11.10).\n");
-	fprintf(stderr, "-v or --port            TCP/UDP port to listen to. Default 0x0810.\n");
-	fprintf(stderr, "<INPUT>                 If n,t or u hasn't been declared, this \n");
-	fprintf(stderr, "                        is interpreted as a filename.\n");
-	fprintf(stderr, "Usage:\n");
-	fprintf(stderr, "%s [filter options] [application options] <INPUT>\n", argv[0]);
-
-	fprintf(stderr, "Sizeof(capture_header) = %zd bytes\n",sizeof(cap_head));
-	exit(0);
-	break;
-      default:
-	printf ("?? getopt returned character code 0%o ??\n", op);
-    }
-  }
-
-  const char* filename = NULL;
-  switch (argc - optind){
-  case 0:
-    switch ( streamType ){
-    case 0:
-      fprintf(stderr, "filename required\n");
-      return 1;
+      
+    case 'h':
+      show_usage();
+      exit(0);
+      break;
+      
     default:
-      filename = "01:00:00:00:00:01";
+      printf ("?? getopt returned character code 0%o ??\n", op);
     }
-    break;
-  default:
-    filename = argv[optind];
-  }
 
   printf("Opening stream %s\n", filename);
   destination_t src;
@@ -274,8 +174,6 @@ int main(int argc, char **argv){
   if(capOutfile==1) {
     closestream(outStream);
   }
-
-  filter_close(&myfilter);
 
   fprintf(stderr, "There was a total of %lld pkts that matched the filter.\n", pktCount);
   return 0;
