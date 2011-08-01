@@ -1,9 +1,26 @@
 ACLOCAL_AMFLAGS = -I m4
 
 lib_LTLIBRARIES = libcap_utils.la libcap_filter.la
-bin_PROGRAMS = capinfo capfilter capdump
-man1_MANS = man/capfilter.1
+bin_PROGRAMS = 
+man1_MANS =
 man3_MANS = man/libcap_filter.3
+
+if BUILD_CAPINFO
+bin_PROGRAMS += capinfo
+endif
+
+if BUILD_CAPDUMP
+bin_PROGRAMS += capdump
+endif
+
+if BUILD_CAPFILTER
+bin_PROGRAMS += capfilter
+man1_MANS += man/capfilter.1
+endif
+
+notrans_dist_man_MANS = \
+	man/capfilter.1 \
+	man/libcap_filter.3
 
 TESTS = tests/filter_argv tests/destination
 check_PROGRAMS = ${TESTS}
@@ -30,7 +47,7 @@ libcap_utils_la_SOURCES = \
 	error.c \
 	openstream.c \
 	readpost.c \
-	stream.c \
+	stream.c stream.h \
 	stream_ethernet.c \
 	stream_file.c \
 	writepost.c
@@ -46,11 +63,11 @@ libcap_filter_la_SOURCES = createfilter.c filter.c ethaton.c picotime.c
 capinfo_CFLAGS = -Wall
 capinfo_LDADD = libcap_utils.la libcap_filter.la
 
-capfilter_CFLAGS = -Wall
-capfilter_LDADD = libcap_filter.la libcap_utils.la
-
 capdump_CFLAGS = -Wall
 capdump_LDADD = libcap_utils.la
+
+capfilter_CFLAGS = -Wall
+capfilter_LDADD = libcap_filter.la libcap_utils.la
 
 tests_filter_argv_CXXFLAGS = -Wall $(CPPUNIT_CFLAGS)
 tests_filter_argv_LDFLAGS = $(CPPUNIT_LIBS)
