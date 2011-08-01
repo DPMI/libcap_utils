@@ -1,3 +1,15 @@
+caputils-0.7.3
+--------------
+
+caputils-0.7.2
+--------------
+
+* Split filtering code from libcaputils to libfilter.
+* Added two more utilities:
+    - capdump - record a stream
+    - capfilter - filter existing stream
+* Added manpages.
+
 caputils-0.7.0
 --------------
 
