@@ -29,6 +29,7 @@ TESTS = tests/filter_argv tests/destination
 check_PROGRAMS = ${TESTS}
 
 nobase_include_HEADERS =    \
+	caputils/address.h  \
 	caputils/picotime.h \
 	caputils/file.h     \
 	caputils/utils.h    \
@@ -43,11 +44,12 @@ pkgconfig_DATA = cap_utils.pc cap_filter.pc
 
 libcap_utils_la_LDFLAGS = -version-info 2:0:0
 libcap_utils_la_CFLAGS = -Wall
-libcap_utils_la_SOURCES = \
-	caputils_int.h \
-	error.c \
-	stream.c stream.h \
-	stream_ethernet.c \
+libcap_utils_la_SOURCES =   \
+	caputils_int.h      \
+	address.c address.h \
+	error.c             \
+	stream.c stream.h   \
+	stream_ethernet.c   \
 	stream_file.c
 
 #	stream_udp.c \

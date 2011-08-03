@@ -61,7 +61,7 @@ int main(int argc, char **argv){
   char* iface = NULL;
   stream_addr_t input;
   stream_addr_t output;
-  destination_aton(&output, "/dev/stdout", STREAM_ADDR_CAPFILE, STREAM_ADDR_LOCAL);
+  stream_addr_aton(&output, "/dev/stdout", STREAM_ADDR_CAPFILE, STREAM_ADDR_LOCAL);
 
   long max_packets = -1;
 
@@ -72,7 +72,7 @@ int main(int argc, char **argv){
       break;
 
     case 'o':
-      destination_aton(&output, optarg, STREAM_ADDR_CAPFILE, STREAM_ADDR_LOCAL);
+      stream_addr_aton(&output, optarg, STREAM_ADDR_CAPFILE, STREAM_ADDR_LOCAL);
       break;
 
     case 'p':
@@ -113,7 +113,7 @@ int main(int argc, char **argv){
   int ret;
 
   /* parse stream address */
-  if ( (ret=destination_aton(&input, argv[optind], STREAM_ADDR_GUESS, 0)) != 0 ){
+  if ( (ret=stream_addr_aton(&input, argv[optind], STREAM_ADDR_GUESS, 0)) != 0 ){
     fprintf(stderr, "Failed to parse stream address: %s\n", caputils_error_string(ret));
     return 1;
   }
@@ -135,7 +135,7 @@ int main(int argc, char **argv){
 
   /* open input stream */
   static char* type[4] = {"file", "ethernet", "udp", "tcp"};
-  fprintf(stderr, "Opening %s stream: %s\n", type[input.type], destination_ntoa(&input));
+  fprintf(stderr, "Opening %s stream: %s\n", type[input.type], stream_addr_ntoa(&input));
   if ( (ret=stream_open(&src, &input, iface, 0)) != 0 ) {
     fprintf(stderr, "stream_open() failed with code 0x%08X: %s\n", ret, caputils_error_string(ret));
     return 1;

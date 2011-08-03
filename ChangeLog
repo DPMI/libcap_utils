@@ -1,6 +1,7 @@
 caputils-0.7.3
 --------------
 
+	* change: Moving stream_addr_t functions to a new source file: address.c
 	* change: Renamed struct destination_t to stream_addr_t
 	* change: Renamed {create,open,close}stream to stream_{create,open,close}
 	* fix: Fixed capdump.

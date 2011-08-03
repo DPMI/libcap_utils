@@ -210,151 +210,9 @@ int filter_match(const struct filter* filter, const void* pkt, struct cap_header
   return match;
 }
 
-/* not static because it is used by unittests */
-const char* hexdump_address_r(const struct ether_addr* address, char buf[IFHWADDRLEN*3]){
-  /* this is basically the same as ether_ntoa but it pads with zeroes which ether_ntoa doesn't */
-  int i;
-
-  for ( i = 0; i < IFHWADDRLEN - 1; i++ ) {
-    sprintf (buf + 3*i, "%2.2X:", address->ether_addr_octet[i]);
-  }  
-  sprintf (buf + 15, "%2.2X", address->ether_addr_octet[i]);
-
-  return buf;
-}
-const char* hexdump_address(const struct ether_addr* address){
-  static char buf[IFHWADDRLEN*3];
-  return hexdump_address_r(address, buf);
-}
-
 static const char* inet_ntoa_r(const struct in_addr in, char* buf){
   const char* tmp = inet_ntoa(in);
   strcpy(buf, tmp);
-  return buf;
-}
-
-static void homogenize_eth_addr(char* buf){
-  /* eth addr with : */
-  if ( buf[2] == ':' ){
-    return; /* do nothing */
-  }
-
-  /* convert - to : */
-  if ( buf[2] == '-' ){
-    for ( int i = 0; i < 6; i++ ){
-      buf[i*3+2] = ':';
-    }
-    return;
-  }
-
-  /* if no : or - is found, insert : into the buffer by starting at the
-   * first pair (LSB) and moving it to the new position. */
-  
-  char* tmp = &buf[3*5+2];
-  *(tmp--) = 0;
-  for ( int i = 5; i >= 1; i-- ){
-    *(tmp--) = buf[1+i*2];
-    *(tmp--) = buf[  i*2];
-    *(tmp--) = ':';
-  }
-}
-
-int destination_aton(stream_addr_t* dst, const char* src, enum AddressType type, int flags){
-  char buf[48];          /* larger than max, just in case user provides large */
-  strncpy(buf, src, 48); /* input, will bail out later on bad data. */
-
-  dst->type = type;
-  dst->flags = flags;
-
-  switch( type ){
-  case STREAM_ADDR_GUESS:
-    /* try tcp/udp */
-    if ( strncmp("tcp://", src, 6) == 0 ){
-      return destination_aton(dst, src+6, STREAM_ADDR_TCP, flags);
-    } else if ( strncmp("udp://", src, 6) == 0 ){
-      return destination_aton(dst, src+6, STREAM_ADDR_UDP, flags);
-    }
-
-    /* try ethernet */
-    if ( destination_aton(dst, src, STREAM_ADDR_ETHERNET, flags) == 0 ){
-      return 0;
-    }
-
-    /* last option: parse as local filename */
-    return destination_aton(dst, src, STREAM_ADDR_CAPFILE, flags | STREAM_ADDR_LOCAL);
-
-  case STREAM_ADDR_TCP: // TCP
-  case STREAM_ADDR_UDP: // UDP
-    // DESTADDR is ipaddress:port
-    {
-      char* ip = buf;
-      strncpy(buf, src, 48);
-
-      dst->in_port = htonl(0x0810); /* default port */
-
-      char* separator = strchr(buf, ':');
-      if( separator ) {
-	*separator = 0;
-	dst->in_port = htonl(atoi(separator+1));
-      }
-
-      dst->in_addr.s_addr = inet_addr(ip);
-
-      if ( dst->in_addr.s_addr == INADDR_NONE ){
-	return EINVAL;
-      }
-    }
-    break;
-
-  case STREAM_ADDR_ETHERNET: // Ethernet
-    homogenize_eth_addr(buf);
-    
-    if ( !eth_aton(&dst->ether_addr, buf) ){
-      return EINVAL;
-    }
-    break;
-
-  case STREAM_ADDR_CAPFILE: // File
-    if ( flags & STREAM_ADDR_LOCAL ){
-      dst->local_filename = src;
-    } else {
-      strncpy(dst->filename, src, 22);
-      dst->filename[21] = 0; /* force null-terminator */
-    }
-    break;
-  }
-
-  return 0;
-}
-
-
-const char* destination_ntoa(const stream_addr_t* src){
-  static char buf[1024];
-  return destination_ntoa_r(src, buf, 1024);
-}
-
-const char* destination_ntoa_r(const stream_addr_t* src, char* buf, size_t bytes){
-  int __attribute__((unused)) written = 0;
-
-  switch(src->type){
-    case STREAM_ADDR_TCP:
-    case STREAM_ADDR_UDP:
-      written = snprintf(buf, bytes, "%s://%s:%d", src->type == STREAM_ADDR_UDP ? "udp" : "tcp", inet_ntoa(src->in_addr), src->in_port);
-      break;
-    case STREAM_ADDR_ETHERNET:
-      hexdump_address_r(&src->ether_addr, buf);
-      break;
-    case STREAM_ADDR_CAPFILE:
-      if ( src->flags & STREAM_ADDR_LOCAL ){
-	strncpy(buf, src->local_filename, bytes);
-      } else {
-	strncpy(buf, src->filename, bytes);
-      }
-      buf[bytes-1] = 0; /* force null-terminator */
-      break;
-  }
-
-  assert(written < bytes);
   return buf;
 }
 
@@ -362,7 +220,7 @@ void filter_print(const struct filter* filter, FILE* fp, int verbose){
   static char buf[100];
 
   fprintf(fp, "FILTER {%02d}\n", filter->filter_id);
-  fprintf(fp, "\t%.14s: %s\n", filter->dest.type == STREAM_ADDR_CAPFILE ? "DESTFILE" : "DESTADDRESS", destination_ntoa(&filter->dest));
+  fprintf(fp, "\t%.14s: %s\n", filter->dest.type == STREAM_ADDR_CAPFILE ? "DESTFILE" : "DESTADDRESS", stream_addr_ntoa(&filter->dest));
   fprintf(fp, "\tCAPLEN        : %d\n", filter->caplen);
   fprintf(fp, "\tindex         : %d\n", filter->index);
 

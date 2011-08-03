@@ -34,3 +34,19 @@ int eth_aton(struct ether_addr* dst, const char* addr){
   memcpy(dst, tmp, sizeof(struct ether_addr));
   return 1;
 }
+
+const char* hexdump_address_r(const struct ether_addr* address, char buf[IFHWADDRLEN*3]){
+  /* this is basically the same as ether_ntoa but it pads with zeroes which ether_ntoa doesn't */
+  int i;
+
+  for ( i = 0; i < IFHWADDRLEN - 1; i++ ) {
+    sprintf (buf + 3*i, "%2.2X:", address->ether_addr_octet[i]);
+  }  
+  sprintf (buf + 15, "%2.2X", address->ether_addr_octet[i]);
+
+  return buf;
+}
+const char* hexdump_address(const struct ether_addr* address){
+  static char buf[IFHWADDRLEN*3];
+  return hexdump_address_r(address, buf);
+}
