@@ -52,11 +52,11 @@ long stream_write(struct stream* st, const void* data, size_t size);
 
 /**
  * Read the next matching frame from a stream.
- * @param st Stream to read from
- * @param data Returns a pointer to the internal buffer for reading the frame.
- * @param filter Filter to match frames with.
- * @return Zero if successful, -1 when finished, positive int on error.
+ * @param st Stream to read from.
+ * @param header Returns a pointer to the frame header (in the internal buffer).
+ * @param filter If non-null, match frame against filter.
+ * @return Zero if successful, -1 when finished, positive int on error. header is undefined on errors.
  */
-long stream_read(struct stream* st, char** data, const struct filter* filter);
+long stream_read(struct stream* st, cap_head** header, const struct filter* filter);
 
 #endif /* CAPUTILS__STREAM_H */

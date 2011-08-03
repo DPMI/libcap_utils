@@ -1,6 +1,8 @@
 caputils-0.7.3
 --------------
 
+* More man-pages.
+* stream_read takes cap_head pointer instead of char-buffer.
 * Fixing compability issues with linux-2.4
 
 caputils-0.7.2

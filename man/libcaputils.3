@@ -1,0 +1,28 @@
+.TH libcaputils 3 "3 Aug 2011" "BTH" "Measurement Area Manual"
+.SH NAME
+libcaputils \- MA frame capture, stream library and utilities.
+.SH SYNOPSIS
+.nf
+.B #include <caputils/caputils.h>
+.sp
+.BI "long stream_read(struct stream* " st ", cap_head** " header ", const struct filter* " filter ");"
+.SH DESCRIPTION
+.BR stream_read()
+reads a frame from the stream \fIst\fP and if \fIfilter\fP is non-null only
+frames matching the filter is returned. The result is stored in \fIheader\fP and
+references internal memory. If you intend to modify or store the frame for a
+longer period of time the memory must be copied. For offline streams (i.e.
+capfiles) -1 can be returned to signal EOF. On errors \fIheader\fP is undefined.
+.PP
+.SH RETURN VALUE
+All functions return zero if successful and unless otherwise specified non-zero
+corresponds to errno code or if greater than 0x80000000 they represents caputils
+errors. Use \fBcaputils_error_string\fP to get a string that describes the error.
+.SH ERRORS
+.TP
+.BR EINVAL
+Invalid parameter passed, e.g. invalid stream or a null-pointer.
+.SH AUTHOR
+Written by Patrik Arlos <patrik.arlos@bth.se> and David Sveningsson <david.sveningsson@bth.se>.
+.SH "SEE ALSO"
+mp(1), capfilter(1)

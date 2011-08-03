@@ -3,7 +3,10 @@ ACLOCAL_AMFLAGS = -I m4
 lib_LTLIBRARIES = libcap_utils.la libcap_filter.la
 bin_PROGRAMS = 
 man1_MANS =
-man3_MANS = man/libcap_filter.3
+man3_MANS = \
+	man/libcaputils.3 \
+	man/libcap_filter.3 \
+	man/stream_read.3
 
 if BUILD_CAPINFO
 bin_PROGRAMS += capinfo

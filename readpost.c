@@ -63,7 +63,7 @@ int fill_buffer(struct stream* st){
   return 0;
 }
 
-long stream_read(struct stream *myStream, char **data, const struct filter *my_Filter){
+long stream_read(struct stream *myStream, cap_head** data, const struct filter *my_Filter){
   int filterStatus=0;
   int skip_counter=-1;
   int ret = 0;
@@ -103,7 +103,7 @@ long stream_read(struct stream *myStream, char **data, const struct filter *my_F
     }
     
     /* set next packet and advance the read pointer */
-    *data = myStream->buffer + myStream->readPos;
+    *data = cp;
     myStream->readPos += packet_size;
 
     filterStatus = 1; /* match by default, i.e. if no filter is used. */
