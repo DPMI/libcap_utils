@@ -3,8 +3,8 @@ exec_prefix=@exec_prefix@
 libdir=@libdir@
 includedir=@includedir@
 
-Name: libcap_utils
+Name: libcap_stream
 Description: 
 Version: @VERSION@
-Libs: -L${libdir} -lcap_utils
+Libs: -L${libdir} -lcap_stream
 Cflags: -I${includedir}

@@ -21,8 +21,8 @@ AM_SILENT_RULES([yes])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_FILES([
-	cap_utils.pc
 	cap_filter.pc
+	cap_stream.pc
 	caputils/version.h
 	Makefile
 ])

@@ -1,6 +1,6 @@
 ACLOCAL_AMFLAGS = -I m4
 
-lib_LTLIBRARIES = libcap_utils.la libcap_filter.la
+lib_LTLIBRARIES = libcap_stream.la libcap_utils.la libcap_filter.la
 bin_PROGRAMS = 
 man1_MANS =
 man3_MANS = \
@@ -40,7 +40,15 @@ nobase_include_HEADERS =    \
 	caputils/version.h
 
 pkgconfigdir = $(libdir)/pkgconfig
-pkgconfig_DATA = cap_utils.pc cap_filter.pc
+pkgconfig_DATA = cap_stream.pc cap_filter.pc
+
+libcap_stream_la_LDFLAGS = -version-info 0:0:0
+libcap_stream_la_CFLAGS = -Wall
+libcap_stream_la_LIBADD = libcap_utils.la libcap_filter.la
+libcap_stream_la_SOURCES =  \
+	stream.c stream.h   \
+	stream_ethernet.c   \
+	stream_file.c
 
 libcap_utils_la_LDFLAGS = -version-info 2:0:0
 libcap_utils_la_CFLAGS = -Wall
@@ -48,9 +56,8 @@ libcap_utils_la_SOURCES =   \
 	caputils_int.h      \
 	address.c address.h \
 	error.c             \
-	stream.c stream.h   \
-	stream_ethernet.c   \
-	stream_file.c
+	utils.c             \
+	picotime.c
 
 #	stream_udp.c \
 #	stream_tcp.c \
@@ -58,13 +65,14 @@ libcap_utils_la_SOURCES =   \
 
 libcap_filter_la_LDFLAGS = -version-info 0:0:0
 libcap_filter_la_CFLAGS = -Wall
-libcap_filter_la_SOURCES = createfilter.c filter.c utils.c picotime.c
+libcap_filter_la_LIBADD = libcap_utils.la
+libcap_filter_la_SOURCES = createfilter.c filter.c
 
 capinfo_CFLAGS = -Wall
-capinfo_LDADD = libcap_utils.la libcap_filter.la
+capinfo_LDADD = libcap_utils.la libcap_filter.la libcap_stream.la
 
 capdump_CFLAGS = -Wall
-capdump_LDADD = libcap_utils.la libcap_filter.la
+capdump_LDADD = libcap_utils.la libcap_filter.la libcap_stream.la
 
 capfilter_CFLAGS = -Wall
 capfilter_LDADD = libcap_filter.la libcap_utils.la
