@@ -355,8 +355,12 @@ const char* destination_ntoa_r(const destination_t* src, char* buf, size_t bytes
       hexdump_address_r(&src->ether_addr, buf);
       break;
     case DEST_CAPFILE:
-      strncpy(buf, src->filename, bytes);
-      buf[bytes-1] = 0;
+      if ( src->flags & DEST_LOCAL ){
+	strncpy(buf, src->local_filename, bytes);
+      } else {
+	strncpy(buf, src->filename, bytes);
+      }
+      buf[bytes-1] = 0; /* force null-terminator */
       break;
   }
 
