@@ -67,7 +67,7 @@ capinfo_CFLAGS = -Wall
 capinfo_LDADD = libcap_utils.la libcap_filter.la
 
 capdump_CFLAGS = -Wall
-capdump_LDADD = libcap_utils.la
+capdump_LDADD = libcap_utils.la libcap_filter.la
 
 capfilter_CFLAGS = -Wall
 capfilter_LDADD = libcap_filter.la libcap_utils.la
