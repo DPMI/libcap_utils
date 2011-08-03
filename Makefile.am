@@ -58,7 +58,7 @@ libcap_utils_la_SOURCES =   \
 
 libcap_filter_la_LDFLAGS = -version-info 0:0:0
 libcap_filter_la_CFLAGS = -Wall
-libcap_filter_la_SOURCES = createfilter.c filter.c ethaton.c picotime.c
+libcap_filter_la_SOURCES = createfilter.c filter.c utils.c picotime.c
 
 capinfo_CFLAGS = -Wall
 capinfo_LDADD = libcap_utils.la libcap_filter.la
