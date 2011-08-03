@@ -32,7 +32,7 @@ int show_info(const char* filename){
   dest.flags = DEST_LOCAL;
   long ret = 0;
 
-  if ( (ret=openstream(&st, &dest, NULL, 0)) != 0 ){
+  if ( (ret=stream_open(&st, &dest, NULL, 0)) != 0 ){
     fprintf(stderr, "%s: %s\n", filename, caputils_error_string(ret));
     return ret;
   }
@@ -133,7 +133,7 @@ int show_info(const char* filename){
     }
   }
 
-  closestream(st);
+  stream_close(st);
   
   return 0;
 }

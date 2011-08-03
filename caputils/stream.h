@@ -9,24 +9,24 @@ struct stream;
  * Open an existing stream.
  * @return 1 if successful.
  */
-long openstream(struct stream** stptr, const destination_t* dest, const char* nic, int port);
+long stream_open(struct stream** stptr, const destination_t* dest, const char* nic, int port);
 
 /**
  * Create a new stream.
  */
-long createstream(struct stream** st, const destination_t* dest, const char* nic, const char* mpid, const char* comment);
+long stream_create(struct stream** st, const destination_t* dest, const char* nic, const char* mpid, const char* comment);
 
 /**
  * Create a filestream.
  * @param file A stream open for writing.
  * @return Zero on failures.
  */
-long createstream_file(struct stream** stptr, FILE* file, const char* filename, const char* mpid, const char* comment);
+//long createstream_file(struct stream** stptr, FILE* file, const char* filename, const char* mpid, const char* comment);
 
 /**
  * Close stream.
  */
-long closestream(struct stream* st);
+long stream_close(struct stream* st);
 
 /**
  * Get verion of this stream.

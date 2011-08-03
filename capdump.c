@@ -10,6 +10,8 @@
 #include <time.h>
 #include <getopt.h>
 #include <errno.h>
+#include <signal.h>
+#include <unistd.h>
 
 static const char* program_name = NULL;
 static struct option long_options[]= {
@@ -20,6 +22,17 @@ static struct option long_options[]= {
   {"help",    no_argument,       0, 'h'},
   {0, 0, 0, 0} /* sentinel */
 };
+
+static int keep_running = 1;
+
+void sigint_handler(int signum){
+  if ( keep_running == 0 ){
+    fprintf(stderr, "\rGot SIGINT again, terminating.\n");
+    abort();
+  }
+  fprintf(stderr, "\rAborting capture.\n");
+  keep_running = 0;
+}
 
 static void show_usage(){
   printf("capdump-" VERSION "\n");
@@ -59,7 +72,7 @@ int main(int argc, char **argv){
       break;
 
     case 'o':
-      destination_aton(&output, optarg, 0, DEST_GUESS);
+      destination_aton(&output, optarg, DEST_CAPFILE, DEST_LOCAL);
       break;
 
     case 'p':
@@ -111,35 +124,37 @@ int main(int argc, char **argv){
     return 1;
   }
 
+  /* cannot output to stdout if it is a terminal */
+  if ( output.type == DEST_CAPFILE &&
+       strcmp("/dev/stdout", output.local_filename) == 0 &&
+       isatty(STDOUT_FILENO) ){
+    fprintf(stderr, "Cannot output to stdout when is is connected to a terminal.\n");
+    fprintf(stderr, "Either specify another destination with --output, use redirection or pipe to another process.\n");
+    return 1;
+  }
+
   /* open input stream */
   static char* type[4] = {"file", "ethernet", "udp", "tcp"};
   fprintf(stderr, "Opening %s stream: %s\n", type[input.type], destination_ntoa(&input));
-  if ( (ret=openstream(&src, &input, iface, 0)) != 0 ) {
-    fprintf(stderr, "openstream() failed with code 0x%08X: %s\n", ret, caputils_error_string(ret));
+  if ( (ret=stream_open(&src, &input, iface, 0)) != 0 ) {
+    fprintf(stderr, "stream_open() failed with code 0x%08X: %s\n", ret, caputils_error_string(ret));
     return 1;
   }
 
   /* open output stream */
-  if ( (ret=createstream(&dst, &output, NULL, stream_get_mampid(src), comment)) != 0 ){
-    fprintf(stderr, "createstream() failed with code 0x%08X: %s\n", ret, caputils_error_string(ret));
+  if ( (ret=stream_create(&dst, &output, NULL, stream_get_mampid(src), comment)) != 0 ){
+    fprintf(stderr, "stream_create() failed with code 0x%08X: %s\n", ret, caputils_error_string(ret));
     return 1;
   }
 
-  struct file_version version;
-  stream_get_version(src, &version);
-
-//output fileheader
-  fprintf(stderr, "ver: %d.%d id: %s \n comments: %s\n",
-	  version.major, 
-	  version.minor, 
-	  stream_get_mampid(src), 
-	  stream_get_comment(src));
+  /* install signal handler so loop can be aborted */
+  signal(SIGINT, sigint_handler);
 
   cap_head* cp;
   size_t len = sizeof(struct cap_header);
-
   long matches = 0;
-  while ( 1 ){
+
+  while ( keep_running ){
     long ret = stream_read(src, &cp, NULL);
     if ( ret == EAGAIN ){
       continue;
@@ -157,8 +172,8 @@ int main(int argc, char **argv){
     }
   }
 
-  closestream(src);
-  closestream(dst);
+  stream_close(src);
+  stream_close(dst);
 
   fprintf(stderr, "There was a total of %ld pkts that matched the filter.\n", matches);
   return 0;

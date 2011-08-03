@@ -45,10 +45,7 @@ libcap_utils_la_LDFLAGS = -version-info 1:0:0
 libcap_utils_la_CFLAGS = -Wall
 libcap_utils_la_SOURCES = \
 	caputils_int.h \
-	closestream.c \
-	createstream.c \
 	error.c \
-	openstream.c \
 	readpost.c \
 	stream.c stream.h \
 	stream_ethernet.c \
