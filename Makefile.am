@@ -41,16 +41,14 @@ nobase_include_HEADERS =    \
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = cap_utils.pc cap_filter.pc
 
-libcap_utils_la_LDFLAGS = -version-info 1:0:0
+libcap_utils_la_LDFLAGS = -version-info 2:0:0
 libcap_utils_la_CFLAGS = -Wall
 libcap_utils_la_SOURCES = \
 	caputils_int.h \
 	error.c \
-	readpost.c \
 	stream.c stream.h \
 	stream_ethernet.c \
-	stream_file.c \
-	writepost.c
+	stream_file.c
 
 #	stream_udp.c \
 #	stream_tcp.c \
