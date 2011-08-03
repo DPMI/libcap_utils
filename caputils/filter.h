@@ -43,6 +43,7 @@ extern "C" {
   typedef struct destination destination_t;
 
   enum DestinationType {
+    DEST_NONE = -1, /* placeholder for DEST_GUESS, invalid in all other cases */
     DEST_CAPFILE = 0,
     DEST_ETHERNET,
     DEST_UDP,
@@ -55,6 +56,22 @@ extern "C" {
      * must ensure the lifetime of the string is as long as the lifetime as the
      * filter holding this address. */
     DEST_LOCAL = (1<<0),
+
+    /**
+     * If the format of the address isn't know, this flag can be set to have it
+     * guess. Essentially it works like following:
+     *  - If it is parsable as an ethernet address, DEST_ETHERNET is used.
+     *  - If is begins with tcp:// or udp://, DEST_TCP and DEST_UDP is used.
+     *  - Otwerwise DEST_CAPFILE with DEST_LOCAL flag is used.
+     *
+     * The format must be DEST_NONE or EINVAL is raised.
+     * DEST_LOCAL is automatically added to the flags if DEST_CAPFILE is selected
+     * so it should not be added manually.
+     *
+     * However, if the user have a file which is named as an ethernet address
+     * confusion might happen.
+     */
+    DEST_GUESS = (1<<1),
   };
 
   enum FilterBitmask {

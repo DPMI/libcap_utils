@@ -266,7 +266,33 @@ int destination_aton(destination_t* dst, const char* src, enum DestinationType t
   dst->type = type;
   dst->flags = flags;
 
+  /* DEST_NONE is only valid when combined with DEST_GUESS */
+  if ( type != DEST_NONE && (flags & DEST_GUESS) ){
+    return EINVAL;
+  }
+  if ( type == DEST_NONE && !(flags & DEST_GUESS) ){
+    return EINVAL;
+  }
+  
   switch( type ){
+  case DEST_NONE:
+    flags = flags &~ DEST_GUESS; /* Remove DEST_GUESS from flags */
+
+    /* try tcp/udp */
+    if ( strncmp("tcp://", src, 6) == 0 ){
+      return destination_aton(dst, src+6, DEST_TCP, flags);
+    } else if ( strncmp("udp://", src, 6) == 0 ){
+      return destination_aton(dst, src+6, DEST_UDP, flags);
+    }
+
+    /* try ethernet */
+    if ( destination_aton(dst, src, DEST_ETHERNET, flags) == 0 ){
+      return 0;
+    }
+
+    /* last option: parse as local filename */
+    return destination_aton(dst, src, DEST_CAPFILE, flags | DEST_LOCAL);
+
   case DEST_TCP: // TCP
   case DEST_UDP: // UDP
     // DESTADDR is ipaddress:port
