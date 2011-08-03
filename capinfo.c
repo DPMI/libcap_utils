@@ -26,13 +26,13 @@ void show_usage(){
 
 int show_info(const char* filename){
   struct stream* st;
-  destination_t dest;
-  dest.local_filename = filename;
-  dest.type = DEST_CAPFILE;
-  dest.flags = DEST_LOCAL;
+  stream_addr_t addr;
+  addr.local_filename = filename;
+  addr.type = STREAM_ADDR_CAPFILE;
+  addr.flags = STREAM_ADDR_LOCAL;
   long ret = 0;
 
-  if ( (ret=stream_open(&st, &dest, NULL, 0)) != 0 ){
+  if ( (ret=stream_open(&st, &addr, NULL, 0)) != 0 ){
     fprintf(stderr, "%s: %s\n", filename, caputils_error_string(ret));
     return ret;
   }

@@ -259,42 +259,32 @@ static void homogenize_eth_addr(char* buf){
   }
 }
 
-int destination_aton(destination_t* dst, const char* src, enum DestinationType type, int flags){
+int destination_aton(stream_addr_t* dst, const char* src, enum AddressType type, int flags){
   char buf[48];          /* larger than max, just in case user provides large */
   strncpy(buf, src, 48); /* input, will bail out later on bad data. */
 
   dst->type = type;
   dst->flags = flags;
 
-  /* DEST_NONE is only valid when combined with DEST_GUESS */
-  if ( type != DEST_NONE && (flags & DEST_GUESS) ){
-    return EINVAL;
-  }
-  if ( type == DEST_NONE && !(flags & DEST_GUESS) ){
-    return EINVAL;
-  }
-  
   switch( type ){
-  case DEST_NONE:
-    flags = flags &~ DEST_GUESS; /* Remove DEST_GUESS from flags */
-
+  case STREAM_ADDR_GUESS:
     /* try tcp/udp */
     if ( strncmp("tcp://", src, 6) == 0 ){
-      return destination_aton(dst, src+6, DEST_TCP, flags);
+      return destination_aton(dst, src+6, STREAM_ADDR_TCP, flags);
     } else if ( strncmp("udp://", src, 6) == 0 ){
-      return destination_aton(dst, src+6, DEST_UDP, flags);
+      return destination_aton(dst, src+6, STREAM_ADDR_UDP, flags);
     }
 
     /* try ethernet */
-    if ( destination_aton(dst, src, DEST_ETHERNET, flags) == 0 ){
+    if ( destination_aton(dst, src, STREAM_ADDR_ETHERNET, flags) == 0 ){
       return 0;
     }
 
     /* last option: parse as local filename */
-    return destination_aton(dst, src, DEST_CAPFILE, flags | DEST_LOCAL);
+    return destination_aton(dst, src, STREAM_ADDR_CAPFILE, flags | STREAM_ADDR_LOCAL);
 
-  case DEST_TCP: // TCP
-  case DEST_UDP: // UDP
+  case STREAM_ADDR_TCP: // TCP
+  case STREAM_ADDR_UDP: // UDP
     // DESTADDR is ipaddress:port
     {
       char* ip = buf;
@@ -316,7 +306,7 @@ int destination_aton(destination_t* dst, const char* src, enum DestinationType t
     }
     break;
 
-  case DEST_ETHERNET: // Ethernet
+  case STREAM_ADDR_ETHERNET: // Ethernet
     homogenize_eth_addr(buf);
     
     if ( !eth_aton(&dst->ether_addr, buf) ){
@@ -324,8 +314,8 @@ int destination_aton(destination_t* dst, const char* src, enum DestinationType t
     }
     break;
 
-  case DEST_CAPFILE: // File
-    if ( flags & DEST_LOCAL ){
+  case STREAM_ADDR_CAPFILE: // File
+    if ( flags & STREAM_ADDR_LOCAL ){
       dst->local_filename = src;
     } else {
       strncpy(dst->filename, src, 22);
@@ -338,24 +328,24 @@ int destination_aton(destination_t* dst, const char* src, enum DestinationType t
 }
 
 
-const char* destination_ntoa(const destination_t* src){
+const char* destination_ntoa(const stream_addr_t* src){
   static char buf[1024];
   return destination_ntoa_r(src, buf, 1024);
 }
 
-const char* destination_ntoa_r(const destination_t* src, char* buf, size_t bytes){
+const char* destination_ntoa_r(const stream_addr_t* src, char* buf, size_t bytes){
   int __attribute__((unused)) written = 0;
 
   switch(src->type){
-    case DEST_TCP:
-    case DEST_UDP:
-      written = snprintf(buf, bytes, "%s://%s:%d", src->type == DEST_UDP ? "udp" : "tcp", inet_ntoa(src->in_addr), src->in_port);
+    case STREAM_ADDR_TCP:
+    case STREAM_ADDR_UDP:
+      written = snprintf(buf, bytes, "%s://%s:%d", src->type == STREAM_ADDR_UDP ? "udp" : "tcp", inet_ntoa(src->in_addr), src->in_port);
       break;
-    case DEST_ETHERNET:
+    case STREAM_ADDR_ETHERNET:
       hexdump_address_r(&src->ether_addr, buf);
       break;
-    case DEST_CAPFILE:
-      if ( src->flags & DEST_LOCAL ){
+    case STREAM_ADDR_CAPFILE:
+      if ( src->flags & STREAM_ADDR_LOCAL ){
 	strncpy(buf, src->local_filename, bytes);
       } else {
 	strncpy(buf, src->filename, bytes);
@@ -372,7 +362,7 @@ void filter_print(const struct filter* filter, FILE* fp, int verbose){
   static char buf[100];
 
   fprintf(fp, "FILTER {%02d}\n", filter->filter_id);
-  fprintf(fp, "\t%.14s: %s\n", filter->dest.type == DEST_CAPFILE ? "DESTFILE" : "DESTADDRESS", destination_ntoa(&filter->dest));
+  fprintf(fp, "\t%.14s: %s\n", filter->dest.type == STREAM_ADDR_CAPFILE ? "DESTFILE" : "DESTADDRESS", destination_ntoa(&filter->dest));
   fprintf(fp, "\tCAPLEN        : %d\n", filter->caplen);
   fprintf(fp, "\tindex         : %d\n", filter->index);
 

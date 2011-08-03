@@ -1,11 +1,12 @@
 caputils-0.7.3
 --------------
 
-* Renamed {create,open,close}stream to stream_{create,open,close}
-* Fixed capdump.
-* More man-pages.
-* stream_read takes cap_head pointer instead of char-buffer.
-* Fixing compability issues with linux-2.4
+	* change: Renamed struct destination_t to stream_addr_t
+	* change: Renamed {create,open,close}stream to stream_{create,open,close}
+	* fix: Fixed capdump.
+	* change: more man-pages.
+	* change: stream_read takes cap_head pointer instead of char-buffer.
+	* fix: Fixing compability issues with linux-2.4
 
 caputils-0.7.2
 --------------

@@ -59,9 +59,9 @@ int main(int argc, char **argv){
 
   char* comment = "capdump-" VERSION " stream";
   char* iface = NULL;
-  destination_t input;
-  destination_t output;
-  destination_aton(&output, "/dev/stdout", DEST_CAPFILE, DEST_LOCAL);
+  stream_addr_t input;
+  stream_addr_t output;
+  destination_aton(&output, "/dev/stdout", STREAM_ADDR_CAPFILE, STREAM_ADDR_LOCAL);
 
   long max_packets = -1;
 
@@ -72,7 +72,7 @@ int main(int argc, char **argv){
       break;
 
     case 'o':
-      destination_aton(&output, optarg, DEST_CAPFILE, DEST_LOCAL);
+      destination_aton(&output, optarg, STREAM_ADDR_CAPFILE, STREAM_ADDR_LOCAL);
       break;
 
     case 'p':
@@ -113,19 +113,19 @@ int main(int argc, char **argv){
   int ret;
 
   /* parse stream address */
-  if ( (ret=destination_aton(&input, argv[optind], DEST_NONE, DEST_GUESS)) != 0 ){
+  if ( (ret=destination_aton(&input, argv[optind], STREAM_ADDR_GUESS, 0)) != 0 ){
     fprintf(stderr, "Failed to parse stream address: %s\n", caputils_error_string(ret));
     return 1;
   }
 
   /* ensure iface has been configured for ethernet streams */
-  if ( input.type == DEST_ETHERNET && !iface ){
+  if ( input.type == STREAM_ADDR_ETHERNET && !iface ){
     fprintf(stderr, "Ethernet streams require --iface\n");
     return 1;
   }
 
   /* cannot output to stdout if it is a terminal */
-  if ( output.type == DEST_CAPFILE &&
+  if ( output.type == STREAM_ADDR_CAPFILE &&
        strcmp("/dev/stdout", output.local_filename) == 0 &&
        isatty(STDOUT_FILENO) ){
     fprintf(stderr, "Cannot output to stdout when is is connected to a terminal.\n");

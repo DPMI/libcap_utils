@@ -9,12 +9,12 @@ struct stream;
  * Open an existing stream.
  * @return 1 if successful.
  */
-long stream_open(struct stream** stptr, const destination_t* dest, const char* nic, int port);
+long stream_open(struct stream** stptr, const stream_addr_t* addr, const char* nic, int port);
 
 /**
  * Create a new stream.
  */
-long stream_create(struct stream** st, const destination_t* dest, const char* nic, const char* mpid, const char* comment);
+long stream_create(struct stream** st, const stream_addr_t* addr, const char* nic, const char* mpid, const char* comment);
 
 /**
  * Create a filestream.
