@@ -48,4 +48,9 @@ struct filter;
 #include <caputils/utils.h>
 #include <caputils/version.h>
 
+/* linux-2.4 net/ethernet.h does not have this macro */
+#ifndef ETHERTYPE_VLAN
+#define ETHERTYPE_VLAN 0x8100
+#endif
+
 #endif /* CAP_UTILS */
