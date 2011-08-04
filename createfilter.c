@@ -130,7 +130,7 @@ static void split_argv(int* src_argc, char** src_argv, int* dst_argc, char** dst
  * CIDR-notation works.
  */
 static int parse_inet_addr(const char* src, struct in_addr* addr, struct in_addr* mask, const char* flag){
-  static char* mask_default = "255.255.255.255";
+  static const char* mask_default = "255.255.255.255";
   const char* buf_addr = src;
   const char* buf_mask = mask_default;
  
@@ -265,7 +265,7 @@ static int parse_eth_type(const char* src, uint16_t* type, uint16_t* mask, const
 }
 
 static int parse_eth_addr(const char* src, struct ether_addr* addr, struct ether_addr* mask, const char* flag){
-  static char* mask_default = "FF:FF:FF:FF:FF:FF";
+  static const char* mask_default = "FF:FF:FF:FF:FF:FF";
   const char* buf_addr = src;
   const char* buf_mask = mask_default;
  

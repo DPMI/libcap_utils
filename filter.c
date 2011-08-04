@@ -50,7 +50,7 @@ static int matchEth(const struct ether_addr* desired, const struct ether_addr* m
 
 static const struct ether_vlan_header* find_ether_vlan_header(const struct ethhdr* ether, uint16_t* h_proto){
   if( *h_proto == 0x8100 ){
-    struct ether_vlan_header* vlan = (struct ether_vlan_header*)ether;
+    const struct ether_vlan_header* vlan = (const struct ether_vlan_header*)ether;
     *h_proto = ntohs(vlan->h_proto);
     return vlan;
   }
@@ -61,12 +61,12 @@ static const struct ip* find_ip_header(const struct ethhdr* ether){
   const void* ptr = ether;
   if( ntohs(ether->h_proto) == 0x8100 ){ /* have VLAN tag */
     if ( ntohs(ether->h_proto) == ETHERTYPE_IP ){
-      return (struct ip*)(ptr + sizeof(struct ethhdr));
+      return (const struct ip*)(ptr + sizeof(struct ethhdr));
     }
   } else {
-    struct ether_vlan_header* vlan = (struct ether_vlan_header*)ether;
+    const struct ether_vlan_header* vlan = (const struct ether_vlan_header*)ether;
     if( ntohs(vlan->h_proto) == ETHERTYPE_IP ){
-      return (struct ip*)(ptr + sizeof(struct ether_vlan_header));
+      return (const struct ip*)(ptr + sizeof(struct ether_vlan_header));
     }
   }
   return NULL;
@@ -82,7 +82,7 @@ static const struct tcphdr* find_tcp_header(const void* pkt, const struct ethhdr
     return NULL;
   }
 
-  const struct tcphdr* tcp = (struct tcphdr*)find_ipproto_header(pkt, ether, ip);
+  const struct tcphdr* tcp = (const struct tcphdr*)find_ipproto_header(pkt, ether, ip);
   *src = ntohs(tcp->source);
   *dest = ntohs(tcp->dest);
   return tcp;
@@ -92,7 +92,7 @@ static const struct udphdr* find_udp_header(const void* pkt, const struct ethhdr
   if ( !( ip && ip->ip_p == IPPROTO_UDP) ){
     return NULL;
   }
-  const struct udphdr* udp = (struct udphdr*)find_ipproto_header(pkt, ether, ip);
+  const struct udphdr* udp = (const struct udphdr*)find_ipproto_header(pkt, ether, ip);
   *src = ntohs(udp->source);
   *dest = ntohs(udp->dest);
   return udp;
@@ -178,7 +178,7 @@ int filter_match(const struct filter* filter, const void* pkt, struct cap_header
     return 1;
   }
 
-  const struct ethhdr* ether = (struct ethhdr*)pkt;
+  const struct ethhdr* ether = (const struct ethhdr*)pkt;
   uint16_t h_proto = ntohl(ether->h_proto); /* may be overwritten by find_ether_vlan_header */
   uint16_t src_port = 0; /* set by find_{tcp,udp}_header */
   uint16_t dst_port = 0; /* set by find_{tcp,udp}_header */

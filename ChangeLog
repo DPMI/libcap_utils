@@ -1,6 +1,7 @@
 caputils-0.7.3
 --------------
 
+	* change: const correctness.
 	* change: using size_t where appropriate (e.g. fread)
 	* change: made fields in struct stream unsigned.
 	* fix: h_proto is 2 bytes.
