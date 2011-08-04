@@ -1,6 +1,7 @@
 caputils-0.7.3
 --------------
 
+	* fix: h_proto is 2 bytes.
 	* fix: minor build-system fixes, mostly related to make dist.
 	* change: adding a third library (libcap_stream) which deals only with
 	          the stream. libcap_utils is utility functions only.

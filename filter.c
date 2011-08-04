@@ -48,7 +48,7 @@ static int matchEth(const struct ether_addr* desired, const struct ether_addr* m
   return 1;
 }
 
-static const struct ether_vlan_header* find_ether_vlan_header(const struct ethhdr* ether, uint8_t* h_proto){
+static const struct ether_vlan_header* find_ether_vlan_header(const struct ethhdr* ether, uint16_t* h_proto){
   if( *h_proto == 0x8100 ){
     struct ether_vlan_header* vlan = (struct ether_vlan_header*)ether;
     *h_proto = ntohs(vlan->h_proto);
@@ -179,7 +179,7 @@ int filter_match(const struct filter* filter, const void* pkt, struct cap_header
   }
 
   const struct ethhdr* ether = (struct ethhdr*)pkt;
-  uint8_t h_proto = ntohs(ether->h_proto); /* may be overwritten by find_ether_vlan_header */
+  uint16_t h_proto = ntohl(ether->h_proto); /* may be overwritten by find_ether_vlan_header */
   uint16_t src_port = 0; /* set by find_{tcp,udp}_header */
   uint16_t dst_port = 0; /* set by find_{tcp,udp}_header */
 
