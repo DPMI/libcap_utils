@@ -21,9 +21,11 @@ bin_PROGRAMS += capfilter
 man1_MANS += man/capfilter.1
 endif
 
-notrans_dist_man_MANS = \
-	man/capfilter.1 \
-	man/libcap_filter.3
+notrans_dist_man_MANS =     \
+	man/libcaputils.3   \
+	man/libcap_filter.3 \
+	man/stream_read.3   \
+	man/capfilter.1
 
 TESTS = tests/filter_argv tests/address
 check_PROGRAMS = ${TESTS}
@@ -54,7 +56,7 @@ libcap_utils_la_LDFLAGS = -version-info 2:0:0
 libcap_utils_la_CFLAGS = -Wall
 libcap_utils_la_SOURCES =   \
 	caputils_int.h      \
-	address.c address.h \
+	address.c           \
 	error.c             \
 	utils.c             \
 	picotime.c
