@@ -39,7 +39,7 @@ struct file_header_06 {
     uint8_t minor;
   } version;
   char mpid[200];
-} __attribute((packed))__;
+};
 
 struct file_header_05 {
   uint32_t comment_size;
