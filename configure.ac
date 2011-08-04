@@ -16,7 +16,7 @@ AC_SUBST([VERSION_MINOR])
 AC_SUBST([VERSION_MICRO])
 
 AC_CONFIG_AUX_DIR([build-aux])
-AM_INIT_AUTOMAKE([-Wall foreign color-tests])
+AM_INIT_AUTOMAKE([1.11 check-news foreign color-tests subdir-objects -Wall -Werror])
 AM_SILENT_RULES([yes])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_HEADERS([config.h])
