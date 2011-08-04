@@ -35,7 +35,7 @@ static int stream_file_fillbuffer(struct stream_file* st){
   }
 
   char* dst = st->base.buffer + offset;
-  int readBytes = fread(dst, 1, available, st->file);
+  size_t readBytes = fread(dst, 1, available, st->file);
 
   /* check if an error occured, EOF is not considered an error. */
   if ( readBytes < available && ferror(st->file) > 0 ){
@@ -107,8 +107,8 @@ int stream_file_open(struct stream** stptr, const char* filename){
   st->file = fp;
 
   /* load stream file header */
-  ret = fread(fhptr, 1, sizeof(struct file_header_t), st->file);
-  if ( ret < sizeof(struct file_header_t) ){ /* even if this struct is larger */
+  size_t bytes = fread(fhptr, 1, sizeof(struct file_header_t), st->file);
+  if ( bytes < sizeof(struct file_header_t) ){ /* even if this struct is larger */
     return ERROR_CAPFILE_INVALID;            /* than legacy, the file would be */
                                              /* to small to be anything useful anyway. */
   }
