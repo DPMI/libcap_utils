@@ -54,7 +54,7 @@ static int write(struct stream_file* st, const void* data, size_t size){
 }
 
 /* Try to load a v05 file header */
-int load_legacy_05(struct file_header_05* fh, FILE* src){
+static int load_legacy_05(struct file_header_05* fh, FILE* src){
   fseek(src, 0L, SEEK_SET);
 
   /* silence gcc [-Wunused-result] */
@@ -65,7 +65,7 @@ int load_legacy_05(struct file_header_05* fh, FILE* src){
 }
 
 /* Try to load a v06 file header */
-int load_legacy_06(struct file_header_06* fh, FILE* src){
+static int load_legacy_06(struct file_header_06* fh, FILE* src){
   fseek(src, 0L, SEEK_SET);
 
   /* silence gcc [-Wunused-result] */
@@ -79,7 +79,7 @@ int load_legacy_06(struct file_header_06* fh, FILE* src){
  * Initialize file stream.
  * @return Non-zero on error (see errno(3) for descriptions).
  */
-int stream_file_open(struct stream** stptr, const char* filename){
+long stream_file_open(struct stream** stptr, const char* filename){
   assert(stptr);
   *stptr = NULL;
   int ret = 0;

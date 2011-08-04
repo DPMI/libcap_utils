@@ -15,7 +15,7 @@ static int packet_flag = 0;
 #define STPBRIDGES 0x0026
 #define CDPVTP 0x016E
 
-void show_usage(){
+static void show_usage(void){
   printf("capinfo  caputils-" CAPUTILS_VERSION "\n");
   printf("(c) 2011 David Sveningsson\n\n");
   printf("Open a capstream and show information about it.\n");
@@ -24,7 +24,7 @@ void show_usage(){
   printf("  -h, --help                 Show this help.\n");
 }
 
-int show_info(const char* filename){
+static int show_info(const char* filename){
   struct stream* st;
   stream_addr_t addr;
   addr.local_filename = filename;

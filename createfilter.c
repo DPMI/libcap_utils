@@ -339,8 +339,6 @@ int filter_from_argv(int* argcptr, char** argv, struct filter* filter){
   split_argv(&argc, argv, &filter_argc, filter_argv);
 
   /* save getopt settings */
-  extern int opterr;
-  extern int optind;
   int opterr_save = opterr;
   int optind_save = optind;
   opterr = 1;

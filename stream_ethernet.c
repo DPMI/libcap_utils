@@ -162,7 +162,7 @@ static long stream_ethernet_write(struct stream_ethernet* st, const void* data, 
   return 0;
 }
 
-long stream_ethernet_init(struct stream** stptr, const struct ether_addr* addr, const char* iface, uint16_t proto){
+static long stream_ethernet_init(struct stream** stptr, const struct ether_addr* addr, const char* iface, uint16_t proto){
   struct ifreq ifr;
   struct packet_mreq mcast = {0,};
 
@@ -245,7 +245,7 @@ long stream_ethernet_init(struct stream** stptr, const struct ether_addr* addr, 
   return 0;
 }
 
-long destroy(struct stream_ethernet* st){
+static long destroy(struct stream_ethernet* st){
   free(st->base.comment);
   free(st);
   return 0;

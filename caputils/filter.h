@@ -89,7 +89,7 @@ extern "C" {
   }  __attribute__((packed));
 
   int filter_from_argv(int* argc, char** argv, struct filter*);
-  void filter_from_argv_usage();
+  void filter_from_argv_usage(void);
 
   /**
    * Display a representation of the filter.

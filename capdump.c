@@ -25,7 +25,7 @@ static struct option long_options[]= {
 
 static int keep_running = 1;
 
-void sigint_handler(int signum){
+static void sigint_handler(int signum){
   if ( keep_running == 0 ){
     fprintf(stderr, "\rGot SIGINT again, terminating.\n");
     abort();
@@ -34,7 +34,7 @@ void sigint_handler(int signum){
   keep_running = 0;
 }
 
-static void show_usage(){
+static void show_usage(void){
   printf("capdump-" VERSION "\n");
   printf("(C) 2011 David Sveningsson <david.sveningsson@bth.se>\n");
   printf("Usage: %s [OPTIONS] STREAM\n", program_name);
@@ -53,7 +53,6 @@ static void show_usage(){
 }
 
 int main(int argc, char **argv){
-  extern int optind, opterr, optopt;
   int op, option_index = -1;
   program_name = strrchr(argv[0], '/') + 1;
 

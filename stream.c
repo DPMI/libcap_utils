@@ -214,7 +214,7 @@ long stream_write(struct stream *outStream, const void* data, size_t size){
   return outStream->write(outStream, data, size);
 }
 
-int fill_buffer(struct stream* st){
+static int fill_buffer(struct stream* st){
   if( st->flushed==1 ){
     return -1;
   }
