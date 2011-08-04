@@ -1,6 +1,6 @@
 ACLOCAL_AMFLAGS = -I m4
 
-lib_LTLIBRARIES = libcap_stream.la libcap_utils.la libcap_filter.la
+lib_LTLIBRARIES = libcap_utils.la libcap_filter.la libcap_stream.la
 bin_PROGRAMS = 
 man1_MANS =
 man3_MANS = \
