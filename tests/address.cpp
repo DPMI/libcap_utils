@@ -28,14 +28,13 @@ void check_error(int expected, int actual, CppUnit::SourceLine line){
 #define CPPUNIT_ASSERT_ETH_ADDR(expected, actual) check_eth_addr(expected, actual, CPPUNIT_SOURCELINE())
 #define CPPUNIT_ASSERT_ERROR(expected, actual) check_error(expected, actual, CPPUNIT_SOURCELINE())
 
-class DestinationTest: public CppUnit::TestFixture {
-  CPPUNIT_TEST_SUITE(DestinationTest);
+class AddressTest: public CppUnit::TestFixture {
+  CPPUNIT_TEST_SUITE(AddressTest);
   CPPUNIT_TEST( test_ethernet_colon  );
   CPPUNIT_TEST( test_ethernet_dash   );
   CPPUNIT_TEST( test_ethernet_none   );
   CPPUNIT_TEST( test_guess_eth       );
   CPPUNIT_TEST( test_guess_filename  );
-  CPPUNIT_TEST( test_guess_invalid   );
   CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -48,10 +47,10 @@ public:
     }
     struct ether_addr addr = *tmp;
 
-    destination_t dest;
+    stream_addr_t dest;
     int ret;
-    if ( (ret=destination_aton(&dest, test, DEST_ETHERNET, 0)) != 0 ){
-      sprintf(msg, "destination_aton() returned %d: %s", ret, strerror(ret));
+    if ( (ret=stream_addr_aton(&dest, test, STREAM_ADDR_ETHERNET, 0)) != 0 ){
+      sprintf(msg, "stream_addr_aton() returned %d: %s", ret, strerror(ret));
       CppUnit::Asserter::fail(msg, line);
     }
 
@@ -74,11 +73,11 @@ public:
     static char msg[1024];
     const char* sample = "cb:a9:87:65:43:21";
     struct ether_addr* expected = ether_aton(sample);
-    destination_t addr;
+    stream_addr_t addr;
     int ret;
 
-    if ( (ret=destination_aton(&addr, sample, DEST_NONE, DEST_GUESS)) != 0 ){
-      sprintf(msg, "destination_aton() returned %d: %s", ret, strerror(ret));
+    if ( (ret=stream_addr_aton(&addr, sample, STREAM_ADDR_GUESS, 0)) != 0 ){
+      sprintf(msg, "stream_addr_aton() returned %d: %s", ret, strerror(ret));
       CppUnit::Asserter::fail(msg);
     }
 
@@ -88,25 +87,19 @@ public:
   void test_guess_filename(){
     static char msg[1024];
     std::string sample = "/path/to/file";
-    destination_t addr;
+    stream_addr_t addr;
     int ret;
 
-    if ( (ret=destination_aton(&addr, sample.c_str(), DEST_NONE, DEST_GUESS)) != 0 ){
-      sprintf(msg, "destination_aton() returned %d: %s", ret, strerror(ret));
+    if ( (ret=stream_addr_aton(&addr, sample.c_str(), STREAM_ADDR_GUESS, 0)) != 0 ){
+      sprintf(msg, "stream_addr_aton() returned %d: %s", ret, strerror(ret));
       CppUnit::Asserter::fail(msg);
     }
 
     CPPUNIT_ASSERT_EQUAL(sample, std::string(addr.local_filename));
   }
-
-  void test_guess_invalid(){
-    destination_t addr;
-    CPPUNIT_ASSERT_ERROR(EINVAL, destination_aton(&addr, "placeholder", DEST_CAPFILE, DEST_GUESS));
-    CPPUNIT_ASSERT_ERROR(EINVAL, destination_aton(&addr, "placeholder", DEST_NONE, 0));
-  }
 };
 
-CPPUNIT_TEST_SUITE_REGISTRATION(DestinationTest);
+CPPUNIT_TEST_SUITE_REGISTRATION(AddressTest);
 
 int main(int argc, const char* argv[]){
   CppUnit::Test *suite = CppUnit::TestFactoryRegistry::getRegistry().makeTest();

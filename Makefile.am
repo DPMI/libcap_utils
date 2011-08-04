@@ -25,7 +25,7 @@ notrans_dist_man_MANS = \
 	man/capfilter.1 \
 	man/libcap_filter.3
 
-TESTS = tests/filter_argv tests/destination
+TESTS = tests/filter_argv tests/address
 check_PROGRAMS = ${TESTS}
 
 nobase_include_HEADERS =    \
@@ -82,7 +82,7 @@ tests_filter_argv_LDFLAGS = $(CPPUNIT_LIBS)
 tests_filter_argv_LDADD = libcap_filter.la libcap_utils.la
 tests_filter_argv_SOURCES = tests/filter_argv.cpp
 
-tests_destination_CXXFLAGS = -Wall $(CPPUNIT_CFLAGS)
-tests_destination_LDFLAGS = $(CPPUNIT_LIBS)
-tests_destination_LDADD = libcap_filter.la
-tests_destination_SOURCES = tests/destination.cpp
+tests_address_CXXFLAGS = -Wall $(CPPUNIT_CFLAGS)
+tests_address_LDFLAGS = $(CPPUNIT_LIBS)
+tests_address_LDADD = libcap_utils.la
+tests_address_SOURCES = tests/address.cpp
