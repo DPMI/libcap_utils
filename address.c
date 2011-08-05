@@ -40,8 +40,8 @@ int stream_addr_aton(stream_addr_t* dst, const char* src, enum AddressType type,
   char buf[48];          /* larger than max, just in case user provides large */
   strncpy(buf, src, 48); /* input, will bail out later on bad data. */
 
-  dst->type = type;
-  dst->flags = flags;
+  dst->type = htons(type);
+  dst->flags = htons(flags);
 
   switch( type ){
   case STREAM_ADDR_GUESS:
@@ -67,12 +67,12 @@ int stream_addr_aton(stream_addr_t* dst, const char* src, enum AddressType type,
       char* ip = buf;
       strncpy(buf, src, 48);
 
-      dst->in_port = htonl(0x0810); /* default port */
+      dst->in_port = htons(0x0810); /* default port */
 
       char* separator = strchr(buf, ':');
       if( separator ) {
 	*separator = 0;
-	dst->in_port = htonl(atoi(separator+1));
+	dst->in_port = htons(atoi(separator+1));
       }
 
       dst->in_addr.s_addr = inet_addr(ip);
@@ -113,16 +113,16 @@ const char* stream_addr_ntoa(const stream_addr_t* src){
 const char* stream_addr_ntoa_r(const stream_addr_t* src, char* buf, size_t bytes){
   int __attribute__((unused)) written = 0;
 
-  switch(src->type){
+  switch(ntohs(src->type)){
     case STREAM_ADDR_TCP:
     case STREAM_ADDR_UDP:
-      written = snprintf(buf, bytes, "%s://%s:%d", src->type == STREAM_ADDR_UDP ? "udp" : "tcp", inet_ntoa(src->in_addr), src->in_port);
+      written = snprintf(buf, bytes, "%s://%s:%d", ntohs(src->type) == STREAM_ADDR_UDP ? "udp" : "tcp", inet_ntoa(src->in_addr), ntohs(src->in_port));
       break;
     case STREAM_ADDR_ETHERNET:
       hexdump_address_r(&src->ether_addr, buf);
       break;
     case STREAM_ADDR_CAPFILE:
-      if ( src->flags & STREAM_ADDR_LOCAL ){
+      if ( ntohl(src->flags) & STREAM_ADDR_LOCAL ){
 	strncpy(buf, src->local_filename, bytes);
       } else {
 	strncpy(buf, src->filename, bytes);

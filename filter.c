@@ -220,7 +220,7 @@ void filter_print(const struct filter* filter, FILE* fp, int verbose){
   static char buf[100];
 
   fprintf(fp, "FILTER {%02d}\n", filter->filter_id);
-  fprintf(fp, "\t%.14s: %s\n", filter->dest.type == STREAM_ADDR_CAPFILE ? "DESTFILE" : "DESTADDRESS", stream_addr_ntoa(&filter->dest));
+  fprintf(fp, "\t%.14s: %s\n", ntohl(filter->dest.type) == STREAM_ADDR_CAPFILE ? "DESTFILE" : "DESTADDRESS", stream_addr_ntoa(&filter->dest));
   fprintf(fp, "\tCAPLEN        : %d\n", filter->caplen);
   fprintf(fp, "\tindex         : %d\n", filter->index);
 
