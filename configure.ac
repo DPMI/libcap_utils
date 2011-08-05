@@ -2,7 +2,7 @@ m4_define([__VERSION_MAJOR__], [0])
 m4_define([__VERSION_MINOR__], [7])
 m4_define([__VERSION_MICRO__], [3])
 
-AC_INIT([libcap_utils],[__VERSION_MAJOR__.__VERSION_MINOR__.__VERSION_MICRO__], [dsv@bth.se])
+AC_INIT([libcap_utils],[__VERSION_MAJOR__.__VERSION_MINOR__.__VERSION_MICRO__],[dsv@bth.se])
 
 VERSION_MAJOR=__VERSION_MAJOR__
 VERSION_MINOR=__VERSION_MINOR__
@@ -30,8 +30,8 @@ AC_CONFIG_FILES([
 AC_PROG_CC_C_O
 AC_PROG_CC_C99
 AC_PROG_CXX
-AC_GNU_SOURCE
-AM_DISABLE_STATIC
+AC_USE_SYSTEM_EXTENSIONS
+AC_DISABLE_STATIC([])
 LT_INIT
 
 AC_ARG_ENABLE([debug], [AS_HELP_STRING([--enable-debug], [will print debugging information during runtime @<:@default=disabled@:>@])])
