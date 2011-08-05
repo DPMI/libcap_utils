@@ -118,13 +118,13 @@ int main(int argc, char **argv){
   }
 
   /* ensure iface has been configured for ethernet streams */
-  if ( input.type == STREAM_ADDR_ETHERNET && !iface ){
+  if ( stream_addr_type(&input) == STREAM_ADDR_ETHERNET && !iface ){
     fprintf(stderr, "Ethernet streams require --iface\n");
     return 1;
   }
 
   /* cannot output to stdout if it is a terminal */
-  if ( output.type == STREAM_ADDR_CAPFILE &&
+  if ( stream_addr_type(&output) == STREAM_ADDR_CAPFILE &&
        strcmp("/dev/stdout", output.local_filename) == 0 &&
        isatty(STDOUT_FILENO) ){
     fprintf(stderr, "Cannot output to stdout when is is connected to a terminal.\n");
@@ -134,7 +134,7 @@ int main(int argc, char **argv){
 
   /* open input stream */
   static const char* type[4] = {"file", "ethernet", "udp", "tcp"};
-  fprintf(stderr, "Opening %s stream: %s\n", type[input.type], stream_addr_ntoa(&input));
+  fprintf(stderr, "Opening %s stream: %s\n", type[stream_addr_type(&input)], stream_addr_ntoa(&input));
   if ( (ret=stream_open(&src, &input, iface, 0)) != 0 ) {
     fprintf(stderr, "stream_open() failed with code 0x%08X: %s\n", ret, caputils_error_string(ret));
     return 1;

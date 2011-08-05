@@ -40,8 +40,9 @@ int stream_addr_aton(stream_addr_t* dst, const char* src, enum AddressType type,
   char buf[48];          /* larger than max, just in case user provides large */
   strncpy(buf, src, 48); /* input, will bail out later on bad data. */
 
-  dst->type = htons(type);
-  dst->flags = htons(flags);
+  memset(dst->buffer, 0, 26);
+  dst->_type = htons(type);
+  dst->_flags = htons(flags);
 
   switch( type ){
   case STREAM_ADDR_GUESS:
@@ -104,6 +105,12 @@ int stream_addr_aton(stream_addr_t* dst, const char* src, enum AddressType type,
   return 0;
 }
 
+int stream_addr_str(stream_addr_t* dst, const char* src){
+  dst->_type = htons(STREAM_ADDR_CAPFILE);
+  dst->_flags = htons(STREAM_ADDR_LOCAL);
+  dst->local_filename = src;
+  return 0;
+}
 
 const char* stream_addr_ntoa(const stream_addr_t* src){
   static char buf[1024];
@@ -113,24 +120,31 @@ const char* stream_addr_ntoa(const stream_addr_t* src){
 const char* stream_addr_ntoa_r(const stream_addr_t* src, char* buf, size_t bytes){
   int __attribute__((unused)) written = 0;
 
-  switch(ntohs(src->type)){
-    case STREAM_ADDR_TCP:
-    case STREAM_ADDR_UDP:
-      written = snprintf(buf, bytes, "%s://%s:%d", ntohs(src->type) == STREAM_ADDR_UDP ? "udp" : "tcp", inet_ntoa(src->in_addr), ntohs(src->in_port));
-      break;
-    case STREAM_ADDR_ETHERNET:
-      hexdump_address_r(&src->ether_addr, buf);
-      break;
-    case STREAM_ADDR_CAPFILE:
-      if ( ntohl(src->flags) & STREAM_ADDR_LOCAL ){
-	strncpy(buf, src->local_filename, bytes);
-      } else {
-	strncpy(buf, src->filename, bytes);
-      }
-      buf[bytes-1] = 0; /* force null-terminator */
-      break;
+  switch(stream_addr_type(src)){
+  case STREAM_ADDR_GUESS:
+    abort();
+
+  case STREAM_ADDR_TCP:
+  case STREAM_ADDR_UDP:
+    written = snprintf(buf, bytes, "%s://%s:%d", stream_addr_type(src) == STREAM_ADDR_UDP ? "udp" : "tcp", inet_ntoa(src->in_addr), ntohs(src->in_port));
+    break;
+  case STREAM_ADDR_ETHERNET:
+    hexdump_address_r(&src->ether_addr, buf);
+    break;
+  case STREAM_ADDR_CAPFILE:
+    if ( ntohl(src->_flags) & STREAM_ADDR_LOCAL ){
+      strncpy(buf, src->local_filename, bytes);
+    } else {
+      strncpy(buf, src->filename, bytes);
+    }
+    buf[bytes-1] = 0; /* force null-terminator */
+    break;
   }
 
   assert(written < bytes);
   return buf;
+}
+
+enum AddressType stream_addr_type(const stream_addr_t* addr){
+  return (enum AddressType)ntohs(addr->_type);
 }

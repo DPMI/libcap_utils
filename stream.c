@@ -88,7 +88,7 @@ int is_valid_version(struct file_header_t* fhptr){
 }
 
 long stream_open(struct stream** stptr, const stream_addr_t* dest, const char* nic, int port){
-  switch(dest->type){
+  switch(stream_addr_type(dest)){
     /* case PROTOCOL_TCP_UNICAST: */
     /*   return stream_tcp_init(myStream, address, port); */
 
@@ -99,10 +99,10 @@ long stream_open(struct stream** stptr, const stream_addr_t* dest, const char* n
       return stream_ethernet_open(stptr, &dest->ether_addr, nic);
 
     case PROTOCOL_LOCAL_FILE:
-      return stream_file_open(stptr, (dest->flags & STREAM_ADDR_LOCAL) ? dest->local_filename : dest->filename);
+      return stream_file_open(stptr, (dest->_flags & STREAM_ADDR_LOCAL) ? dest->local_filename : dest->filename);
 
     default:
-      fprintf(stderr, "Unhandled protocol %d\n", dest->type);
+      fprintf(stderr, "Unhandled protocol %d\n", stream_addr_type(dest));
       return ERROR_NOT_IMPLEMENTED;
   }
 }
@@ -115,12 +115,12 @@ long stream_create(struct stream** stptr, const stream_addr_t* dest, const char*
   /* struct sockaddr_in destination; */
   /* struct ether_addr ethernet_address; */
 
-  switch ( dest->type ){
+  switch ( stream_addr_type(dest) ){
   case PROTOCOL_ETHERNET_MULTICAST:
     return stream_ethernet_create(stptr, &dest->ether_addr, nic, mpid, comment);
 
   case PROTOCOL_LOCAL_FILE:
-    return stream_file_create(stptr, NULL, (dest->flags & STREAM_ADDR_LOCAL) ? dest->local_filename : dest->filename, mpid, comment);
+    return stream_file_create(stptr, NULL, (dest->_flags & STREAM_ADDR_LOCAL) ? dest->local_filename : dest->filename, mpid, comment);
 
   default:
     return ERROR_NOT_IMPLEMENTED;

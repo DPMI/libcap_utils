@@ -425,18 +425,12 @@ int filter_from_argv(int* argcptr, char** argv, struct filter* filter){
       if ( !parse_inet_addr(optarg, &filter->ip_src, &filter->ip_src_mask, "ip.src") ){
 	continue;
       }
-      /* copy to text for legacy code */
-      strcpy((char*)filter->_ip_src, inet_ntoa(filter->ip_src));
-      strcpy((char*)filter->_ip_src_mask, inet_ntoa(filter->ip_src_mask));
       break;
 
     case FILTER_IP_DST:
       if ( !parse_inet_addr(optarg, &filter->ip_dst, &filter->ip_dst_mask, "ip.dst") ){
 	continue;
       }
-      /* copy to text for legacy code */
-      strcpy((char*)filter->_ip_dst, inet_ntoa(filter->ip_dst));
-      strcpy((char*)filter->_ip_dst_mask, inet_ntoa(filter->ip_dst_mask));
       break;
 
     case FILTER_SRC_PORT:

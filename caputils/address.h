@@ -29,11 +29,11 @@ extern "C" {
 	struct in_addr in_addr;
 	uint16_t in_port;
       };
-    };
+    } __attribute__((packed));
 
-    uint16_t type;
-    uint16_t flags;
-  };
+    uint16_t _type;
+    uint16_t _flags;
+  } __attribute__((packed));
   typedef struct stream_addr stream_addr_t;
 
   enum AddressType {
@@ -75,6 +75,11 @@ extern "C" {
   int stream_addr_aton(stream_addr_t* dst, const char* src, enum AddressType type, int flags);
 
   /**
+   * Set address to a local string (only referencing the memory)
+   */
+  int stream_addr_str(stream_addr_t* dst, const char* src);
+
+  /**
    * Convert destination to string. The string is returned in a statically
    * allocated buffer, which subsequent calls will overwrite.
    */
@@ -85,6 +90,8 @@ extern "C" {
    * @param bytes Size of buf.
    */
   const char* stream_addr_ntoa_r(const stream_addr_t* src, char* buf, size_t bytes);
+
+  enum AddressType stream_addr_type(const stream_addr_t* addr) __attribute__((pure));
 
 #ifdef __cplusplus
 }
