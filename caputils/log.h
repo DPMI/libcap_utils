@@ -9,7 +9,7 @@ extern "C" {
 #include <stdarg.h>
 
   int vlogmsg(FILE* fp, const char* tag, const char* fmt, va_list ap);
-  int logmsg(FILE* fp, const char* tag, const char* fmt, ...);
+  int logmsg(FILE* fp, const char* tag, const char* fmt, ...) __attribute__ ((format (printf, 3, 4)));
 
   /**
    * Dump the content of data as hexadecimal (and its ascii repr.)
