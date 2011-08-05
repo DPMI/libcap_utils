@@ -55,10 +55,6 @@ enum {
   MAX_ERRORS
 };
 
-/* this is basically the same as ether_ntoa but it pads with zeroes which ether_ntoa doesn't */
-const char* hexdump_address(const struct ether_addr* address);
-const char* hexdump_address_r(const struct ether_addr* address, char buf[IFHWADDRLEN*3]);
-
 int is_valid_version(struct file_header_t* fhptr);
 
 /**

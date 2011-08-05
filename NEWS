@@ -1,6 +1,7 @@
 caputils-0.7.3
 --------------
 
+	* Moving {,v}logmsg from libmarc here.
 	* Major API changes; breaks ABI.
 	* Fixed capdump.
 	* More man-pages.

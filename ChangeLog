@@ -1,6 +1,7 @@
 caputils-0.7.3
 --------------
 
+	* add: {,v}logmsg from libmarc is more suitable here.
 	* change: const correctness, fixing warnings.
 	* change: using size_t where appropriate (e.g. fread)
 	* change: made fields in struct stream unsigned.

@@ -38,6 +38,7 @@ nobase_include_HEADERS =    \
 	caputils/capture.h  \
 	caputils/filter.h   \
 	caputils/caputils.h \
+	caputils/log.h      \
 	caputils/stream.h   \
 	caputils/version.h
 
@@ -58,6 +59,7 @@ libcap_utils_la_SOURCES =   \
 	caputils_int.h      \
 	address.c           \
 	error.c             \
+	log.c               \
 	utils.c             \
 	picotime.c
 
