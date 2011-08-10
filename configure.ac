@@ -54,6 +54,7 @@ AM_CONDITIONAL([BUILD_CAPDUMP],   [test "x$enable_capdump"   == "xyes" -o "x$ena
 AM_CONDITIONAL([BUILD_CAPINFO],   [test "x$enable_capinfo"   == "xyes" -o "x$enable_capinfo"   == $utils_unset])
 AM_CONDITIONAL([BUILD_CAPFILTER], [test "x$enable_capfilter" == "xyes" -o "x$enable_capfilter" == $utils_unset])
 
-AM_PATH_CPPUNIT(1.9.6)
+AM_PATH_CPPUNIT(1.9.6,,[AC_MSG_NOTICE([cppunit not found, tests disabled])])
+AM_CONDITIONAL([BUILD_TESTS], [test "x$no_cppunit" != "xyes"])
 
 AC_OUTPUT

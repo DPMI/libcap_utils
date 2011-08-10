@@ -27,7 +27,11 @@ notrans_dist_man_MANS =     \
 	man/stream_read.3   \
 	man/capfilter.1
 
+if BUILD_TESTS
 TESTS = tests/filter_argv tests/address
+else
+TESTS = tests/disabled
+endif
 check_PROGRAMS = ${TESTS}
 
 nobase_include_HEADERS =    \
@@ -90,3 +94,5 @@ tests_address_CXXFLAGS = -Wall $(CPPUNIT_CFLAGS)
 tests_address_LDFLAGS = $(CPPUNIT_LIBS)
 tests_address_LDADD = libcap_utils.la
 tests_address_SOURCES = tests/address.cpp
+
+tests_disabled_SOURCES = tests/disabled.cpp
