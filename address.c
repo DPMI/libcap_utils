@@ -148,3 +148,11 @@ const char* stream_addr_ntoa_r(const stream_addr_t* src, char* buf, size_t bytes
 enum AddressType stream_addr_type(const stream_addr_t* addr){
   return (enum AddressType)ntohs(addr->_type);
 }
+
+int stream_addr_flags(const stream_addr_t* addr){
+  return ntohs(addr->_flags);
+}
+
+int stream_addr_have_flag(const stream_addr_t* addr, enum AddressFlags flag){
+  return ntohs(addr->_flags) & flag;
+}

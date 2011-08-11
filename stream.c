@@ -99,7 +99,7 @@ long stream_open(struct stream** stptr, const stream_addr_t* dest, const char* n
       return stream_ethernet_open(stptr, &dest->ether_addr, nic);
 
     case PROTOCOL_LOCAL_FILE:
-      return stream_file_open(stptr, (dest->_flags & STREAM_ADDR_LOCAL) ? dest->local_filename : dest->filename);
+      return stream_file_open(stptr, stream_addr_have_flag(dest, STREAM_ADDR_LOCAL) ? dest->local_filename : dest->filename);
 
     default:
       fprintf(stderr, "Unhandled protocol %d\n", stream_addr_type(dest));
@@ -120,7 +120,7 @@ long stream_create(struct stream** stptr, const stream_addr_t* dest, const char*
     return stream_ethernet_create(stptr, &dest->ether_addr, nic, mpid, comment);
 
   case PROTOCOL_LOCAL_FILE:
-    return stream_file_create(stptr, NULL, (dest->_flags & STREAM_ADDR_LOCAL) ? dest->local_filename : dest->filename, mpid, comment);
+    return stream_file_create(stptr, NULL, stream_addr_have_flag(dest, STREAM_ADDR_LOCAL) ? dest->local_filename : dest->filename, mpid, comment);
 
   default:
     return ERROR_NOT_IMPLEMENTED;

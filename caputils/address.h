@@ -93,6 +93,10 @@ extern "C" {
 
   enum AddressType stream_addr_type(const stream_addr_t* addr) __attribute__((pure));
 
+  int stream_addr_flags(const stream_addr_t* addr) __attribute__((pure));
+
+  int stream_addr_have_flag(const stream_addr_t* addr, enum AddressFlags flag);
+
 #ifdef __cplusplus
 }
 #endif
