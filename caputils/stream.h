@@ -3,6 +3,9 @@
 
 #include <caputils/filter.h>
 
+#include <stdint.h>
+#include <netinet/ether.h>
+
 struct stream;
 
 /**
