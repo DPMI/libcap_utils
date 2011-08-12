@@ -105,9 +105,9 @@ int stream_addr_aton(stream_addr_t* dst, const char* src, enum AddressType type,
   return 0;
 }
 
-int stream_addr_str(stream_addr_t* dst, const char* src){
+int stream_addr_str(stream_addr_t* dst, const char* src, int flags){
   dst->_type = htons(STREAM_ADDR_CAPFILE);
-  dst->_flags = htons(STREAM_ADDR_LOCAL);
+  dst->_flags = htons(STREAM_ADDR_LOCAL|flags);
   dst->local_filename = src;
   return 0;
 }

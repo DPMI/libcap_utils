@@ -27,7 +27,7 @@ static void show_usage(void){
 static int show_info(const char* filename){
   struct stream* st;
   stream_addr_t addr;
-  stream_addr_str(&addr, filename);
+  stream_addr_str(&addr, filename, 0);
   long ret = 0;
 
   if ( (ret=stream_open(&st, &addr, NULL, 0)) != 0 ){

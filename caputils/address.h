@@ -62,6 +62,10 @@ extern "C" {
      * must ensure the lifetime of the string is as long as the lifetime as the
      * filter holding this address. */
     STREAM_ADDR_LOCAL = (1<<0),
+
+    /* force the stream to be flushed for every write. useful for low-traffic
+     * streams or to ensure real-time data. */
+    STREAM_ADDR_FLUSH = (1<<1),
   };
 
   /**
@@ -77,7 +81,7 @@ extern "C" {
   /**
    * Set address to a local string (only referencing the memory)
    */
-  int stream_addr_str(stream_addr_t* dst, const char* src);
+  int stream_addr_str(stream_addr_t* dst, const char* src, int flags);
 
   /**
    * Convert destination to string. The string is returned in a statically

@@ -9,6 +9,7 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 struct stream_file {
   struct stream base;
@@ -46,10 +47,15 @@ static int stream_file_fillbuffer(struct stream_file* st){
   return readBytes;
 }
 
-static int write(struct stream_file* st, const void* data, size_t size){
+static int stream_file_write(struct stream_file* st, const void* data, size_t size){
   if( fwrite(data, 1, size, st->file) != size ){
     return errno; /* @bug must check with feof(3) and ferror(3) */
   }
+
+  /* make sure the data is flushed */
+  fflush(st->file);
+  fsync(fileno(st->file));
+
   return 0;
 }
 
@@ -155,7 +161,7 @@ long stream_file_open(struct stream** stptr, const char* filename){
   /* add callbacks */
   st->base.fill_buffer = (fill_buffer_callback)stream_file_fillbuffer;
   st->base.destroy = NULL;
-  st->base.write = (write_callback)write;
+  st->base.write = (write_callback)stream_file_write;
 
   return 0;
 }
@@ -207,7 +213,7 @@ int stream_file_create(struct stream** stptr, FILE* fp, const char* filename, co
   /* add callbacks */
   st->base.fill_buffer = (fill_buffer_callback)stream_file_fillbuffer;
   st->base.destroy = NULL;
-  st->base.write = (write_callback)write;
+  st->base.write = (write_callback)stream_file_write;
 
   return 0;
 }
