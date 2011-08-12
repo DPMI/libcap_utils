@@ -114,13 +114,15 @@ long stream_create(struct stream** stptr, const stream_addr_t* dest, const char*
   /* int ret; */
   /* struct sockaddr_in destination; */
   /* struct ether_addr ethernet_address; */
+  const char* filename;
 
   switch ( stream_addr_type(dest) ){
   case PROTOCOL_ETHERNET_MULTICAST:
     return stream_ethernet_create(stptr, &dest->ether_addr, nic, mpid, comment);
 
   case PROTOCOL_LOCAL_FILE:
-    return stream_file_create(stptr, NULL, stream_addr_have_flag(dest, STREAM_ADDR_LOCAL) ? dest->local_filename : dest->filename, mpid, comment);
+    filename = stream_addr_have_flag(dest, STREAM_ADDR_LOCAL) ? dest->local_filename : dest->filename;
+    return stream_file_create(stptr, NULL, filename, mpid, comment);
 
   default:
     return ERROR_NOT_IMPLEMENTED;
