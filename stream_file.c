@@ -15,6 +15,7 @@ struct stream_file {
   struct stream base;
   FILE* file;
   const char* filename;
+  int force_flush; /* force stream to be flushed on every write */
 };
 
 static int stream_file_fillbuffer(struct stream_file* st){
@@ -53,8 +54,10 @@ static int stream_file_write(struct stream_file* st, const void* data, size_t si
   }
 
   /* make sure the data is flushed */
-  fflush(st->file);
-  fsync(fileno(st->file));
+  if ( st->force_flush ){
+    fflush(st->file);
+    fsync(fileno(st->file));
+  }
 
   return 0;
 }
@@ -111,6 +114,7 @@ long stream_file_open(struct stream** stptr, const char* filename){
   int i;
 
   st->file = fp;
+  st->force_flush = 0;
 
   /* load stream file header */
   size_t bytes = fread(fhptr, 1, sizeof(struct file_header_t), st->file);
@@ -166,7 +170,7 @@ long stream_file_open(struct stream** stptr, const char* filename){
   return 0;
 }
 
-int stream_file_create(struct stream** stptr, FILE* fp, const char* filename, const char* mpid, const char* comment){
+int stream_file_create(struct stream** stptr, FILE* fp, const char* filename, const char* mpid, const char* comment, int flags){
   assert(stptr);
   *stptr = NULL;
   int ret = 0;
@@ -193,6 +197,7 @@ int stream_file_create(struct stream** stptr, FILE* fp, const char* filename, co
   
   st->file = fp;
   st->filename = strdup(filename);
+  st->force_flush = flags & STREAM_ADDR_FLUSH;
 
   st->base.comment = strdup(comment);
   st->base.FH.magic = CAPUTILS_FILE_MAGIC;

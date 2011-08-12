@@ -67,13 +67,13 @@ int stream_udp_init(struct stream* st, const char* address, int port);
 int stream_tcp_init(struct stream* st, const char* address, int port);
 
 long stream_ethernet_open(struct stream** stptr, const struct ether_addr* address, const char* iface);
-long stream_ethernet_create(struct stream** stptr, const struct ether_addr* address, const char* iface, const char* mpid, const char* comment);
+long stream_ethernet_create(struct stream** stptr, const struct ether_addr* address, const char* iface, const char* mpid, const char* comment, int flags);
 
 long stream_file_open(struct stream** stptr, const char* filename);
 
 /**
  * @param fp Optional
  */
-int stream_file_create(struct stream** stptr, FILE* fp, const char* filename, const char* mpid, const char* comment);
+int stream_file_create(struct stream** stptr, FILE* fp, const char* filename, const char* mpid, const char* comment, int flags);
 
 #endif /* CAPUTILS_INT_H */

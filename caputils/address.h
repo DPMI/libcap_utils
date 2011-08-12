@@ -64,7 +64,8 @@ extern "C" {
     STREAM_ADDR_LOCAL = (1<<0),
 
     /* force the stream to be flushed for every write. useful for low-traffic
-     * streams or to ensure real-time data. */
+     * streams or to ensure real-time data. Not necessarily implemented for all
+     * types.*/
     STREAM_ADDR_FLUSH = (1<<1),
   };
 

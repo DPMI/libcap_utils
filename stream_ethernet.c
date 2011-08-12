@@ -251,7 +251,7 @@ static long destroy(struct stream_ethernet* st){
   return 0;
 }
 
-long stream_ethernet_create(struct stream** stptr, const struct ether_addr* addr, const char* iface, const char* mpid, const char* comment){
+long stream_ethernet_create(struct stream** stptr, const struct ether_addr* addr, const char* iface, const char* mpid, const char* comment, int flags){
   long ret = 0;
 
   if ( (ret=stream_ethernet_init(stptr, addr, iface, LLPROTO)) != 0 ){
