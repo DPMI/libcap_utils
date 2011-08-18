@@ -156,3 +156,13 @@ int stream_addr_flags(const stream_addr_t* addr){
 int stream_addr_have_flag(const stream_addr_t* addr, enum AddressFlags flag){
   return ntohs(addr->_flags) & flag;
 }
+
+void stream_addr_reset(stream_addr_t* addr){
+  memset(addr, 0, sizeof(stream_addr_t));
+}
+
+int stream_addr_is_set(const stream_addr_t* addr){
+  /* potentially another address type might have the first bytes as a zero so
+   * the type is also checked */
+  return addr->_type != 0 || addr->filename[0] != 0;
+}

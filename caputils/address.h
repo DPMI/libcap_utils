@@ -102,6 +102,16 @@ extern "C" {
 
   int stream_addr_have_flag(const stream_addr_t* addr, enum AddressFlags flag);
 
+  /**
+   * Initialize address to zero.
+   */
+  void stream_addr_reset(stream_addr_t* addr);
+
+  /**
+   * Check if an address is set or not.
+   */
+  int stream_addr_is_set(const stream_addr_t* addr);
+
 #ifdef __cplusplus
 }
 #endif
