@@ -58,8 +58,9 @@ long stream_write(struct stream* st, const void* data, size_t size);
  * @param st Stream to read from.
  * @param header Returns a pointer to the frame header (in the internal buffer).
  * @param filter If non-null, match frame against filter.
+ * @param timeout See select(2) for description of timeout.
  * @return Zero if successful, -1 when finished, positive int on error. header is undefined on errors.
  */
-long stream_read(struct stream* st, cap_head** header, const struct filter* filter);
+long stream_read(struct stream* st, cap_head** header, const struct filter* filter, struct timeval* timeout);
 
 #endif /* CAPUTILS__STREAM_H */

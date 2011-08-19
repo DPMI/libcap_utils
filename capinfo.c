@@ -52,7 +52,7 @@ static int show_info(const char* filename){
   long other = 0;
   long ipproto[UINT8_MAX] = {0,}; /* protocol is defined as 1 octet */
 
-  while ( (ret=stream_read(st, &cp, NULL)) == 0 ){
+  while ( (ret=stream_read(st, &cp, NULL, NULL)) == 0 ){
     packets++;
 
     struct ethhdr* eth = (struct ethhdr*)cp->payload;

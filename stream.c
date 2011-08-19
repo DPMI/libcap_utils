@@ -217,13 +217,12 @@ long stream_write(struct stream *outStream, const void* data, size_t size){
   return outStream->write(outStream, data, size);
 }
 
-static int fill_buffer(struct stream* st){
+static int fill_buffer(struct stream* st, struct timeval* timeout){
   if( st->flushed==1 ){
     return -1;
   }
 
   int ret;
-  struct timeval timeout = {0, 0};
 
   switch(st->type){
   case PROTOCOL_TCP_UNICAST://TCP
@@ -233,7 +232,7 @@ static int fill_buffer(struct stream* st){
     break;
   case PROTOCOL_ETHERNET_MULTICAST://ETHERNET
   case PROTOCOL_LOCAL_FILE:
-    ret = st->fill_buffer(st, &timeout);
+    ret = st->fill_buffer(st, timeout);
     if ( ret > 0 ){ /* common case */
       return 0;
     } else if ( ret < 0 ){ /* failed to read */
@@ -248,7 +247,7 @@ static int fill_buffer(struct stream* st){
   return 0;
 }
 
-long stream_read(struct stream *myStream, cap_head** data, const struct filter *my_Filter){
+long stream_read(struct stream *myStream, cap_head** data, const struct filter *my_Filter, struct timeval* timeout){
   int filterStatus=0;
   int skip_counter=-1;
   int ret = 0;
@@ -261,7 +260,7 @@ long stream_read(struct stream *myStream, cap_head** data, const struct filter *
 
     /* bufferSize tells how much data there is available in the buffer */
     if( myStream->bufferSize == myStream->readPos ){
-      if ( (ret=fill_buffer(myStream)) != 0 ){
+      if ( (ret=fill_buffer(myStream, timeout)) != 0 ){
 	return ret; /* could not read */
       }
       continue;
@@ -280,7 +279,7 @@ long stream_read(struct stream *myStream, cap_head** data, const struct filter *
     assert(packet_size > 0);
 
     if( end_pos > myStream->bufferSize ) {
-      if ( (ret=fill_buffer(myStream)) != 0 ){
+      if ( (ret=fill_buffer(myStream, timeout)) != 0 ){
 	return ret; /* could not read */
       }
 

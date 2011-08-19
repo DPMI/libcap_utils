@@ -154,7 +154,7 @@ int main(int argc, char **argv){
   long matches = 0;
 
   while ( keep_running ){
-    long ret = stream_read(src, &cp, NULL);
+    long ret = stream_read(src, &cp, NULL, NULL);
     if ( ret == EAGAIN ){
       continue;
     } else if ( ret != 0 ){
