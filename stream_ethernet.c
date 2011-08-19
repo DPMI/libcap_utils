@@ -63,30 +63,6 @@ static int fill_buffer(struct stream_ethernet* st, struct timeval* timeout){
     }
 
     readBytes=recvfrom(st->socket, osrBuffer, available, 0, NULL, NULL);
-
-#ifdef DEBUG
-    printf("eth.type=%04x\n", ntohs(eh->h_proto));
-    printf("\t%02X:%02X:%02X:%02X:%02X:%02X --> %02X:%02X:%02X:%02X:%02X:%02X\n",
-	   eh->h_source[0],
-	   eh->h_source[1],
-	   eh->h_source[2],
-	   eh->h_source[3],
-	   eh->h_source[4],
-	   eh->h_source[5],
-	   eh->h_dest[0],
-	   eh->h_dest[1],
-	   eh->h_dest[2],
-	   eh->h_dest[3],
-	   eh->h_dest[4],
-	   eh->h_dest[5]);
-    printf("\tst->address = %02x:%02x:%02x:%02x:%02x:%02x\n",
-	   st->address.ether_addr_octet[0],
-	   st->address.ether_addr_octet[1],
-	   st->address.ether_addr_octet[2],
-	   st->address.ether_addr_octet[3],
-	   st->address.ether_addr_octet[4],
-	   st->address.ether_addr_octet[5]);
-#endif
 	
     /* terminated */
     if ( readBytes < 0 ){
@@ -104,9 +80,6 @@ static int fill_buffer(struct stream_ethernet* st, struct timeval* timeout){
     int match_proto = ntohs(eh->h_proto) == LLPROTO;
     int match_addr = memcmp((const void*)eh->h_dest, st->address.ether_addr_octet, ETH_ALEN) == 0;
     if( !(match_proto && match_addr) ){
-#ifdef DEBUG
-      printf("\tskipping (proto: %d, addr: %d)\n", match_proto, match_addr);
-#endif /* DEBUG */
       continue;
     }
 
@@ -138,10 +111,6 @@ static int fill_buffer(struct stream_ethernet* st, struct timeval* timeout){
     size_t header_size = sizeof(struct ethhdr)+sizeof(struct sendhead);
     memcpy(st->base.buffer + st->base.bufferSize, osrBuffer + header_size, readBytes - header_size);
     st->base.bufferSize += readBytes - header_size;
-
-#ifdef DEBUG
-    printf("Packet contained %d bytes (Eth %zd, Send %zd, Cap %zd) Buffer Size = %d / %d  Pkts %ld \n",readBytes,sizeof(struct ethhdr), sizeof(struct sendhead),sizeof(struct cap_header),st->base.bufferSize, buffLen, st->base.pktCount);
-#endif
 
     /* This indicates a flush from the sender.. */
     if( ntohs(sh->flush) == 1 ){
