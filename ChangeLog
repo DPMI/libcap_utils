@@ -1,6 +1,7 @@
 caputils-0.7.3
 --------------
 
+	* add: filter_*_set functions
 	* add: stream_addr_str() to set a local filename easily.
 	* add: stream_addr_type() to get type in host order
 	* change: splitting filter structs so the packed and unpacked are
