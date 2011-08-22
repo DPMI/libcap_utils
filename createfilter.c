@@ -462,3 +462,13 @@ int filter_from_argv(int* argcptr, char** argv, struct filter* filter){
 int filter_close(struct filter* filter){
   return 0;
 }
+
+void filter_src_port_set(struct filter* filter, uint16_t port, uint16_t mask){
+  filter->src_port = port;
+  filter->src_port_mask = mask;
+}
+
+void filter_dst_port_set(struct filter* filter, uint16_t port, uint16_t mask){
+  filter->dst_port = port;
+  filter->dst_port_mask = mask;
+}

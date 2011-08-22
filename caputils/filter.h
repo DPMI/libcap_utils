@@ -160,6 +160,9 @@ extern "C" {
   int filter_from_argv(int* argc, char** argv, struct filter*);
   void filter_from_argv_usage(void);
 
+  void filter_src_port_set(struct filter* filter, uint16_t port, uint16_t mask);
+  void filter_dst_port_set(struct filter* filter, uint16_t port, uint16_t mask);
+
   /**
    * Display a representation of the filter.
    */
