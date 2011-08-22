@@ -16,8 +16,6 @@
 #include <net/if.h>
 #include <arpa/inet.h>
 
-static char osrBuffer[buffLen] = {0,};
-
 struct stream_ethernet {
   struct stream base;
   int socket;
@@ -32,10 +30,7 @@ static int fill_buffer(struct stream_ethernet* st, struct timeval* timeout){
   int readBytes;
 
   size_t available = buffLen;
-
-  const char* ether = osrBuffer;
-  const struct ethhdr *eh=(const struct ethhdr *)ether;
-  const struct sendhead *sh=(const struct sendhead *)(ether + sizeof(struct ethhdr));
+  size_t offset = 0;
 
   /* copy old content */
   if ( st->base.readPos > 0 ){
@@ -45,6 +40,7 @@ static int fill_buffer(struct stream_ethernet* st, struct timeval* timeout){
     st->base.bufferSize = bytes;
     st->base.readPos = 0;
     available = buffLen - bytes;
+    offset = bytes;
   }
 
   while ( 1 ){
@@ -62,7 +58,12 @@ static int fill_buffer(struct stream_ethernet* st, struct timeval* timeout){
       break;
     }
 
-    readBytes=recvfrom(st->socket, osrBuffer, available, 0, NULL, NULL);
+    char* dst = st->base.buffer + offset;    
+    const char* ether = dst;
+    const struct ethhdr *eh=(const struct ethhdr *)ether;
+    const struct sendhead *sh=(const struct sendhead *)(ether + sizeof(struct ethhdr));
+
+    readBytes=recvfrom(st->socket, dst, available, 0, NULL, NULL);
 	
     /* terminated */
     if ( readBytes < 0 ){
@@ -109,8 +110,8 @@ static int fill_buffer(struct stream_ethernet* st, struct timeval* timeout){
 
     /* copy packets to stream buffer */
     size_t header_size = sizeof(struct ethhdr)+sizeof(struct sendhead);
-    memcpy(st->base.buffer + st->base.bufferSize, osrBuffer + header_size, readBytes - header_size);
-    st->base.bufferSize += readBytes - header_size;
+    st->base.bufferSize += readBytes;
+    st->base.readPos = header_size;
 
     /* This indicates a flush from the sender.. */
     if( ntohs(sh->flush) == 1 ){
