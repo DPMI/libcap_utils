@@ -59,11 +59,11 @@ static const struct ether_vlan_header* find_ether_vlan_header(const struct ethhd
 
 static const struct ip* find_ip_header(const struct ethhdr* ether){
   const void* ptr = ether;
-  if( ntohs(ether->h_proto) == 0x8100 ){ /* have VLAN tag */
+  if( ntohs(ether->h_proto) != 0x8100 ){
     if ( ntohs(ether->h_proto) == ETHERTYPE_IP ){
       return (const struct ip*)(ptr + sizeof(struct ethhdr));
     }
-  } else {
+  } else { /* have VLAN tag */
     const struct ether_vlan_header* vlan = (const struct ether_vlan_header*)ether;
     if( ntohs(vlan->h_proto) == ETHERTYPE_IP ){
       return (const struct ip*)(ptr + sizeof(struct ether_vlan_header));
