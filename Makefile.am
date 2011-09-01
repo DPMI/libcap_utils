@@ -1,6 +1,6 @@
 ACLOCAL_AMFLAGS = -I m4
 
-lib_LTLIBRARIES = libcap_utils_07.la libcap_filter_07.la libcap_stream_07.la
+lib_LTLIBRARIES = libcap_utils-07.la libcap_filter-07.la libcap_stream-07.la
 bin_PROGRAMS = 
 man1_MANS =
 man3_MANS = \
@@ -51,7 +51,7 @@ pkgconfig_DATA = libcap_stream-0.7.pc libcap_filter-0.7.pc
 
 libcap_stream_07_la_LDFLAGS = -version-info 0:0:0
 libcap_stream_07_la_CFLAGS = -Wall
-libcap_stream_07_la_LIBADD = libcap_utils_07.la libcap_filter_07.la
+libcap_stream_07_la_LIBADD = libcap_utils-07.la libcap_filter-07.la
 libcap_stream_07_la_SOURCES =  \
 	stream.c stream.h   \
 	stream_ethernet.c   \
@@ -73,26 +73,26 @@ libcap_utils_07_la_SOURCES =   \
 
 libcap_filter_07_la_LDFLAGS = -version-info 0:0:0
 libcap_filter_07_la_CFLAGS = -Wall
-libcap_filter_07_la_LIBADD = libcap_utils_07.la
+libcap_filter_07_la_LIBADD = libcap_utils-07.la
 libcap_filter_07_la_SOURCES = createfilter.c filter.c
 
 capinfo_CFLAGS = -Wall
-capinfo_LDADD = libcap_utils_07.la libcap_filter_07.la libcap_stream_07.la
+capinfo_LDADD = libcap_utils-07.la libcap_filter-07.la libcap_stream-07.la
 
 capdump_CFLAGS = -Wall
-capdump_LDADD = libcap_utils_07.la libcap_filter_07.la libcap_stream_07.la
+capdump_LDADD = libcap_utils-07.la libcap_filter-07.la libcap_stream-07.la
 
 capfilter_CFLAGS = -Wall
-capfilter_LDADD = libcap_filter_07.la libcap_utils_07.la
+capfilter_LDADD = libcap_filter-07.la libcap_utils-07.la
 
 tests_filter_argv_CXXFLAGS = -Wall $(CPPUNIT_CFLAGS)
 tests_filter_argv_LDFLAGS = $(CPPUNIT_LIBS)
-tests_filter_argv_LDADD = libcap_filter_07.la libcap_utils_07.la
+tests_filter_argv_LDADD = libcap_filter-07.la libcap_utils-07.la
 tests_filter_argv_SOURCES = tests/filter_argv.cpp
 
 tests_address_CXXFLAGS = -Wall $(CPPUNIT_CFLAGS)
 tests_address_LDFLAGS = $(CPPUNIT_LIBS)
-tests_address_LDADD = libcap_utils_07.la
+tests_address_LDADD = libcap_utils-07.la
 tests_address_SOURCES = tests/address.cpp
 
 tests_disabled_SOURCES = tests/disabled.cpp
