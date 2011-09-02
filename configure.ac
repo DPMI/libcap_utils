@@ -25,6 +25,7 @@ AC_CONFIG_FILES([
 	libcap_stream-0.7.pc
 	caputils/version.h
 	Makefile
+  dist/deb-control
 ])
 
 AC_PROG_CC_C_O
@@ -56,5 +57,8 @@ AM_CONDITIONAL([BUILD_CAPFILTER], [test "x$enable_capfilter" == "xyes" -o "x$ena
 
 AM_PATH_CPPUNIT(1.9.6,,[AC_MSG_NOTICE([cppunit not found, tests disabled])])
 AM_CONDITIONAL([BUILD_TESTS], [test "x$no_cppunit" != "xyes"])
+
+ARCH=`echo $host|cut -d '-' -f 1`
+AC_SUBST(ARCH)
 
 AC_OUTPUT

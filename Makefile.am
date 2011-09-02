@@ -96,3 +96,9 @@ tests_address_LDADD = libcap_utils-07.la
 tests_address_SOURCES = tests/address.cpp
 
 tests_disabled_SOURCES = tests/disabled.cpp
+
+deb: all
+	mkdir -p libcap-utils-dev_@VERSION@_@ARCH@/DEBIAN
+	cp dist/deb-control libcap-utils-dev_@VERSION@_@ARCH@/DEBIAN/control
+	$(MAKE) install DESTDIR=`pwd`/libcap-utils-dev_@VERSION@_@ARCH@
+	dpkg-deb --build libcap-utils-dev_@VERSION@_@ARCH@
