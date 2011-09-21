@@ -109,7 +109,7 @@ int main(int argc, char **argv){
 
 	struct stream* src;
 	struct stream* dst;
-	int ret;
+	long ret;
 
 	/* parse stream address */
 	if ( (ret=stream_addr_aton(&input, argv[optind], STREAM_ADDR_GUESS, 0)) != 0 ){
@@ -136,13 +136,13 @@ int main(int argc, char **argv){
 	static const char* type[4] = {"file", "ethernet", "udp", "tcp"};
 	fprintf(stderr, "Opening %s stream: %s\n", type[stream_addr_type(&input)], stream_addr_ntoa(&input));
 	if ( (ret=stream_open(&src, &input, iface, 0)) != 0 ) {
-		fprintf(stderr, "stream_open() failed with code 0x%08X: %s\n", ret, caputils_error_string(ret));
+		fprintf(stderr, "stream_open() failed with code 0x%08lX: %s\n", ret, caputils_error_string(ret));
 		return 1;
 	}
 
 	/* open output stream */
 	if ( (ret=stream_create(&dst, &output, NULL, stream_get_mampid(src), comment)) != 0 ){
-		fprintf(stderr, "stream_create() failed with code 0x%08X: %s\n", ret, caputils_error_string(ret));
+		fprintf(stderr, "stream_create() failed with code 0x%08lX: %s\n", ret, caputils_error_string(ret));
 		return 1;
 	}
 
@@ -153,8 +153,8 @@ int main(int argc, char **argv){
 	size_t len = sizeof(struct cap_header);
 	long matches = 0;
 
-	while ( keep_running ){
-		long ret = stream_read(src, &cp, NULL, NULL);
+	while(1){
+		ret = stream_read(src, &cp, NULL, NULL);
 		if ( ret == EAGAIN ){
 			continue;
 		} else if ( ret != 0 ){
@@ -166,9 +166,13 @@ int main(int argc, char **argv){
 			fprintf(stderr, "Problems writing data to file!");
 		}
 
-		if ( matches >= max_packets ){
+		if ( max_packets > 0 && matches >= max_packets ){
 			break;
 		}
+	}
+
+	if ( ret > 0 ){
+		fprintf(stderr, "stream_read() returned 0x%08lX: %s\n", ret, caputils_error_string(ret));
 	}
 
 	stream_close(src);
