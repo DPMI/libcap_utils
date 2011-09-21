@@ -51,9 +51,15 @@ static int show_info(const char* filename){
 	long cdpvtp = 0;
 	long other = 0;
 	long ipproto[UINT8_MAX] = {0,}; /* protocol is defined as 1 octet */
+	timepico first, last;
 
 	while ( (ret=stream_read(st, &cp, NULL, NULL)) == 0 ){
 		packets++;
+
+		if ( packets == 1 ){
+			first = cp->ts;
+		}
+		last = cp->ts; /* overwritten each time */
 
 		struct ethhdr* eth = (struct ethhdr*)cp->payload;
 		struct iphdr* ip = NULL;
@@ -93,7 +99,12 @@ static int show_info(const char* filename){
 	if ( ret > 0 ){
 		fprintf(stderr, "stream_read() returned 0x%08lx: %s\n", ret, caputils_error_string(ret));
 	}
-  
+
+	char first_str[128];
+	char last_str[128];
+	timepico_to_string(&first, first_str, 128, "%F %T");
+	timepico_to_string(&last,  last_str,  128, "%F %T");
+	printf(" captured: %s to %s\n", first_str, last_str);
 	printf("  packets: %ld\n", packets);
   
 	if ( packet_flag ){
