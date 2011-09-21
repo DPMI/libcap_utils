@@ -91,7 +91,7 @@ static int show_info(const char* filename){
 	}
   
 	if ( ret > 0 ){
-		fprintf(stderr, "read_post() returned 0x%08lx: %s\n", ret, caputils_error_string(ret));
+		fprintf(stderr, "stream_read() returned 0x%08lx: %s\n", ret, caputils_error_string(ret));
 	}
   
 	printf("  packets: %ld\n", packets);
