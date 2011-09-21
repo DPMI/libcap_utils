@@ -132,7 +132,7 @@ const char* stream_addr_ntoa_r(const stream_addr_t* src, char* buf, size_t bytes
     hexdump_address_r(&src->ether_addr, buf);
     break;
   case STREAM_ADDR_CAPFILE:
-    if ( ntohl(src->_flags) & STREAM_ADDR_LOCAL ){
+	  if ( stream_addr_have_flag(src, STREAM_ADDR_LOCAL) ){
       strncpy(buf, src->local_filename, bytes);
     } else {
       strncpy(buf, src->filename, bytes);
