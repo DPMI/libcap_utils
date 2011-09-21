@@ -2,6 +2,7 @@
 #define CAPUTILS_PICOTIME_H
 
 #include <stdint.h>
+#include <stdlib.h>
 #include <sys/time.h>
 
 // Time struct for precision down to picoseconds
@@ -23,6 +24,12 @@ timepico timespec_to_timepico(struct timespec);
  * Return 0 on success.
  */
 int timepico_from_string(timepico* dst, const char* str);
+
+/**
+ * Convert timepico to string (using strftime), psec ignored
+ * @return dst or NULL if it fails.
+ */
+const char* timepico_to_string(const timepico* src, char* dst, size_t bytes, const char* fmt);
 
 //compares two struct timepico (ts1<ts2=-1, ts1>ts2=1, ts1==ts2=0)
 int timecmp(const timepico *ts1, const timepico *ts2);

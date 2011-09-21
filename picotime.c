@@ -99,3 +99,11 @@ int timepico_from_string(timepico* dst , const char* input){
 
   return 0;
 }
+
+const char* timepico_to_string(const timepico* src, char* dst, size_t bytes, const char* fmt){
+	time_t time = src->tv_sec;
+	struct tm tm;
+	gmtime_r(&time, &tm);
+	strftime(dst, bytes, fmt, &tm);
+	return dst;
+}
