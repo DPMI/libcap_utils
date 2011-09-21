@@ -259,7 +259,7 @@ long stream_read(struct stream *myStream, cap_head** data, const struct filter *
 		skip_counter++;
 
 		/* bufferSize tells how much data there is available in the buffer */
-		if( myStream->bufferSize == myStream->readPos ){
+		if( myStream->bufferSize - myStream->readPos < sizeof(struct cap_header) ){
 			if ( (ret=fill_buffer(myStream, timeout)) != 0 ){
 				return ret; /* could not read */
 			}
