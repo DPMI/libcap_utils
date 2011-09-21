@@ -54,7 +54,15 @@ static void show_usage(void){
 
 int main(int argc, char **argv){
 	int op, option_index = -1;
-	program_name = strrchr(argv[0], '/') + 1;
+
+  /* extract program name from path. e.g. /path/to/MArCd -> MArCd */
+  const char* separator = strrchr(argv[0], '/');
+  if ( separator ){
+    program_name = separator + 1;
+  } else {
+    program_name = argv[0];
+  }
+
 
 	const char* comment = "capdump-" VERSION " stream";
 	char* iface = NULL;
