@@ -162,7 +162,7 @@ int main(int argc, char **argv){
     }
 
     matches++;
-    if( !(stream_write(dst, (char*)cp, cp->caplen + len)) ) {
+    if( stream_write(dst, (char*)cp, cp->caplen + len) != 0 ) {
       fprintf(stderr, "Problems writing data to file!");
     }
 
