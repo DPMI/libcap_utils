@@ -178,8 +178,12 @@ extern "C" {
 
   int filter_close(struct filter* filter);
 
+
+void filter_pack(struct filter* src, struct filter_packed* dst);
+void filter_unpack(struct filter_packed* src, struct filter* dst);
+
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* CAPUTILS_FILTER_H */
+#endif /* LIBMARC_FILTER_H */

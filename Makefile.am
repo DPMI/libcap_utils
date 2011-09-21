@@ -1,6 +1,6 @@
 ACLOCAL_AMFLAGS = -I m4
 
-lib_LTLIBRARIES = libcap_utils-07.la libcap_filter-07.la libcap_stream-07.la
+lib_LTLIBRARIES = libcap_utils-07.la libcap_filter-07.la libcap_stream-07.la libcap_marc-07.la
 bin_PROGRAMS = 
 man1_MANS =
 man3_MANS = \
@@ -44,10 +44,11 @@ nobase_include_HEADERS =    \
 	caputils/caputils.h \
 	caputils/log.h      \
 	caputils/stream.h   \
+	caputils/marc.h     \
 	caputils/version.h
 
 pkgconfigdir = $(libdir)/pkgconfig
-pkgconfig_DATA = libcap_stream-0.7.pc libcap_filter-0.7.pc
+pkgconfig_DATA = libcap_stream-0.7.pc libcap_filter-0.7.pc libcap_utils-0.7.pc libcap_marc-0.7.pc
 
 libcap_stream_07_la_LDFLAGS = -version-info 0:0:0
 libcap_stream_07_la_CFLAGS = -Wall
@@ -75,6 +76,10 @@ libcap_filter_07_la_LDFLAGS = -version-info 0:0:0
 libcap_filter_07_la_CFLAGS = -Wall
 libcap_filter_07_la_LIBADD = libcap_utils-07.la
 libcap_filter_07_la_SOURCES = createfilter.c filter.c
+
+libcap_marc_07_la_LDFLAGS = -shared -version-info 0:0:0
+libcap_marc_07_la_CFLAGS = -Wall ${libcap_filter_CFLAGS}
+libcap_marc_07_la_SOURCES = marc.c
 
 capinfo_CFLAGS = -Wall
 capinfo_LDADD = libcap_utils-07.la libcap_filter-07.la libcap_stream-07.la
