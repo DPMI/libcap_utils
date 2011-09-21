@@ -290,3 +290,64 @@ void filter_print(const struct filter* filter, FILE* fp, int verbose){
     fprintf(fp, "\tPORT_DST      : NULL\n");
   }
 }
+
+void filter_pack(struct filter* src, struct filter_packed* dst){
+  dst->filter_id	= htonl(src->filter_id);
+  dst->index		= htonl(src->index);
+  dst->vlan_tci		= htons(src->vlan_tci);
+  dst->eth_type		= htons(src->eth_type);
+  dst->ip_proto		= src->ip_proto;
+  dst->src_port		= htons(src->src_port);
+  dst->dst_port		= htons(src->dst_port);
+  dst->vlan_tci_mask	= htons(src->vlan_tci_mask);
+  dst->eth_type_mask	= htons(src->eth_type_mask);
+  dst->src_port_mask	= htons(src->src_port_mask);
+  dst->dst_port_mask	= htons(src->dst_port_mask);
+  dst->consumer		= htonl(src->consumer);
+  dst->caplen		= htonl(src->caplen);
+
+  /* ip source and dest */
+  memcpy(dst->ip_src, inet_ntoa(src->ip_src), 16);
+  memcpy(dst->ip_dst, inet_ntoa(src->ip_dst), 16);
+  memcpy(dst->ip_src_mask, inet_ntoa(src->ip_src_mask), 16);
+  memcpy(dst->ip_dst_mask, inet_ntoa(src->ip_dst_mask), 16);
+
+  memcpy(dst->iface, src->iface, 8);
+  memcpy(&dst->eth_src, &src->eth_src, sizeof(struct ether_addr));
+  memcpy(&dst->eth_dst, &src->eth_dst, sizeof(struct ether_addr));
+  memcpy(&dst->eth_src_mask, &src->eth_src_mask, sizeof(struct ether_addr));
+  memcpy(&dst->eth_dst_mask, &src->eth_dst_mask, sizeof(struct ether_addr));
+
+  /* address (safe to copy, already in network order) */
+  memcpy(&dst->dest, &src->dest, sizeof(stream_addr_t)); 
+}
+
+void filter_unpack(struct filter_packed* src, struct filter* dst){
+  dst->filter_id	= ntohl(src->filter_id);
+  dst->index		= ntohl(src->index);
+  dst->vlan_tci		= ntohs(src->vlan_tci);
+  dst->eth_type		= ntohs(src->eth_type);
+  dst->ip_proto		= src->ip_proto;
+  dst->src_port		= ntohs(src->src_port);
+  dst->dst_port		= ntohs(src->dst_port);
+  dst->vlan_tci_mask	= ntohs(src->vlan_tci_mask);
+  dst->eth_type_mask	= ntohs(src->eth_type_mask);
+  dst->src_port_mask	= ntohs(src->src_port_mask);
+  dst->dst_port_mask	= ntohs(src->dst_port_mask);
+  dst->consumer		= ntohl(src->consumer);
+  dst->caplen		= ntohl(src->caplen);
+
+  inet_aton((const char*)src->ip_src, &dst->ip_src);
+  inet_aton((const char*)src->ip_dst, &dst->ip_dst);
+  inet_aton((const char*)src->ip_src_mask, &dst->ip_src_mask);
+  inet_aton((const char*)src->ip_dst_mask, &dst->ip_dst_mask);
+
+  memcpy(dst->iface, src->iface, 8);
+  memcpy(&dst->eth_src, &src->eth_src, sizeof(struct ether_addr));
+  memcpy(&dst->eth_dst, &src->eth_dst, sizeof(struct ether_addr));
+  memcpy(&dst->eth_src_mask, &src->eth_src_mask, sizeof(struct ether_addr));
+  memcpy(&dst->eth_dst_mask, &src->eth_dst_mask, sizeof(struct ether_addr));
+
+  /* address (safe to copy, supposed to be in network order) */
+  memcpy(&dst->dest, &src->dest, sizeof(stream_addr_t)); 
+}
