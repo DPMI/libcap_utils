@@ -6,6 +6,5 @@ includedir=@includedir@
 Name: libmarc
 Description: 
 Version: @VERSION@
-Requires.private: libcap_filter-0.7 >= 0.7.2
-Libs: -L${libdir} -lmarc-07 -lcap_utils-07 -Wl,-rpath -Wl,${libdir}
+Libs: -L${libdir} -lcap_marc-07 -lcap_utils-07 -Wl,-rpath -Wl,${libdir}
 Cflags: -I${includedir}
