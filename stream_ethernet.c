@@ -250,6 +250,7 @@ long stream_ethernet_open(struct stream** stptr, const struct ether_addr* addr, 
 
   struct stream_ethernet* st = (struct stream_ethernet*)*stptr;  
   
+  st->base.type = PROTOCOL_ETHERNET_MULTICAST;
   st->base.FH.comment_size = 0;
   st->base.comment = NULL;
 
@@ -258,4 +259,37 @@ long stream_ethernet_open(struct stream** stptr, const struct ether_addr* addr, 
   st->base.destroy = (destroy_callback)destroy;
 
   return 0;
+}
+
+long stream_add(struct stream* st, const stream_addr_t* addr){
+	if ( stream_addr_type(addr) != STREAM_ADDR_ETHERNET ){
+		return EINVAL;
+	}
+
+	if ( st->type != PROTOCOL_ETHERNET_MULTICAST ){
+		/* not very nice */
+		fprintf(stderr, "stream must be ethernet multicast (type: %d)\n", st->type);
+		return EINVAL;
+	}
+
+	/* parse hwaddr from user */
+	if ( (addr->ether_addr.ether_addr_octet[0] & 0x01) == 0 ){
+		return ERROR_INVALID_HWADDR_MULTICAST;
+	}
+
+	struct stream_ethernet* se = (struct stream_ethernet*)st;
+	
+	struct packet_mreq mcast = {0,};
+	mcast.mr_ifindex = se->if_index;
+	mcast.mr_type = PACKET_MR_MULTICAST;
+	mcast.mr_alen = ETH_ALEN;
+	memcpy(mcast.mr_address, &addr->ether_addr, ETH_ALEN);
+	
+	/* setup ethernet multicast */
+	if ( setsockopt(se->socket, SOL_PACKET, PACKET_ADD_MEMBERSHIP, (void*)&mcast, sizeof(mcast)) == -1 ){
+		perror("Adding multicast address failed");
+		return errno;
+	}
+
+	return 0;
 }

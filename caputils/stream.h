@@ -7,6 +7,7 @@
 #include <netinet/ether.h>
 
 struct stream;
+typedef struct stream stream_t;
 
 /**
  * Open an existing stream.
@@ -25,6 +26,11 @@ long stream_create(struct stream** st, const stream_addr_t* addr, const char* ni
  * @return Zero on failures.
  */
 //long createstream_file(struct stream** stptr, FILE* file, const char* filename, const char* mpid, const char* comment);
+
+/**
+ * Add source to stream (currently only for ethernet multicast)
+ */
+long stream_add(struct stream* st, const stream_addr_t* addr);
 
 /**
  * Close stream.
