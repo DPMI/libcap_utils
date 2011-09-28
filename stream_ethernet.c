@@ -16,6 +16,8 @@
 #include <net/if.h>
 #include <arpa/inet.h>
 
+#define MAX_ADDRESS 100
+
 struct stream_ethernet {
   struct stream base;
   int socket;
@@ -23,7 +25,9 @@ struct stream_ethernet {
   int if_index;
   int if_mtu;
   struct sockaddr_ll sll;
-  struct ether_addr address;
+  struct ether_addr address[MAX_ADDRESS];
+	long unsigned int seqnum[MAX_ADDRESS];
+	unsigned int num_address;
 };
 
 static int fill_buffer(struct stream_ethernet* st, struct timeval* timeout){
@@ -78,10 +82,24 @@ static int fill_buffer(struct stream_ethernet* st, struct timeval* timeout){
     }
 
     /* check protocol and destination */
-    int match_proto = ntohs(eh->h_proto) == LLPROTO;
-    int match_addr = memcmp((const void*)eh->h_dest, st->address.ether_addr_octet, ETH_ALEN) == 0;
-    if( !(match_proto && match_addr) ){
-      continue;
+    if ( ntohs(eh->h_proto) != LLPROTO ){
+	    continue;
+    }
+
+#ifdef DEBUG
+    printf("Ethernet Multicast\nEthernet.type=%04X\nEthernet.dst=%02X:%02X:%02X:%02X:%02X:%02X\n", LLPROTO
+           ,eh->h_dest[0], eh->h_dest[1], eh->h_dest[2]
+           ,eh->h_dest[3], eh->h_dest[4], eh->h_dest[5]
+           );
+#endif
+
+    unsigned int match;
+    for ( match = 0; match < st->num_address; match++ ){
+	    if ( memcmp((const void*)eh->h_dest, st->address[match].ether_addr_octet, ETH_ALEN) == 0 ) break;
+    }
+
+    if ( match == st->num_address ){
+	    continue;
     }
 
     /* increase packet count */
@@ -90,7 +108,7 @@ static int fill_buffer(struct stream_ethernet* st, struct timeval* timeout){
     /* if no sequencenr is set some additional checks are made.
      * they will also run when the sequence number wraps, but that ok since the
      * sequence number will match in that case anyway. */
-    if ( st->base.expSeqnr == 0 ){
+    if ( st->seqnum[match] == 0 ){
       /* read stream version */
       struct file_header_t FH;
       FH.version.major=ntohs(sh->version.major);
@@ -98,15 +116,15 @@ static int fill_buffer(struct stream_ethernet* st, struct timeval* timeout){
 
       /* ensure we can read this version */
       if ( !is_valid_version(&FH) ){
-	return -1;
+	      return -1;
       }
 
       /* this is set last, as we want to wait until a packet with valid version
        * arrives before proceeding. */
-      st->base.expSeqnr = ntohl(sh->sequencenr);
+      st->seqnum[match] = ntohl(sh->sequencenr);
     }
 
-    match_inc_seqnr(&st->base, sh);
+    match_inc_seqnr(&st->seqnum[match], sh);
 
     /* copy packets to stream buffer */
     size_t header_size = sizeof(struct ethhdr)+sizeof(struct sendhead);
@@ -132,9 +150,38 @@ static long stream_ethernet_write(struct stream_ethernet* st, const void* data, 
   return 0;
 }
 
+static long stream_ethernet_add(struct stream_ethernet* st, const struct ether_addr* addr){
+	if ( st->num_address == MAX_ADDRESS ){
+		return EBUSY;
+	}
+
+  /* parse hwaddr from user */
+  if ( (addr->ether_addr_octet[0] & 0x01) == 0 ){
+    return ERROR_INVALID_HWADDR_MULTICAST;
+  }
+  
+  /* store parsed address */
+  memcpy(&st->address[st->num_address], addr, ETH_ALEN);
+
+  /* setup multicast address */
+	struct packet_mreq mcast = {0,};
+  mcast.mr_ifindex = st->if_index;
+  mcast.mr_type = PACKET_MR_MULTICAST;
+  mcast.mr_alen = ETH_ALEN;
+  memcpy(mcast.mr_address, &st->address[st->num_address], ETH_ALEN);
+
+  /* setup ethernet multicast */
+  if ( setsockopt(st->socket, SOL_PACKET, PACKET_ADD_MEMBERSHIP, (void*)&mcast, sizeof(mcast)) == -1 ){
+    perror("Adding multicast address failed");
+    return errno;
+  }
+
+  st->num_address++;
+  return 0;
+}
+
 static long stream_ethernet_init(struct stream** stptr, const struct ether_addr* addr, const char* iface, uint16_t proto){
   struct ifreq ifr;
-  struct packet_mreq mcast = {0,};
 
   long ret = 0;
   
@@ -160,6 +207,7 @@ static long stream_ethernet_init(struct stream** stptr, const struct ether_addr*
   }
   struct stream_ethernet* st = (struct stream_ethernet*)*stptr;
   st->socket = fd;
+  st->num_address = 0;
 
   /* get iface index */
   if ( ioctl(fd, SIOCGIFINDEX, &ifr) == -1 ){
@@ -173,24 +221,8 @@ static long stream_ethernet_init(struct stream** stptr, const struct ether_addr*
   }
   st->if_mtu = ifr.ifr_mtu;
 
-  /* parse hwaddr from user */
-  if ( (addr->ether_addr_octet[0] & 0x01) == 0 ){
-    return ERROR_INVALID_HWADDR_MULTICAST;
-  }
-  
-  /* store parsed address */
-  memcpy(&st->address, addr, ETH_ALEN);
-
-  /* setup multicast address */
-  mcast.mr_ifindex = st->if_index;
-  mcast.mr_type = PACKET_MR_MULTICAST;
-  mcast.mr_alen = ETH_ALEN;
-  memcpy(mcast.mr_address, &st->address, ETH_ALEN);
-
-  /* setup ethernet multicast */
-  if ( setsockopt(fd, SOL_PACKET, PACKET_ADD_MEMBERSHIP, (void*)&mcast, sizeof(mcast)) == -1 ){
-    perror("Adding multicast address failed");
-    return errno;
+  if ( (ret=stream_ethernet_add(st, addr)) != 0 ){
+	  return ret;
   }
 
   memset(&st->sll, 0, sizeof(st->sll));
@@ -272,24 +304,6 @@ long stream_add(struct stream* st, const stream_addr_t* addr){
 		return EINVAL;
 	}
 
-	/* parse hwaddr from user */
-	if ( (addr->ether_addr.ether_addr_octet[0] & 0x01) == 0 ){
-		return ERROR_INVALID_HWADDR_MULTICAST;
-	}
-
 	struct stream_ethernet* se = (struct stream_ethernet*)st;
-	
-	struct packet_mreq mcast = {0,};
-	mcast.mr_ifindex = se->if_index;
-	mcast.mr_type = PACKET_MR_MULTICAST;
-	mcast.mr_alen = ETH_ALEN;
-	memcpy(mcast.mr_address, &addr->ether_addr, ETH_ALEN);
-	
-	/* setup ethernet multicast */
-	if ( setsockopt(se->socket, SOL_PACKET, PACKET_ADD_MEMBERSHIP, (void*)&mcast, sizeof(mcast)) == -1 ){
-		perror("Adding multicast address failed");
-		return errno;
-	}
-
-	return 0;
+	return stream_ethernet_add(se, &addr->ether_addr);
 }

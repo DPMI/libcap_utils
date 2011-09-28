@@ -42,19 +42,19 @@ int stream_alloc(struct stream** stptr, enum protocol_t protocol, size_t size){
 	return 0;
 }
 
-void match_inc_seqnr(struct stream* restrict st, const struct sendhead* restrict sh){
+void match_inc_seqnr(long unsigned int* restrict seq, const struct sendhead* restrict sh){
 	/* validate sequence number */
-	if( st->expSeqnr != ntohl(sh->sequencenr) ){
-		fprintf(stderr,"Missmatch of sequence numbers. Expeced %ld got %d\n", st->expSeqnr, ntohl(sh->sequencenr));
-		st->expSeqnr = ntohl(sh->sequencenr); /* reset sequence number */
+	if( *seq != ntohl(sh->sequencenr) ){
+		fprintf(stderr,"Missmatch of sequence numbers. Expeced %ld got %d\n", *seq, ntohl(sh->sequencenr));
+		*seq = ntohl(sh->sequencenr); /* reset sequence number */
 	}
 
 	/* increment sequence number (next packet is expected to have +1) */
-	st->expSeqnr++;
+	(*seq)++;
 
 	/* wrap sequence number */
-	if( st->expSeqnr>=0xFFFF ){
-		st->expSeqnr=0;
+	if( *seq >= 0xFFFF ){
+		*seq = 0;
 	}
 }
 
