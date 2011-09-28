@@ -307,10 +307,14 @@ void filter_pack(struct filter* src, struct filter_packed* dst){
   dst->caplen		= htonl(src->caplen);
 
   /* ip source and dest */
-  memcpy(dst->ip_src, inet_ntoa(src->ip_src), 16);
-  memcpy(dst->ip_dst, inet_ntoa(src->ip_dst), 16);
-  memcpy(dst->ip_src_mask, inet_ntoa(src->ip_src_mask), 16);
-  memcpy(dst->ip_dst_mask, inet_ntoa(src->ip_dst_mask), 16);
+  dst->ip_src = src->ip_src;
+  dst->ip_dst = src->ip_dst;
+  dst->ip_src_mask = src->ip_src_mask;
+  dst->ip_dst_mask = src->ip_dst_mask;
+  memcpy(dst->_ip_src, inet_ntoa(src->ip_src), 16);
+  memcpy(dst->_ip_dst, inet_ntoa(src->ip_dst), 16);
+  memcpy(dst->_ip_src_mask, inet_ntoa(src->ip_src_mask), 16);
+  memcpy(dst->_ip_dst_mask, inet_ntoa(src->ip_dst_mask), 16);
 
   memcpy(dst->iface, src->iface, 8);
   memcpy(&dst->eth_src, &src->eth_src, sizeof(struct ether_addr));
@@ -320,6 +324,9 @@ void filter_pack(struct filter* src, struct filter_packed* dst){
 
   /* address (safe to copy, already in network order) */
   memcpy(&dst->dest, &src->dest, sizeof(stream_addr_t)); 
+
+  /* filter version */
+  dst->version = htonl(0x01);
 }
 
 void filter_unpack(struct filter_packed* src, struct filter* dst){
@@ -337,10 +344,18 @@ void filter_unpack(struct filter_packed* src, struct filter* dst){
   dst->consumer		= ntohl(src->consumer);
   dst->caplen		= ntohl(src->caplen);
 
-  inet_aton((const char*)src->ip_src, &dst->ip_src);
-  inet_aton((const char*)src->ip_dst, &dst->ip_dst);
-  inet_aton((const char*)src->ip_src_mask, &dst->ip_src_mask);
-  inet_aton((const char*)src->ip_dst_mask, &dst->ip_dst_mask);
+  /* legacy filters are converted from ascii */
+  if ( ntohl(src->version) == 0 ){
+	  inet_aton((const char*)src->_ip_src, &dst->ip_src);
+	  inet_aton((const char*)src->_ip_dst, &dst->ip_dst);
+	  inet_aton((const char*)src->_ip_src_mask, &dst->ip_src_mask);
+	  inet_aton((const char*)src->_ip_dst_mask, &dst->ip_dst_mask);
+  } else {
+	  dst->ip_src = src->ip_src;
+	  dst->ip_dst = src->ip_dst;
+	  dst->ip_src_mask = src->ip_src_mask;
+	  dst->ip_dst_mask = src->ip_dst_mask;
+  }
 
   memcpy(dst->iface, src->iface, 8);
   memcpy(&dst->eth_src, &src->eth_src, sizeof(struct ether_addr));
@@ -350,4 +365,7 @@ void filter_unpack(struct filter_packed* src, struct filter* dst){
 
   /* address (safe to copy, supposed to be in network order) */
   memcpy(&dst->dest, &src->dest, sizeof(stream_addr_t)); 
+
+  /* filter version */
+  dst->version = htonl(0x01);
 }

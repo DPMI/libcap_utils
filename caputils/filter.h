@@ -37,49 +37,9 @@ extern "C" {
     FILTER_DST_PORT = (1<<0),
   };
 
-  /* Filter Structure */
-#define LIBMARC_FILTER_DEF						\
-  /* Integer identifying the rule. This should be uniqe for the MP. */	\
-  uint32_t filter_id;							\
-									\
-  /* Which fields should we check? Bitmask (see further fields for values) */ \
-  uint32_t index;							\
-  CI_handle_t iface;                 /* 512: Which CI */                \
-  uint16_t vlan_tci;                 /* 256: VLAN id */			\
-  uint16_t eth_type;                 /* 128: Ethernet type */		\
-  struct ether_addr eth_src;         /*  64: Ethernet Source */		\
-  struct ether_addr eth_dst;         /*  32: Ethernet Destination */	\
-  uint8_t ip_proto;                  /*  16: IP Payload Protocol */	\
-  unsigned char _ip_src[16];         /* DO NOT USE. FOR COMPAT ONLY */  \
-  unsigned char _ip_dst[16];         /* DO NOT USE: FOR COMPAT ONLY */  \
-  uint16_t src_port;                 /*   2: Transport Source Port */	\
-  uint16_t dst_port;                 /*   1: Transport Destination Port */ \
-									\
-  uint16_t vlan_tci_mask;            /* VLAN id mask */			\
-  uint16_t eth_type_mask;            /* Ethernet type mask */		\
-  struct ether_addr eth_src_mask;    /* Ethernet Source Mask */		\
-  struct ether_addr eth_dst_mask;    /* Ethernet Destination Mask */	\
-  unsigned char _ip_src_mask[16];    /* DO NOT USE. FOR COMPAT ONLY */  \
-  unsigned char _ip_dst_mask[16];    /* DO NOT USE. FOR COMPAT ONLY */  \
-  uint16_t src_port_mask;            /* Transport Source Port Mask */	\
-  uint16_t dst_port_mask;            /* Transport Destination Port Mask */ \
-  uint32_t consumer;                 /* Destination Consumer */		\
-  uint32_t caplen;                   /* Amount of data to capture. */	\
-									\
-  stream_addr_t dest;                /* Destination. */			\
-                                                                        \
-  /* filter 0.7 extensions */                                           \
-  uint32_t version;                  /* filter version */		\
-  timepico starttime;                /* 4096: Time of first packet. */  \
-  timepico endtime;                  /* 2048: Time of last packet. */   \
-  char mampid[8];                    /* 1024: Match MAMPid */           \
-  struct in_addr ip_src;             /*    8: IP source */              \
-  struct in_addr ip_src_mask;                                           \
-  struct in_addr ip_dst;             /*    4: IP destination */         \
-  struct in_addr ip_dst_mask;                                           \
-
-  /* filter end */
-
+/**
+ * This is the structure as represented internally within the host.
+ */
   struct filter {
     /* Integer identifying the rule. This should be uniqe for the MP. */
     uint32_t filter_id;
@@ -119,7 +79,9 @@ extern "C" {
     stream_addr_t dest;                /* Destination. */
   };
 
-  /* This is whats transmitted across the network */
+/**
+ * This is whats transmitted across the network.
+ **/
   struct filter_packed {
     /* Integer identifying the rule. This should be uniqe for the MP. */
     uint32_t filter_id;
@@ -132,8 +94,8 @@ extern "C" {
     struct ether_addr eth_src;         /*  64: Ethernet Source */
     struct ether_addr eth_dst;         /*  32: Ethernet Destination */
     uint8_t ip_proto;                  /*  16: IP Payload Protocol */
-    unsigned char ip_src[16];          /*   8: IP source */
-    unsigned char ip_dst[16];          /*   4: IP destination */
+    unsigned char _ip_src[16];          /*   8: IP source */
+    unsigned char _ip_dst[16];          /*   4: IP destination */
     uint16_t src_port;                 /*   2: Transport Source Port */
     uint16_t dst_port;                 /*   1: Transport Destination Port */
 
@@ -141,20 +103,24 @@ extern "C" {
     uint16_t eth_type_mask;            /* Ethernet type mask */
     struct ether_addr eth_src_mask;    /* Ethernet Source Mask */
     struct ether_addr eth_dst_mask;    /* Ethernet Destination Mask */
-    unsigned char ip_src_mask[16];    /* DO NOT USE. FOR COMPAT ONLY */
-    unsigned char ip_dst_mask[16];    /* DO NOT USE. FOR COMPAT ONLY */
+    unsigned char _ip_src_mask[16];    /* DO NOT USE. FOR COMPAT ONLY */
+    unsigned char _ip_dst_mask[16];    /* DO NOT USE. FOR COMPAT ONLY */
     uint16_t src_port_mask;            /* Transport Source Port Mask */
     uint16_t dst_port_mask;            /* Transport Destination Port Mask */
     uint32_t consumer;                 /* Destination Consumer */
     uint32_t caplen;                   /* Amount of data to capture. */
 
-    stream_addr_t dest; /* Destination. */
+    stream_addr_t dest;                /* Destination. */
 
     /* filter 0.7 extensions */
     uint32_t version;                  /* filter version */
     timepico starttime;                /* 4096: Time of first packet. */
     timepico endtime;                  /* 2048: Time of last packet. */
     char mampid[8];                    /* 1024: Match MAMPid */
+	  struct in_addr ip_src;             /*    8: IP source */
+	  struct in_addr ip_src_mask;
+	  struct in_addr ip_dst;             /*    4: IP destination */
+	  struct in_addr ip_dst_mask;
   } __attribute__((packed));
 
   int filter_from_argv(int* argc, char** argv, struct filter*);
