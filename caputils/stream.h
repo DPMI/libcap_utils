@@ -6,6 +6,10 @@
 #include <stdint.h>
 #include <netinet/ether.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct stream;
 typedef struct stream stream_t;
 
@@ -68,5 +72,9 @@ long stream_write(struct stream* st, const void* data, size_t size);
  * @return Zero if successful, -1 when finished, positive int on error. header is undefined on errors.
  */
 long stream_read(struct stream* st, cap_head** header, const struct filter* filter, struct timeval* timeout);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* CAPUTILS__STREAM_H */
