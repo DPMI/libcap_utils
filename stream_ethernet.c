@@ -225,13 +225,17 @@ static long stream_ethernet_init(struct stream** stptr, const struct ether_addr*
 	  return ret;
   }
 
+  /* bind MA MAC */
+  if ( ioctl(fd, SIOCGIFHWADDR, &ifr) == -1) {
+	  perror("SIOCGIFHWADDR");
+	  return errno;
+  }
   memset(&st->sll, 0, sizeof(st->sll));
   st->sll.sll_family=AF_PACKET;
   st->sll.sll_ifindex=st->if_index;
   st->sll.sll_protocol=htons(proto);
   st->sll.sll_pkttype=PACKET_MULTICAST;
-  memcpy(st->sll.sll_addr, &st->address, ETH_ALEN);
-
+  memcpy(st->sll.sll_addr, ifr.ifr_hwaddr.sa_data, ETH_ALEN);
   if ( bind(fd, (struct sockaddr *) &st->sll, sizeof(st->sll)) == -1 ) {
     perror("Binding to interface.");
     return errno;
