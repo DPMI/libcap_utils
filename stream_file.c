@@ -188,6 +188,11 @@ int stream_file_create(struct stream** stptr, FILE* fp, const char* filename, co
     }
   }
 
+  /* sanitize comment */
+  if ( !comment ){
+	  comment = "";
+  }
+
   /* Initialize the structure */
   if ( (ret = stream_alloc(stptr, PROTOCOL_LOCAL_FILE, sizeof(struct stream_file)) != 0) ){
     return ret;
