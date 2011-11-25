@@ -1,6 +1,7 @@
 caputils-0.7.4
 --------------
 
+	* fix: sigreturn is not well defined, uses SIG_IGN instead.
 	* fix: crash when file stream comment was null.
 
 caputils-0.7.3
