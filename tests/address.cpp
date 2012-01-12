@@ -34,6 +34,7 @@ class AddressTest: public CppUnit::TestFixture {
   CPPUNIT_TEST( test_ethernet_dash   );
   CPPUNIT_TEST( test_ethernet_none   );
   CPPUNIT_TEST( test_ethernet_short  );
+  CPPUNIT_TEST( test_ethernet_leading);
   CPPUNIT_TEST( test_guess_eth       );
   CPPUNIT_TEST( test_guess_filename  );
   CPPUNIT_TEST_SUITE_END();
@@ -72,8 +73,13 @@ public:
 
   void test_ethernet_short(){
     compare_eth_addr("01:00:00:00:00:09", "01::09", CPPUNIT_SOURCELINE());
+    compare_eth_addr("01:00:00:00:00:09", "1::9", CPPUNIT_SOURCELINE());
     compare_eth_addr("01:02:00:00:00:09", "01:02::09", CPPUNIT_SOURCELINE());
     compare_eth_addr("01:00:00:00:08:09", "01::08:09", CPPUNIT_SOURCELINE());
+  }
+
+  void test_ethernet_leading(){
+    compare_eth_addr("00:01:02:03:04:05", "0:1:2:3:4:5", CPPUNIT_SOURCELINE());
   }
 
   void test_guess_eth(){

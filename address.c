@@ -10,8 +10,85 @@
 #include <errno.h>
 #include <assert.h>
 
+/**
+ * like strtok but works with sequential delimiters
+ */
+static char* strtok2(char* str, char* delim){
+	static char* next = NULL;
+
+	if ( !str ){
+		str = next;
+	}
+
+	if ( !str ){
+		return NULL;
+	}
+
+	char* tmp = strpbrk(str, delim);
+	if ( !tmp ){
+		next = NULL;
+		return str;
+	}
+
+	*tmp = 0;
+	next = tmp+1;
+
+	return str;
+}
+
 static void homogenize_eth_addr(char* buf){
 	const size_t len = strlen(buf);
+
+  /* convert dash to colon */
+	for ( int i = 0; i < 17; i++ ){
+		if ( buf[i] == '-' ) buf[i] = ':';
+	}
+
+	char tmp[17] = {0,};
+	char* cur = tmp;
+	char* pair = strtok2(buf, ":");
+	while ( pair ){
+		char* next = strtok2(NULL, ":");
+
+		switch ( strlen(pair) ){
+		case 12: /* no delimiter */
+			/* insert colon into the buffer by starting at the first pair (LSB) and
+			 * moving it to the new position. */
+			{
+				char* ptr = &buf[3*5+2];
+				*(ptr--) = 0;
+				for ( int i = 5; i >= 1; i-- ){
+					*(ptr--) = buf[1+i*2];
+					*(ptr--) = buf[  i*2];
+					*(ptr--) = ':';
+				}
+			}
+
+			return; /* nothing more to do */
+
+		case 2: /* two digits */
+			cur += sprintf(cur, "%s", pair);
+			break;
+
+		case 1: /* 1 digit */
+			cur += sprintf(cur, "0%s", pair);
+			break;
+
+		case 0: /* no digits means double delimiter */
+			break;
+
+		default: /* something else, just bail out */
+			return;
+		}
+
+		if ( next ){
+			*cur++ = ':';
+		}
+
+		pair = next;
+	}
+
+	memcpy(buf, tmp, 17);
 
 	/* look for :: and fill in blanks */
 	for ( int i = 0; i < len-1; i++ ){
@@ -40,30 +117,6 @@ static void homogenize_eth_addr(char* buf){
 			buf[j+2] = ':';
 		}
 	}
-
-  /* eth addr with : */
-  if ( buf[2] == ':' ){
-    return; /* do nothing */
-  }
-
-  /* convert - to : */
-  if ( buf[2] == '-' ){
-    for ( int i = 0; i < 6; i++ ){
-      buf[i*3+2] = ':';
-    }
-    return;
-  }
-
-  /* if no : or - is found, insert : into the buffer by starting at the
-   * first pair (LSB) and moving it to the new position. */
-  
-  char* tmp = &buf[3*5+2];
-  *(tmp--) = 0;
-  for ( int i = 5; i >= 1; i-- ){
-    *(tmp--) = buf[1+i*2];
-    *(tmp--) = buf[  i*2];
-    *(tmp--) = ':';
-  }
 }
 
 int stream_addr_aton(stream_addr_t* dst, const char* src, enum AddressType type, int flags){
