@@ -52,6 +52,7 @@ static unsigned char raw_buffer[dataLEN]; /* Allocate the data space */
 
 /* pcap stores error descriptions in this buffer */
 static char errorBuffer[PCAP_ERRBUF_SIZE];
+static const char* program_name = NULL;
 
 static int run = 1;
 
@@ -61,6 +62,14 @@ void sighandler(int signum){
 }
 
 int main (int argc, char **argv){
+	/* extract program name from path. e.g. /path/to/MArCd -> MArCd */
+	const char* separator = strrchr(argv[0], '/');
+	if ( separator ){
+		program_name = separator + 1;
+	} else {
+		program_name = argv[0];
+	}
+
   extern int optind, opterr, optopt;
   int op;
   
@@ -100,7 +109,7 @@ int main (int argc, char **argv){
   
   /* Parse Input Arguments */
   if(argc<2){
-    printf("use %s -h or --help for help\n",argv[0]);
+	  fprintf(stderr, "Usage: %s -h or --help for help\n", program_name);
     exit(0);
   }
   
