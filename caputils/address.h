@@ -5,6 +5,30 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
+/**
+ * Supported address format:
+ *
+ * Types:
+ *  - ethernet address (hwaddr)
+ *  - IP address:port
+ *  - filename
+ *
+ * Ethernet address:
+ *  - Optional but recommended colon or dash delimiter.
+ *  - Can fill in blanks by using double color, e.g:
+ *    01::01 is read as 01:00:00:00:00:01
+ *
+ * IP address:
+ *  - tcp://127.0.0.1:4711
+ *  - Supports tcp and udp.
+ *  - Parsed using inet_aton.
+ *
+ * Filename:
+ *  - Absolute or relative.
+ *  - For filters limited to 22 chars.
+ *  - No limit on local machine.
+ */
+
 #ifdef __cplusplus
 extern "C" {
 #endif

@@ -33,6 +33,7 @@ class AddressTest: public CppUnit::TestFixture {
   CPPUNIT_TEST( test_ethernet_colon  );
   CPPUNIT_TEST( test_ethernet_dash   );
   CPPUNIT_TEST( test_ethernet_none   );
+  CPPUNIT_TEST( test_ethernet_short  );
   CPPUNIT_TEST( test_guess_eth       );
   CPPUNIT_TEST( test_guess_filename  );
   CPPUNIT_TEST_SUITE_END();
@@ -67,6 +68,12 @@ public:
 
   void test_ethernet_none(){
     compare_eth_addr("cb:a9:87:65:43:21", "cba987654321", CPPUNIT_SOURCELINE());
+  }
+
+  void test_ethernet_short(){
+    compare_eth_addr("01:00:00:00:00:09", "01::09", CPPUNIT_SOURCELINE());
+    compare_eth_addr("01:02:00:00:00:09", "01:02::09", CPPUNIT_SOURCELINE());
+    compare_eth_addr("01:00:00:00:08:09", "01::08:09", CPPUNIT_SOURCELINE());
   }
 
   void test_guess_eth(){

@@ -11,6 +11,36 @@
 #include <assert.h>
 
 static void homogenize_eth_addr(char* buf){
+	const size_t len = strlen(buf);
+
+	/* look for :: and fill in blanks */
+	for ( int i = 0; i < len-1; i++ ){
+		if ( buf[i  ] != ':' ) continue;
+		if ( buf[i+1] != ':' ) continue;
+
+		/*   0 1 : 0 0 : 0 0 : 0 0 : 0 0 : 0 1
+		 *   0 1 : : 0 1                 ^
+		 * p1 -----^     ^               |
+		 * p2 -----------+               |
+		 * p3 ---------------------------+
+		 */
+
+		const int p1 = i+1;
+		int p2 = p1; for ( ; buf[p2] != 0; p2++ ){}
+		const int digits = p2-p1;
+		const int p3 = 17 - digits;
+
+		/* move right part to the end */
+		memcpy(&buf[p3], &buf[p1], digits);
+
+		/* fill blanks */
+		for ( int j = p1; j < p3; j += 3 ){
+			buf[j  ] = '0';
+			buf[j+1] = '0';
+			buf[j+2] = ':';
+		}
+	}
+
   /* eth addr with : */
   if ( buf[2] == ':' ){
     return; /* do nothing */
