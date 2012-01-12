@@ -43,6 +43,23 @@ AS_IF([test "x$enable_debug" == "xyes"],
 	[AC_DEFINE([NDEBUG], [1], [Define to disable extra debug prints])]
 )
 
+AC_ARG_WITH([pcap], [AS_HELP_STRING([--with-pcap], [Build utilities for conversion to and from pcap files. @<:@default=enabled@:>@])])
+AM_CONDITIONAL([BUILD_PCAP], [test "x$with_pcap" != "xno"])
+
+AS_IF([test "x$with_pcap" != "xno"], [
+  AC_CHECK_HEADER([pcap/pcap.h], [
+    AC_CHECK_LIB([pcap], [pcap_close], [
+      AC_DEFINE([HAVE_PCAP], 1, [Define to 1 if you have libpcap])
+      PCAP_LIBS="-lpcap"
+    ],[
+      AC_MSG_ERROR([Make sure libpcap is available])
+    ])
+  ], [
+    AC_MSG_ERROR([Make sure libpcap is available])
+  ])
+  AC_SUBST(PCAP_LIBS)
+])
+
 AC_ARG_ENABLE([capdump], [AS_HELP_STRING([--enable-capdump], [Build capdump utility (record a stream) @<:@default=enabled@:>@])])
 AC_ARG_ENABLE([capinfo], [AS_HELP_STRING([--enable-capinfo], [Build capinfo utility (show info about a stream) @<:@default=enabled@:>@])])
 AC_ARG_ENABLE([capfilter], [AS_HELP_STRING([--enable-capfilter], [Build capfilter utility (filter existing stream) @<:@default=enabled@:>@])])

@@ -8,6 +8,10 @@ man3_MANS = \
 	man/libcap_filter.3 \
 	man/stream_read.3
 
+if BUILD_PCAP
+bin_PROGRAMS += pcap2cap
+endif
+
 if BUILD_CAPINFO
 bin_PROGRAMS += capinfo
 endif
@@ -80,6 +84,9 @@ libcap_filter_07_la_SOURCES = createfilter.c filter.c
 libcap_marc_07_la_LDFLAGS = -shared -version-info 0:0:0
 libcap_marc_07_la_CFLAGS = -Wall ${libcap_filter_CFLAGS}
 libcap_marc_07_la_SOURCES = marc.c
+
+pcap2cap_CFLAGS = -Wall
+pcap2cap_LDADD = libcap_utils-07.la libcap_filter-07.la libcap_stream-07.la ${PCAP_LIBS}
 
 capinfo_CFLAGS = -Wall
 capinfo_LDADD = libcap_utils-07.la libcap_filter-07.la libcap_stream-07.la
