@@ -33,11 +33,6 @@ int main (int argc, char **argv){
 	
 	int option_index;
 	long ret;
-		
-	if ( argc < 2 ){
-		fprintf(stderr, "Usage: %s -h or --help for help\n", program_name);
-		return 1;
-	}
 	
 	struct filter filter;
 	if ( filter_from_argv(&argc, argv, &filter) != 0 ){

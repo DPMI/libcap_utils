@@ -107,12 +107,6 @@ int main (int argc, char **argv){
   strncpy(caphead->nic, "CONV", 8);
   gethostname(caphead->mampid, 8);
   
-  /* Parse Input Arguments */
-  if(argc<2){
-	  fprintf(stderr, "Usage: %s -h or --help for help\n", program_name);
-    exit(0);
-  }
-  
   while (1) {
     option_index = 0;
     
