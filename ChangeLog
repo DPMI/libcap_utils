@@ -1,7 +1,7 @@
 caputils-0.7.4
 --------------
 
-	* add: including pcap2cap.
+	* add: including pcap2cap and cap2pcap for conversion to and from pcap.
 	* add: support for dropping groups and leading zeros in ethernet
 	       addresses, e.g. 01::01 is read as 01:00:00:00:00:01
 	* add: support for address prefix.

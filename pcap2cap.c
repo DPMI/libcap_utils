@@ -143,7 +143,7 @@ int main (int argc, char **argv){
       break;
       
     case 'h':
-      printf("pcap2cap (caputils-" CAPUTILS_VERSION ")\n");
+	    printf("%s (caputils-" CAPUTILS_VERSION ")\n", program_name);
       printf("(c) 2004-2011 Patrik Arlos, David Sveningsson\n\n");
       printf("Capture packets using libpcap (or convert existing pcap-file) to a caputils stream.\n");
       printf("Converted data can be piped or stored to a file.\n\n");

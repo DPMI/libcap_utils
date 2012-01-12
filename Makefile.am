@@ -9,7 +9,7 @@ man3_MANS = \
 	man/stream_read.3
 
 if BUILD_PCAP
-bin_PROGRAMS += pcap2cap
+bin_PROGRAMS += pcap2cap cap2pcap
 endif
 
 if BUILD_CAPINFO
@@ -87,6 +87,9 @@ libcap_marc_07_la_SOURCES = marc.c
 
 pcap2cap_CFLAGS = -Wall
 pcap2cap_LDADD = libcap_utils-07.la libcap_filter-07.la libcap_stream-07.la ${PCAP_LIBS}
+
+cap2pcap_CFLAGS = -Wall
+cap2pcap_LDADD = libcap_utils-07.la libcap_filter-07.la libcap_stream-07.la ${PCAP_LIBS}
 
 capinfo_CFLAGS = -Wall
 capinfo_LDADD = libcap_utils-07.la libcap_filter-07.la libcap_stream-07.la
