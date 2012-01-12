@@ -27,6 +27,12 @@
  *  - Absolute or relative.
  *  - For filters limited to 22 chars.
  *  - No limit on local machine.
+ *  - NOTE: For local addresses the string is referenced and must be retained
+ *    during the lifetime of the address.
+ *
+ * To force a specific type use a prefix, e.g. file://127.0.0.1 reference a file
+ * called "127.0.0.1". TCP/UDP is only supported using prefix.
+ * 
  */
 
 #ifdef __cplusplus

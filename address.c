@@ -129,20 +129,36 @@ int stream_addr_aton(stream_addr_t* dst, const char* src, enum AddressType type,
 
   switch( type ){
   case STREAM_ADDR_GUESS:
-    /* try tcp/udp */
-    if ( strncmp("tcp://", src, 6) == 0 ){
-      return stream_addr_aton(dst, src+6, STREAM_ADDR_TCP, flags);
-    } else if ( strncmp("udp://", src, 6) == 0 ){
-      return stream_addr_aton(dst, src+6, STREAM_ADDR_UDP, flags);
-    }
+  {
+    char* delim = strstr(buf, "://");
 
+    /* check if prefix is set */
+    if ( delim ){
+      *delim = 0;
+      const char* prefix = buf;
+      const char* addr = delim + 3;
+	    
+      if ( strcasecmp("tcp", prefix) == 0 ){
+	      return stream_addr_aton(dst, addr, STREAM_ADDR_TCP, flags);
+      } else if ( strcasecmp("udp", prefix) == 0 ){
+	      return stream_addr_aton(dst, addr, STREAM_ADDR_UDP, flags);
+      } else if ( strcasecmp("eth", prefix) == 0 ){
+	      return stream_addr_aton(dst, addr, STREAM_ADDR_ETHERNET, flags);
+      } else if ( strcasecmp("file", prefix) == 0 ){
+	      return stream_addr_aton(dst, src+7, STREAM_ADDR_CAPFILE, flags | STREAM_ADDR_LOCAL);
+      }
+      
+      return EINVAL;
+    }
+    
     /* try ethernet */
     if ( stream_addr_aton(dst, src, STREAM_ADDR_ETHERNET, flags) == 0 ){
-      return 0;
+	    return 0;
     }
-
+    
     /* last option: parse as local filename */
     return stream_addr_aton(dst, src, STREAM_ADDR_CAPFILE, flags | STREAM_ADDR_LOCAL);
+  }
 
   case STREAM_ADDR_TCP: // TCP
   case STREAM_ADDR_UDP: // UDP

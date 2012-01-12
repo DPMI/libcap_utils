@@ -28,6 +28,8 @@ void check_error(int expected, int actual, CppUnit::SourceLine line){
 #define CPPUNIT_ASSERT_ETH_ADDR(expected, actual) check_eth_addr(expected, actual, CPPUNIT_SOURCELINE())
 #define CPPUNIT_ASSERT_ERROR(expected, actual) check_error(expected, actual, CPPUNIT_SOURCELINE())
 
+static char msg[1024];
+
 class AddressTest: public CppUnit::TestFixture {
   CPPUNIT_TEST_SUITE(AddressTest);
   CPPUNIT_TEST( test_ethernet_colon  );
@@ -36,12 +38,13 @@ class AddressTest: public CppUnit::TestFixture {
   CPPUNIT_TEST( test_ethernet_short  );
   CPPUNIT_TEST( test_ethernet_leading);
   CPPUNIT_TEST( test_guess_eth       );
-  CPPUNIT_TEST( test_guess_filename  );
+	CPPUNIT_TEST( test_prefix_eth      );
+  CPPUNIT_TEST( test_prefix_filename );
+  CPPUNIT_TEST( test_prefix_invalid  );
   CPPUNIT_TEST_SUITE_END();
 
 public:
   void compare_eth_addr(const char* sample, const char* test, const CppUnit::SourceLine& line){
-    static char msg[1024];
     struct ether_addr* tmp = ether_aton(sample);
     if ( !tmp ){
       sprintf(msg, "ether_aton() failed");
@@ -83,7 +86,6 @@ public:
   }
 
   void test_guess_eth(){
-    static char msg[1024];
     const char* sample = "cb:a9:87:65:43:21";
     struct ether_addr* expected = ether_aton(sample);
     stream_addr_t addr;
@@ -98,7 +100,6 @@ public:
   }
 
   void test_guess_filename(){
-    static char msg[1024];
     std::string sample = "/path/to/file";
     stream_addr_t addr;
     int ret;
@@ -110,6 +111,42 @@ public:
 
     CPPUNIT_ASSERT_EQUAL(sample, std::string(addr.local_filename));
   }
+
+	void test_prefix_eth(){
+    const char* sample = "eth://cb:a9:87:65:43:21";
+    struct ether_addr* expected = ether_aton(sample+6);
+    stream_addr_t addr;
+    int ret;
+
+    if ( (ret=stream_addr_aton(&addr, sample, STREAM_ADDR_GUESS, 0)) != 0 ){
+      sprintf(msg, "stream_addr_aton() returned %d: %s", ret, strerror(ret));
+      CppUnit::Asserter::fail(msg);
+    }
+
+    CPPUNIT_ASSERT_EQUAL(STREAM_ADDR_ETHERNET, stream_addr_type(&addr));
+    CPPUNIT_ASSERT_ETH_ADDR(*expected, addr.ether_addr);
+	}
+
+	void test_prefix_filename(){
+    const char* sample = "file://cb:a9:87:65:43:21";
+    stream_addr_t addr;
+    int ret;
+
+    if ( (ret=stream_addr_aton(&addr, sample, STREAM_ADDR_GUESS, 0)) != 0 ){
+      sprintf(msg, "stream_addr_aton() returned %d: %s", ret, strerror(ret));
+      CppUnit::Asserter::fail(msg);
+    }
+
+    CPPUNIT_ASSERT_EQUAL(STREAM_ADDR_CAPFILE, stream_addr_type(&addr));
+    CPPUNIT_ASSERT_EQUAL(std::string("cb:a9:87:65:43:21"), std::string(addr.local_filename));
+	}
+
+	void test_prefix_invalid(){
+    stream_addr_t addr;
+    if ( stream_addr_aton(&addr, "nonsense://foobar", STREAM_ADDR_GUESS, 0) == 0 ){
+      CppUnit::Asserter::fail("invalid prefix was accepted");
+    }
+	}
 };
 
 CPPUNIT_TEST_SUITE_REGISTRATION(AddressTest);
