@@ -170,6 +170,14 @@ static long stream_ethernet_add(struct stream_ethernet* st, const struct ether_a
   mcast.mr_alen = ETH_ALEN;
   memcpy(mcast.mr_address, &st->address[st->num_address], ETH_ALEN);
 
+  #ifdef DEBUG
+  char name[IF_NAMESIZE+1];
+  printf("Ethernet Multicast\nEthernet.type=%04X\nEthernet.dst=%02X:%02X:%02X:%02X:%02X:%02X\nInterface=%s (%d)\n", LLPROTO
+         , mcast.mr_address[0], mcast.mr_address[1], mcast.mr_address[2]
+         , mcast.mr_address[3], mcast.mr_address[4], mcast.mr_address[5]
+         , if_indextoname(st->if_index, name), mcast.mr_ifindex);
+  #endif
+
   /* setup ethernet multicast */
   if ( setsockopt(st->socket, SOL_PACKET, PACKET_ADD_MEMBERSHIP, (void*)&mcast, sizeof(mcast)) == -1 ){
     perror("Adding multicast address failed");
@@ -241,13 +249,6 @@ static long stream_ethernet_init(struct stream** stptr, const struct ether_addr*
     return errno;
   }
   
-#ifdef DEBUG
-  printf("Ethernet Multicast\nEthernet.type=%04X\nEthernet.dst=%02X:%02X:%02X:%02X:%02X:%02X\nInterface=%s (%d)\n", LLPROTO
-	 ,mcast.mr_address[0], mcast.mr_address[1], mcast.mr_address[2]
-	 ,mcast.mr_address[3], mcast.mr_address[4], mcast.mr_address[5]
-	 ,iface, mcast.mr_ifindex);
-#endif
-
   return 0;
 }
 
