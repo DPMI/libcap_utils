@@ -101,8 +101,7 @@ int main (int argc, char **argv){
   /* setup pointers */
   cap_head *caphead = (cap_head*)raw_buffer;
   unsigned char* pkt_buffer = (unsigned char*)raw_buffer + sizeof(cap_head);
-  size_t packet_max_size = dataLEN - sizeof(cap_head);
-  size_t caplen = packet_max_size;
+  size_t caplen = dataLEN - sizeof(cap_head);
 
   /* default interface */
   strncpy(caphead->nic, "CONV", 8);
@@ -152,7 +151,7 @@ int main (int argc, char **argv){
 	     "                             stream_addr_aton(3) for format description).\n");
       printf("  -i, --interface=INTERFACE  Capture on live interface. (use \"any\" to capture\n"
 	     "                             on all interfaces) Default CONV.\n");
-      printf("      --caplen=INT           Set caplen. Default %zd.\n", packet_max_size);
+      printf("      --caplen=INT           Set caplen. Default %zd.\n", caplen);
       printf("  -h, --help                 Show this help.\n");
       return 0;
       break;
@@ -224,9 +223,9 @@ int main (int argc, char **argv){
 		  fprintf(stderr, "Failed to get MTU for iface %s.\n", caphead->nic);
 		  return 1;
 	  }
-	  if ( packet_max_size > ifr.ifr_mtu ){
+	  if ( caplen > ifr.ifr_mtu ){
 		  fprintf(stderr, "Truncating caplen to MTU size (%d bytes)\n", ifr.ifr_mtu);
-		  packet_max_size = ifr.ifr_mtu;
+		  caplen = ifr.ifr_mtu;
 	  }
   }
 
@@ -247,8 +246,8 @@ int main (int argc, char **argv){
     caphead->len=pcapHeader.len; /* The Wire-lenght of the frame */
 
     /* Copy the Packet payload to the payload field in the cap file. */
-    if(pcapHeader.caplen > packet_max_size ) {
-	    fprintf(stderr, "pcap has recorded a too large packet. Was: %d bytes, max %zd bytes.\n", pcapHeader.caplen, packet_max_size);
+    if(pcapHeader.caplen > caplen ) {
+	    fprintf(stderr, "pcap has recorded a too large packet. Was: %d bytes, max %zd bytes.\n", pcapHeader.caplen, caplen);
       continue;
     }
 
