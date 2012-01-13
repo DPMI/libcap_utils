@@ -174,6 +174,7 @@ static long stream_ethernet_add(struct stream_ethernet* st, const struct ether_a
   mcast.mr_alen = ETH_ALEN;
   memcpy(mcast.mr_address, &st->address[st->num_address], ETH_ALEN);
 
+#ifdef DEBUG
   char name[IF_NAMESIZE+1];
   char eth_src[IFHWADDRLEN*3];
   char eth_dst[IFHWADDRLEN*3];
@@ -186,6 +187,7 @@ static long stream_ethernet_add(struct stream_ethernet* st, const struct ether_a
           hexdump_address_r(&st->sll.sll_addr, eth_src),
           hexdump_address_r(&mcast.mr_address, eth_dst),
           if_indextoname(st->if_index, name), mcast.mr_ifindex);
+#endif
 
   /* setup ethernet multicast */
   if ( setsockopt(st->socket, SOL_PACKET, PACKET_ADD_MEMBERSHIP, (void*)&mcast, sizeof(mcast)) == -1 ){
