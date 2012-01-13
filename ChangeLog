@@ -1,6 +1,7 @@
 caputils-0.7.4
 --------------
 
+	* fix: issue in pcap2cap causing an inifinite loop over the same packet.
 	* add: including pcap2cap and cap2pcap for conversion to and from pcap.
 	* add: support for dropping groups and leading zeros in ethernet
 	       addresses, e.g. 01::01 is read as 01:00:00:00:00:01
