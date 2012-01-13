@@ -228,7 +228,7 @@ const char* stream_addr_ntoa_r(const stream_addr_t* src, char* buf, size_t bytes
 		written = snprintf(buf, bytes, "%s://%s:%d", stream_addr_type(src) == STREAM_ADDR_UDP ? "udp" : "tcp", inet_ntoa(src->in_addr), ntohs(src->in_port));
 		break;
 	case STREAM_ADDR_ETHERNET:
-		hexdump_address_r(&src->ether_addr, buf);
+		written = snprintf(buf, bytes, "eth://%s", hexdump_address(&src->ether_addr));
 		break;
 	case STREAM_ADDR_CAPFILE:
 		if ( stream_addr_have_flag(src, STREAM_ADDR_LOCAL) ){
