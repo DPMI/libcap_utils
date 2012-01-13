@@ -28,6 +28,7 @@
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
+#include "caputils_int.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -92,7 +93,7 @@ int main (int argc, char **argv){
   struct stream* dst_stream = NULL;
   stream_addr_reset(&dst);
   
-  char *comments=strdup("(nil)");
+  char* comments = strdup("(nil)");
   unsigned long long pktCount = 0;
 
   memset(raw_buffer, 0, dataLEN);
@@ -147,10 +148,9 @@ int main (int argc, char **argv){
       printf("  -m, --mpid=STRING          Set MP id, max 199 char. Default hostname.\n");
       printf("  -c, --comment=STRING       Add comment to header, dont forget \" \" around the\n"
 	     "                             text. Not set by default.\n");
-      printf("  -o, --output=FILENAME      Destination filename (or live stream, see\n"
-	     "                             stream_addr_aton(3) for format description).\n");
+      printf("  -o, --output=FILENAME      Destination filename.\n");
       printf("  -i, --interface=INTERFACE  Capture on live interface. (use \"any\" to capture\n"
-	     "                             on all interfaces) Default CONV.\n");
+             "                             on all interfaces) Default CONV.\n");
       printf("      --caplen=INT           Set caplen. Default %zd.\n", caplen);
       printf("  -h, --help                 Show this help.\n");
       return 0;
@@ -214,19 +214,9 @@ int main (int argc, char **argv){
     return 1;
   }
 
-  /* truncate caplen to MTU size */
-  if ( stream_addr_type(&dst) == STREAM_ADDR_ETHERNET ){
-	  struct ifreq ifr;
-	  strncpy(ifr.ifr_name, caphead->nic, IFNAMSIZ);
-	  int fd = socket(AF_PACKET, SOCK_RAW, htons(1234));
-	  if ( ioctl(fd, SIOCGIFMTU, &ifr) == -1 ){
-		  fprintf(stderr, "Failed to get MTU for iface %s.\n", caphead->nic);
-		  return 1;
-	  }
-	  if ( caplen > ifr.ifr_mtu ){
-		  fprintf(stderr, "Truncating caplen to MTU size (%d bytes)\n", ifr.ifr_mtu);
-		  caplen = ifr.ifr_mtu;
-	  }
+  if ( stream_addr_type(&dst) != STREAM_ADDR_CAPFILE ){
+	  fprintf(stderr, "%s: only capfiles are supported, you can use \"mp --local -i pcapIFACE\" if you want to stream over ethernet.\n", program_name);
+	  return 1;
   }
 
   /* comment is no longer needed */
@@ -244,12 +234,6 @@ int main (int argc, char **argv){
     caphead->ts.tv_psec*=1000;
     caphead->ts.tv_psec*=1000;
     caphead->len=pcapHeader.len; /* The Wire-lenght of the frame */
-
-    /* Copy the Packet payload to the payload field in the cap file. */
-    if(pcapHeader.caplen > caplen ) {
-	    fprintf(stderr, "pcap has recorded a too large packet. Was: %d bytes, max %zd bytes.\n", pcapHeader.caplen, caplen);
-      continue;
-    }
 
     const size_t data_len = MIN(pcapHeader.caplen, caplen);
     memcpy(pkt_buffer, packet, data_len);
