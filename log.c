@@ -7,6 +7,9 @@
 #include <ctype.h>
 #include <time.h>
 #include <sys/time.h>
+#include <pthread.h>
+
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
 static void write_time(FILE* fp){
   struct timeval tid1;
@@ -40,9 +43,12 @@ static void write_tag(FILE* fp, const char* tag){
 }
 
 int vlogmsg(FILE* fp, const char* tag, const char* fmt, va_list ap){
+	pthread_mutex_lock(&mutex);
   write_time(fp);
   write_tag(fp, tag); /* centered */
-  return vfprintf(fp, fmt, ap);
+  int ret = vfprintf(fp, fmt, ap);
+	pthread_mutex_unlock(&mutex);
+	return ret;
 }
 
 int logmsg(FILE* fp, const char* tag, const char* fmt, ...){
