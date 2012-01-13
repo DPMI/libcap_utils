@@ -41,6 +41,7 @@
 #include <getopt.h>
 #include <pcap.h>
 #include <assert.h>
+#include <sys/ioctl.h>
 
 #define MIN(A,B) ((A) < (B) ? (A):(B))
 
@@ -208,10 +209,25 @@ int main (int argc, char **argv){
 	static const char* type[4] = {"file", "ethernet", "udp", "tcp"};
 	fprintf(stderr, "Opening %s stream: %s\n", type[stream_addr_type(&dst)], stream_addr_ntoa(&dst));
   
-  int ret;
+  long ret;
   if ( (ret=stream_create(&dst_stream, &dst, caphead->nic, caphead->mampid, comments)) != 0 ){
-    fprintf(stderr, "%s: stream_create failed with code %d: %s.\n", argv[0], ret, caputils_error_string(ret));
+    fprintf(stderr, "%s: stream_create failed with code %ld: %s.\n", argv[0], ret, caputils_error_string(ret));
     return 1;
+  }
+
+  /* truncate caplen to MTU size */
+  if ( stream_addr_type(&dst) == STREAM_ADDR_ETHERNET ){
+	  struct ifreq ifr;
+	  strncpy(ifr.ifr_name, caphead->nic, IFNAMSIZ);
+	  int fd = socket(AF_PACKET, SOCK_RAW, htons(1234));
+	  if ( ioctl(fd, SIOCGIFMTU, &ifr) == -1 ){
+		  fprintf(stderr, "Failed to get MTU for iface %s.\n", caphead->nic);
+		  return 1;
+	  }
+	  if ( packet_max_size > ifr.ifr_mtu ){
+		  fprintf(stderr, "Truncating caplen to MTU size (%d bytes)\n", ifr.ifr_mtu);
+		  packet_max_size = ifr.ifr_mtu;
+	  }
   }
 
   /* comment is no longer needed */
@@ -221,10 +237,7 @@ int main (int argc, char **argv){
   /* setup signal handler so it can handle ctrl-c etc with proper closing of streams */
   signal(SIGINT, sighandler);
 
-  //Begin Packet processing, by reading the first packet in the PCAP file.
-  packet = pcap_next(pcapHandle, &pcapHeader);
-
-  while ( packet && run ){
+  while ( (packet=pcap_next(pcapHandle, &pcapHeader)) && run ){
     pktCount++;
 
     caphead->ts.tv_sec=pcapHeader.ts.tv_sec;  /* Copy and convert the timestamp provided by PCAP, assumes _usec. If nsec will be present adjust! */
@@ -235,7 +248,7 @@ int main (int argc, char **argv){
 
     /* Copy the Packet payload to the payload field in the cap file. */
     if(pcapHeader.caplen > packet_max_size ) {
-	    fprintf(stderr, "pcap has recorded a to large packet. Was: %d bytes, max %zd bytes.\n", pcapHeader.caplen, packet_max_size);
+	    fprintf(stderr, "pcap has recorded a too large packet. Was: %d bytes, max %zd bytes.\n", pcapHeader.caplen, packet_max_size);
       continue;
     }
 
@@ -250,12 +263,9 @@ int main (int argc, char **argv){
     }
 
     // Save a copy of the frame to the new file.
-    if( (ret=stream_write(dst_stream, raw_buffer, caphead->caplen + sizeof(cap_head)) != 0) ) {
-	    fprintf(stderr, "stream_write returned %d: %s\n", ret, caputils_error_string(ret));
+    if ( (ret=stream_write(dst_stream, raw_buffer, caphead->caplen + sizeof(cap_head))) != 0 ) {
+	    fprintf(stderr, "stream_write returned %ld: %s\n", ret, caputils_error_string(ret));
     }
-
-    /* Read Next packet from the PCAP file */
-    packet=pcap_next(pcapHandle, &pcapHeader);
   }
   //End Packet processing
 
@@ -265,7 +275,7 @@ int main (int argc, char **argv){
   /* close caputils stream */
   stream_close(dst_stream);
 
-  fprintf(stderr, "\nThere was a total of %lld pkts that matched the filter.\n",pktCount);
+  fprintf(stderr, "\n%s: There was a total of %lld pkts that matched the filter.\n", program_name, pktCount);
 
   return 0;
 }
