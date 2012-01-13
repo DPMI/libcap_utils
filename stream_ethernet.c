@@ -144,6 +144,10 @@ static int fill_buffer(struct stream_ethernet* st, struct timeval* timeout){
 }
 
 static long stream_ethernet_write(struct stream_ethernet* st, const void* data, size_t size){
+	if ( size > st->if_mtu ){
+		fprintf(stderr, "packet is larger (%zd) than MTU (%d), ignoring\n", size, st->if_mtu);
+		return EINVAL;
+	}
   if ( sendto(st->socket, data, size, 0, (struct sockaddr*)&st->sll, sizeof(st->sll)) < 0 ){
     return errno;
   }
