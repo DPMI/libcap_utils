@@ -174,13 +174,18 @@ static long stream_ethernet_add(struct stream_ethernet* st, const struct ether_a
   mcast.mr_alen = ETH_ALEN;
   memcpy(mcast.mr_address, &st->address[st->num_address], ETH_ALEN);
 
-  #ifdef DEBUG
   char name[IF_NAMESIZE+1];
-  printf("Ethernet Multicast\nEthernet.type=%04X\nEthernet.dst=%02X:%02X:%02X:%02X:%02X:%02X\nInterface=%s (%d)\n", LLPROTO
-         , mcast.mr_address[0], mcast.mr_address[1], mcast.mr_address[2]
-         , mcast.mr_address[3], mcast.mr_address[4], mcast.mr_address[5]
-         , if_indextoname(st->if_index, name), mcast.mr_ifindex);
-  #endif
+  char eth_src[IFHWADDRLEN*3];
+  char eth_dst[IFHWADDRLEN*3];
+  fprintf(stderr, "Adding membership to ethernet multicast group:\n"
+          "\tEthernet.type=%04X\n"
+          "\tEthernet.src=%s\n"
+          "\tEthernet.dst=%s\n"
+          "\tInterface=%s (%d)\n",
+          LLPROTO,
+          hexdump_address_r(&st->sll.sll_addr, eth_src),
+          hexdump_address_r(&mcast.mr_address, eth_dst),
+          if_indextoname(st->if_index, name), mcast.mr_ifindex);
 
   /* setup ethernet multicast */
   if ( setsockopt(st->socket, SOL_PACKET, PACKET_ADD_MEMBERSHIP, (void*)&mcast, sizeof(mcast)) == -1 ){
@@ -233,10 +238,6 @@ static long stream_ethernet_init(struct stream** stptr, const struct ether_addr*
   }
   st->if_mtu = ifr.ifr_mtu;
 
-  if ( (ret=stream_ethernet_add(st, addr)) != 0 ){
-	  return ret;
-  }
-
   /* bind MA MAC */
   if ( ioctl(fd, SIOCGIFHWADDR, &ifr) == -1) {
 	  perror("SIOCGIFHWADDR");
@@ -251,6 +252,11 @@ static long stream_ethernet_init(struct stream** stptr, const struct ether_addr*
   if ( bind(fd, (struct sockaddr *) &st->sll, sizeof(st->sll)) == -1 ) {
     perror("Binding to interface.");
     return errno;
+  }
+
+  /* add membership to group */
+  if ( (ret=stream_ethernet_add(st, addr)) != 0 ){
+	  return ret;
   }
   
   return 0;
