@@ -204,9 +204,12 @@ int main (int argc, char **argv){
   if ( errorBuffer[0] != 0 ){
     fprintf(stderr, "%s: %s\n", argv[0], errorBuffer);
   }
+
+	static const char* type[4] = {"file", "ethernet", "udp", "tcp"};
+	fprintf(stderr, "Opening %s stream: %s\n", type[stream_addr_type(&dst)], stream_addr_ntoa(&dst));
   
   int ret;
-  if ( (ret=stream_create(&dst_stream, &dst, "", caphead->mampid, comments)) != 0 ){
+  if ( (ret=stream_create(&dst_stream, &dst, caphead->nic, caphead->mampid, comments)) != 0 ){
     fprintf(stderr, "%s: stream_create failed with code %d: %s.\n", argv[0], ret, caputils_error_string(ret));
     return 1;
   }
@@ -232,7 +235,7 @@ int main (int argc, char **argv){
 
     /* Copy the Packet payload to the payload field in the cap file. */
     if(pcapHeader.caplen > packet_max_size ) {
-      fprintf(stderr, "pcap has recorded a to large packet. Was: %d bytes, max %zd bytes.\n", pcapHeader.caplen, packet_max_size);
+	    fprintf(stderr, "pcap has recorded a to large packet. Was: %d bytes, max %zd bytes.\n", pcapHeader.caplen, packet_max_size);
       continue;
     }
 
@@ -248,7 +251,7 @@ int main (int argc, char **argv){
 
     // Save a copy of the frame to the new file.
     if( (ret=stream_write(dst_stream, raw_buffer, caphead->caplen + sizeof(cap_head)) != 0) ) {
-      fprintf(stderr, "Problems writing data to file: %s", caputils_error_string(ret));
+	    fprintf(stderr, "stream_write returned %d: %s\n", ret, caputils_error_string(ret));
     }
 
     /* Read Next packet from the PCAP file */
