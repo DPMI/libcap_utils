@@ -311,7 +311,7 @@ long stream_ethernet_open(struct stream** stptr, const struct ether_addr* addr, 
 }
 
 int stream_add(struct stream* st, const stream_addr_t* addr){
-	if ( stream_addr_type(addr) != STREAM_ADDR_ETHERNET ){
+	if ( !st || stream_addr_type(addr) != STREAM_ADDR_ETHERNET ){
 		return EINVAL;
 	}
 
