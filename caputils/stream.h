@@ -17,29 +17,35 @@ typedef struct stream stream_t;
  * Open an existing stream.
  * @return 1 if successful.
  */
-long stream_open(struct stream** stptr, const stream_addr_t* addr, const char* nic, int port);
+int stream_open(struct stream** stptr, const stream_addr_t* addr, const char* nic, int port);
 
 /**
  * Create a new stream.
  */
-long stream_create(struct stream** st, const stream_addr_t* addr, const char* nic, const char* mpid, const char* comment);
+int stream_create(struct stream** st, const stream_addr_t* addr, const char* nic, const char* mpid, const char* comment);
 
 /**
  * Create a filestream.
  * @param file A stream open for writing.
  * @return Zero on failures.
  */
-//long createstream_file(struct stream** stptr, FILE* file, const char* filename, const char* mpid, const char* comment);
+//int createstream_file(struct stream** stptr, FILE* file, const char* filename, const char* mpid, const char* comment);
 
 /**
  * Add source to stream (currently only for ethernet multicast)
+ * @return 0 if successful.
+ * @errors
+ *   EINVAL
+ *     Invalid stream or addr is not ethernet multicast.
+ *   ERROR_INVALID_PROTOCOL
+ *     Stream is not ethernet multicast.
  */
-long stream_add(struct stream* st, const stream_addr_t* addr);
+int stream_add(struct stream* st, const stream_addr_t* addr);
 
 /**
  * Close stream.
  */
-long stream_close(struct stream* st);
+int stream_close(struct stream* st);
 
 /**
  * Get verion of this stream.
@@ -61,7 +67,7 @@ const char* stream_get_mampid(const struct stream* st);
 /**
  * Write a captured frame to a stream.
  */
-long stream_write(struct stream* st, const void* data, size_t size);
+int stream_write(struct stream* st, const void* data, size_t size);
 
 /**
  * Read the next matching frame from a stream.
@@ -71,7 +77,7 @@ long stream_write(struct stream* st, const void* data, size_t size);
  * @param timeout See select(2) for description of timeout.
  * @return Zero if successful, -1 when finished, positive int on error. header is undefined on errors.
  */
-long stream_read(struct stream* st, cap_head** header, const struct filter* filter, struct timeval* timeout);
+int stream_read(struct stream* st, cap_head** header, const struct filter* filter, struct timeval* timeout);
 
 #ifdef __cplusplus
 }

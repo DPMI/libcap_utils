@@ -39,7 +39,7 @@ enum {
 
   /* errno codes goes here */
 
-  __UNUSED = 0x80000000,
+  ERROR_FIRST = (1<<15),
 
   /* errors related to capfiles */
   ERROR_CAPFILE_INVALID,
@@ -52,7 +52,7 @@ enum {
   ERROR_INVALID_IFACE,
   ERROR_NOT_IMPLEMENTED, /* should not normally be used but during the transition period it is useful */
 
-  MAX_ERRORS
+  ERROR_LAST
 };
 
 int is_valid_version(struct file_header_t* fhptr);

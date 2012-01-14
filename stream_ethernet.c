@@ -310,15 +310,13 @@ long stream_ethernet_open(struct stream** stptr, const struct ether_addr* addr, 
   return 0;
 }
 
-long stream_add(struct stream* st, const stream_addr_t* addr){
+int stream_add(struct stream* st, const stream_addr_t* addr){
 	if ( stream_addr_type(addr) != STREAM_ADDR_ETHERNET ){
 		return EINVAL;
 	}
 
 	if ( st->type != PROTOCOL_ETHERNET_MULTICAST ){
-		/* not very nice */
-		fprintf(stderr, "stream must be ethernet multicast (type: %d)\n", st->type);
-		return EINVAL;
+		return ERROR_INVALID_PROTOCOL;
 	}
 
 	struct stream_ethernet* se = (struct stream_ethernet*)st;

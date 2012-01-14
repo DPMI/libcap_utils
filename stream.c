@@ -87,7 +87,7 @@ int is_valid_version(struct file_header_t* fhptr){
 	return 0;
 }
 
-long stream_open(struct stream** stptr, const stream_addr_t* dest, const char* nic, int port){
+int stream_open(struct stream** stptr, const stream_addr_t* dest, const char* nic, int port){
 	switch(stream_addr_type(dest)){
 		/* case PROTOCOL_TCP_UNICAST: */
 		/*   return stream_tcp_init(myStream, address, port); */
@@ -107,7 +107,7 @@ long stream_open(struct stream** stptr, const stream_addr_t* dest, const char* n
 	}
 }
 
-long stream_create(struct stream** stptr, const stream_addr_t* dest, const char* nic, const char* mpid, const char* comment){
+int stream_create(struct stream** stptr, const stream_addr_t* dest, const char* nic, const char* mpid, const char* comment){
 	/* struct ifreq ifr; */
 	/* int ifindex=0; */
 	/* int socket_descriptor=0; */
@@ -181,7 +181,7 @@ long stream_create(struct stream** stptr, const stream_addr_t* dest, const char*
 	/* return(1);   */
 }
 
-long stream_close(struct stream* st){
+int stream_close(struct stream* st){
 	return st->destroy ? st->destroy(st) : 0;
 
 	/* ret */
@@ -211,7 +211,7 @@ long stream_close(struct stream* st){
 	/* return(1); */
 }
 
-long stream_write(struct stream *outStream, const void* data, size_t size){
+int stream_write(struct stream *outStream, const void* data, size_t size){
 	assert(outStream);
 	assert(outStream->write);
 	return outStream->write(outStream, data, size);
@@ -247,7 +247,7 @@ static int fill_buffer(struct stream* st, struct timeval* timeout){
 	return 0;
 }
 
-long stream_read(struct stream *myStream, cap_head** data, const struct filter *my_Filter, struct timeval* timeout){
+int stream_read(struct stream *myStream, cap_head** data, const struct filter *my_Filter, struct timeval* timeout){
 	int filterStatus=0;
 	int skip_counter=-1;
 	int ret = 0;

@@ -6,8 +6,8 @@
 #include "caputils_int.h"
 #include <string.h>
 
-static const char* errstr[MAX_ERRORS - 0x80000000] = {
-  /* __UNUSED */ NULL,
+static const char* errstr[ERROR_LAST - ERROR_FIRST] = {
+  /* ERROR_FIRST */ NULL,
 
   /* ERROR_CAPFILE_INVALID   */ "not a valid capfile.",
   /* ERROR_CAPFILE_TRUNCATED */ "file is truncated.",
@@ -21,8 +21,8 @@ static const char* errstr[MAX_ERRORS - 0x80000000] = {
 };
 
 const char* caputils_error_string(int code){
-  if ( code & 0x80000000 ){
-    return errstr[code^0x80000000];
+  if ( code & ERROR_FIRST ){
+    return errstr[code^ERROR_FIRST];
   } else {
     return strerror(code);
   }
