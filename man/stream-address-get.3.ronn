@@ -1,0 +1,39 @@
+stream-address-get(3) -- MA Stream address
+==========================================
+
+## SYNOPSIS
+
+`#include <caputils/address.h>`
+
+`enum AddressType stream_addr_type(const stream_addr_t* addr)`
+
+`int stream_addr_flags(const stream_addr_t* addr)`
+
+`int stream_addr_have_flag(const stream_addr_t* addr, enum AddressFlags flag)`
+
+`void stream_addr_reset(stream_addr_t* addr)`
+
+`int stream_addr_is_set(const stream_addr_t* addr)`
+
+## DESCRIPTION
+
+Accessor functions for stream addresses.
+
+`stream_addr_type` returns the address type enum for the given address.
+
+`stream_addr_flags` returns a bitmask of all flags set for the given address.
+
+`stream_addr_have_flag` returns 1 if <flag> is set in <addr> or 0.
+
+`stream_addr_reset` resets the address. It is only required if
+`stream_addr_is_set` is used to determine if <addr> is valid or not.
+
+`stream_addr_is_set` returns 1 if <addr> is initialied with a value or 0.
+
+## COPYRIGHT
+
+Copyright (C) 2011-12 David Sveningsson <dsv@bth.se>
+
+## SEE ALSO
+
+stream-address(3)
