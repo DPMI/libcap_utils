@@ -54,7 +54,7 @@ static int fill_buffer(struct stream_ethernet* st, struct timeval* timeout){
     
     switch ( select(st->socket+1, &fds, NULL, NULL, timeout) ){
     case -1:
-      return errno;
+      return -1;
     case 0:
       errno = EAGAIN;
       return -1;
