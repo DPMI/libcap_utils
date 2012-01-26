@@ -30,24 +30,51 @@ struct stream_ethernet {
 	unsigned int num_address;
 };
 
-static int fill_buffer(struct stream_ethernet* st, struct timeval* timeout){
-  int readBytes;
+/**
+ * Test if a MA packet is valid and matches our expected destinations
+ * Returns the matching address index or -1 for invalid packets.
+ */
+static int match_ma_pkt(const struct stream_ethernet* st, const struct ethhdr* ethhdr){
+	assert(st);
+	assert(ethhdr);
 
+	/* check protocol and destination */
+	if ( ntohs(ethhdr->h_proto) != LLPROTO ){
+		return -1;
+	}
+
+	int match;
+	for ( match = 0; match < st->num_address; match++ ){
+		if ( memcmp((const void*)ethhdr->h_dest, st->address[match].ether_addr_octet, ETH_ALEN) == 0 ) break;
+	}
+
+	if ( match == st->num_address ){
+		return -1; /* ethernet stream did not match any of our expected */
+	}
+
+	return match;
+}
+
+static int fill_buffer(struct stream_ethernet* st, struct timeval* timeout){
+	assert(st);
+
+	int total_bytes = 0;
   size_t available = buffLen;
   size_t offset = 0;
 
   /* copy old content */
   if ( st->base.readPos > 0 ){
-    size_t bytes = st->base.bufferSize - st->base.readPos;
+    const size_t bytes = st->base.bufferSize - st->base.readPos;
     memmove(st->base.buffer, st->base.buffer + st->base.readPos, bytes); /* move content */
-    memset(st->base.buffer + bytes, 0, buffLen-bytes); /* reset rest */
     st->base.bufferSize = bytes;
     st->base.readPos = 0;
     available = buffLen - bytes;
     offset = bytes;
   }
 
-  while ( 1 ){
+  assert(available >= st->if_mtu);
+
+  while ( available >= st->if_mtu ){
     fd_set fds;
     FD_ZERO(&fds);
     FD_SET(st->socket, &fds);
@@ -62,43 +89,24 @@ static int fill_buffer(struct stream_ethernet* st, struct timeval* timeout){
       break;
     }
 
-    char* dst = st->base.buffer + offset;    
-    const char* ether = dst;
-    const struct ethhdr *eh=(const struct ethhdr *)ether;
-    const struct sendhead *sh=(const struct sendhead *)(ether + sizeof(struct ethhdr));
-
-    readBytes=recvfrom(st->socket, dst, available, 0, NULL, NULL);
-	
-    /* terminated */
-    if ( readBytes < 0 ){
+    /* Read data into a temporary buffer. */
+    char temp[st->if_mtu];
+    int bytes = recvfrom(st->socket, temp, st->if_mtu, 0, NULL, NULL);
+    if ( bytes < 0 ){ /* error occurred */
       perror("Cannot receive Ethernet data.");
       return -1;
-    }
-
-    /* proper shutdown */
-    if( readBytes==0 ){
+    } else if ( bytes == 0 ){ /* proper shutdown */
       perror("Connection closed by client.");
       return -1; /* return -1 so it won't try again */
     }
 
-    /* check protocol and destination */
-    if ( ntohs(eh->h_proto) != LLPROTO ){
-	    continue;
-    }
+    /* Setup pointers */
+    const struct ethhdr* eh = (const struct ethhdr*)temp;
+    const struct sendhead* sh = (const struct sendhead*)(temp + sizeof(struct ethhdr));
 
-#ifdef DEBUG
-    printf("Ethernet Multicast\nEthernet.type=%04X\nEthernet.dst=%02X:%02X:%02X:%02X:%02X:%02X\n", LLPROTO
-           ,eh->h_dest[0], eh->h_dest[1], eh->h_dest[2]
-           ,eh->h_dest[3], eh->h_dest[4], eh->h_dest[5]
-           );
-#endif
-
-    unsigned int match;
-    for ( match = 0; match < st->num_address; match++ ){
-	    if ( memcmp((const void*)eh->h_dest, st->address[match].ether_addr_octet, ETH_ALEN) == 0 ) break;
-    }
-
-    if ( match == st->num_address ){
+    /* Check if it is a valid packet and if it was destinationed here */
+    int match;
+    if ( (match=match_ma_pkt(st, eh)) == -1 ){
 	    continue;
     }
 
@@ -123,24 +131,29 @@ static int fill_buffer(struct stream_ethernet* st, struct timeval* timeout){
        * arrives before proceeding. */
       st->seqnum[match] = ntohl(sh->sequencenr);
     }
-
     match_inc_seqnr(&st->seqnum[match], sh);
 
     /* copy packets to stream buffer */
-    size_t header_size = sizeof(struct ethhdr)+sizeof(struct sendhead);
-    st->base.bufferSize += readBytes;
-    st->base.readPos = header_size;
+    const size_t header_size = sizeof(struct ethhdr) + sizeof(struct sendhead);
+    const size_t capture_bytes = bytes - header_size;
+    memcpy(st->base.buffer + offset, temp + header_size, capture_bytes);
+    st->base.bufferSize += capture_bytes;
+    available -= capture_bytes;
+    offset += capture_bytes;
+    total_bytes += capture_bytes;
+
+#ifdef DEBUG
+    fprintf(stderr, "got measurement frame with %d capture packets [BU: %3.2f%%]\n", ntohl(sh->nopkts), (float)offset / buffLen * 100);
+#endif
 
     /* This indicates a flush from the sender.. */
     if( ntohs(sh->flush) == 1 ){
 	    fprintf(stderr, "Sender terminated.\n");
 	    st->base.flushed=1;
     }
-
-    break; //Break the while loop.
   }
 
-  return readBytes;
+  return total_bytes;
 }
 
 static long stream_ethernet_write(struct stream_ethernet* st, const void* data, size_t size){
