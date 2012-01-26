@@ -75,7 +75,7 @@ int main(int argc, char **argv){
 
 	long max_packets = -1;
 
-	while ( (op = getopt_long(argc, argv, "ho:p:c:i:", long_options, &option_index)) != -1 ){
+	while ( (op = getopt_long(argc, argv, "ho:p:c:i:t:", long_options, &option_index)) != -1 ){
 		switch (op){
 		case 0:   /* long opt */
 		case '?': /* unknown opt */
