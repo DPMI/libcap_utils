@@ -240,6 +240,7 @@ static long stream_ethernet_init(struct stream** stptr, const struct ether_addr*
   struct stream_ethernet* st = (struct stream_ethernet*)*stptr;
   st->socket = fd;
   st->num_address = 0;
+  memset(st->seqnum, 0, sizeof(long unsigned int) * MAX_ADDRESS);
 
   /* get iface index */
   if ( ioctl(fd, SIOCGIFINDEX, &ifr) == -1 ){
