@@ -1,6 +1,7 @@
 caputils-0.7.5
 --------------
 
+	* fix: ethernet hproto was truncated to uint8_t.
 	* fix: select call in fill_buffer would not propagate errors properly so
 	       SIGINT would not be caught by user and thus stuck in infinite
 	       loop.

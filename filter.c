@@ -124,7 +124,7 @@ static int filter_vlan_tci(const struct filter* filter, const struct ether_vlan_
   return !(filter->index & FILTER_VLAN) || (vlan && (ntohs(vlan->vlan_tci) & filter->vlan_tci_mask) == filter->vlan_tci);
 }
 
-static int filter_h_proto(const struct filter* filter, uint8_t h_proto){
+static int filter_h_proto(const struct filter* filter, uint16_t h_proto){
   return  !(filter->index & FILTER_ETH_TYPE) || (h_proto & filter->eth_type_mask) == filter->eth_type;
 }
 
@@ -179,7 +179,7 @@ int filter_match(const struct filter* filter, const void* pkt, struct cap_header
   }
 
   const struct ethhdr* ether = (const struct ethhdr*)pkt;
-  uint16_t h_proto = ntohl(ether->h_proto); /* may be overwritten by find_ether_vlan_header */
+  uint16_t h_proto = ntohs(ether->h_proto); /* may be overwritten by find_ether_vlan_header */
   uint16_t src_port = 0; /* set by find_{tcp,udp}_header */
   uint16_t dst_port = 0; /* set by find_{tcp,udp}_header */
 
