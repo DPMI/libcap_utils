@@ -133,8 +133,8 @@ static int fill_buffer(struct stream_ethernet* st, struct timeval* timeout){
 
     /* This indicates a flush from the sender.. */
     if( ntohs(sh->flush) == 1 ){
-      printf("Sender terminated. \n");
-      st->base.flushed=1;
+	    fprintf(stderr, "Sender terminated.\n");
+	    st->base.flushed=1;
     }
 
     break; //Break the while loop.
