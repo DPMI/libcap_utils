@@ -84,6 +84,12 @@ static int load_legacy_06(struct file_header_06* fh, FILE* src){
   return fh->version.major == 0 && fh->version.minor == 6;
 }
 
+static long stream_file_destroy(struct stream_file* st){
+  free(st->base.comment);
+  free(st);
+  return 0;
+}
+
 /**
  * Initialize file stream.
  * @return Non-zero on error (see errno(3) for descriptions).
@@ -222,7 +228,7 @@ int stream_file_create(struct stream** stptr, FILE* fp, const char* filename, co
 
   /* add callbacks */
   st->base.fill_buffer = (fill_buffer_callback)stream_file_fillbuffer;
-  st->base.destroy = NULL;
+  st->base.destroy = (destroy_callback)stream_file_destroy;
   st->base.write = (write_callback)stream_file_write;
 
   return 0;
