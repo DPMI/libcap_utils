@@ -240,6 +240,11 @@ static long stream_ethernet_init(struct stream** stptr, const struct ether_addr*
   }
   st->if_mtu = ifr.ifr_mtu;
 
+  /* ensure buffer is larger than MTU */
+  if ( buffLen < st->if_mtu ){
+	  return ERROR_BUFFER_LENGTH;
+  }
+
   /* bind MA MAC */
   if ( ioctl(fd, SIOCGIFHWADDR, &ifr) == -1) {
 	  perror("SIOCGIFHWADDR");
