@@ -19,6 +19,7 @@ static struct option long_options[]= {
 	{"packets", required_argument, 0, 'p'},
 	{"iface",   required_argument, 0, 'i'},
 	{"comment", required_argument, 0, 'c'},
+	{"timeout", required_argument, 0, 't'},
 	{"help",    no_argument,       0, 'h'},
 	{0, 0, 0, 0} /* sentinel */
 };
@@ -43,6 +44,7 @@ static void show_usage(void){
 	       "                       on. For other streams it is ignored.\n"
 	       "  -p, --packets=INT    Stop capture after INT packages.\n"
 	       "  -c, --comment        Set stream comment.\n"	 
+	       "  -t, --timeout=N      Wait for N ms while buffer fills [default: 1000ms].\n"
 	       "  -h, --help           This text.\n");
 	printf("\n");
 	printf("Streams can be specified in the following formats:\n");
@@ -66,6 +68,7 @@ int main(int argc, char **argv){
 
 	const char* comment = "capdump-" VERSION " stream";
 	char* iface = NULL;
+	struct timeval timeout = {1, 0};
 	stream_addr_t input;
 	stream_addr_t output;
 	stream_addr_aton(&output, "/dev/stdout", STREAM_ADDR_CAPFILE, STREAM_ADDR_LOCAL);
@@ -88,6 +91,14 @@ int main(int argc, char **argv){
 
 		case 'c':
 			comment = optarg;
+			break;
+
+		case 't':
+			{
+				int tmp = atoi(optarg);
+				timeout.tv_sec  = tmp / 1000;
+				timeout.tv_usec = tmp % 1000 * 1000;
+			}
 			break;
 
 		case 'i':
@@ -162,7 +173,8 @@ int main(int argc, char **argv){
 	long matches = 0;
 
 	while(1){
-		ret = stream_read(src, &cp, NULL, NULL);
+		struct timeval tv = timeout;
+		ret = stream_read(src, &cp, NULL, &tv);
 		if ( ret == EAGAIN ){
 			continue;
 		} else if ( ret != 0 ){

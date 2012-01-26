@@ -1,6 +1,8 @@
 caputils-0.7.5
 --------------
 
+	* add: adding timeout to capdump which increases the responsiveness, e.g.
+	       when piping to another application. Defaults to 1000ms.
 	* fix: ethernet hproto was truncated to uint8_t.
 	* fix: select call in fill_buffer would not propagate errors properly so
 	       SIGINT would not be caught by user and thus stuck in infinite
