@@ -18,6 +18,7 @@ endif
 
 if BUILD_CAPDUMP
 bin_PROGRAMS += capdump
+man1_MANS += man/capdump.1
 endif
 
 if BUILD_CAPFILTER

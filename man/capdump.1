@@ -1,0 +1,39 @@
+.TH capdump 1 "26 Jan 2012" "BTH" "Measurement Area Manual"
+.SH NAME
+capdump \- Save capture stream to file.
+.SH SYNOPSIS
+.nf
+.B capdump [-o \fIFILE\fP] [\fIOPTIONS\fP...] \fISTREAM\fP...
+.SH DESCRIPTION
+capture \fISTREAM\fP and save to \fiFILE\fP. If no output file is specified
+stdout is used. Streams are specified in standard format, see stream-address(3).
+
+.TP
+\fB\-o\fR, \fB\-\-output\fR=\fIFILE\fR
+Save output in capfile.
+.TP
+\fB\-i\fR, \fB\-\-iface\fR=\fIIFACE\fR
+For ethernet-based streams this is the interface to listen on. Required for
+ethernet streams.
+.TP
+\fB\-p\fR, \fB\-\-packets\fR=\fIAMOUNT\fR
+Stops capture after \fIAMOUNT\fP packets has been recevied. Default is to
+capture until sender terminates or SIGINT is recevied.
+.TP
+\fB\-c\fR, \fB\-\-comment\fR=\fISTRING\fR
+Set the comment for the output stream. Default is to copy from source stream (if
+available.)
+.TP
+\fB\-t\fR, \fB\-\-timeout\fR=\fIN\fR
+Sets the timeout in milliseconds to stream_read. Lower timeout increases the
+responsiveness when using pipes but can decrease the performance slightly as the
+buffer might not be fully utilized. High timeouts will fill the buffer but may
+instead cause drops because while it drains the buffer OS starts dropping
+packets. Default is 1000ms. 
+.TP
+\fB\-h\fR, \fB\-\-help
+Short help.
+.SH COPYRIGHT
+Copyright (C) 2011-2012 David Sveningsson <dsv@bth.se>.
+.SH "SEE ALSO"
+stream-address(3), capplay(1)
