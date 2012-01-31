@@ -13,6 +13,9 @@
 #include <signal.h>
 #include <unistd.h>
 
+static int keep_running = 1;
+static int marker = 0;
+
 static const char* program_name = NULL;
 static struct option long_options[]= {
 	{"output",  required_argument, 0, 'o'},
@@ -20,11 +23,11 @@ static struct option long_options[]= {
 	{"iface",   required_argument, 0, 'i'},
 	{"comment", required_argument, 0, 'c'},
 	{"timeout", required_argument, 0, 't'},
+	{"marker",  no_argument,       &marker, 1},
+	{"marker-format", required_argument, 0, 'f'},
 	{"help",    no_argument,       0, 'h'},
 	{0, 0, 0, 0} /* sentinel */
 };
-
-static int keep_running = 1;
 
 static void sigint_handler(int signum){
 	if ( keep_running == 0 ){
@@ -45,6 +48,9 @@ static void show_usage(void){
 	       "  -p, --packets=INT    Stop capture after INT packages.\n"
 	       "  -c, --comment        Set stream comment.\n"	 
 	       "  -t, --timeout=N      Wait for N ms while buffer fills [default: 1000ms].\n"
+	       "      --marker         Split streams based on marker packet. See capdump(1) for\n"
+	       "                       further description of this feature.\n"
+	       "      --marker-format  Renaming format for marker.\n"
 	       "  -h, --help           This text.\n");
 	printf("\n");
 	printf("Streams can be specified in the following formats:\n");
@@ -52,6 +58,10 @@ static void show_usage(void){
 	       "  - tcp://IP[:PORT]    Listen to TCP unicast.\n"
 	       "  - udp://IP[:PORT]    Listen to UDP broadcast.\n"
 	       "  - FILENAME           Open capfile for reading.\n");
+}
+
+static int is_marker(struct cap_header* cp){
+	return 0;
 }
 
 int main(int argc, char **argv){
@@ -103,6 +113,10 @@ int main(int argc, char **argv){
 
 		case 'i':
 			iface = optarg;
+			break;
+
+		case 'f': /* --marker-format */
+			fprintf(stderr, "--marker-format is not yet implemented\n");
 			break;
       
 		case 'h':
@@ -179,6 +193,10 @@ int main(int argc, char **argv){
 			continue;
 		} else if ( ret != 0 ){
 			break;
+		}
+
+		if ( marker && is_marker(cp) ){
+			fprintf(stderr, "marker found\n");
 		}
 
 		matches++;
