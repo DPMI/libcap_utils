@@ -23,7 +23,6 @@ int stream_alloc(struct stream** st, enum protocol_t protocol, size_t size);
 #define CAPUTILS_FILE_MAGIC 0x8f1ae247c53d9b6e
 #define MARKER_MAGIC 0x9f7a3c83
 #define LLPROTO 0x0810
-#define LMPROTO 0x0811
 #define LISTENPORT 0x0810
 
 /**

@@ -24,6 +24,8 @@ enum app_mode {
 
 static enum app_mode mode = MODE_START;
 static int keep_running = 1;
+static const char* path = NULL;
+static int sd = -1;
 static struct marker marker = {
 	.magic = MARKER_MAGIC,
 	.version = 1,
@@ -70,6 +72,48 @@ static const char* expand_home(const char* str){
 	struct passwd* result = getpwuid(getuid());
 	snprintf(buf, 1024, "%s/%s", result->pw_dir, str);
 	return buf;
+}
+
+static int start_daemon(){
+	int pid;
+	struct stat st;
+
+	/* ensure daemon isn't running */
+	if ( stat(path, &st) == 0 ){
+		fprintf(stderr, "%s: `%s' already exists, is the program already running?\n", program_name, path);
+		return 1;
+	} else if ( errno != ENOENT ){
+		fprintf(stderr, "%s: failed to stat `%s', check permissions\n", program_name, path);
+		return 1;
+	}
+
+	/* open socket */
+	sd = socket(AF_INET, SOCK_DGRAM, 0);
+	if ( sd == -1 ){
+		fprintf(stderr, "%s: failed to open socket: %s\n", program_name, strerror(errno));
+		return 1;
+	}
+	
+	if ( (pid=fork()) == 0 ){
+		signal(SIGINT, sigint_handler);
+		signal(SIGUSR1, sigusr1_handler);
+		signal(SIGUSR2, sigusr2_handler);
+			
+		while ( keep_running){
+			/* do nothing */
+		}
+
+		unlink(path);
+	} else {
+		FILE* fp = fopen(path, "w");
+		if ( !fp ){
+			fprintf(stderr, "%s: could not write to `%s': %s\n", program_name, path, strerror(errno));
+			kill(pid, SIGUSR2); /* terminate child */
+			return 1;
+		}
+		fprintf(fp, "%d\n", pid);
+	}
+	return 0;
 }
 
 static void show_usage(void){
@@ -165,43 +209,15 @@ int main(int argc, char **argv){
 		return 1;
 	}
 
-	int pid;
-	struct stat st;
-	const char* path = expand_home(".capmarker.pid");
+	path = expand_home(".capmarker.pid");
 
 	/* fork */
 	if ( mode == MODE_START) {
-		if ( stat(path, &st) == 0 ){
-			fprintf(stderr, "%s: `%s' already exists, is the program already running?\n", program_name, path);
-			return 1;
-		} else if ( errno != ENOENT ){
-			fprintf(stderr, "%s: failed to stat `%s', check permissions\n", program_name, path);
-			return 1;
-		}
-		
-		if ( (pid=fork()) == 0 ){
-			signal(SIGINT, sigint_handler);
-			signal(SIGUSR1, sigusr1_handler);
-			signal(SIGUSR2, sigusr2_handler);
-			
-			while ( keep_running){
-				/* do nothing */
-			}
-
-			unlink(path);
-		} else {
-			FILE* fp = fopen(path, "w");
-			if ( !fp ){
-				fprintf(stderr, "%s: could not write to `%s': %s\n", program_name, path, strerror(errno));
-				kill(pid, SIGUSR2); /* terminate child */
-				return 1;
-			}
-			fprintf(fp, "%d\n", pid);
-		}
-		return 0;
+		return start_daemon();
 	}
 
 	/* read child pid */
+	int pid;
 	FILE* fp = fopen(path, "r");
 	if ( !fp ){
 		fprintf(stderr, "%s: could not read `%s', check that the application is running and check permissions\n", program_name, path);
