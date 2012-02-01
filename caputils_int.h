@@ -24,6 +24,7 @@ int stream_alloc(struct stream** st, enum protocol_t protocol, size_t size);
 #define MARKER_MAGIC 0x9f7a3c83
 #define LLPROTO 0x0810
 #define LISTENPORT 0x0810
+#define MARKERPORT 0x0811
 
 /**
  * Error enumerations.

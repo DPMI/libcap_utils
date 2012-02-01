@@ -25,7 +25,6 @@ enum app_mode {
 static enum app_mode mode = MODE_START;
 static int keep_running = 1;
 static const char* path = NULL;
-static int sd = -1;
 static struct marker marker = {
 	.magic = MARKER_MAGIC,
 	.version = 1,
@@ -35,6 +34,8 @@ static struct marker marker = {
 	.run_id = 0,
 	.key_id = 0,
 	.seq_num = 0,
+	.starttime = 0,
+	.stoptime = 0,
 };
 
 static const char* program_name = NULL;
@@ -57,7 +58,7 @@ static void sigint_handler(int signum){
 }
 
 static void sigusr1_handler(int signum){
-	fprintf(stderr, "should send marker\n");
+	/* do nothing */
 }
 
 static void sigusr2_handler(int signum){
@@ -88,9 +89,35 @@ static int start_daemon(){
 	}
 
 	/* open socket */
-	sd = socket(AF_INET, SOCK_DGRAM, 0);
+	int sd = socket(AF_INET, SOCK_DGRAM, 0);
 	if ( sd == -1 ){
 		fprintf(stderr, "%s: failed to open socket: %s\n", program_name, strerror(errno));
+		return 1;
+	}
+
+  /* setup broadcast */
+  int broadcast = 1;
+  if( setsockopt(sd, SOL_SOCKET, SO_BROADCAST, &broadcast, sizeof(int)) == -1 ){
+	  fprintf(stderr, "%s: SO_BROADCAST failed: %s\n", program_name, strerror(errno));
+	  return 1;
+  }
+
+	/* setup source address */
+  static struct sockaddr_in src_addr;
+  memset(&src_addr, 0, sizeof(struct sockaddr_in));
+	src_addr.sin_family = AF_INET;
+	src_addr.sin_port = (in_port_t)htons(MARKERPORT);
+	src_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+
+	/* setup destination address */
+	static struct sockaddr_in dst_addr;
+  memset(&dst_addr, 0, sizeof(struct sockaddr_in));
+	dst_addr.sin_family = AF_INET;
+	dst_addr.sin_port = (in_port_t)htons(MARKERPORT);
+	dst_addr.sin_addr.s_addr = htonl(INADDR_BROADCAST);
+
+	if ( bind(sd, &src_addr, sizeof(struct sockaddr_in)) == -1 ){
+		fprintf(stderr, "%s: failed to bind socket: %s\n", program_name, strerror(errno));
 		return 1;
 	}
 	
@@ -98,9 +125,21 @@ static int start_daemon(){
 		signal(SIGINT, sigint_handler);
 		signal(SIGUSR1, sigusr1_handler);
 		signal(SIGUSR2, sigusr2_handler);
-			
+
+		marker.starttime = htobe64(time(NULL));
 		while ( keep_running){
-			/* do nothing */
+			/* wait for signal */
+			pause();
+
+			/* send marker */
+			if ( sendto(sd, &marker, sizeof(struct marker), 0, (struct sockaddr*)&dst_addr, sizeof(struct sockaddr_in)) == -1 ){
+				fprintf(stderr, "%s: sendto failed: %s\n", program_name, strerror(errno));
+			}
+
+			/* update fields */
+			marker.seq_num += htonl(1);
+			marker.starttime = marker.stoptime;
+			marker.stoptime = htobe64(time(NULL));
 		}
 
 		unlink(path);
@@ -184,6 +223,14 @@ int main(int argc, char **argv){
 		}
 		option_index = -1;
 	}
+
+	/* network order */
+	marker.magic = htonl(marker.magic);
+	marker.reserved = htons(marker.reserved);
+	marker.exp_id = htonl(marker.exp_id);
+	marker.run_id = htonl(marker.run_id);
+	marker.key_id = htonl(marker.key_id);
+	marker.seq_num = htonl(marker.seq_num);
 
 	switch (argc-optind){
 	case 0:
