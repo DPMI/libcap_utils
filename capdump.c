@@ -14,11 +14,13 @@
 #include <errno.h>
 #include <signal.h>
 #include <unistd.h>
+#include <ctype.h>
 #include <netinet/udp.h>
 
 static int keep_running = 1;
 static int marker = 0;
-
+static char* fmt_basename = NULL;  /* used by format_filename */
+static char* fmt_extension = NULL; /* used by format_filename */
 static const char* program_name = NULL;
 static struct option long_options[]= {
 	{"output",  required_argument, 0, 'o'},
@@ -95,6 +97,71 @@ static int is_marker(struct cap_header* cp, struct marker* ptr){
 	return 1;
 }
 
+static const char* format_filename(const char* fmt, const struct marker* marker){
+	static char buffer[1024];
+	char* dst = buffer;
+	const char* src = fmt;
+
+	while ( *src ){
+		const char ch = *src;
+
+		switch ( ch ){
+		case '%':
+			{
+				char w[4] = {0,};
+				int n = 0;
+				while ( isdigit(*(++src)) ) {
+					if ( n == 4 ){ fprintf(stderr, "field width specifier to great"); abort(); }
+					w[n++] = *src;
+				}
+
+				const int zeropad = w[0] == '0';
+				const int width = atoi(w);
+				const char specifier = *src++;
+
+				switch ( specifier ){
+				case 'e': /* extension */
+					dst += sprintf(dst, "%s", fmt_extension);
+					break;
+
+				case 'f': /* filename */
+					dst += sprintf(dst, "%s", fmt_basename);
+					break;
+
+				case 's': /* sequence number */
+					dst += sprintf(dst, zeropad ? "%0*d" : "%*d", width, marker->seq_num);
+					break;
+
+				case 'k': /* key */
+					dst += sprintf(dst, zeropad ? "%0*d" : "%*d", width, marker->key_id);
+					break;
+
+				case 'r': /* run id */
+					dst += sprintf(dst, zeropad ? "%0*d" : "%*d", width, marker->run_id);
+					break;
+
+				case 'x': /* experiment id */
+					dst += sprintf(dst, zeropad ? "%0*d" : "%*d", width, marker->exp_id);
+					break;
+
+				default:
+					fprintf(stderr, "unknown specifier `%c'\n", specifier);
+					abort();
+				}
+				break;
+			}
+
+		default:
+			*dst++ = ch;
+			src++;
+		}
+	}
+	*dst = 0;
+	printf("filename: %s\n", buffer);
+
+	return buffer;
+}
+
 int main(int argc, char **argv){
 	int op, option_index = -1;
 
@@ -106,7 +173,7 @@ int main(int argc, char **argv){
     program_name = argv[0];
   }
 
-
+  const char* marker_format = "%f-%x-%03s.%e";
 	const char* comment = "capdump-" VERSION " stream";
 	char* iface = NULL;
 	struct timeval timeout = {1, 0};
@@ -124,6 +191,15 @@ int main(int argc, char **argv){
 
 		case 'o':
 			stream_addr_aton(&output, optarg, STREAM_ADDR_CAPFILE, STREAM_ADDR_LOCAL);
+			free(fmt_basename);
+			fmt_basename = strdup(optarg);
+			fmt_extension = fmt_basename;
+			while ( *fmt_extension && *fmt_extension != '.' ){
+				fmt_extension++;
+			}
+			if ( *fmt_extension ){
+				*fmt_extension++ = 0;
+			}
 			break;
 
 		case 'p':
@@ -236,7 +312,7 @@ int main(int argc, char **argv){
 			strftime(stoptime,  200, "%a, %d %b %Y %T %z", tm2);
 			fprintf(stderr, "marker v%d found\n", mark.version);
 			fprintf(stderr, "  flags: %d\n", mark.flags);
-			fprintf(stderr, "  experiment id: %d\n", mark.exp_id);
+			fprintf(stderr, "  exp id: %d\n", mark.exp_id);
 			fprintf(stderr, "  run id: %d\n", mark.run_id);
 			fprintf(stderr, "  key id: %d\n", mark.key_id);
 			fprintf(stderr, "  seq num: %d\n", mark.seq_num);
@@ -247,6 +323,14 @@ int main(int argc, char **argv){
 			if ( strcmp("/dev/stdout", output.local_filename) == 0 ){
 				break;
 			}
+
+			stream_addr_str(&output, format_filename(marker_format, &mark), STREAM_ADDR_LOCAL);
+			if ( (ret=stream_create(&dst, &output, NULL, stream_get_mampid(src), comment)) != 0 ){
+				fprintf(stderr, "stream_create() failed with code 0x%08lX: %s\n", ret, caputils_error_string(ret));
+				return 1;
+			}
+
+			continue;
 		}
 
 		matches++;
