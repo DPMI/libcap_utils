@@ -223,7 +223,7 @@ int main(int argc, char **argv){
 			break;
 
 		case 'f': /* --marker-format */
-			fprintf(stderr, "--marker-format is not yet implemented\n");
+			marker_format = optarg;
 			break;
       
 		case 'h':
