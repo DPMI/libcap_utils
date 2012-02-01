@@ -242,6 +242,11 @@ int main(int argc, char **argv){
 			fprintf(stderr, "  seq num: %d\n", mark.seq_num);
 			fprintf(stderr, "  starttime: %s\n", starttime);
 			fprintf(stderr, "  stoptime: %s\n", stoptime);
+
+			/* abort if output is pipe */
+			if ( strcmp("/dev/stdout", output.local_filename) == 0 ){
+				break;
+			}
 		}
 
 		matches++;
