@@ -3,6 +3,8 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <caputils/caputils.h>
+#include <caputils/marker.h>
+#include "caputils_int.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -12,6 +14,7 @@
 #include <errno.h>
 #include <signal.h>
 #include <unistd.h>
+#include <netinet/udp.h>
 
 static int keep_running = 1;
 static int marker = 0;
@@ -60,8 +63,36 @@ static void show_usage(void){
 	       "  - FILENAME           Open capfile for reading.\n");
 }
 
-static int is_marker(struct cap_header* cp){
-	return 0;
+/**
+ * Test if packet is a marker packet.
+ * ptr is undefined if packet isn't a marker.
+ */
+static int is_marker(struct cap_header* cp, struct marker* ptr){
+	/* match ip packet */
+	const struct ip* ip = find_ip_header(cp->ethhdr);
+	if ( !ip ){ return 0; }
+
+	/* match udp packet */
+	uint16_t src, dst;
+	const struct udphdr* udp = find_udp_header(cp->payload, cp->ethhdr, ip, &src, &dst);
+	if ( !(udp && src == MARKERPORT && dst == MARKERPORT) ){ return 0; }
+
+	/* match magic */
+	struct marker* marker = (struct marker*)((char*)udp + sizeof(struct udphdr));
+	if ( ntohl(marker->magic) != MARKER_MAGIC ){ return 0; }
+
+	/* assume it is a marker */
+	ptr->magic = ntohl(marker->magic);
+	ptr->version = marker->version;
+	ptr->flags = marker->flags;
+	ptr->reserved = ntohs(marker->reserved);
+	ptr->exp_id = ntohl(marker->exp_id);
+	ptr->run_id = ntohl(marker->run_id);
+	ptr->key_id = ntohl(marker->key_id);
+	ptr->seq_num = ntohl(marker->seq_num);
+	ptr->starttime = be64toh(marker->starttime);
+	ptr->stoptime = be64toh(marker->stoptime);
+	return 1;
 }
 
 int main(int argc, char **argv){
@@ -195,8 +226,22 @@ int main(int argc, char **argv){
 			break;
 		}
 
-		if ( marker && is_marker(cp) ){
-			fprintf(stderr, "marker found\n");
+		struct marker mark;
+		if ( marker && is_marker(cp, &mark) ){
+			char starttime[200];
+			char stoptime[200];
+			struct tm* tm1 = localtime((time_t*)&mark.starttime);
+			struct tm* tm2 = localtime((time_t*)&mark.stoptime);
+			strftime(starttime, 200, "%a, %d %b %Y %T %z", tm1);
+			strftime(stoptime,  200, "%a, %d %b %Y %T %z", tm2);
+			fprintf(stderr, "marker v%d found\n", mark.version);
+			fprintf(stderr, "  flags: %d\n", mark.flags);
+			fprintf(stderr, "  experiment id: %d\n", mark.exp_id);
+			fprintf(stderr, "  run id: %d\n", mark.run_id);
+			fprintf(stderr, "  key id: %d\n", mark.key_id);
+			fprintf(stderr, "  seq num: %d\n", mark.seq_num);
+			fprintf(stderr, "  starttime: %s\n", starttime);
+			fprintf(stderr, "  stoptime: %s\n", stoptime);
 		}
 
 		matches++;
