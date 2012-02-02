@@ -95,6 +95,12 @@ static int start_daemon(){
 		return 1;
 	}
 
+	int on = 1;
+	if (setsockopt(sd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(int)) < 0) {
+		fprintf(stderr, "%s: setsockopt(SO_REUSEADDR) failed: %s\n", program_name, strerror(errno));
+		return 1;
+	}
+
   /* setup broadcast */
   int broadcast = 1;
   if( setsockopt(sd, SOL_SOCKET, SO_BROADCAST, &broadcast, sizeof(int)) == -1 ){
