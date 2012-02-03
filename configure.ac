@@ -37,6 +37,21 @@ AC_USE_SYSTEM_EXTENSIONS
 AC_DISABLE_STATIC([])
 LT_INIT
 
+AC_LANG_PUSH([C])
+AC_MSG_CHECKING([be64toh])
+saved_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS="$CPPFLAGS -Werror"
+AC_COMPILE_IFELSE([AC_LANG_SOURCE([
+#include <endian.h>
+#include <stdint.h>
+int foo(void){ uint64_t x = be64toh((uint64_t)0); }
+])], [AC_MSG_RESULT([yes])], [
+  AC_MSG_RESULT([no])
+  AC_MSG_ERROR([be64toh not supported (available from glibc-2.9 and later)])
+])
+CPPFLAGS="$saved_CPPFLAGS"
+AC_LANG_POP
+
 AC_ARG_ENABLE([debug], [AS_HELP_STRING([--enable-debug], [will print debugging information during runtime @<:@default=disabled@:>@])])
 AS_IF([test "x$enable_debug" == "xyes"],
 	[AC_DEFINE([DEBUG],  [1], [Define to enable extra debug prints])],
