@@ -43,7 +43,7 @@ AS_IF([test "x$enable_debug" == "xyes"],
 	[AC_DEFINE([NDEBUG], [1], [Define to disable extra debug prints])]
 )
 
-<AC_ARG_WITH([pcap], [AS_HELP_STRING([--with-pcap@<:@=PREFIX@:>@], [Build utilities for conversion to and from pcap files. @<:@default=enabled@:>@])])
+AC_ARG_WITH([pcap], [AS_HELP_STRING([--with-pcap@<:@=PREFIX@:>@], [Build utilities for conversion to and from pcap files. @<:@default=enabled@:>@])])
 AM_CONDITIONAL([BUILD_PCAP], [test "x$with_pcap" != "xno"])
 AX_PCAP($with_pcap)
 
