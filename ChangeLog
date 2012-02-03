@@ -1,6 +1,7 @@
 caputils-0.7.5
 --------------
 
+	* fix: support for specifying pcap prefix.
 	* add: capmarker: utility for sending a special marker packets.
 	* add: adding timeout to capdump which increases the responsiveness, e.g.
 	       when piping to another application. Defaults to 1000ms.
