@@ -2,8 +2,6 @@ AC_DEFUN([AX_PCAP], [
   saved_CPPFLAGS="$CPPFLAGS"
   saved_LDFLAGS="$LDFLAGS"
 
-  echo "hurr durr"
-
   case $1 in
     yes | "")
       ax_pcap_path=
