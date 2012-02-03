@@ -56,6 +56,7 @@ nobase_include_HEADERS =    \
 	caputils/log.h      \
 	caputils/stream.h   \
 	caputils/marc.h     \
+	caputils/marker.h   \
 	caputils/version.h
 
 pkgconfigdir = $(libdir)/pkgconfig
