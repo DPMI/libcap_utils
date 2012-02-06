@@ -76,8 +76,11 @@ libcap_utils_07_la_SOURCES =   \
 	error.c             \
 	log.c               \
 	utils.c             \
-	picotime.c          \
-	be64toh.c be64toh.h
+	picotime.c
+
+if BUILD_BE64TOH
+libcap_utils_07_la_SOURCES += be64toh.c be64toh.h
+endif
 
 #	stream_udp.c \
 #	stream_tcp.c \
@@ -108,10 +111,14 @@ tests_address_LDFLAGS = $(CPPUNIT_LIBS)
 tests_address_LDADD = libcap_utils-07.la
 tests_address_SOURCES = tests/address.cpp
 
+# -Dfulhack is needed so libtool will become less confused about
+# multiple objects of be64toh. By having different cflags it will
+# rename the files.
+tests_endian_CFLAGS = ${AM_CFLAGS} -Dfulhack
 tests_endian_CXXFLAGS = ${AM_CFLAGS} $(CPPUNIT_CFLAGS)
 tests_endian_LDFLAGS = $(CPPUNIT_LIBS)
 tests_endian_LDADD = libcap_utils-07.la
-tests_endian_SOURCES = tests/endian.cpp
+tests_endian_SOURCES = tests/endian.cpp be64toh.c
 
 tests_disabled_SOURCES = tests/disabled.cpp
 
