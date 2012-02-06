@@ -52,7 +52,7 @@ static void show_usage(void){
 	       "  -i, --iface          For ethernet-based streams, this is the interface to listen\n"
 	       "                       on. For other streams it is ignored.\n"
 	       "  -p, --packets=INT    Stop capture after INT packages.\n"
-	       "  -c, --comment        Set stream comment.\n"	 
+	       "  -c, --comment        Set stream comment.\n"
 	       "  -t, --timeout=N      Wait for N ms while buffer fills [default: 1000ms].\n"
 	       "      --marker         Split streams based on marker packet. See capdump(1) for\n"
 	       "                       further description of this feature.\n"
@@ -226,12 +226,12 @@ int main(int argc, char **argv){
 		case 'f': /* --marker-format */
 			marker_format = optarg;
 			break;
-      
+
 		case 'h':
 			show_usage();
 			exit(0);
 			break;
-      
+
 		default:
 			if ( option_index >= 0 ){
 				fprintf(stderr, "flag --%s declared but not handled\n", long_options[option_index].name);
