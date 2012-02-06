@@ -10,11 +10,6 @@ union bits {
 	uint64_t d;
 };
 
-#ifndef HAVE_BE64TOH
-void htobe64() __attribute__((weak, alias ("_int_htobe64")));
-void be64toh() __attribute__((weak, alias ("_int_be64toh")));
-#endif
-
 uint64_t _int_htobe64(uint64_t host_64bits) {
 	union bits out, in = { .d = host_64bits };
 
