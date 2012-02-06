@@ -16,6 +16,7 @@
 #include <unistd.h>
 #include <ctype.h>
 #include <netinet/udp.h>
+#include "be64toh.h" /* for compability */
 
 static int keep_running = 1;
 static int marker = 0;
