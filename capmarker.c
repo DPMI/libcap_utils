@@ -277,7 +277,8 @@ int main(int argc, char **argv){
 		fprintf(stderr, "%s: could not read `%s', check that the application is running and check permissions\n", program_name, path);
 		return 1;
 	}
-	fscanf(fp, "%d\n", &pid);
+	int x = fscanf(fp, "%d\n", &pid);
+	if ( x != 1 )	abort(); /* isn't any good way to handle this error which cannot really happen */
 
 	switch ( mode ){
 	case MODE_START:
