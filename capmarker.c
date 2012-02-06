@@ -127,7 +127,7 @@ static int start_daemon(){
 		fprintf(stderr, "%s: failed to bind socket: %s\n", program_name, strerror(errno));
 		return 1;
 	}
-	
+
 	if ( (pid=fork()) == 0 ){
 		signal(SIGINT, sigint_handler);
 		signal(SIGUSR1, sigusr1_handler);
@@ -219,7 +219,7 @@ int main(int argc, char **argv){
 			show_usage();
 			exit(0);
 			break;
-      
+
 		default:
 			if ( option_index >= 0 ){
 				fprintf(stderr, "flag --%s declared but not handled\n", long_options[option_index].name);
@@ -288,7 +288,7 @@ int main(int argc, char **argv){
 	case MODE_STOP:
 		kill(pid, SIGUSR2);
 		break;
-	} 
+	}
 
 	return 0;
 }
