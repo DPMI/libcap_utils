@@ -11,8 +11,8 @@
 extern "C" {
 #endif
 
-void htobe64() __attribute__((weak, alias ("_int_htobe64")));
-void be64toh() __attribute__((weak, alias ("_int_be64toh")));
+uint64_t htobe64(uint64_t val) __attribute__((weak, alias ("_int_htobe64")));
+uint64_t be64toh(uint64_t val) __attribute__((weak, alias ("_int_be64toh")));
 
 #ifdef __cplusplus
 }
