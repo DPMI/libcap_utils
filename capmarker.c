@@ -15,6 +15,7 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <pwd.h>
+#include "be64toh.h" /* for compability */
 
 enum app_mode {
 	MODE_START,
