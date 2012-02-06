@@ -39,7 +39,7 @@ notrans_dist_man_MANS =     \
 	man/capfilter.1
 
 if BUILD_TESTS
-TESTS = tests/filter_argv tests/address
+TESTS = tests/filter_argv tests/address tests/endian
 else
 TESTS = tests/disabled
 endif
@@ -76,7 +76,8 @@ libcap_utils_07_la_SOURCES =   \
 	error.c             \
 	log.c               \
 	utils.c             \
-	picotime.c
+	picotime.c          \
+	be64toh.c be64toh.h
 
 #	stream_udp.c \
 #	stream_tcp.c \
@@ -106,6 +107,11 @@ tests_address_CXXFLAGS = ${AM_CFLAGS} $(CPPUNIT_CFLAGS)
 tests_address_LDFLAGS = $(CPPUNIT_LIBS)
 tests_address_LDADD = libcap_utils-07.la
 tests_address_SOURCES = tests/address.cpp
+
+tests_endian_CXXFLAGS = ${AM_CFLAGS} $(CPPUNIT_CFLAGS)
+tests_endian_LDFLAGS = $(CPPUNIT_LIBS)
+tests_endian_LDADD = libcap_utils-07.la
+tests_endian_SOURCES = tests/endian.cpp
 
 tests_disabled_SOURCES = tests/disabled.cpp
 

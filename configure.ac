@@ -45,9 +45,11 @@ AC_COMPILE_IFELSE([AC_LANG_SOURCE([
 #include <endian.h>
 #include <stdint.h>
 int foo(void){ uint64_t x = be64toh((uint64_t)0); }
-])], [AC_MSG_RESULT([yes])], [
+])], [
+  AC_MSG_RESULT([yes])
+  AC_DEFINE([HAVE_BE64TOH], [], [Define to 1 if you have the be64toh function.])
+], [
   AC_MSG_RESULT([no])
-  AC_MSG_ERROR([be64toh not supported (available from glibc-2.9 and later)])
 ])
 CPPFLAGS="$saved_CPPFLAGS"
 AC_LANG_POP
