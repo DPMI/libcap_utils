@@ -36,7 +36,9 @@ notrans_dist_man_MANS =     \
 	man/libcaputils.3   \
 	man/libcap_filter.3 \
 	man/stream_read.3   \
-	man/capfilter.1
+	man/capdump.1       \
+	man/capfilter.1     \
+	man/capmarker.1
 
 if BUILD_TESTS
 TESTS = tests/filter_argv tests/address tests/endian
