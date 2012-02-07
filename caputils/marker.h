@@ -17,8 +17,8 @@ struct marker {
 	uint32_t run_id;
 	uint32_t key_id;
 	uint32_t seq_num;
-	uint64_t starttime;
-	uint64_t stoptime;
+	uint64_t timestamp;
+	char comment[64];
 
 	/* timeval depttime; */
 } __attribute__((packed));

@@ -93,8 +93,7 @@ static int is_marker(struct cap_header* cp, struct marker* ptr){
 	ptr->run_id = ntohl(marker->run_id);
 	ptr->key_id = ntohl(marker->key_id);
 	ptr->seq_num = ntohl(marker->seq_num);
-	ptr->starttime = be64toh(marker->starttime);
-	ptr->stoptime = be64toh(marker->stoptime);
+	ptr->timestamp = be64toh(marker->timestamp);
 	return 1;
 }
 
@@ -305,20 +304,16 @@ int main(int argc, char **argv){
 
 		struct marker mark;
 		if ( marker && is_marker(cp, &mark) ){
-			char starttime[200];
-			char stoptime[200];
-			struct tm* tm1 = localtime((time_t*)&mark.starttime);
-			struct tm* tm2 = localtime((time_t*)&mark.stoptime);
-			strftime(starttime, 200, "%a, %d %b %Y %T %z", tm1);
-			strftime(stoptime,  200, "%a, %d %b %Y %T %z", tm2);
+			char timestamp[200];
+			struct tm* tm = localtime((time_t*)&mark.timestamp);
+			strftime(timestamp, 200, "%a, %d %b %Y %T %z", tm);
 			fprintf(stderr, "marker v%d found\n", mark.version);
 			fprintf(stderr, "  flags: %d\n", mark.flags);
 			fprintf(stderr, "  exp id: %d\n", mark.exp_id);
 			fprintf(stderr, "  run id: %d\n", mark.run_id);
 			fprintf(stderr, "  key id: %d\n", mark.key_id);
 			fprintf(stderr, "  seq num: %d\n", mark.seq_num);
-			fprintf(stderr, "  starttime: %s\n", starttime);
-			fprintf(stderr, "  stoptime: %s\n", stoptime);
+			fprintf(stderr, "  timestamp: %s\n", timestamp);
 
 			/* abort if output is pipe */
 			if ( strcmp("/dev/stdout", output.local_filename) == 0 ){
