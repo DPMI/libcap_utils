@@ -289,19 +289,25 @@ int main(int argc, char **argv){
 	/* install signal handler so loop can be aborted */
 	signal(SIGINT, sigint_handler);
 
-	cap_head* cp;
-	size_t len = sizeof(struct cap_header);
-	long matches = 0;
+	const size_t len = sizeof(struct cap_header);
+	long int pkts = 0;
 
-	while(1){
+	while( keep_running ){
+		/* A short timeout is used to allow the application to "breathe", i.e
+		 * terminate if SIGINT was received. */
 		struct timeval tv = timeout;
+
+		/* Read the next packet */
+		cap_head* cp;
 		ret = stream_read(src, &cp, NULL, &tv);
-		if ( ret == EAGAIN ){
+		if ( ret == EAGAIN ){ /* a timeout occured */
 			continue;
-		} else if ( ret != 0 ){
+		} else if ( ret != 0 ){ /* either an error or proper shutdown */
 			break;
 		}
+		pkts++;
 
+		/* Detect marker in stream */
 		struct marker mark;
 		if ( marker && is_marker(cp, &mark) ){
 			char timestamp[200];
@@ -325,27 +331,27 @@ int main(int argc, char **argv){
 				fprintf(stderr, "stream_create() failed with code 0x%08lX: %s\n", ret, caputils_error_string(ret));
 				return 1;
 			}
-
-			continue;
 		}
 
-		matches++;
 		if( stream_write(dst, (char*)cp, cp->caplen + len) != 0 ) {
 			fprintf(stderr, "Problems writing data to file!");
 		}
 
-		if ( max_packets > 0 && matches >= max_packets ){
+		if ( max_packets > 0 && pkts >= max_packets ){
 			break;
 		}
 	}
 
-	if ( ret > 0 ){
+	/* if ret == -1 the stream was closed properly (e.g EOF or TCP shutdown)
+	 * In addition EINTR should not give any errors because it is implied when the
+	 * user presses C-c */
+	if ( ret > 0 && ret != EINTR ){
 		fprintf(stderr, "stream_read() returned 0x%08lX: %s\n", ret, caputils_error_string(ret));
 	}
 
 	stream_close(src);
 	stream_close(dst);
 
-	fprintf(stderr, "There was a total of %ld pkts that matched the filter.\n", matches);
+	fprintf(stderr, "There was a total of %'ld packets read.\n", pkts);
 	return 0;
 }
