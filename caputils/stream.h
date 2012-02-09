@@ -13,6 +13,12 @@ extern "C" {
 struct stream;
 typedef struct stream stream_t;
 
+struct stream_stat {
+	uint64_t recv;
+	uint64_t matched;
+};
+typedef struct stream_stat stream_stat_t;
+
 /**
  * Open an existing stream.
  * @return 1 if successful.
@@ -63,6 +69,12 @@ const char* stream_get_comment(const struct stream* st);
  * @return Internal reference to MAMPid.
  */
 const char* stream_get_mampid(const struct stream* st);
+
+/**
+ * Read stats from stream.
+ * Returns internal structure, don't need to call repeated and don't free it.
+ */
+const struct stream_stat* stream_get_stat(const struct stream* st);
 
 /**
  * Write a captured frame to a stream.

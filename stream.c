@@ -24,10 +24,11 @@ int stream_alloc(struct stream** stptr, enum protocol_t protocol, size_t size){
 	st->buffer = (char*)st + size; /* calculate pointer to buffer */
 
 	st->expSeqnr = 0;
-	st->pktCount = 0;
 	st->bufferSize=0;
 	st->readPos=0;
 	st->flushed = 0;
+	st->stat.recv = 0;
+	st->stat.matched = 0;
 
 	/* callbacks */
 	st->fill_buffer = NULL;
@@ -69,6 +70,10 @@ const char* stream_get_comment(const struct stream* st){
 
 const char* stream_get_mampid(const struct stream* st){
 	return st->FH.mpid;
+}
+
+const struct stream_stat* stream_get_stat(const struct stream* st){
+	return &st->stat;
 }
 
 /**
@@ -295,6 +300,7 @@ int stream_read(struct stream *myStream, cap_head** data, const struct filter *m
 			filterStatus = filter_match(my_Filter, cp->payload, cp);
 		}
 	} while(filterStatus==0);
-  
+
+	myStream->stat.matched++;
 	return 0;
 }

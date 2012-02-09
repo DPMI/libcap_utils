@@ -111,7 +111,7 @@ static int fill_buffer(struct stream_ethernet* st, struct timeval* timeout){
     }
 
     /* increase packet count */
-    st->base.pktCount += ntohs(sh->nopkts);
+    st->base.stat.recv += ntohs(sh->nopkts);
 
     /* if no sequencenr is set some additional checks are made.
      * they will also run when the sequence number wraps, but that ok since the
