@@ -83,6 +83,7 @@ class FilterCreate : public CppUnit::TestFixture {
   CPPUNIT_TEST( test_ip_dst        );
   CPPUNIT_TEST( test_tp_sport      );
   CPPUNIT_TEST( test_tp_dport      );
+  CPPUNIT_TEST( test_equal_sign    );
   CPPUNIT_TEST_SUITE_END();
 
   struct filter filter;
@@ -104,7 +105,7 @@ public:
 
   void test_basic(){
     const char* orig[] = {
-      "programname",      
+      "programname",
       "--spam",
       "fred",
       "--ham",
@@ -195,14 +196,14 @@ public:
 
     argc = generate_argv(argv, "programname", "--eth.src", "01:00:00:00:00:02", NULL);
     CPPUNIT_ASSERT_SUCCESS(filter_from_argv(&argc, argv, &filter), 1);
-   
+
     CPPUNIT_ASSERT_EQUAL((uint32_t)FILTER_ETH_SRC, filter.index);
     CPPUNIT_ASSERT_ETH_ADDR(addr,  filter.eth_src);
     CPPUNIT_ASSERT_ETH_ADDR(mask1, filter.eth_src_mask);
 
     argc = generate_argv(argv, "programname", "--eth.src", "01:00:00:00:00:02/12:34:56:78:9a:bc", NULL);
     CPPUNIT_ASSERT_SUCCESS(filter_from_argv(&argc, argv, &filter), 1);
-   
+
     CPPUNIT_ASSERT_EQUAL((uint32_t)FILTER_ETH_SRC, filter.index);
     CPPUNIT_ASSERT_ETH_ADDR(addr,  filter.eth_src);
     CPPUNIT_ASSERT_ETH_ADDR(mask2, filter.eth_src_mask);
@@ -211,7 +212,7 @@ public:
   void test_eth_dst(){
     argc = generate_argv(argv, "programname", "--eth.dst", "01:00:00:00:00:02/FF:FF:FF:FF:FF:00", NULL);
     CPPUNIT_ASSERT_SUCCESS(filter_from_argv(&argc, argv, &filter), 1);
-    
+
     struct ether_addr addr = *ether_aton("01:00:00:00:00:02");
     struct ether_addr mask = *ether_aton("FF:FF:FF:FF:FF:00");
 
@@ -299,6 +300,14 @@ public:
     argc = generate_argv(argv, "programname", "--tp.dport", "ssh/123", NULL);
     CPPUNIT_ASSERT_SUCCESS(filter_from_argv(&argc, argv, &filter), 1);
 
+    CPPUNIT_ASSERT_EQUAL((uint32_t)FILTER_DST_PORT, filter.index);
+    CPPUNIT_ASSERT_EQUAL((uint16_t)22,  filter.dst_port);
+    CPPUNIT_ASSERT_EQUAL((uint16_t)123, filter.dst_port_mask);
+  }
+
+  void test_equal_sign(){
+    argc = generate_argv(argv, "programname", "--tp.dport=22/123", NULL);
+    CPPUNIT_ASSERT_SUCCESS(filter_from_argv(&argc, argv, &filter), 1);
     CPPUNIT_ASSERT_EQUAL((uint32_t)FILTER_DST_PORT, filter.index);
     CPPUNIT_ASSERT_EQUAL((uint16_t)22,  filter.dst_port);
     CPPUNIT_ASSERT_EQUAL((uint16_t)123, filter.dst_port_mask);
