@@ -89,7 +89,7 @@ static void split_argv(int* src_argc, char** src_argv, int* dst_argc, char** dst
 		/* check if it is consumed */
 		struct option* cur = options;
 		while ( cur->name ){
-			if ( strcmp(cur->name, &arg[2]) != 0 ){
+			if ( strlen(arg) < 3 || strcmp(cur->name, &arg[2]) != 0 ){
 				cur++;
 				continue;
 			}
