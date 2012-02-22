@@ -314,3 +314,63 @@ int stream_read(struct stream *myStream, cap_head** data, const struct filter *m
 	myStream->stat.matched++;
 	return 0;
 }
+
+static const char* type[4] = {"file", "ethernet", "udp", "tcp"};
+int stream_from_getopt(struct stream** st, char* argv[], int optind, int argc, const char* iface, const char* program_name){
+	int ret;
+	stream_addr_t addr;
+
+	/* verify that at least one address is present */
+	if ( optind == argc ){
+		fprintf(stderr, "%s: no stream address specified.", program_name);
+		return EINVAL;
+	}
+
+	/* parse first stream address */
+	if ( (ret=stream_addr_aton(&addr, argv[optind], STREAM_ADDR_GUESS, 0)) != 0 ){
+		fprintf(stderr, "%s: Failed to parse stream address: %s\n", program_name, caputils_error_string(ret));
+		return ret;
+	}
+
+	/* open first stream */
+	fprintf(stderr, "Opening %s stream: %s\n", type[stream_addr_type(&addr)], stream_addr_ntoa(&addr));
+	if ( (ret=stream_open(st, &addr, iface, 0)) != 0 ) {
+		fprintf(stderr, "%s: stream_open() failed with code 0x%08X: %s\n", program_name, ret, caputils_error_string(ret));
+		return ret;
+	}
+
+	/* no secondary present */
+	if ( ++optind == argc ){
+		return 0;
+	}
+
+	if ( stream_addr_type(&addr) != STREAM_ADDR_ETHERNET ){
+		fprintf(stderr, "%s: only ethernet streams support multiple addresses.\n", program_name);
+		return EINVAL;
+	}
+
+	/* try secondary addresses */
+	for ( int i = ++optind; i < argc; i++ ){
+		if ( (ret=stream_addr_aton(&addr, argv[i], STREAM_ADDR_ETHERNET, 0)) != 0 ){
+			fprintf(stderr, "%s: Failed to parse stream address: %s\n", program_name, caputils_error_string(ret));
+			return ret;
+		}
+
+		if( (ret=stream_add(*st, &addr)) != 0 ) {
+			fprintf(stderr, "%s: stream_add() failed with code 0x%08X: %s\n", program_name, ret, caputils_error_string(ret));
+			return ret;
+		}
+	}
+
+	return 0;
+}
+
+void stream_print_info(const struct stream* st, FILE* dst){
+	struct file_version version;
+	const char* mampid = stream_get_mampid(st);
+	const char* comment = stream_get_comment(st);
+	stream_get_version(st, &version);
+	fprintf(dst, "%s caputils %d.%d stream\n", stream_addr_ntoa(&st->addr), version.major, version.minor);
+	fprintf(dst, "     mpid: %s\n", mampid[0] != 0 ? mampid : "(unset)");
+	fprintf(dst, "  comment: %s\n", comment ? comment : "(unset)");
+}

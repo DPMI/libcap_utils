@@ -50,6 +50,12 @@ int stream_create(struct stream** st, const stream_addr_t* addr, const char* nic
 int stream_add(struct stream* st, const stream_addr_t* addr);
 
 /**
+ * Shorthand for opening multiple streams from command-line arguments.
+ * Calls stream_open followed by stream_add, with error checking.
+ */
+int stream_from_getopt(struct stream** st, char* argv[], int optind, int argc, const char* iface, const char* program_name);
+
+/**
  * Close stream.
  */
 int stream_close(struct stream* st);
@@ -76,6 +82,11 @@ const char* stream_get_mampid(const struct stream* st);
  * Returns internal structure, don't need to call repeated and don't free it.
  */
 const struct stream_stat* stream_get_stat(const struct stream* st);
+
+/**
+ * Print information about stream.
+ */
+void stream_print_info(const struct stream* st, FILE* dst);
 
 /**
  * Write a captured frame to a stream.
