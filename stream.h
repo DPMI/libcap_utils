@@ -20,6 +20,7 @@ typedef int (*write_callback)(struct stream* st, const void* data, size_t size);
 // Stream structure, used to manage different types of streams
 struct stream {
   enum protocol_t type;                 // What type of stream do we have?
+	stream_addr_t addr;                   // The address used to open stream.
 
   /* header related */
   struct file_header_t FH;

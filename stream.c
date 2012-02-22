@@ -93,6 +93,8 @@ int is_valid_version(struct file_header_t* fhptr){
 }
 
 int stream_open(struct stream** stptr, const stream_addr_t* dest, const char* nic, int port){
+	int ret;
+
 	switch(stream_addr_type(dest)){
 		/* case PROTOCOL_TCP_UNICAST: */
 		/*   return stream_tcp_init(myStream, address, port); */
@@ -101,15 +103,22 @@ int stream_open(struct stream** stptr, const stream_addr_t* dest, const char* ni
 		/*   return stream_udp_init(myStream, address, port); */
 
 	case PROTOCOL_ETHERNET_MULTICAST:
-		return stream_ethernet_open(stptr, &dest->ether_addr, nic);
+		ret = stream_ethernet_open(stptr, &dest->ether_addr, nic);
+		break;
 
 	case PROTOCOL_LOCAL_FILE:
-		return stream_file_open(stptr, stream_addr_have_flag(dest, STREAM_ADDR_LOCAL) ? dest->local_filename : dest->filename);
+		ret = stream_file_open(stptr, stream_addr_have_flag(dest, STREAM_ADDR_LOCAL) ? dest->local_filename : dest->filename);
+		break;
 
 	default:
 		fprintf(stderr, "Unhandled protocol %d\n", stream_addr_type(dest));
 		return ERROR_NOT_IMPLEMENTED;
 	}
+
+	/** @note Only shallow copy, it might cause issues if using a local path which
+	 * is referenced and freed after stream_open */
+	(*stptr)->addr = *dest;
+	return ret;
 }
 
 int stream_create(struct stream** stptr, const stream_addr_t* dest, const char* nic, const char* mpid, const char* comment){
@@ -182,7 +191,7 @@ int stream_create(struct stream** stptr, const stream_addr_t* dest, const char* 
 
 	/* //  st->mySocket=socket_descriptor; */
 	/* //  st->ifindex=ifindex; */
-  
+
 	/* return(1);   */
 }
 
@@ -247,7 +256,7 @@ static int fill_buffer(struct stream* st, struct timeval* timeout){
 		}
 		break;
 	}
-  
+
 	/* not reached */
 	return 0;
 }
