@@ -51,6 +51,14 @@ void check_success(int ret, int expected, int actual, CppUnit::SourceLine source
   CppUnit::assertEquals(expected, actual, sourceLine, "did not consume enough arguments");
 }
 
+void check_failure(int ret, int expected, int actual, CppUnit::SourceLine sourceLine){
+  if ( ret == 0 ){
+    CppUnit::Asserter::failNotEqual("(no error)", strerror(ret), sourceLine, "function unexpectedly returned successfully");
+    return;
+  }
+  CppUnit::assertEquals(expected, actual, sourceLine, "did not consume enough arguments");
+}
+
 void check_inet_addr(in_addr expected, in_addr actual, CppUnit::SourceLine sourceLine){
   if ( expected.s_addr != actual.s_addr ){
     char _expected[64];
@@ -64,6 +72,7 @@ void check_inet_addr(in_addr expected, in_addr actual, CppUnit::SourceLine sourc
 #define CPPUNIT_ASSERT_ETH_ADDR(expected, actual) check_eth_addr(expected, actual, CPPUNIT_SOURCELINE())
 #define CPPUNIT_ASSERT_INET_ADDR(expected, actual) check_inet_addr(expected, actual, CPPUNIT_SOURCELINE())
 #define CPPUNIT_ASSERT_SUCCESS(expr, n) do { int r = (expr); check_success(r, n, argc, CPPUNIT_SOURCELINE()); } while (0)
+#define CPPUNIT_ASSERT_FAILURE(expr, n) do { int r = (expr); check_failure(r, n, argc, CPPUNIT_SOURCELINE()); } while (0)
 
 class FilterCreate : public CppUnit::TestFixture {
   CPPUNIT_TEST_SUITE(FilterCreate);
@@ -83,6 +92,7 @@ class FilterCreate : public CppUnit::TestFixture {
   CPPUNIT_TEST( test_ip_dst        );
   CPPUNIT_TEST( test_tp_sport      );
   CPPUNIT_TEST( test_tp_dport      );
+  CPPUNIT_TEST( test_missing       );
   CPPUNIT_TEST( test_equal_sign    );
   CPPUNIT_TEST_SUITE_END();
 
@@ -305,12 +315,17 @@ public:
     CPPUNIT_ASSERT_EQUAL((uint16_t)123, filter.dst_port_mask);
   }
 
+  void test_missing(){
+    argc = generate_argv(argv, "programname", "--starttime", NULL);
+    CPPUNIT_ASSERT_FAILURE(filter_from_argv(&argc, argv, &filter), 1);
+  }
+
   void test_equal_sign(){
-    argc = generate_argv(argv, "programname", "--tp.dport=22/123", NULL);
+    argc = generate_argv(argv, "programname", "--endtime=123.4007", NULL);
     CPPUNIT_ASSERT_SUCCESS(filter_from_argv(&argc, argv, &filter), 1);
-    CPPUNIT_ASSERT_EQUAL((uint32_t)FILTER_DST_PORT, filter.index);
-    CPPUNIT_ASSERT_EQUAL((uint16_t)22,  filter.dst_port);
-    CPPUNIT_ASSERT_EQUAL((uint16_t)123, filter.dst_port_mask);
+    CPPUNIT_ASSERT_EQUAL((uint32_t)FILTER_END_TIME, filter.index);
+    CPPUNIT_ASSERT_EQUAL((uint32_t)123, filter.endtime.tv_sec);
+    CPPUNIT_ASSERT_EQUAL((uint64_t)4007000000000, filter.endtime.tv_psec);
   }
 };
 

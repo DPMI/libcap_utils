@@ -85,12 +85,18 @@ static void split_argv(int* src_argc, char** src_argv, int* dst_argc, char** dst
 	int i = 1;
 	do {
 		const char* arg = *ptr;
+		if ( strlen(arg) < 3 ) continue; /* not enough chars */
+
+		/* find = to determine how many chars to compare */
+		size_t maxlen = 0;
+		const char* tmp = arg;
+		while ( maxlen++, *++tmp ) if ( *tmp == '=' ) break;
 
 		/* check if it is consumed */
 		struct option* cur = options;
-		while ( cur->name ){
-			if ( strlen(arg) < 3 || strcmp(cur->name, &arg[2]) != 0 ){
-				cur++;
+		for ( cur = options; cur->name; cur++ ){
+
+			if ( strncmp(cur->name, &arg[2], maxlen-2) != 0 ){
 				continue;
 			}
 
@@ -98,9 +104,13 @@ static void split_argv(int* src_argc, char** src_argv, int* dst_argc, char** dst
 			size_t n = 2;
 
 			/* ensure valid argument follows */
-			if ( (i+1) == *src_argc || ptr[1][0] == '-' ){
-				fprintf(stderr, "%s: option '--%s' requires an argument\n", src_argv[0], cur->name);
+			if ( arg[maxlen] == '=' ){ /* "--foo=bar" */
 				n = 1;
+			} else { /* "--foo=bar */
+				if ( (i+1) == *src_argc || ptr[1][0] == '-' ){
+					fprintf(stderr, "%s: option '--%s' requires an argument\n", src_argv[0], cur->name);
+					n = 1;
+				}
 			}
 
 			/* copy arguments to dst_argv */
@@ -343,9 +353,15 @@ int filter_from_argv(int* argcptr, char** argv, struct filter* filter){
 	int optind_save = optind;
 	opterr = 1;
 
+	int ret = 0;
 	int index;
 	int op;
 	while ( (op=getopt_long(filter_argc, filter_argv, "", options, &index)) != -1 ){
+		if ( op == '?' ){ /* error occured, e.g. missing argument */
+			ret = 1;
+			break;
+		}
+
 		if ( op & PARAM_BIT ){
 			switch ((enum Parameters)(op ^ PARAM_BIT)){
 			case PARAM_CAPLEN:
@@ -444,6 +460,9 @@ int filter_from_argv(int* argcptr, char** argv, struct filter* filter){
 				continue;
 			}
 			break;
+
+		default:
+			fprintf(stderr, "op: %d\n", op);
 		}
 
 		/* update index bitmask */
@@ -456,7 +475,7 @@ int filter_from_argv(int* argcptr, char** argv, struct filter* filter){
 
 	/* save argc */
 	*argcptr = argc;
-	return 0;
+	return ret;
 }
 
 int filter_close(struct filter* filter){
