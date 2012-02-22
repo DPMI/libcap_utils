@@ -69,7 +69,7 @@ static int load_legacy_05(struct file_header_05* fh, FILE* src){
   /* silence gcc [-Wunused-result] */
   int __attribute__((unused)) bytes =			\
     fread(fh, 1, sizeof(struct file_header_05), src);
-  
+
   return fh->version.major == 0 && fh->version.minor == 5;
 }
 
@@ -116,7 +116,7 @@ long stream_file_open(struct stream** stptr, const char* filename){
   if ( (ret = stream_alloc(stptr, PROTOCOL_LOCAL_FILE, sizeof(struct stream_file)) != 0) ){
     return ret;
   }
-  
+
   struct stream_file* st = (struct stream_file*)*stptr;
   struct file_header_t* fhptr = &(st->base.FH);
   int i;
@@ -169,10 +169,10 @@ long stream_file_open(struct stream** stptr, const char* filename){
   }
 
   st->filename = strdup(filename);
-  
+
   /* add callbacks */
   st->base.fill_buffer = (fill_buffer_callback)stream_file_fillbuffer;
-  st->base.destroy = NULL;
+  st->base.destroy = (destroy_callback)stream_file_destroy;
   st->base.write = (write_callback)stream_file_write;
 
   return 0;
@@ -207,7 +207,7 @@ int stream_file_create(struct stream** stptr, FILE* fp, const char* filename, co
   }
 
   struct stream_file* st = (struct stream_file*)*stptr;
-  
+
   st->file = fp;
   st->filename = strdup(filename);
   st->force_flush = flags & STREAM_ADDR_FLUSH;
