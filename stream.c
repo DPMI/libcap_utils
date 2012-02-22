@@ -290,10 +290,11 @@ int stream_read(struct stream *myStream, cap_head** data, const struct filter *m
 
 			continue;
 		}
-    
+
 		/* set next packet and advance the read pointer */
 		*data = cp;
 		myStream->readPos += packet_size;
+		myStream->stat.read++;
 
 		filterStatus = 1; /* match by default, i.e. if no filter is used. */
 		if ( my_Filter ){

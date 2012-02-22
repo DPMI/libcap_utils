@@ -28,10 +28,12 @@ struct stream {
   /* common fields */
   char* buffer;
   unsigned long expSeqnr;               // Expected sequence number
-  unsigned long pktCount;               // Received packets
   unsigned int bufferSize;              // Amount of data in buffer.
   unsigned int readPos;                 // Read position
   int flushed;                          // Indicate that we got a flush signal.
+
+	/* stats */
+	struct stream_stat stat;
 
   /* Callback functions */
   fill_buffer_callback fill_buffer;
