@@ -85,7 +85,11 @@ static void split_argv(int* src_argc, char** src_argv, int* dst_argc, char** dst
 	int i = 1;
 	do {
 		const char* arg = *ptr;
-		if ( strlen(arg) < 3 ) continue; /* not enough chars */
+		if ( strlen(arg) < 3 ){ /* not enough chars */
+			i++;
+			ptr++;
+			continue;
+		}
 
 		/* find = to determine how many chars to compare */
 		size_t maxlen = 0;
