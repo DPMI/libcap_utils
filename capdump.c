@@ -273,10 +273,7 @@ int main(int argc, char **argv){
 	}
 
 	/* open input stream */
-	static const char* type[4] = {"file", "ethernet", "udp", "tcp"};
-	fprintf(stderr, "Opening %s stream: %s\n", type[stream_addr_type(&input)], stream_addr_ntoa(&input));
-	if ( (ret=stream_open(&src, &input, iface, 0)) != 0 ) {
-		fprintf(stderr, "stream_open() failed with code 0x%08lX: %s\n", ret, caputils_error_string(ret));
+	if ( (ret=stream_from_getopt(&src, argv, optind, argc, iface, program_name)) != 0 ) {
 		return 1;
 	}
 
