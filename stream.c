@@ -116,8 +116,12 @@ int stream_open(struct stream** stptr, const stream_addr_t* dest, const char* ni
 	}
 
 	/** @note Only shallow copy, it might cause issues if using a local path which
-	 * is referenced and freed after stream_open */
-	(*stptr)->addr = *dest;
+	 * is referenced and freed after stream_open. Can only safely copy if open
+	 * succeeded because there is no guarantee stream is allocated if it fails.  */
+	if ( ret == 0 ){
+		(*stptr)->addr = *dest;
+	}
+
 	return ret;
 }
 
@@ -319,6 +323,10 @@ static const char* type[4] = {"file", "ethernet", "udp", "tcp"};
 int stream_from_getopt(struct stream** st, char* argv[], int optind, int argc, const char* iface, const char* program_name){
 	int ret;
 	stream_addr_t addr;
+	memset(&addr, sizeof(stream_addr_t), 0);
+
+	/* force it to be null so finding bugs may be easier */
+	*st = NULL;
 
 	/* verify that at least one address is present */
 	if ( optind == argc ){
