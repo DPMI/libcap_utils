@@ -278,10 +278,21 @@ int stream_read(struct stream *myStream, cap_head** data, const struct filter *m
 
 		/* bufferSize tells how much data there is available in the buffer */
 		if( myStream->bufferSize - myStream->readPos < sizeof(struct cap_header) ){
-			if ( (ret=fill_buffer(myStream, timeout)) != 0 ){
+			switch ( (ret=fill_buffer(myStream, timeout)) ){
+			case 0:
+				continue; /* retry, buffer is not full */
+
+			case EAGAIN:
+				/* if a timeout occurred but there is enough data to read a packet it is
+				 * not considered an error. */
+				if ( myStream->bufferSize - myStream->readPos < sizeof(struct cap_header) ){
+					continue;
+				}
+
+				/* fallthrough */
+			default:
 				return ret; /* could not read */
 			}
-			continue;
 		}
 
 		// We have some data in the buffer.
