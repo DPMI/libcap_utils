@@ -64,7 +64,7 @@ static int show_info(const char* filename){
 		struct ethhdr* eth = (struct ethhdr*)cp->payload;
 		struct iphdr* ip = NULL;
 		uint16_t h_proto = ntohs(eth->h_proto);
-    
+
 		switch ( h_proto ){
 		case ETHERTYPE_VLAN:
 			ip = (struct iphdr*)(cp->payload + sizeof(struct ether_vlan_header));
@@ -95,7 +95,7 @@ static int show_info(const char* filename){
 			break;
 		}
 	}
-  
+
 	if ( ret > 0 ){
 		fprintf(stderr, "stream_read() returned 0x%08lx: %s\n", ret, caputils_error_string(ret));
 	}
@@ -106,7 +106,7 @@ static int show_info(const char* filename){
 	timepico_to_string(&last,  last_str,  128, "%F %T");
 	printf(" captured: %s to %s\n", first_str, last_str);
 	printf("  packets: %ld\n", packets);
-  
+
 	if ( packet_flag ){
 		long ipother = 0;
 		printf("    IP: ");
@@ -143,7 +143,7 @@ static int show_info(const char* filename){
 	}
 
 	stream_close(st);
-  
+
 	return 0;
 }
 
@@ -162,7 +162,7 @@ int main(int argc, char* argv[]){
 		};
 
 		int option_index = 0;
-    
+
 		int c = getopt_long(argc, argv, "h", long_options, &option_index);
 
 		if ( c == -1 ){
