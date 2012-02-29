@@ -273,12 +273,25 @@ int stream_read(struct stream *myStream, cap_head** data, const struct filter *m
 	/* as a precaution, reset the datapoint to NULL so errors will be easier to track down */
 	*data = NULL;
 
+	/* always use a timeout so it won't block indefinitely. This helps when
+	 * there is very little traffic. */
+	struct timeval tv = {1,0};
+	if ( timeout ){
+		tv = *timeout;
+	}
+
 	do {
 		skip_counter++;
 
+		/* Try to read data into the buffer (using a zero timeout so it won't block) */
+		struct timeval zero = {0,0};
+		if ( (ret=fill_buffer(myStream, &zero)) != 0 && ret != EAGAIN ){
+			return ret;
+		}
+
 		/* bufferSize tells how much data there is available in the buffer */
 		if( myStream->bufferSize - myStream->readPos < sizeof(struct cap_header) ){
-			switch ( (ret=fill_buffer(myStream, timeout)) ){
+			switch ( (ret=fill_buffer(myStream, &tv)) ){
 			case 0:
 				continue; /* retry, buffer is not full */
 
