@@ -289,6 +289,11 @@ int stream_read(struct stream *myStream, cap_head** data, const struct filter *m
 					continue;
 				}
 
+				/* If the user requested a blocking call we must retry no matter what */
+				if ( !timeout ){
+					continue;
+				}
+
 				/* fallthrough */
 			default:
 				return ret; /* could not read */

@@ -74,12 +74,23 @@ static int fill_buffer(struct stream_ethernet* st, struct timeval* timeout){
 
   assert(available >= st->if_mtu);
 
+  /* always use a timeout so it won't block indefinitely. Caller is expected to
+   * always handle timeout errors even if the user requested a blocking call.
+   * This helps when there is very little traffic. */
+  struct timeval tv = {1,0};
+  if ( timeout ){
+	  tv = *timeout;
+  }
+
   while ( available >= st->if_mtu ){
     fd_set fds;
     FD_ZERO(&fds);
     FD_SET(st->socket, &fds);
 
-    switch ( select(st->socket+1, &fds, NULL, NULL, timeout) ){
+    /* here we depend on the linux extension where select modifies the timeout
+     * to return the amount of time that wasn't slept. This will be a
+     * portability issue if porting to another OS. */
+    switch ( select(st->socket+1, &fds, NULL, NULL, &tv) ){
     case -1:
       return -1;
     case 0:
