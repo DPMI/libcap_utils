@@ -78,7 +78,7 @@ static int fill_buffer(struct stream_ethernet* st, struct timeval* timeout){
     fd_set fds;
     FD_ZERO(&fds);
     FD_SET(st->socket, &fds);
-    
+
     switch ( select(st->socket+1, &fds, NULL, NULL, timeout) ){
     case -1:
       return -1;
@@ -176,7 +176,7 @@ static long stream_ethernet_add(struct stream_ethernet* st, const struct ether_a
   if ( (addr->ether_addr_octet[0] & 0x01) == 0 ){
     return ERROR_INVALID_HWADDR_MULTICAST;
   }
-  
+
   /* store parsed address */
   memcpy(&st->address[st->num_address], addr, ETH_ALEN);
 
@@ -216,7 +216,7 @@ static long stream_ethernet_init(struct stream** stptr, const struct ether_addr*
   struct ifreq ifr;
 
   long ret = 0;
-  
+
   assert(stptr);
 
   /* validate arguments */
@@ -279,7 +279,7 @@ static long stream_ethernet_init(struct stream** stptr, const struct ether_addr*
   if ( (ret=stream_ethernet_add(st, addr)) != 0 ){
 	  return ret;
   }
-  
+
   return 0;
 }
 
@@ -296,7 +296,7 @@ long stream_ethernet_create(struct stream** stptr, const struct ether_addr* addr
     return ret;
   }
 
-  struct stream_ethernet* st = (struct stream_ethernet*)*stptr;  
+  struct stream_ethernet* st = (struct stream_ethernet*)*stptr;
 
   st->base.FH.comment_size = strlen(comment);
   st->base.comment = strdup(comment);
@@ -316,8 +316,8 @@ long stream_ethernet_open(struct stream** stptr, const struct ether_addr* addr, 
     return ret;
   }
 
-  struct stream_ethernet* st = (struct stream_ethernet*)*stptr;  
-  
+  struct stream_ethernet* st = (struct stream_ethernet*)*stptr;
+
   st->base.type = PROTOCOL_ETHERNET_MULTICAST;
   st->base.FH.comment_size = 0;
   st->base.comment = NULL;
