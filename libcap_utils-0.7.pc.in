@@ -6,5 +6,5 @@ includedir=@includedir@
 Name: libcap_utils
 Description: all libcap_* libs
 Version: @VERSION@
-Libs: -L${libdir} -lcap_stream-07 -lcap_filter-07 -lcap_marc-07
+Libs: -L${libdir} -lcap_stream-07 -lcap_filter-07 -lcap_marc-07 -libcap_utils-07
 Cflags: -I${includedir}

@@ -1,6 +1,7 @@
 caputils-0.7.5
 --------------
 
+	* fix: pkg-config file libcap_utils-0.7 now includes all libraries.
 	* add: stream_from_getopt and stream_print_info helpers.
 	* fix: large-file support for 32bit arch.
 	* fix: support for specifying pcap prefix to configure.
