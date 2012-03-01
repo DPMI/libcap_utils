@@ -296,7 +296,7 @@ int stream_read(struct stream *myStream, cap_head** data, const struct filter *m
 			case EAGAIN:
 				/* if a timeout occurred but there is enough data to read a packet it is
 				 * not considered an error. */
-				if ( myStream->bufferSize - myStream->readPos < sizeof(struct cap_header) ){
+				if ( myStream->bufferSize - myStream->readPos >= sizeof(struct cap_header) ){
 					continue;
 				}
 
