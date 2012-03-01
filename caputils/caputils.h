@@ -2,7 +2,7 @@
                           cap_utils.h  -  description
                              -------------------
     begin                : Fri Jan 31 2003
-    copyright            : (C) 2003 by Anders Ekberg, 
+    copyright            : (C) 2003 by Anders Ekberg,
     			 : (C) 2005 by Patrik Arlos,
                          : (C) 2011 by David Sveningsson
     email                : anders.ekberg@bth.se
@@ -26,7 +26,7 @@
 #include <stdio.h>
 #include <net/ethernet.h>
 
-#define buffLen 25000                   // Buffer size
+#define buffLen 175000                   // Buffer size
 
 /* Protocol definitions */
 enum protocol_t {
