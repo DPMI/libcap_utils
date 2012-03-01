@@ -27,10 +27,10 @@ static int stream_file_fillbuffer(struct stream_file* st){
 
   /* copy old content */
   if ( st->base.readPos > 0 ){
-    size_t bytes = st->base.bufferSize - st->base.readPos;
+    size_t bytes = st->base.writePos - st->base.readPos;
     memmove(st->base.buffer, st->base.buffer + st->base.readPos, bytes); /* move content */
     memset(st->base.buffer + bytes, 0, buffLen-bytes); /* reset rest */
-    st->base.bufferSize = bytes;
+    st->base.writePos = bytes;
     st->base.readPos = 0;
     available = buffLen - bytes;
     offset = bytes;
@@ -44,7 +44,7 @@ static int stream_file_fillbuffer(struct stream_file* st){
     return -1;
   }
 
-  st->base.bufferSize += readBytes;
+  st->base.writePos += readBytes;
   return readBytes;
 }
 

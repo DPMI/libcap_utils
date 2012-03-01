@@ -29,7 +29,7 @@ struct stream {
   /* common fields */
   char* buffer;
   unsigned long expSeqnr;               // Expected sequence number
-  unsigned int bufferSize;              // Amount of data in buffer.
+  unsigned int writePos;                // Write position
   unsigned int readPos;                 // Read position
   int flushed;                          // Indicate that we got a flush signal.
 

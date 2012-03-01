@@ -24,7 +24,7 @@ int stream_alloc(struct stream** stptr, enum protocol_t protocol, size_t size){
 	st->buffer = (char*)st + size; /* calculate pointer to buffer */
 
 	st->expSeqnr = 0;
-	st->bufferSize=0;
+	st->writePos=0;
 	st->readPos=0;
 	st->flushed = 0;
 	st->stat.recv = 0;
@@ -284,7 +284,7 @@ int stream_read(struct stream *myStream, cap_head** data, const struct filter *m
 		skip_counter++;
 
 		/* bufferSize tells how much data there is available in the buffer */
-		if( myStream->bufferSize - myStream->readPos < sizeof(struct cap_header) ){
+		if( myStream->writePos - myStream->readPos < sizeof(struct cap_header) ){
 			if ( !timeout ){
 				tv.tv_sec = 1; /* always read for one sec */
 			}
@@ -296,7 +296,7 @@ int stream_read(struct stream *myStream, cap_head** data, const struct filter *m
 			case EAGAIN:
 				/* if a timeout occurred but there is enough data to read a packet it is
 				 * not considered an error. */
-				if ( myStream->bufferSize - myStream->readPos >= sizeof(struct cap_header) ){
+				if ( myStream->writePos - myStream->readPos >= sizeof(struct cap_header) ){
 					continue;
 				}
 
@@ -330,7 +330,7 @@ int stream_read(struct stream *myStream, cap_head** data, const struct filter *m
 
 		assert(packet_size > 0);
 
-		if( end_pos > myStream->bufferSize ) {
+		if( end_pos > myStream->writePos ) {
 			if ( (ret=fill_buffer(myStream, timeout)) != 0 ){
 				return ret; /* could not read */
 			}
