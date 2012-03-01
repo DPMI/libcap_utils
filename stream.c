@@ -283,14 +283,12 @@ int stream_read(struct stream *myStream, cap_head** data, const struct filter *m
 	do {
 		skip_counter++;
 
-		/* Try to read data into the buffer (using a zero timeout so it won't block) */
-		struct timeval zero = {0,0};
-		if ( (ret=fill_buffer(myStream, &zero)) != 0 && ret != EAGAIN ){
-			return ret;
-		}
-
 		/* bufferSize tells how much data there is available in the buffer */
 		if( myStream->bufferSize - myStream->readPos < sizeof(struct cap_header) ){
+			if ( !timeout ){
+				tv.tv_sec = 1; /* always read for one sec */
+			}
+
 			switch ( (ret=fill_buffer(myStream, &tv)) ){
 			case 0:
 				continue; /* retry, buffer is not full */
@@ -311,6 +309,13 @@ int stream_read(struct stream *myStream, cap_head** data, const struct filter *m
 			default:
 				return ret; /* could not read */
 			}
+		}
+
+		/* Try to read data into the buffer (using a zero timeout so it won't block)
+		 * to keep the buffer full and reducing load on the network buffers.*/
+		struct timeval zero = {0,0};
+		if ( (ret=fill_buffer(myStream, &zero)) != 0 && ret != EAGAIN ){
+			return ret;
 		}
 
 		// We have some data in the buffer.

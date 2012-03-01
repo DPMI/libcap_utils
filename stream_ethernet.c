@@ -59,20 +59,23 @@ static int fill_buffer(struct stream_ethernet* st, struct timeval* timeout){
 	assert(st);
 
 	int total_bytes = 0;
-  size_t available = buffLen;
-  size_t offset = 0;
+  size_t available = buffLen - st->base.bufferSize;
+
+  //fprintf(stderr, "s: %d e: %d l: %d\n", st->base.readPos, st->base.bufferSize, st->base.bufferSize - st->base.readPos);
 
   /* copy old content */
-  if ( st->base.readPos > 0 ){
+  if ( ((float)st->base.readPos / buffLen > 0.4f) && (buffLen - st->base.bufferSize < st->if_mtu) ){
     const size_t bytes = st->base.bufferSize - st->base.readPos;
     memmove(st->base.buffer, st->base.buffer + st->base.readPos, bytes); /* move content */
     st->base.bufferSize = bytes;
     st->base.readPos = 0;
     available = buffLen - bytes;
-    offset = bytes;
   }
 
-  assert(available >= st->if_mtu);
+  if ( available < st->if_mtu ){
+	  /* fulhack so it won't signal an error if the buffer is full */
+	  return 1;
+  }
 
   while ( available >= st->if_mtu ){
     fd_set fds;
@@ -139,14 +142,15 @@ static int fill_buffer(struct stream_ethernet* st, struct timeval* timeout){
     /* copy packets to stream buffer */
     const size_t header_size = sizeof(struct ethhdr) + sizeof(struct sendhead);
     const size_t capture_bytes = bytes - header_size;
-    memcpy(st->base.buffer + offset, temp + header_size, capture_bytes);
+    memcpy(st->base.buffer + st->base.bufferSize, temp + header_size, capture_bytes);
     st->base.bufferSize += capture_bytes;
     available -= capture_bytes;
-    offset += capture_bytes;
     total_bytes += capture_bytes;
 
+    assert(st->base.bufferSize <= buffLen);
+
 #ifdef DEBUG
-    fprintf(stderr, "got measurement frame with %d capture packets [BU: %3.2f%%]\n", ntohl(sh->nopkts), (float)offset / buffLen * 100);
+    fprintf(stderr, "got measurement frame with %d capture packets [BU: %3.2f%%]\n", ntohl(sh->nopkts), (float)(st->base.bufferSize-st->base.readPos) / buffLen * 100);
 #endif
 
     /* This indicates a flush from the sender.. */
