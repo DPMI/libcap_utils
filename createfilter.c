@@ -175,6 +175,9 @@ static int parse_inet_addr(const char* src, struct in_addr* addr, struct in_addr
 		}
 	}
 
+	/* always mask the address based on mask */
+	addr->s_addr &= mask->s_addr;
+
 	return 1;
 }
 
@@ -197,6 +200,9 @@ static int parse_port(const char* src, uint16_t* port, uint16_t* mask, const cha
 		fprintf(stderr, "Invalid port number passed to %s: %s. Ignoring\n", flag, src);
 		return 0;
 	}
+
+	/* always mask the port based on mask */
+	*port &= *mask;
 
 	return 1;
 }
@@ -275,6 +281,8 @@ static int parse_eth_type(const char* src, uint16_t* type, uint16_t* mask, const
 		return 0;
 	}
 
+	*type &= *mask;
+
 	return 1;
 }
 
@@ -297,6 +305,11 @@ static int parse_eth_addr(const char* src, struct ether_addr* addr, struct ether
 	if ( !eth_aton(mask, buf_mask) ){
 		fprintf(stderr, "Invalid ethernet mask passed to --%s: %s. Ignoring\n", flag, buf_mask);
 		return 0;
+	}
+
+	/* apply mask */
+	for ( int i = 0; i < ETH_ALEN; i++ ){
+		addr->ether_addr_octet[i] &= mask->ether_addr_octet[i];
 	}
 
 	return 1;
