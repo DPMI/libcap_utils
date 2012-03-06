@@ -32,13 +32,19 @@ bin_PROGRAMS += capmarker
 man1_MANS += man/capmarker.1
 endif
 
+if BUILD_CAPSHOW
+bin_PROGRAMS += capshow
+man1_MANS += man/capshow.1
+endif
+
 notrans_dist_man_MANS =     \
 	man/libcaputils.3   \
 	man/libcap_filter.3 \
 	man/stream_read.3   \
 	man/capdump.1       \
 	man/capfilter.1     \
-	man/capmarker.1
+	man/capmarker.1     \
+	man/capshow.1
 
 if BUILD_TESTS
 TESTS = tests/filter_argv tests/address tests/endian
@@ -102,6 +108,7 @@ capinfo_LDADD = libcap_utils-07.la libcap_filter-07.la libcap_stream-07.la
 capdump_LDADD = libcap_utils-07.la libcap_filter-07.la libcap_stream-07.la
 capfilter_LDADD = libcap_filter-07.la libcap_utils-07.la
 capmarker_LDADD = libcap_filter-07.la libcap_utils-07.la
+capshow_LDADD = libcap_filter-07.la libcap_utils-07.la libcap_stream-07.la
 
 tests_filter_argv_CXXFLAGS = ${AM_CFLAGS} $(CPPUNIT_CFLAGS)
 tests_filter_argv_LDFLAGS = $(CPPUNIT_LIBS)
@@ -129,3 +136,6 @@ deb: all
 	cp dist/deb-control libcap-utils-dev_@VERSION@_@ARCH@/DEBIAN/control
 	$(MAKE) install DESTDIR=`pwd`/libcap-utils-dev_@VERSION@_@ARCH@
 	dpkg-deb --build libcap-utils-dev_@VERSION@_@ARCH@
+
+install-exec-hook:
+	ln $(DESTDIR)$(bindir)/capshow$(EXEEXT) $(DESTDIR)$(bindir)/consumer-ls$(EXEEXT)
