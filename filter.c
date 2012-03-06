@@ -243,7 +243,7 @@ void filter_print(const struct filter* filter, FILE* fp, int verbose){
   }
 
   if ( filter->index&128 ){
-    fprintf(fp, "\tETH_TYPE      : %d (MASK: %d)\n", filter->eth_type, filter->eth_type_mask);
+    fprintf(fp, "\tETH_TYPE      : %d (MASK: 0x%04X)\n", filter->eth_type, filter->eth_type_mask);
   } else if ( verbose ) {
     fprintf(fp, "\tETH_TYPE      : NULL\n");
   }
@@ -279,13 +279,13 @@ void filter_print(const struct filter* filter, FILE* fp, int verbose){
   }
 
   if ( filter->index&2 ){
-    fprintf(fp, "\tPORT_SRC      : %d (MASK: %d)\n", filter->src_port, filter->src_port_mask);
+    fprintf(fp, "\tPORT_SRC      : %d (MASK: 0x%04X)\n", filter->src_port, filter->src_port_mask);
   } else if ( verbose ) {
     fprintf(fp, "\tPORT_SRC      : NULL\n");
   }
 
   if ( filter->index&1  ){
-    fprintf(fp, "\tPORT_DST      : %d (MASK: %d)\n", filter->dst_port, filter->dst_port_mask);
+    fprintf(fp, "\tPORT_DST      : %d (MASK: 0x%04X)\n", filter->dst_port, filter->dst_port_mask);
   } else if ( verbose ) {
     fprintf(fp, "\tPORT_DST      : NULL\n");
   }

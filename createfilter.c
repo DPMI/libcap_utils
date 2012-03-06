@@ -188,7 +188,13 @@ static int parse_port(const char* src, uint16_t* port, uint16_t* mask, const cha
 	char* separator = strchr(src, '/');
 	if ( separator ){
 		separator[0] = 0;
-		*mask = atoi(separator+1);
+		const char* tmp = separator+1;
+		int base = 10;
+		if ( strncasecmp(tmp, "0x", 2) == 0 ){
+			base = 16;
+			tmp+=2;
+		}
+		*mask = strtol(tmp, (char **) NULL, base);
 	}
 
 	struct servent* service = getservbyname(src, NULL);
@@ -262,7 +268,13 @@ static int parse_eth_type(const char* src, uint16_t* type, uint16_t* mask, const
 	char* separator = strchr(src, '/');
 	if ( separator ){
 		separator[0] = 0;
-		*mask = atoi(separator+1);
+		const char* tmp = separator+1;
+		int base = 10;
+		if ( strncasecmp(tmp, "0x", 2) == 0 ){
+			base = 16;
+			tmp+=2;
+		}
+		*mask = strtol(tmp, (char **) NULL, base);
 	}
 
 	/* search for protocol name */
