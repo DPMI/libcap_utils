@@ -27,13 +27,13 @@ int main (int argc, char **argv){
 	} else {
 		program_name = argv[0];
 	}
-	
+
 	extern int optind, opterr, optopt;
 	int op;
-	
+
 	int option_index;
 	long ret;
-	
+
 	struct filter filter;
 	if ( filter_from_argv(&argc, argv, &filter) != 0 ){
 		fprintf(stderr, "Failed to parse filter");
@@ -55,7 +55,7 @@ int main (int argc, char **argv){
 		case 0:   /* long opt */
 		case '?': /* unknown opt */
 			break;
-		
+
 		case 'o':
 			outFilename = optarg;
 			break;
@@ -67,13 +67,13 @@ int main (int argc, char **argv){
 		case 'a': /* --caplen */
 			caplen = atoi(optarg);
 			break;
-			
+
 		case 'l':
 			linktype = atoi(optarg);
 			fprintf(stderr, "Linktype = %d ==> %s(%s)\n", linktype, pcap_datalink_val_to_name(linktype),
 			       pcap_datalink_val_to_description(linktype));
 			break;
-			
+
 		case 'h':
 	    printf("%s (caputils-" CAPUTILS_VERSION ")\n", program_name);
       printf("(c) 2004-2011 Patrik Arlos, David Sveningsson\n\n");
@@ -90,7 +90,7 @@ int main (int argc, char **argv){
 			fprintf (stderr, "?? getopt returned character code 0%o ??\n", op);
 		}
 	}
-	
+
 	stream_addr_t src;
 	if ( argc-optind > 0 ){
 		ret = stream_addr_aton(&src, argv[optind], STREAM_ADDR_GUESS, 0);
@@ -139,11 +139,11 @@ int main (int argc, char **argv){
 	const char* mampid = stream_get_mampid(st);
 	const char* comment = stream_get_comment(st);
 	stream_get_version(st, &version);
-	
+
 	fprintf(stderr, "%s: caputils %d.%d stream\n", stream_addr_ntoa(&src), version.major, version.minor);
 	fprintf(stderr, "     mpid: %s\n", mampid != 0 ? mampid : "(unset)");
 	fprintf(stderr, "  comment: %s\n", comment ? comment : "(unset)");
-	
+
 	struct cap_header* cp;
 	struct pcap_pkthdr pcapHeader;
 	long int packets = 0;
@@ -155,7 +155,7 @@ int main (int argc, char **argv){
 		pcapHeader.len    = cp->len;
 		pcapHeader.caplen = cp->caplen;
 
-		// Let the user know that we are alive, good when processing large files. 
+		// Let the user know that we are alive, good when processing large files.
 		if ( packets % 1000 == 0) {
 			fprintf(stderr, ".");
 			fflush(stderr);
