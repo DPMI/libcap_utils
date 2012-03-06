@@ -363,7 +363,7 @@ static const char* type[4] = {"file", "ethernet", "udp", "tcp"};
 int stream_from_getopt(stream_t* st, char* argv[], int optind, int argc, const char* iface, const char* program_name){
 	int ret;
 	stream_addr_t addr;
-	memset(&addr, sizeof(stream_addr_t), 0);
+	memset(&addr, 0, sizeof(stream_addr_t));
 
 	/* force it to be null so finding bugs may be easier */
 	*st = NULL;
