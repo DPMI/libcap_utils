@@ -138,4 +138,5 @@ deb: all
 	dpkg-deb --build libcap-utils-dev_@VERSION@_@ARCH@
 
 install-exec-hook:
-	ln $(DESTDIR)$(bindir)/capshow$(EXEEXT) $(DESTDIR)$(bindir)/consumer-ls$(EXEEXT)
+	cd $(DESTDIR)$(bindir) && \
+	  test -h consumer-ls$(EXEEXT) || $(LN_S) capshow$(EXEEXT) consumer-ls$(EXEEXT)
