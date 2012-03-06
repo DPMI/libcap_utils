@@ -51,4 +51,19 @@ struct filter;
 #define ETHERTYPE_VLAN 0x8100
 #endif
 
+/* libc might not provide this if it is missing ipv6 support */
+#ifndef ETHERTYPE_IPV6
+#define ETHERTYPE_IPV6 0x86dd
+#endif /* ETHERTYPE_IPV6 */
+
+#define STPBRIDGES 0x0026
+#define CDPVTP 0x016E
+
+struct llc_pdu_sn {
+  uint8_t dsap;
+  uint8_t ssap;
+  uint8_t ctrl_1;
+  uint8_t ctrl_2;
+};
+
 #endif /* CAP_UTILS */
