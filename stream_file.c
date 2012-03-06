@@ -22,17 +22,17 @@ static int stream_file_fillbuffer(struct stream_file* st){
   assert(st);
   assert(st->file);
 
-  size_t available = buffLen;
+  size_t available = st->base.buffer_size;
   size_t offset = 0;
 
   /* copy old content */
   if ( st->base.readPos > 0 ){
     size_t bytes = st->base.writePos - st->base.readPos;
     memmove(st->base.buffer, st->base.buffer + st->base.readPos, bytes); /* move content */
-    memset(st->base.buffer + bytes, 0, buffLen-bytes); /* reset rest */
+    memset(st->base.buffer + bytes, 0, st->base.buffer_size-bytes); /* reset rest */
     st->base.writePos = bytes;
     st->base.readPos = 0;
-    available = buffLen - bytes;
+    available = st->base.buffer_size - bytes;
     offset = bytes;
   }
 
@@ -113,7 +113,7 @@ long stream_file_open(struct stream** stptr, const char* filename){
   }
 
   /* Initialize the structure */
-  if ( (ret = stream_alloc(stptr, PROTOCOL_LOCAL_FILE, sizeof(struct stream_file)) != 0) ){
+  if ( (ret = stream_alloc(stptr, PROTOCOL_LOCAL_FILE, sizeof(struct stream_file), 0) != 0) ){
     return ret;
   }
 
@@ -202,7 +202,7 @@ int stream_file_create(struct stream** stptr, FILE* fp, const char* filename, co
   }
 
   /* Initialize the structure */
-  if ( (ret = stream_alloc(stptr, PROTOCOL_LOCAL_FILE, sizeof(struct stream_file)) != 0) ){
+  if ( (ret = stream_alloc(stptr, PROTOCOL_LOCAL_FILE, sizeof(struct stream_file), 0) != 0) ){
     return ret;
   }
 

@@ -12,16 +12,21 @@
 #include <arpa/inet.h>
 #include <errno.h>
 
-int stream_alloc(struct stream** stptr, enum protocol_t protocol, size_t size){
+int stream_alloc(struct stream** stptr, enum protocol_t protocol, size_t size, size_t buffer_size){
 	assert(stptr);
 
+	if ( buffer_size == 0 ){
+		buffer_size = 175000; /* default buffer size */
+	}
+
 	/* the buffer is always placed after the struct */
-	struct stream* st = (struct stream*)malloc(size + buffLen);
+	struct stream* st = (struct stream*)malloc(size + buffer_size);
 	*stptr = st;
 
 	st->type = protocol;
 	st->comment = NULL;
 	st->buffer = (char*)st + size; /* calculate pointer to buffer */
+	st->buffer_size = buffer_size;
 
 	st->expSeqnr = 0;
 	st->writePos=0;
@@ -34,7 +39,8 @@ int stream_alloc(struct stream** stptr, enum protocol_t protocol, size_t size){
 	st->fill_buffer = NULL;
 	st->destroy = NULL;
 
-	memset(st->buffer, 0, buffLen);
+	/* reset memory */
+	memset(st->buffer, 0, buffer_size);
 
 	/* initialize file_header */
 	st->FH.comment_size = 0;
@@ -92,7 +98,7 @@ int is_valid_version(struct file_header_t* fhptr){
 	return 0;
 }
 
-int stream_open(stream_t* stptr, const stream_addr_t* dest, const char* nic, int port){
+int stream_open(stream_t* stptr, const stream_addr_t* dest, const char* iface, size_t buffer_size){
 	int ret;
 
 	switch(stream_addr_type(dest)){
@@ -103,7 +109,7 @@ int stream_open(stream_t* stptr, const stream_addr_t* dest, const char* nic, int
 		/*   return stream_udp_init(myStream, address, port); */
 
 	case PROTOCOL_ETHERNET_MULTICAST:
-		ret = stream_ethernet_open(stptr, &dest->ether_addr, nic);
+		ret = stream_ethernet_open(stptr, &dest->ether_addr, iface, buffer_size);
 		break;
 
 	case PROTOCOL_LOCAL_FILE:

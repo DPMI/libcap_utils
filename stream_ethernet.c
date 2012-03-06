@@ -59,17 +59,17 @@ static int fill_buffer(struct stream_ethernet* st, struct timeval* timeout){
 	assert(st);
 
 	int total_bytes = 0;
-  size_t available = buffLen - st->base.writePos;
+  size_t available = st->base.buffer_size - st->base.writePos;
 
   //fprintf(stderr, "s: %d e: %d l: %d\n", st->base.readPos, st->base.writePos, st->base.writePos - st->base.readPos);
 
   /* copy old content */
-  if ( ((float)st->base.readPos / buffLen > 0.4f) && (buffLen - st->base.writePos < st->if_mtu) ){
+  if ( ((float)st->base.readPos / st->base.buffer_size > 0.4f) && (st->base.buffer_size - st->base.writePos < st->if_mtu) ){
     const size_t bytes = st->base.writePos - st->base.readPos;
     memmove(st->base.buffer, st->base.buffer + st->base.readPos, bytes); /* move content */
     st->base.writePos = bytes;
     st->base.readPos = 0;
-    available = buffLen - bytes;
+    available = st->base.buffer_size - bytes;
   }
 
   if ( available < st->if_mtu ){
@@ -219,7 +219,7 @@ static long stream_ethernet_add(struct stream_ethernet* st, const struct ether_a
   return 0;
 }
 
-static long stream_ethernet_init(struct stream** stptr, const struct ether_addr* addr, const char* iface, uint16_t proto){
+static long stream_ethernet_init(struct stream** stptr, const struct ether_addr* addr, const char* iface, uint16_t proto, size_t buffer_size){
   struct ifreq ifr;
 
   long ret = 0;
@@ -241,7 +241,7 @@ static long stream_ethernet_init(struct stream** stptr, const struct ether_addr*
   }
 
   /* Initialize the structure */
-  if ( (ret = stream_alloc(stptr, PROTOCOL_ETHERNET_MULTICAST, sizeof(struct stream_ethernet)) != 0) ){
+  if ( (ret = stream_alloc(stptr, PROTOCOL_ETHERNET_MULTICAST, sizeof(struct stream_ethernet), buffer_size) != 0) ){
     return ret;
   }
   struct stream_ethernet* st = (struct stream_ethernet*)*stptr;
@@ -262,7 +262,7 @@ static long stream_ethernet_init(struct stream** stptr, const struct ether_addr*
   st->if_mtu = ifr.ifr_mtu;
 
   /* ensure buffer is larger than MTU */
-  if ( buffLen < st->if_mtu ){
+  if ( st->base.buffer_size < st->if_mtu ){
 	  return ERROR_BUFFER_LENGTH;
   }
 
@@ -299,7 +299,7 @@ static long destroy(struct stream_ethernet* st){
 long stream_ethernet_create(struct stream** stptr, const struct ether_addr* addr, const char* iface, const char* mpid, const char* comment, int flags){
   long ret = 0;
 
-  if ( (ret=stream_ethernet_init(stptr, addr, iface, LLPROTO)) != 0 ){
+  if ( (ret=stream_ethernet_init(stptr, addr, iface, LLPROTO, 0)) != 0 ){
     return ret;
   }
 
@@ -316,10 +316,10 @@ long stream_ethernet_create(struct stream** stptr, const struct ether_addr* addr
   return 0;
 }
 
-long stream_ethernet_open(struct stream** stptr, const struct ether_addr* addr, const char* iface){
+long stream_ethernet_open(struct stream** stptr, const struct ether_addr* addr, const char* iface, size_t buffer_size){
   long ret = 0;
 
-  if ( (ret=stream_ethernet_init(stptr, addr, iface, ETH_P_ALL)) != 0 ){
+  if ( (ret=stream_ethernet_init(stptr, addr, iface, ETH_P_ALL, buffer_size)) != 0 ){
     return ret;
   }
 

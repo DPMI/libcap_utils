@@ -4,6 +4,15 @@
 #include <caputils/stream.h>
 
 /**
+ * Initialize variables for a stream.
+ * @bug To retain compability with code, some variables which weren't
+ *      initialized are left that way, at least until I proved and tested it
+ *      does not break.
+ * @return Non-zero on failure.
+ */
+int stream_alloc(struct stream** st, enum protocol_t protocol, size_t size, size_t buffer_size);
+
+/**
  * Fill the stream buffer.
  * @return Number of bytes actually read, zero if there is nothing more to read
  *         and negative on errors.
@@ -28,6 +37,7 @@ struct stream {
 
   /* common fields */
   char* buffer;
+  size_t buffer_size;                   // Total size of the buffer
   unsigned long expSeqnr;               // Expected sequence number
   unsigned int writePos;                // Write position
   unsigned int readPos;                 // Read position

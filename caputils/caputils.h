@@ -26,8 +26,6 @@
 #include <stdio.h>
 #include <net/ethernet.h>
 
-#define buffLen 175000                   // Buffer size
-
 /* Protocol definitions */
 enum protocol_t {
   PROTOCOL_LOCAL_FILE = 0,

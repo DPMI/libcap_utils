@@ -11,15 +11,6 @@
  */
 int eth_aton(struct ether_addr* dst, const char* addr);
 
-/**
- * Initialize variables for a stream.
- * @bug To retain compability with code, some variables which weren't
- *      initialized are left that way, at least until I proved and tested it
- *      does not break.
- * @return Non-zero on failure.
- */
-int stream_alloc(struct stream** st, enum protocol_t protocol, size_t size);
-
 #define CAPUTILS_FILE_MAGIC 0x8f1ae247c53d9b6e
 #define MARKER_MAGIC 0x9f7a3c83
 #define LLPROTO 0x0810
@@ -69,7 +60,7 @@ void match_inc_seqnr(long unsigned int* restrict st, const struct sendhead* rest
 int stream_udp_init(struct stream* st, const char* address, int port);
 int stream_tcp_init(struct stream* st, const char* address, int port);
 
-long stream_ethernet_open(struct stream** stptr, const struct ether_addr* address, const char* iface);
+long stream_ethernet_open(struct stream** stptr, const struct ether_addr* address, const char* iface, size_t buffer_size);
 long stream_ethernet_create(struct stream** stptr, const struct ether_addr* address, const char* iface, const char* mpid, const char* comment, int flags);
 
 long stream_file_open(struct stream** stptr, const char* filename);

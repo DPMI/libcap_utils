@@ -22,9 +22,14 @@ typedef struct stream_stat stream_stat_t;
 
 /**
  * Open an existing stream.
- * @return 1 if successful.
+ *
+ * @param stptr Pointer to a stream handle.
+ * @param addr Stream address to open.
+ * @param iface For ethernet streams it is the interface it listen on (only used for ethernet, can be null)
+ * @param buffer_size Buffer size in bytes, use 0 for default.
+ * @return 0 if successful or error code on errors (use caputils_error_string to get description)
  */
-int stream_open(stream_t* stptr, const stream_addr_t* addr, const char* nic, int port);
+int stream_open(stream_t* stptr, const stream_addr_t* addr, const char* nic, size_t buffer_size);
 
 /**
  * Create a new stream.
