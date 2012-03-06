@@ -19,6 +19,7 @@ extern "C" {
 
   enum FilterBitmask {
     /* filter 0.7 extensions */
+	  FILTER_PORT     = (1<<13), /* either src or dst port */
     FILTER_START_TIME=(1<<12),
     FILTER_END_TIME = (1<<11),
     FILTER_MAMPID   = (1<<10),
@@ -72,6 +73,8 @@ extern "C" {
     uint16_t src_port_mask;
     uint16_t dst_port;                 /*   1: Transport Destination Port */
     uint16_t dst_port_mask;
+	  uint16_t port;                     /* 8192: src or dst port */
+	  uint16_t port_mask;
 
     uint32_t consumer;                 /* Destination Consumer */
     uint32_t caplen;                   /* Amount of data to capture. */
@@ -85,7 +88,7 @@ extern "C" {
   struct filter_packed {
     /* Integer identifying the rule. This should be uniqe for the MP. */
     uint32_t filter_id;
-    
+
     /* Which fields should we check? Bitmask (see further fields for values) */
     uint32_t index;
     CI_handle_t iface;                 /* 512: Which CI */
@@ -121,6 +124,8 @@ extern "C" {
 	  struct in_addr ip_src_mask;
 	  struct in_addr ip_dst;             /*    4: IP destination */
 	  struct in_addr ip_dst_mask;
+	  uint16_t port;                     /* 8192: src or dst port */
+	  uint16_t port_mask;
   } __attribute__((packed));
 
   int filter_from_argv(int* argc, char** argv, struct filter*);

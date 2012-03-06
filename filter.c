@@ -156,6 +156,10 @@ static int filter_dst_port(const struct filter* filter, uint16_t port){
   return !(filter->index & FILTER_DST_PORT) || filter->dst_port == port;
 }
 
+static int filter_port(const struct filter* filter, uint16_t src, uint16_t dst){
+	return !(filter->index & FILTER_PORT) || (filter->port == src || filter->port == dst);
+}
+
 static int filter_mampid(const struct filter* filter, char mampid[]){
   return !(filter->index & FILTER_MAMPID) || strncmp(filter->mampid, mampid, 8) == 0;
 }
@@ -200,7 +204,8 @@ int filter_match(const struct filter* filter, const void* pkt, struct cap_header
   match &= filter_ip_src(filter, ip);           /* IP source address */
   match &= filter_ip_dst(filter, ip);           /* IP destination address */
   match &= filter_src_port(filter, src_port);   /* Transport source port */
-  match &= filter_dst_port(filter, dst_port);   /* Transport source port */
+  match &= filter_dst_port(filter, dst_port);   /* Transport dest port */
+  match &= filter_port(filter, src_port, dst_port); /* Transport source or dest port */
 
   /* 0.7 extensions */
   match &= filter_mampid(filter, head->mampid); /* MAMPid */
@@ -278,6 +283,12 @@ void filter_print(const struct filter* filter, FILE* fp, int verbose){
     fprintf(fp, "\tIP_DST        : NULL\n");
   }
 
+  if ( filter->index & FILTER_PORT ){
+    fprintf(fp, "\tPORT (s or d) : %d (MASK: 0x%04X)\n", filter->port, filter->port_mask);
+  } else if ( verbose ) {
+    fprintf(fp, "\tPORT (s or d) : NULL\n");
+  }
+
   if ( filter->index&2 ){
     fprintf(fp, "\tPORT_SRC      : %d (MASK: 0x%04X)\n", filter->src_port, filter->src_port_mask);
   } else if ( verbose ) {
@@ -299,10 +310,12 @@ void filter_pack(struct filter* src, struct filter_packed* dst){
   dst->ip_proto		= src->ip_proto;
   dst->src_port		= htons(src->src_port);
   dst->dst_port		= htons(src->dst_port);
+  dst->port       = htons(src->port);
   dst->vlan_tci_mask	= htons(src->vlan_tci_mask);
   dst->eth_type_mask	= htons(src->eth_type_mask);
   dst->src_port_mask	= htons(src->src_port_mask);
   dst->dst_port_mask	= htons(src->dst_port_mask);
+  dst->port_mask      = htons(src->port_mask);
   dst->consumer		= htonl(src->consumer);
   dst->caplen		= htonl(src->caplen);
 

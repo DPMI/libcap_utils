@@ -49,6 +49,7 @@ enum Parameters {
 };
 
 static struct option options[]= {
+	{"tp.port",   1, 0, FILTER_PORT},
 	{"starttime", 1, 0, 4096},
 	{"begin",     1, 0, 4096},
 	{"endtime",   1, 0, 2048},
@@ -348,6 +349,8 @@ void filter_from_argv_usage(){
 	printf("      --ip.dst=ADDR[/MASK]    Filter on destination ip address, dotted decimal\n");
 	printf("      --tp.sport=PORT[/MASK]  Filter on source portnumber\n");
 	printf("      --tp.dport=PORT[/MASK]  Filter on destination portnumber\n");
+	printf("      --tp.port=PORT[/MASK]   Filter or source or destination portnumber (if"
+	       "                              either is a match the packet matches\n");
 	printf("      --caplen=BYTES          Store BYTES of the captured packet. [default=ALL]\n");
 }
 
@@ -404,6 +407,12 @@ int filter_from_argv(int* argcptr, char** argv, struct filter* filter){
 		const enum FilterBitmask bitmask = (enum FilterBitmask)op;
 
 		switch (bitmask){
+		case FILTER_PORT:
+			if ( !parse_port(optarg, &filter->port, &filter->port_mask, "tp.port") ){
+				continue;
+			}
+			break;
+
 		case FILTER_START_TIME:
 			if ( timepico_from_string(&filter->starttime, optarg) != 0 ){
 				fprintf(stderr, "Invalid dated passed to --%s: %s. Ignoring.", options[index].name, optarg);
