@@ -4,7 +4,7 @@
     begin        : Mnn Aug 1 2004
     copyright    : (c) 2005 by Patrik Arlos <patrik.arlos@bth.se>
                    (c) 2011 by David Sveningsson <david.sveningsson@bth.se>
-                           
+
  ***************************************************************************/
 
 /***************************************************************************
@@ -107,9 +107,9 @@ const struct udphdr* find_udp_header(const void* pkt, const struct ethhdr* ether
  *    0 1
  *   +---+   A→B where A is the filter index test and B is the actual test.
  *  0|1|1|   The operation can be rewritten as !A || B
- * A +-+-+   
+ * A +-+-+
  *  1|0|1|   E.g: !(filter->index & FOO) || some_test(filter->foo)
- *   +---+   
+ *   +---+
  *           In practice this means that if the first filter index test fails,
  *           it will always return true, and if and only if the index test is
  *           true it will consider the real test which MUST be true for the
@@ -141,11 +141,11 @@ static int filter_ip_proto(const struct filter* filter, const struct ip* ip){
 }
 
 static int filter_ip_src(const struct filter* filter, const struct ip* ip){
-  return !(filter->index & FILTER_IP_SRC) || ((ip->ip_src.s_addr & filter->ip_src_mask.s_addr) & filter->ip_src.s_addr);
+  return !(filter->index & FILTER_IP_SRC) || (ip && (ip->ip_src.s_addr & filter->ip_src_mask.s_addr) & filter->ip_src.s_addr);
 }
 
 static int filter_ip_dst(const struct filter* filter, const struct ip* ip){
-  return !(filter->index & FILTER_IP_DST) || ((ip->ip_dst.s_addr & filter->ip_dst_mask.s_addr) & filter->ip_dst.s_addr);
+  return !(filter->index & FILTER_IP_DST) || (ip && (ip->ip_dst.s_addr & filter->ip_dst_mask.s_addr) & filter->ip_dst.s_addr);
 }
 
 static int filter_src_port(const struct filter* filter, uint16_t port){
@@ -201,7 +201,7 @@ int filter_match(const struct filter* filter, const void* pkt, struct cap_header
   match &= filter_ip_dst(filter, ip);           /* IP destination address */
   match &= filter_src_port(filter, src_port);   /* Transport source port */
   match &= filter_dst_port(filter, dst_port);   /* Transport source port */
-  
+
   /* 0.7 extensions */
   match &= filter_mampid(filter, head->mampid); /* MAMPid */
   match &= filter_start_time(filter, &head->ts);/* Start time vs packet timestamp */
@@ -247,7 +247,7 @@ void filter_print(const struct filter* filter, FILE* fp, int verbose){
   } else if ( verbose ) {
     fprintf(fp, "\tETH_TYPE      : NULL\n");
   }
-  
+
   if ( filter->index&64 ){
     fprintf(fp, "\tETH_SRC       : %s (MASK: %s)\n", hexdump_address_r(&filter->eth_src, &buf[0]), hexdump_address_r(&filter->eth_src_mask, &buf[19]));
   } else if ( verbose ) {
@@ -259,7 +259,7 @@ void filter_print(const struct filter* filter, FILE* fp, int verbose){
   } else if ( verbose ) {
     fprintf(fp, "\tETH_DST       : NULL\n");
   }
-  
+
   if ( filter->index&16 ){
     fprintf(fp, "\tIP_PROTO      : %d\n", filter->ip_proto);
   } else if ( verbose ) {
@@ -323,7 +323,7 @@ void filter_pack(struct filter* src, struct filter_packed* dst){
   memcpy(&dst->eth_dst_mask, &src->eth_dst_mask, sizeof(struct ether_addr));
 
   /* address (safe to copy, already in network order) */
-  memcpy(&dst->dest, &src->dest, sizeof(stream_addr_t)); 
+  memcpy(&dst->dest, &src->dest, sizeof(stream_addr_t));
 
   /* filter version */
   dst->version = htonl(0x01);
@@ -364,7 +364,7 @@ void filter_unpack(struct filter_packed* src, struct filter* dst){
   memcpy(&dst->eth_dst_mask, &src->eth_dst_mask, sizeof(struct ether_addr));
 
   /* address (safe to copy, supposed to be in network order) */
-  memcpy(&dst->dest, &src->dest, sizeof(stream_addr_t)); 
+  memcpy(&dst->dest, &src->dest, sizeof(stream_addr_t));
 
   /* filter version */
   dst->version = htonl(0x01);
