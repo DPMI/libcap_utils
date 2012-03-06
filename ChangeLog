@@ -1,6 +1,9 @@
 caputils-0.7.5
 --------------
 
+	* change: `stream_t` is now a pointer and should be used in place of
+	          `struct stream*`. Existing applications should change from
+	          `stream_t*` to `stream_t`.
 	* fix: pkg-config file libcap_utils-0.7 now includes all libraries.
 	* add: stream_from_getopt and stream_print_info helpers.
 	* fix: large-file support for 32bit arch.

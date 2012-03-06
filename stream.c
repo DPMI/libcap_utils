@@ -59,20 +59,20 @@ void match_inc_seqnr(long unsigned int* restrict seq, const struct sendhead* res
 	}
 }
 
-void stream_get_version(const struct stream* st, struct file_version* dst){
+void stream_get_version(const stream_t st, struct file_version* dst){
 	dst->major = st->FH.version.major;
 	dst->minor = st->FH.version.minor;
 }
 
-const char* stream_get_comment(const struct stream* st){
+const char* stream_get_comment(const stream_t st){
 	return st->comment;
 }
 
-const char* stream_get_mampid(const struct stream* st){
+const char* stream_get_mampid(const stream_t st){
 	return st->FH.mpid;
 }
 
-const struct stream_stat* stream_get_stat(const struct stream* st){
+const struct stream_stat* stream_get_stat(const stream_t st){
 	return &st->stat;
 }
 
@@ -92,7 +92,7 @@ int is_valid_version(struct file_header_t* fhptr){
 	return 0;
 }
 
-int stream_open(struct stream** stptr, const stream_addr_t* dest, const char* nic, int port){
+int stream_open(stream_t* stptr, const stream_addr_t* dest, const char* nic, int port){
 	int ret;
 
 	switch(stream_addr_type(dest)){
@@ -125,7 +125,7 @@ int stream_open(struct stream** stptr, const stream_addr_t* dest, const char* ni
 	return ret;
 }
 
-int stream_create(struct stream** stptr, const stream_addr_t* dest, const char* nic, const char* mpid, const char* comment){
+int stream_create(stream_t* stptr, const stream_addr_t* dest, const char* nic, const char* mpid, const char* comment){
 	/* struct ifreq ifr; */
 	/* int ifindex=0; */
 	/* int socket_descriptor=0; */
@@ -199,7 +199,7 @@ int stream_create(struct stream** stptr, const stream_addr_t* dest, const char* 
 	/* return(1);   */
 }
 
-int stream_close(struct stream* st){
+int stream_close(stream_t st){
 	return st->destroy ? st->destroy(st) : 0;
 
 	/* ret */
@@ -235,7 +235,7 @@ int stream_write(struct stream *outStream, const void* data, size_t size){
 	return outStream->write(outStream, data, size);
 }
 
-static int fill_buffer(struct stream* st, struct timeval* timeout){
+static int fill_buffer(stream_t st, struct timeval* timeout){
 	if( st->flushed==1 ){
 		return -1;
 	}
@@ -354,7 +354,7 @@ int stream_read(struct stream *myStream, cap_head** data, const struct filter *m
 }
 
 static const char* type[4] = {"file", "ethernet", "udp", "tcp"};
-int stream_from_getopt(struct stream** st, char* argv[], int optind, int argc, const char* iface, const char* program_name){
+int stream_from_getopt(stream_t* st, char* argv[], int optind, int argc, const char* iface, const char* program_name){
 	int ret;
 	stream_addr_t addr;
 	memset(&addr, sizeof(stream_addr_t), 0);
@@ -407,7 +407,7 @@ int stream_from_getopt(struct stream** st, char* argv[], int optind, int argc, c
 	return 0;
 }
 
-void stream_print_info(const struct stream* st, FILE* dst){
+void stream_print_info(const stream_t st, FILE* dst){
 	struct file_version version;
 	const char* mampid = stream_get_mampid(st);
 	const char* comment = stream_get_comment(st);

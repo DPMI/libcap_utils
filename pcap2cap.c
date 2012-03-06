@@ -1,7 +1,7 @@
 /**
  * Copyright (c) 2004-2011, Patrik Arlos, David Sveningsson
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
  *     * Redistributions of source code must retain the above copyright
@@ -12,7 +12,7 @@
  *     * Neither the name of the Blekinge Institute of Technology nor the
  *       names of its contributors may be used to endorse or promote products
  *       derived from this software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -74,7 +74,7 @@ int main (int argc, char **argv){
 
   extern int optind, opterr, optopt;
   int op;
-  
+
   int option_index;
   static struct option long_options[]= {
     {"comments",1, 0,'c'},
@@ -85,14 +85,14 @@ int main (int argc, char **argv){
     {"caplen", 1, 0, 'l'},
     {0, 0, 0, 0}
   };
-  
+
   const u_char *packet; /* Packet read from PCAP */
   struct pcap_pkthdr pcapHeader; /* PCAPS packet header */
 
   stream_addr_t dst;
-  struct stream* dst_stream = NULL;
+  stream_t dst_stream = NULL;
   stream_addr_reset(&dst);
-  
+
   char* comments = strdup("(nil)");
   unsigned long long pktCount = 0;
 
@@ -107,36 +107,36 @@ int main (int argc, char **argv){
   /* default interface */
   strncpy(caphead->nic, "CONV", 8);
   gethostname(caphead->mampid, 8);
-  
+
   while (1) {
     option_index = 0;
-    
+
     op = getopt_long  (argc, argv, "m:c:o:i:h",
 		       long_options, &option_index);
     if (op == -1)
       break;
-    
+
     switch (op){
     case 'c':
       comments = strdup(optarg);
       break;
-      
+
     case 'm':
       strncpy(caphead->mampid, optarg, 8);
       break;
-      
+
     case 'i':
       strncpy(caphead->nic, optarg, 8);
       break;
-      
+
     case 'l':
       caplen = atoi(optarg);
       break;
-	
+
     case 'o':
       stream_addr_aton(&dst, optarg, STREAM_ADDR_GUESS, 0);
       break;
-      
+
     case 'h':
 	    printf("%s (caputils-" CAPUTILS_VERSION ")\n", program_name);
       printf("(c) 2004-2011 Patrik Arlos, David Sveningsson\n\n");
@@ -167,7 +167,7 @@ int main (int argc, char **argv){
 	              "redirect output.\n");
       return 1;
     }
-    
+
     /* stdout is not a terminal so user probably want to use redirection */
     stream_addr_str(&dst, "/dev/stdout", 0);
   }
@@ -181,7 +181,7 @@ int main (int argc, char **argv){
       pcapHandle = pcap_open_offline("/dev/stdin", errorBuffer);
     } else if ( strcmp(caphead->nic, "CONV") != 0 ){ /* live capture */
       pcapHandle = pcap_open_live(caphead->nic, BUFSIZ, 1, 1000, errorBuffer);
-    } else { 
+    } else {
       fprintf(stderr, "Must specify either an interface (-i, --interface) for live capture or a pcap-file.\n");
       return 1;
     }
@@ -207,7 +207,7 @@ int main (int argc, char **argv){
 
 	static const char* type[4] = {"file", "ethernet", "udp", "tcp"};
 	fprintf(stderr, "Opening %s stream: %s\n", type[stream_addr_type(&dst)], stream_addr_ntoa(&dst));
-  
+
   long ret;
   if ( (ret=stream_create(&dst_stream, &dst, caphead->nic, caphead->mampid, comments)) != 0 ){
     fprintf(stderr, "%s: stream_create failed with code %ld: %s.\n", argv[0], ret, caputils_error_string(ret));
@@ -239,7 +239,7 @@ int main (int argc, char **argv){
     memcpy(pkt_buffer, packet, data_len);
     caphead->caplen = data_len;
 
-    // Let the user know that we are alive, good when processing large files. 
+    // Let the user know that we are alive, good when processing large files.
     if( pktCount % 1000 == 0 ) {
       fprintf(stderr, ".");
       fflush(stderr);

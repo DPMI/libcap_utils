@@ -107,7 +107,7 @@ int main (int argc, char **argv){
 	}
 
 	/* open input stream */
-	stream_t* st;
+	stream_t st;
 	static const char* type[4] = {"file", "ethernet", "udp", "tcp"};
 	fprintf(stderr, "Opening %s stream: %s\n", type[stream_addr_type(&src)], stream_addr_ntoa(&src));
 	if ( (ret=stream_open(&st, &src, iface, 0)) != 0 ) {

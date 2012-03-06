@@ -247,8 +247,8 @@ int main(int argc, char **argv){
 		exit(0);
 	}
 
-	struct stream* src;
-	struct stream* dst;
+	stream_t src;
+	stream_t dst;
 	long ret;
 
 	/* parse stream address */

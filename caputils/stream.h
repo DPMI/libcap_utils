@@ -11,7 +11,7 @@ extern "C" {
 #endif
 
 struct stream;
-typedef struct stream stream_t;
+typedef struct stream* stream_t;
 
 struct stream_stat {
 	uint64_t recv;     /* number of packets read into buffer */
@@ -24,12 +24,12 @@ typedef struct stream_stat stream_stat_t;
  * Open an existing stream.
  * @return 1 if successful.
  */
-int stream_open(struct stream** stptr, const stream_addr_t* addr, const char* nic, int port);
+int stream_open(stream_t* stptr, const stream_addr_t* addr, const char* nic, int port);
 
 /**
  * Create a new stream.
  */
-int stream_create(struct stream** st, const stream_addr_t* addr, const char* nic, const char* mpid, const char* comment);
+int stream_create(stream_t* st, const stream_addr_t* addr, const char* nic, const char* mpid, const char* comment);
 
 /**
  * Create a filestream.
@@ -47,51 +47,51 @@ int stream_create(struct stream** st, const stream_addr_t* addr, const char* nic
  *   ERROR_INVALID_PROTOCOL
  *     Stream is not ethernet multicast.
  */
-int stream_add(struct stream* st, const stream_addr_t* addr);
+int stream_add(stream_t st, const stream_addr_t* addr);
 
 /**
  * Shorthand for opening multiple streams from command-line arguments.
  * Calls stream_open followed by stream_add, with error checking.
  */
-int stream_from_getopt(struct stream** st, char* argv[], int optind, int argc, const char* iface, const char* program_name);
+int stream_from_getopt(stream_t* st, char* argv[], int optind, int argc, const char* iface, const char* program_name);
 
 /**
  * Close stream.
  */
-int stream_close(struct stream* st);
+int stream_close(stream_t st);
 
 /**
  * Get verion of this stream.
  */
-void stream_get_version(const struct stream* st, struct file_version* dst);
+void stream_get_version(const stream_t st, struct file_version* dst);
 
 /**
  * Get stream comment.
  * @return Internal reference to comment.
  */
-const char* stream_get_comment(const struct stream* st);
+const char* stream_get_comment(const stream_t st);
 
 /**
  * Get MAMPid of stream or NULL if unknown.
  * @return Internal reference to MAMPid.
  */
-const char* stream_get_mampid(const struct stream* st);
+const char* stream_get_mampid(const stream_t st);
 
 /**
  * Read stats from stream.
  * Returns internal structure, don't need to call repeated and don't free it.
  */
-const struct stream_stat* stream_get_stat(const struct stream* st);
+const struct stream_stat* stream_get_stat(const stream_t st);
 
 /**
  * Print information about stream.
  */
-void stream_print_info(const struct stream* st, FILE* dst);
+void stream_print_info(const stream_t st, FILE* dst);
 
 /**
  * Write a captured frame to a stream.
  */
-int stream_write(struct stream* st, const void* data, size_t size);
+int stream_write(stream_t st, const void* data, size_t size);
 
 /**
  * Read the next matching frame from a stream.
@@ -101,7 +101,7 @@ int stream_write(struct stream* st, const void* data, size_t size);
  * @param timeout See select(2) for description of timeout.
  * @return Zero if successful, -1 when finished, positive int on error. header is undefined on errors.
  */
-int stream_read(struct stream* st, cap_head** header, const struct filter* filter, struct timeval* timeout);
+int stream_read(stream_t st, cap_head** header, const struct filter* filter, struct timeval* timeout);
 
 #ifdef __cplusplus
 }
