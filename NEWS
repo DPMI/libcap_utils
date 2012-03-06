@@ -1,7 +1,11 @@
 caputils-0.7.5
 --------------
 
-  * Added capmarker
+  * `stream_t` is made a pointer, this will break applications but is easily
+    fixed.
+  * Additional utility functions.
+  * Changed buffering strategy.
+  * Added capmarker and capshow.
 
 caputils-0.7.4
 --------------
