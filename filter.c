@@ -34,6 +34,8 @@
 #include <netinet/tcp.h>
 #include <netinet/ether.h>
 
+#define FILTER __attribute__ ((pure))
+
 /**
  * Match ethernet address.
  */
@@ -116,59 +118,59 @@ const struct udphdr* find_udp_header(const void* pkt, const struct ethhdr* ether
  *           full test to return true.
  */
 
-static int filter_iface(const struct filter* filter, const char* iface){
+static int FILTER filter_iface(const struct filter* filter, const char* iface){
   return  !(filter->index & FILTER_CI) || (strstr(iface, filter->iface) != NULL);
 }
 
-static int filter_vlan_tci(const struct filter* filter, const struct ether_vlan_header* vlan){
+static int FILTER filter_vlan_tci(const struct filter* filter, const struct ether_vlan_header* vlan){
   return !(filter->index & FILTER_VLAN) || (vlan && (ntohs(vlan->vlan_tci) & filter->vlan_tci_mask) == filter->vlan_tci);
 }
 
-static int filter_h_proto(const struct filter* filter, uint16_t h_proto){
+static int FILTER filter_h_proto(const struct filter* filter, uint16_t h_proto){
   return  !(filter->index & FILTER_ETH_TYPE) || (h_proto & filter->eth_type_mask) == filter->eth_type;
 }
 
-static int filter_eth_src(const struct filter* filter, const struct ethhdr* ether){
+static int FILTER filter_eth_src(const struct filter* filter, const struct ethhdr* ether){
   return !(filter->index & FILTER_ETH_SRC) || matchEth(&filter->eth_src, &filter->eth_src_mask, ether->h_source);
 }
 
-static int filter_eth_dst(const struct filter* filter, const struct ethhdr* ether){
+static int FILTER filter_eth_dst(const struct filter* filter, const struct ethhdr* ether){
   return !(filter->index & FILTER_ETH_DST) || matchEth(&filter->eth_dst, &filter->eth_dst_mask, ether->h_dest);
 }
 
-static int filter_ip_proto(const struct filter* filter, const struct ip* ip){
+static int FILTER filter_ip_proto(const struct filter* filter, const struct ip* ip){
   return !(filter->index & FILTER_IP_PROTO) || (ip && filter->ip_proto == ip->ip_p);
 }
 
-static int filter_ip_src(const struct filter* filter, const struct ip* ip){
+static int FILTER filter_ip_src(const struct filter* filter, const struct ip* ip){
   return !(filter->index & FILTER_IP_SRC) || (ip && (ip->ip_src.s_addr & filter->ip_src_mask.s_addr) == filter->ip_src.s_addr);
 }
 
-static int filter_ip_dst(const struct filter* filter, const struct ip* ip){
+static int FILTER filter_ip_dst(const struct filter* filter, const struct ip* ip){
   return !(filter->index & FILTER_IP_DST) || (ip && (ip->ip_dst.s_addr & filter->ip_dst_mask.s_addr) == filter->ip_dst.s_addr);
 }
 
-static int filter_src_port(const struct filter* filter, uint16_t port){
+static int FILTER filter_src_port(const struct filter* filter, uint16_t port){
   return !(filter->index & FILTER_SRC_PORT) || filter->src_port == port;
 }
 
-static int filter_dst_port(const struct filter* filter, uint16_t port){
+static int FILTER filter_dst_port(const struct filter* filter, uint16_t port){
   return !(filter->index & FILTER_DST_PORT) || filter->dst_port == port;
 }
 
-static int filter_port(const struct filter* filter, uint16_t src, uint16_t dst){
+static int FILTER filter_port(const struct filter* filter, uint16_t src, uint16_t dst){
 	return !(filter->index & FILTER_PORT) || (filter->port == src || filter->port == dst);
 }
 
-static int filter_mampid(const struct filter* filter, char mampid[]){
+static int FILTER filter_mampid(const struct filter* filter, char mampid[]){
   return !(filter->index & FILTER_MAMPID) || strncmp(filter->mampid, mampid, 8) == 0;
 }
 
-static int filter_start_time(const struct filter* filter, const timepico* time){
+static int FILTER filter_start_time(const struct filter* filter, const timepico* time){
   return !(filter->index & FILTER_START_TIME) || timecmp(&filter->starttime, time) <= 0;
 }
 
-static int filter_end_time(const struct filter* filter, const timepico* time){
+static int FILTER filter_end_time(const struct filter* filter, const timepico* time){
   return !(filter->index & FILTER_END_TIME) || timecmp(&filter->endtime, time) >= 0;
 }
 
@@ -205,12 +207,12 @@ int filter_match(const struct filter* filter, const void* pkt, struct cap_header
   match &= filter_ip_dst(filter, ip);           /* IP destination address */
   match &= filter_src_port(filter, src_port);   /* Transport source port */
   match &= filter_dst_port(filter, dst_port);   /* Transport dest port */
-  match &= filter_port(filter, src_port, dst_port); /* Transport source or dest port */
 
   /* 0.7 extensions */
   match &= filter_mampid(filter, head->mampid); /* MAMPid */
   match &= filter_start_time(filter, &head->ts);/* Start time vs packet timestamp */
   match &= filter_end_time(filter, &head->ts);  /* End time vs packet timestamp */
+  match &= filter_port(filter, src_port, dst_port); /* Transport source or dest port */
 
   return match;
 }
