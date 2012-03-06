@@ -42,6 +42,7 @@ int main(int argc, char* argv[]){
       printf("Usage: %s [-i FILE] [-o FILE] [OPTIONS...]\n", argv[0]);
       printf("  -i, --input                 read from FILE.\n");
       printf("  -o, --output                write to FILE.\n");
+      printf("  -r, --rejects               write packets not matching to FILE.\n");
       printf("  -h, --help                  help (this text).\n");
       printf("\n");
       filter_from_argv_usage();
