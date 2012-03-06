@@ -22,7 +22,9 @@ static const char* errstr[ERROR_LAST - ERROR_FIRST] = {
 };
 
 const char* caputils_error_string(int code){
-  if ( code & ERROR_FIRST ){
+	if ( code == -1 ){
+		return "stream eof\n";
+	} else if ( code & ERROR_FIRST ){
     return errstr[code^ERROR_FIRST];
   } else {
     return strerror(code);
