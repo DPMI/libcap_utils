@@ -191,18 +191,18 @@ public:
     CPPUNIT_ASSERT_EQUAL((uint16_t)ETH_P_IP, filter.eth_type);
     CPPUNIT_ASSERT_EQUAL((uint16_t)1234, filter.eth_type_mask);
 
-    argc = generate_argv(argv, "programname", "--eth.type", "2048/1234", NULL);
+    argc = generate_argv(argv, "programname", "--eth.type", "2048/0xffff", NULL);
     CPPUNIT_ASSERT_SUCCESS(filter_from_argv(&argc, argv, &filter), 1);
 
     CPPUNIT_ASSERT_EQUAL((uint32_t)FILTER_ETH_TYPE, filter.index);
     CPPUNIT_ASSERT_EQUAL((uint16_t)ETH_P_IP, filter.eth_type);
-    CPPUNIT_ASSERT_EQUAL((uint16_t)1234, filter.eth_type_mask);
+    CPPUNIT_ASSERT_EQUAL((uint16_t)0xffff, filter.eth_type_mask);
   }
 
   void test_eth_src(){
     struct ether_addr addr = *ether_aton("01:00:00:00:00:02");
     struct ether_addr mask1 = *ether_aton("FF:FF:FF:FF:FF:FF");
-    struct ether_addr mask2 = *ether_aton("12:34:56:78:9a:bc");
+    struct ether_addr mask2 = *ether_aton("FF:00:00:00:00:FF");
 
     argc = generate_argv(argv, "programname", "--eth.src", "01:00:00:00:00:02", NULL);
     CPPUNIT_ASSERT_SUCCESS(filter_from_argv(&argc, argv, &filter), 1);
@@ -211,7 +211,7 @@ public:
     CPPUNIT_ASSERT_ETH_ADDR(addr,  filter.eth_src);
     CPPUNIT_ASSERT_ETH_ADDR(mask1, filter.eth_src_mask);
 
-    argc = generate_argv(argv, "programname", "--eth.src", "01:00:00:00:00:02/12:34:56:78:9a:bc", NULL);
+    argc = generate_argv(argv, "programname", "--eth.src", "01:00:00:00:00:02/FF:00:00:00:00:ff", NULL);
     CPPUNIT_ASSERT_SUCCESS(filter_from_argv(&argc, argv, &filter), 1);
 
     CPPUNIT_ASSERT_EQUAL((uint32_t)FILTER_ETH_SRC, filter.index);
@@ -220,11 +220,11 @@ public:
   }
 
   void test_eth_dst(){
-    argc = generate_argv(argv, "programname", "--eth.dst", "01:00:00:00:00:02/FF:FF:FF:FF:FF:00", NULL);
+    argc = generate_argv(argv, "programname", "--eth.dst", "01:00:00:00:00:02/FF:00:00:00:00:00", NULL);
     CPPUNIT_ASSERT_SUCCESS(filter_from_argv(&argc, argv, &filter), 1);
 
-    struct ether_addr addr = *ether_aton("01:00:00:00:00:02");
-    struct ether_addr mask = *ether_aton("FF:FF:FF:FF:FF:00");
+    struct ether_addr addr = *ether_aton("01:00:00:00:00:00");
+    struct ether_addr mask = *ether_aton("FF:00:00:00:00:00");
 
     CPPUNIT_ASSERT_EQUAL((uint32_t)FILTER_ETH_DST, filter.index);
     CPPUNIT_ASSERT_ETH_ADDR(addr, filter.eth_dst);
@@ -246,7 +246,7 @@ public:
   }
 
   void test_ip_src(){
-    in_addr addr = {inet_addr("1.2.3.4")};
+    in_addr addr = {inet_addr("1.2.3.0")};
     in_addr mask = {inet_addr("255.255.255.192")};
 
     argc = generate_argv(argv, "programname", "--ip.src", "1.2.3.4/255.255.255.192", NULL);
@@ -265,7 +265,7 @@ public:
   }
 
   void test_ip_dst(){
-    in_addr addr = {inet_addr("1.2.3.4")};
+    in_addr addr = {inet_addr("1.2.3.0")};
     in_addr mask = {inet_addr("255.255.255.192")};
 
     argc = generate_argv(argv, "programname", "--ip.dst", "1.2.3.4/255.255.255.192", NULL);
@@ -304,14 +304,14 @@ public:
     CPPUNIT_ASSERT_SUCCESS(filter_from_argv(&argc, argv, &filter), 1);
 
     CPPUNIT_ASSERT_EQUAL((uint32_t)FILTER_DST_PORT, filter.index);
-    CPPUNIT_ASSERT_EQUAL((uint16_t)22,  filter.dst_port);
+    CPPUNIT_ASSERT_EQUAL((uint16_t)18,  filter.dst_port);
     CPPUNIT_ASSERT_EQUAL((uint16_t)123, filter.dst_port_mask);
 
     argc = generate_argv(argv, "programname", "--tp.dport", "ssh/123", NULL);
     CPPUNIT_ASSERT_SUCCESS(filter_from_argv(&argc, argv, &filter), 1);
 
     CPPUNIT_ASSERT_EQUAL((uint32_t)FILTER_DST_PORT, filter.index);
-    CPPUNIT_ASSERT_EQUAL((uint16_t)22,  filter.dst_port);
+    CPPUNIT_ASSERT_EQUAL((uint16_t)18,  filter.dst_port);
     CPPUNIT_ASSERT_EQUAL((uint16_t)123, filter.dst_port_mask);
   }
 
