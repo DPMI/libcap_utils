@@ -27,6 +27,20 @@ static void show_usage(void){
 	printf("  -h, --help                 Show this help.\n");
 }
 
+static void format_bytes(char* dst, size_t size, uint64_t bytes){
+	static const char* prefix[] = { "", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB" };
+	unsigned int n = 0;
+	uint64_t multiplier = 1;
+	while ( bytes / multiplier >= 1024 && n < 8 ){
+		multiplier *= 1024;
+		n++;
+	}
+
+	float tmp = (float)bytes / multiplier;
+	snprintf(dst, size, "%.1f %s (%"PRIu64" bytes)", tmp, prefix[n], bytes);
+}
+
+
 static int show_info(const char* filename){
 	stream_t st;
 	stream_addr_t addr;
@@ -105,13 +119,15 @@ static int show_info(const char* filename){
 		fprintf(stderr, "stream_read() returned 0x%08lx: %s\n", ret, caputils_error_string(ret));
 	}
 
+	char byte_str[128];
 	char first_str[128];
 	char last_str[128];
 	timepico_to_string(&first, first_str, 128, "%F %T");
 	timepico_to_string(&last,  last_str,  128, "%F %T");
+	format_bytes(byte_str, 128, bytes);
 	printf(" captured: %s to %s\n", first_str, last_str);
 	printf("  packets: %ld\n", packets);
-	printf("    bytes: %"PRIu64" bytes\n", bytes);
+	printf("    bytes: %s\n", byte_str);
 
 	if ( packet_flag ){
 		long ipother = 0;
