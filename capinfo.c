@@ -82,6 +82,46 @@ static void print_overview(){
 	printf(" duration: %s (%.1f seconds)\n", sec_str, (float)hseconds/10);
 	printf("  packets: %ld\n", packets);
 	printf("    bytes: %s\n", byte_str);
+	printf("\n");
+}
+
+static void print_distribution(){
+	printf("Packet distribution\n"
+	       "-------------------\n");
+
+	long ipother = 0;
+	printf("       IP: ");
+	for ( int i = 0; i < UINT8_MAX; i++ ){
+		if ( ipproto[i] == 0 ){
+			continue;
+		}
+
+		struct protoent* protoent = getprotobynumber(i);
+
+		if ( !protoent ){
+			ipother += ipproto[i];
+			continue;
+		}
+
+		printf("%s(%ld) ", protoent->p_name, ipproto[i]);
+	}
+	if ( ipother > 0 ){
+		printf("other(%ld)", other);
+	}
+	printf("\n");
+	if ( arp > 0 ){
+		printf("      ARP: %ld\n", arp);
+	}
+	if ( stp > 0 ){
+		printf("      STP: %ld\n", stp);
+	}
+	if ( cdpvtp > 0 ){
+		printf("   cdpvtp: %ld\n", cdpvtp);
+	}
+	if ( other > 0 ){
+		printf("    Other: %ld\n", other);
+	}
+
 }
 
 static int show_info(const char* filename){
@@ -149,45 +189,8 @@ static int show_info(const char* filename){
 	int n = printf("%s: caputils %d.%d stream\n", filename, version.major, version.minor);
 	while ( n-- ){ putchar('='); } puts("\n");
 
-	/* overview */
 	print_overview();
-
-	printf("\n"
-	       "Packet distribution\n"
-	       "-------------------\n");
-
-	long ipother = 0;
-	printf("       IP: ");
-	for ( int i = 0; i < UINT8_MAX; i++ ){
-		if ( ipproto[i] == 0 ){
-			continue;
-		}
-
-		struct protoent* protoent = getprotobynumber(i);
-
-		if ( !protoent ){
-			ipother += ipproto[i];
-			continue;
-		}
-
-		printf("%s(%ld) ", protoent->p_name, ipproto[i]);
-	}
-	if ( ipother > 0 ){
-		printf("other(%ld)", other);
-	}
-	printf("\n");
-	if ( arp > 0 ){
-		printf("      ARP: %ld\n", arp);
-	}
-	if ( stp > 0 ){
-		printf("      STP: %ld\n", stp);
-	}
-	if ( cdpvtp > 0 ){
-		printf("   cdpvtp: %ld\n", cdpvtp);
-	}
-	if ( other > 0 ){
-		printf("    Other: %ld\n", other);
-	}
+	print_distribution();
 
 	stream_close(st);
 	return 0;
