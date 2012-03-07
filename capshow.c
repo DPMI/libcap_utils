@@ -317,12 +317,13 @@ int main(int argc, char **argv){
 		fprintf(stderr, "stream_read() returned 0x%08X: %s\n", ret, caputils_error_string(ret));
 	}
 
+	/* Write stats */
+	fprintf(stderr, "%"PRIu64" packets received.\n", stat->read);
+	fprintf(stderr, "%"PRIu64" packets matched filter.\n", stat->matched);
+
 	/* Release resources */
 	stream_close(stream);
 	filter_close(&filter);
 
-	/* Write stats */
-	fprintf(stderr, "%"PRIu64" packets received.\n", stat->read);
-	fprintf(stderr, "%"PRIu64" packets matched filter.\n", stat->matched);
 	return 0;
 }
