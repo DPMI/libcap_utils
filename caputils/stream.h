@@ -58,7 +58,7 @@ int stream_add(stream_t st, const stream_addr_t* addr);
  * Shorthand for opening multiple streams from command-line arguments.
  * Calls stream_open followed by stream_add, with error checking.
  */
-int stream_from_getopt(stream_t* st, char* argv[], int optind, int argc, const char* iface, const char* program_name);
+int stream_from_getopt(stream_t* st, char* argv[], int optind, int argc, const char* iface, const char* program_name, size_t buffer_size);
 
 /**
  * Close stream.

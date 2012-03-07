@@ -360,7 +360,7 @@ int stream_read(struct stream *myStream, cap_head** data, const struct filter *m
 }
 
 static const char* type[4] = {"file", "ethernet", "udp", "tcp"};
-int stream_from_getopt(stream_t* st, char* argv[], int optind, int argc, const char* iface, const char* program_name){
+int stream_from_getopt(stream_t* st, char* argv[], int optind, int argc, const char* iface, const char* program_name, size_t buffer_size){
 	int ret;
 	stream_addr_t addr;
 	memset(&addr, 0, sizeof(stream_addr_t));
@@ -382,7 +382,7 @@ int stream_from_getopt(stream_t* st, char* argv[], int optind, int argc, const c
 
 	/* open first stream */
 	fprintf(stderr, "Opening %s stream: %s\n", type[stream_addr_type(&addr)], stream_addr_ntoa(&addr));
-	if ( (ret=stream_open(st, &addr, iface, 0)) != 0 ) {
+	if ( (ret=stream_open(st, &addr, iface, buffer_size)) != 0 ) {
 		fprintf(stderr, "%s: stream_open() failed with code 0x%08X: %s\n", program_name, ret, caputils_error_string(ret));
 		return ret;
 	}
