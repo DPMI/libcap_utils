@@ -19,6 +19,8 @@
 static stream_t st = NULL;
 static long int packets = 0;
 static uint64_t bytes = 0;
+static long ipv4 = 0;
+static long ipv6 = 0;
 static long arp = 0;
 static long stp = 0;
 static long cdpvtp = 0;
@@ -90,25 +92,30 @@ static void print_distribution(){
 	       "-------------------\n");
 
 	long ipother = 0;
-	printf("       IP: ");
-	for ( int i = 0; i < UINT8_MAX; i++ ){
-		if ( ipproto[i] == 0 ){
-			continue;
+	if ( ipv4 > 0 ){
+		printf("     IPv4: ");
+		for ( int i = 0; i < UINT8_MAX; i++ ){
+			if ( ipproto[i] == 0 ){
+				continue;
+			}
+
+			struct protoent* protoent = getprotobynumber(i);
+
+			if ( !protoent ){
+				ipother += ipproto[i];
+				continue;
+			}
+
+			printf("%s(%ld) ", protoent->p_name, ipproto[i]);
 		}
-
-		struct protoent* protoent = getprotobynumber(i);
-
-		if ( !protoent ){
-			ipother += ipproto[i];
-			continue;
+		if ( ipother > 0 ){
+			printf("other(%ld)", other);
 		}
-
-		printf("%s(%ld) ", protoent->p_name, ipproto[i]);
+		printf("\n");
 	}
-	if ( ipother > 0 ){
-		printf("other(%ld)", other);
+	if ( ipv6 > 0 ){
+		printf("     IPv6: %ld\n", ipv6);
 	}
-	printf("\n");
 	if ( arp > 0 ){
 		printf("      ARP: %ld\n", arp);
 	}
@@ -158,7 +165,12 @@ static int show_info(const char* filename){
 				ip = (struct iphdr*)(cp->payload + sizeof(struct ethhdr));
 			}
 
+			ipv4++;
 			ipproto[ip->protocol]++;
+			break;
+
+		case ETHERTYPE_IPV6:
+			ipv6++;
 			break;
 
 		case ETHERTYPE_ARP:
