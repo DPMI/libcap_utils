@@ -19,7 +19,7 @@ public:
   void test_sub(){
 	  timepico a = { 3, 1e11 };
 	  timepico b = { 1, 9e11 };
-	  timepico diff = timepico_sub(&a, &b);
+	  timepico diff = timepico_sub(a, b);
 
 	  CPPUNIT_ASSERT_EQUAL((uint32_t)1,    diff.tv_sec );
 	  CPPUNIT_ASSERT_EQUAL((uint64_t)2e11, diff.tv_psec);

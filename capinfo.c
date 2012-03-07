@@ -40,6 +40,17 @@ static void format_bytes(char* dst, size_t size, uint64_t bytes){
 	snprintf(dst, size, "%.1f %s (%"PRIu64" bytes)", tmp, prefix[n], bytes);
 }
 
+void format_seconds(char* dst, size_t size, timepico first, timepico last){
+	const timepico time_diff = timepico_sub(last, first);
+	uint64_t hseconds = time_diff.tv_sec * 10 + time_diff.tv_psec / (PICODIVIDER / 10);
+
+	int s = hseconds % 600;
+	hseconds /= 600;
+	int m = hseconds % 60;
+	int h = hseconds / 60;
+
+	snprintf(dst, size, "%02d:%02d:%02.1f", h, m, (float)s/10);
+}
 
 static int show_info(const char* filename){
 	stream_t st;
@@ -122,10 +133,15 @@ static int show_info(const char* filename){
 	char byte_str[128];
 	char first_str[128];
 	char last_str[128];
+	char sec_str[128];
+	const timepico time_diff = timepico_sub(last, first);
+	uint64_t hseconds = time_diff.tv_sec * 10 + time_diff.tv_psec / (PICODIVIDER / 10);
 	timepico_to_string(&first, first_str, 128, "%F %T");
 	timepico_to_string(&last,  last_str,  128, "%F %T");
 	format_bytes(byte_str, 128, bytes);
+	format_seconds(sec_str, 128, first, last);
 	printf(" captured: %s to %s\n", first_str, last_str);
+	printf(" duration: %s (%.1f seconds)\n", sec_str, (float)hseconds/10);
 	printf("  packets: %ld\n", packets);
 	printf("    bytes: %s\n", byte_str);
 
