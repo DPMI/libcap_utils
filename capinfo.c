@@ -2,9 +2,12 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
+#define __STDC_FORMAT_MACROS
+
 #include "caputils/caputils.h"
 #include <getopt.h>
 #include <string.h>
+#include <inttypes.h>
 #include <errno.h>
 #include <arpa/inet.h>
 #include <netinet/ip.h>
@@ -46,6 +49,7 @@ static int show_info(const char* filename){
 
 	struct cap_header* cp;
 	long int packets = 0;
+	uint64_t bytes = 0;
 	long arp = 0;
 	long stp = 0;
 	long cdpvtp = 0;
@@ -60,6 +64,7 @@ static int show_info(const char* filename){
 			first = cp->ts;
 		}
 		last = cp->ts; /* overwritten each time */
+		bytes += cp->len;
 
 		struct ethhdr* eth = (struct ethhdr*)cp->payload;
 		struct iphdr* ip = NULL;
@@ -106,6 +111,7 @@ static int show_info(const char* filename){
 	timepico_to_string(&last,  last_str,  128, "%F %T");
 	printf(" captured: %s to %s\n", first_str, last_str);
 	printf("  packets: %ld\n", packets);
+	printf("    bytes: %"PRIu64" bytes\n", bytes);
 
 	if ( packet_flag ){
 		long ipother = 0;
