@@ -21,8 +21,17 @@ struct stream_file {
 static int stream_file_fillbuffer(struct stream_file* st){
   assert(st);
   assert(st->file);
+  assert(st->base.buffer_size);
 
   size_t available = st->base.buffer_size - st->base.writePos;
+  size_t left = st->base.buffer_size - st->base.readPos;
+
+  /* don't need to fill file buffer unless drained */
+  struct cap_header* cp = (struct cap_header*)(st->base.buffer + st->base.readPos);
+  if ( available == 0 && left > sizeof(struct cap_header) && left > (sizeof(struct cap_header)+cp->caplen) ){
+	  /* fulhack so it won't signal an error */
+	  return 1;
+  }
 
   /* copy old content */
   if ( st->base.readPos > 0 ){
@@ -31,11 +40,6 @@ static int stream_file_fillbuffer(struct stream_file* st){
     st->base.writePos = bytes;
     st->base.readPos = 0;
     available = st->base.buffer_size - bytes;
-  }
-
-  if ( available == 0 ){
-	  /* fulhack so it won't signal an error if the buffer is full */
-	  return 1;
   }
 
   char* dst = st->base.buffer + st->base.writePos;
