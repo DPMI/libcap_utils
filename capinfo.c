@@ -84,6 +84,7 @@ static void print_overview(){
 	printf(" duration: %s (%.1f seconds)\n", sec_str, (float)hseconds/10);
 	printf("  packets: %ld\n", packets);
 	printf("    bytes: %s\n", byte_str);
+	printf(" avg rate: %.1fkbps\n", (float)(bytes / (hseconds/10)) / 1024);
 	printf("\n");
 }
 
