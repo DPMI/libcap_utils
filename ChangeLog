@@ -3,6 +3,7 @@ caputils-0.7.6
 
 	* add: functions for working with timepico.
 	* add: improvements to capshow.
+	* fix: asorted bugs related to new buffering algorithm and capfiles.
 
 caputils-0.7.5
 --------------
