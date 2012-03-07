@@ -107,3 +107,29 @@ const char* timepico_to_string(const timepico* src, char* dst, size_t bytes, con
 	strftime(dst, bytes, fmt, &tm);
 	return dst;
 }
+
+timepico timepico_sub(const timepico* a, const timepico* b){
+	timepico result;
+	timepico x = *a;
+	timepico y = *b;
+
+  /* Perform the carry for the later subtraction by updating y. */
+  if (x.tv_psec < y.tv_psec) {
+    int psec = (y.tv_psec - x.tv_psec) / PICODIVIDER + 1;
+    y.tv_psec -= PICODIVIDER * psec;
+    y.tv_sec += psec;
+  }
+  if (x.tv_psec - y.tv_psec > PICODIVIDER) {
+    int psec = (x.tv_psec - y.tv_psec) / PICODIVIDER;
+    y.tv_psec += PICODIVIDER * psec;
+    y.tv_sec -= psec;
+  }
+
+  /* Compute the time remaining to wait.
+     tv_psec is certainly positive. */
+  result.tv_sec = x.tv_sec - y.tv_sec;
+  result.tv_psec = x.tv_psec - y.tv_psec;
+
+  /* Return 1 if result is negative. */
+  return result;
+}

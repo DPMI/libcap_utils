@@ -5,6 +5,12 @@
 #include <stdlib.h>
 #include <sys/time.h>
 
+#define PICODIVIDER 1e12
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // Time struct for precision down to picoseconds
 struct picotime {
     uint32_t tv_sec;
@@ -33,5 +39,14 @@ const char* timepico_to_string(const timepico* src, char* dst, size_t bytes, con
 
 //compares two struct timepico (ts1<ts2=-1, ts1>ts2=1, ts1==ts2=0)
 int timecmp(const timepico *ts1, const timepico *ts2);
+
+/**
+ * Calculate a - b.
+ */
+timepico timepico_sub(const timepico* a, const timepico* b);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* CAPUTILS_PICOTIME_H */
