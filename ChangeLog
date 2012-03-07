@@ -1,6 +1,12 @@
 caputils-0.7.5
 --------------
 
+	* add: functions for working with timepico.
+	* add: improvements to capshow.
+
+caputils-0.7.5
+--------------
+
 	* add: capshow (aliased as consumer-ls)
 	* add: --tp.port which matches either src or dst port.
 	* add: ability to set buffer size at initialization (use 0 for old
