@@ -320,7 +320,7 @@ int stream_read(struct stream *myStream, cap_head** data, const struct filter *m
 		/* Try to read data into the buffer (using a zero timeout so it won't block)
 		 * to keep the buffer full and reducing load on the network buffers.*/
 		struct timeval zero = {0,0};
-		if ( (ret=fill_buffer(myStream, &zero)) != 0 && ret != EAGAIN ){
+		if ( (ret=fill_buffer(myStream, &zero)) != 0 && ret != EAGAIN && ret != -1 ){
 			return ret;
 		}
 
