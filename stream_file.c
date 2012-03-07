@@ -22,21 +22,23 @@ static int stream_file_fillbuffer(struct stream_file* st){
   assert(st);
   assert(st->file);
 
-  size_t available = st->base.buffer_size;
-  size_t offset = 0;
+  size_t available = st->base.buffer_size - st->base.writePos;
 
   /* copy old content */
   if ( st->base.readPos > 0 ){
     size_t bytes = st->base.writePos - st->base.readPos;
     memmove(st->base.buffer, st->base.buffer + st->base.readPos, bytes); /* move content */
-    memset(st->base.buffer + bytes, 0, st->base.buffer_size-bytes); /* reset rest */
     st->base.writePos = bytes;
     st->base.readPos = 0;
     available = st->base.buffer_size - bytes;
-    offset = bytes;
   }
 
-  char* dst = st->base.buffer + offset;
+  if ( available == 0 ){
+	  /* fulhack so it won't signal an error if the buffer is full */
+	  return 1;
+  }
+
+  char* dst = st->base.buffer + st->base.writePos;
   size_t readBytes = fread(dst, 1, available, st->file);
 
   /* check if an error occured, EOF is not considered an error. */
