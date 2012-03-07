@@ -43,7 +43,7 @@ int timecmp(const timepico *ts1, const timepico *ts2);
 /**
  * Calculate a - b.
  */
-timepico timepico_sub(const timepico* a, const timepico* b);
+timepico timepico_sub(timepico a, timepico b);
 
 #ifdef __cplusplus
 }

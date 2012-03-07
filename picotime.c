@@ -108,10 +108,8 @@ const char* timepico_to_string(const timepico* src, char* dst, size_t bytes, con
 	return dst;
 }
 
-timepico timepico_sub(const timepico* a, const timepico* b){
+timepico timepico_sub(timepico x, timepico y){
 	timepico result;
-	timepico x = *a;
-	timepico y = *b;
 
   /* Perform the carry for the later subtraction by updating y. */
   if (x.tv_psec < y.tv_psec) {
