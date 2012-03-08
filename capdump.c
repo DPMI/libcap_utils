@@ -190,7 +190,6 @@ static const char* generate_filename(const char* fmt, const struct marker* marke
 		sprintf(dst, ".%d", suffix++); /** @todo potential buffer overflow */
 	} while (1);
 
-	printf("filename: %s\n", buffer);
 	return buffer;
 }
 
@@ -346,11 +345,8 @@ int main(int argc, char **argv){
 			char timestamp[200];
 			struct tm* tm = localtime((time_t*)&mark.timestamp);
 			strftime(timestamp, 200, "%a, %d %b %Y %T %z", tm);
-			fprintf(stderr, "marker v%d found\n", mark.version);
-			fprintf(stderr, "  flags: %d\n", mark.flags);
-			fprintf(stderr, "  exp id: %d\n", mark.exp_id);
-			fprintf(stderr, "  run id: %d\n", mark.run_id);
-			fprintf(stderr, "  key id: %d\n", mark.key_id);
+			fprintf(stderr, "marker v%d found (flags: %d)\n", mark.version, mark.flags);
+			fprintf(stderr, "  exp / run / key id: %d / %d / %d\n", mark.exp_id, mark.run_id, mark.key_id);
 			fprintf(stderr, "  seq num: %d\n", mark.seq_num);
 			fprintf(stderr, "  timestamp: %s\n", timestamp);
 
@@ -362,7 +358,12 @@ int main(int argc, char **argv){
 			/* close current stream */
 			stream_close(dst);
 
-			stream_addr_str(&output, generate_filename(marker_format, &mark), STREAM_ADDR_LOCAL);
+			/* generate next filename */
+			const char* filename = generate_filename(marker_format, &mark);
+			fprintf(stderr, "  filename: `%s'\n", filename);
+
+			/* open new stream */
+			stream_addr_str(&output, filename, STREAM_ADDR_LOCAL);
 			if ( (ret=stream_create(&dst, &output, NULL, stream_get_mampid(src), comment)) != 0 ){
 				fprintf(stderr, "stream_create() failed with code 0x%08lX: %s\n", ret, caputils_error_string(ret));
 				return 1;
