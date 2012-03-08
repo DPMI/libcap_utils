@@ -78,7 +78,7 @@ static int is_marker(struct cap_header* cp, struct marker* ptr){
 	/* match udp packet */
 	uint16_t src, dst;
 	const struct udphdr* udp = find_udp_header(cp->payload, cp->ethhdr, ip, &src, &dst);
-	if ( !(udp && src == marker && dst == marker) ){ return 0; }
+	if ( !(udp && src == MARKERPORT && dst == marker) ){ return 0; }
 
 	/* match magic */
 	struct marker* marker = (struct marker*)((char*)udp + sizeof(struct udphdr));
