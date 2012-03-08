@@ -15,13 +15,16 @@
 #include <signal.h>
 #include <unistd.h>
 #include <ctype.h>
+#include <libgen.h> /* for dirname */
+#include <sys/stat.h>
 #include <netinet/udp.h>
 #include "be64toh.h" /* for compability */
 
+static const size_t FILENAME_SUFFIX_MAX = 1000; /* maximum number of filename suffixes */
 static int keep_running = 1;
 static int marker = 0;
-static char* fmt_basename = NULL;  /* used by format_filename */
-static char* fmt_extension = NULL; /* used by format_filename */
+static char* fmt_basename = NULL;  /* used by generate_filename */
+static char* fmt_extension = NULL; /* used by generate_filename */
 static const char* program_name = NULL;
 static struct option long_options[]= {
 	{"output",  required_argument, 0, 'o'},
@@ -97,7 +100,7 @@ static int is_marker(struct cap_header* cp, struct marker* ptr){
 	return 1;
 }
 
-static const char* format_filename(const char* fmt, const struct marker* marker){
+static const char* generate_filename(const char* fmt, const struct marker* marker){
 	static char buffer[1024];
 	char* dst = buffer;
 	const char* src = fmt;
@@ -157,8 +160,37 @@ static const char* format_filename(const char* fmt, const struct marker* marker)
 		}
 	}
 	*dst = 0;
-	printf("filename: %s\n", buffer);
 
+	/* try if the file exists already and append a suffix if it does */
+	int suffix = 1;
+	do {
+
+		/* if tried to many times, give up and randomize name */
+		if ( suffix > FILENAME_SUFFIX_MAX ){
+			*dst = 0;
+			char* tmp = tempnam("./", NULL);
+			fprintf(stderr, "%s: more than %zd filename collisions detected for `%s', giving up and using `%s.%s'.\n", program_name, FILENAME_SUFFIX_MAX, buffer, buffer, tmp+2);
+			sprintf(dst, ".%s", tmp+2); /* +2 to to ignore ./ */ /** @todo potential overflow */
+			free(tmp);
+			break;
+		}
+
+		/* test if filename already exists */
+		struct stat st;
+		if ( stat(buffer, &st) == -1  ){
+			if ( errno == ENOENT ){
+				break; /* exit loop and return filename */
+			} else {
+				fprintf(stderr, "%s: stat() returned %d: %s\n", program_name, errno, strerror(errno));
+			}
+			break;
+		}
+
+		/* append suffix */
+		sprintf(dst, ".%d", suffix++); /** @todo potential buffer overflow */
+	} while (1);
+
+	printf("filename: %s\n", buffer);
 	return buffer;
 }
 
@@ -330,7 +362,7 @@ int main(int argc, char **argv){
 			/* close current stream */
 			stream_close(dst);
 
-			stream_addr_str(&output, format_filename(marker_format, &mark), STREAM_ADDR_LOCAL);
+			stream_addr_str(&output, generate_filename(marker_format, &mark), STREAM_ADDR_LOCAL);
 			if ( (ret=stream_create(&dst, &output, NULL, stream_get_mampid(src), comment)) != 0 ){
 				fprintf(stderr, "stream_create() failed with code 0x%08lX: %s\n", ret, caputils_error_string(ret));
 				return 1;
