@@ -65,20 +65,23 @@ AS_IF([test "x$enable_debug" = "xyes"],
 	[AC_DEFINE([NDEBUG], [1], [Define to disable extra debug prints])]
 )
 
-AC_ARG_WITH([pcap], [AS_HELP_STRING([--with-pcap@<:@=PREFIX@:>@], [Build utilities for conversion to and from pcap files. @<:@default=enabled@:>@])])
-AM_CONDITIONAL([BUILD_PCAP], [test "x$with_pcap" != "xno"])
-AX_PCAP($with_pcap)
-
 AC_ARG_ENABLE([capdump], [AS_HELP_STRING([--enable-capdump], [Build capdump utility (record a stream) @<:@default=enabled@:>@])])
 AC_ARG_ENABLE([capinfo], [AS_HELP_STRING([--enable-capinfo], [Build capinfo utility (show info about a stream) @<:@default=enabled@:>@])])
 AC_ARG_ENABLE([capfilter], [AS_HELP_STRING([--enable-capfilter], [Build capfilter utility (filter existing stream) @<:@default=enabled@:>@])])
 AC_ARG_ENABLE([capmarker], [AS_HELP_STRING([--enable-capmarker], [Build capmarker utility @<:@default=enabled@:>@])])
 AC_ARG_ENABLE([capshow], [AS_HELP_STRING([--enable-capshow], [Build capshow utility @<:@default=enabled@:>@])])
-AC_ARG_ENABLE([utils], [AS_HELP_STRING([--enable-utils], [By default all utils are build, this flag disables all utils unless they are explicitly enabled.])])
+AC_ARG_ENABLE([utils], [AS_HELP_STRING([--enable-utils], [By default all utils are build, this flag disables all utils unless they are explicitly enabled. This also disables pcap support by default but can be explicitly enabled with --with-pcap])])
+AC_ARG_WITH([pcap], [AS_HELP_STRING([--with-pcap@<:@=PREFIX@:>@], [Build utilities for conversion to and from pcap files. @<:@default=enabled@:>@])])
 
 utils_unset="x"
 AS_IF([test "x$enable_utils" = "xno"], [
 	utils_unset=""
+
+  dnl disable pcap by default if using --disable-utils as to reduce the
+  dnl dependencies as much as possible.
+  if test "x$with_pcap" = "x"; then
+    with_pcap="no"
+  fi
 ])
 
 AM_CONDITIONAL([BUILD_CAPDUMP],   [test "x$enable_capdump"   = "xyes" -o "x$enable_capdump"   = "$utils_unset"])
@@ -86,6 +89,8 @@ AM_CONDITIONAL([BUILD_CAPINFO],   [test "x$enable_capinfo"   = "xyes" -o "x$enab
 AM_CONDITIONAL([BUILD_CAPFILTER], [test "x$enable_capfilter" = "xyes" -o "x$enable_capfilter" = "$utils_unset"])
 AM_CONDITIONAL([BUILD_CAPMARKER], [test "x$enable_capmarker" = "xyes" -o "x$enable_capmarker" = "$utils_unset"])
 AM_CONDITIONAL([BUILD_CAPSHOW],   [test "x$enable_capshow"   = "xyes" -o "x$enable_capshow"   = "$utils_unset"])
+AM_CONDITIONAL([BUILD_PCAP],      [test "x$with_pcap" != "xno"])
+AX_PCAP($with_pcap)
 
 AM_PATH_CPPUNIT(1.9.6,,[AC_MSG_NOTICE([cppunit not found, tests disabled])])
 AM_CONDITIONAL([BUILD_TESTS], [test "x$no_cppunit" != "xyes"])
