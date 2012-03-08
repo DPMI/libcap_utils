@@ -142,6 +142,8 @@ deb: all
 	$(MAKE) install DESTDIR=`pwd`/libcap-utils-dev_@VERSION@_@ARCH@
 	dpkg-deb --build libcap-utils-dev_@VERSION@_@ARCH@
 
+if BUILD_CAPSHOW
 install-exec-hook:
 	cd $(DESTDIR)$(bindir) && \
 	  test -h consumer-ls$(EXEEXT) || $(LN_S) capshow$(EXEEXT) consumer-ls$(EXEEXT)
+endif
