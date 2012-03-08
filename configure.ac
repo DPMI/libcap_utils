@@ -60,7 +60,7 @@ CPPFLAGS="$saved_CPPFLAGS"
 AC_LANG_POP
 
 AC_ARG_ENABLE([debug], [AS_HELP_STRING([--enable-debug], [will print debugging information during runtime @<:@default=disabled@:>@])])
-AS_IF([test "x$enable_debug" == "xyes"],
+AS_IF([test "x$enable_debug" = "xyes"],
 	[AC_DEFINE([DEBUG],  [1], [Define to enable extra debug prints])],
 	[AC_DEFINE([NDEBUG], [1], [Define to disable extra debug prints])]
 )
@@ -77,15 +77,15 @@ AC_ARG_ENABLE([capshow], [AS_HELP_STRING([--enable-capshow], [Build capshow util
 AC_ARG_ENABLE([utils], [AS_HELP_STRING([--enable-utils], [By default all utils are build, this flag disables all utils unless they are explicitly enabled.])])
 
 utils_unset="x"
-AS_IF([test "x$enable_utils" == "xno"], [
+AS_IF([test "x$enable_utils" = "xno"], [
 	utils_unset=""
 ])
 
-AM_CONDITIONAL([BUILD_CAPDUMP],   [test "x$enable_capdump"     == "xyes" -o "x$enable_capdump"     == $utils_unset])
-AM_CONDITIONAL([BUILD_CAPINFO],   [test "x$enable_capinfo"     == "xyes" -o "x$enable_capinfo"     == $utils_unset])
-AM_CONDITIONAL([BUILD_CAPFILTER], [test "x$enable_capfilter"   == "xyes" -o "x$enable_capfilter"   == $utils_unset])
-AM_CONDITIONAL([BUILD_CAPMARKER], [test "x$enable_capmarker"   == "xyes" -o "x$enable_capmarker"   == $utils_unset])
-AM_CONDITIONAL([BUILD_CAPSHOW],   [test "x$enable_capshow"     == "xyes" -o "x$enable_capshow"     == $utils_unset])
+AM_CONDITIONAL([BUILD_CAPDUMP],   [test "x$enable_capdump"   = "xyes" -o "x$enable_capdump"   = "$utils_unset"])
+AM_CONDITIONAL([BUILD_CAPINFO],   [test "x$enable_capinfo"   = "xyes" -o "x$enable_capinfo"   = "$utils_unset"])
+AM_CONDITIONAL([BUILD_CAPFILTER], [test "x$enable_capfilter" = "xyes" -o "x$enable_capfilter" = "$utils_unset"])
+AM_CONDITIONAL([BUILD_CAPMARKER], [test "x$enable_capmarker" = "xyes" -o "x$enable_capmarker" = "$utils_unset"])
+AM_CONDITIONAL([BUILD_CAPSHOW],   [test "x$enable_capshow"   = "xyes" -o "x$enable_capshow"   = "$utils_unset"])
 
 AM_PATH_CPPUNIT(1.9.6,,[AC_MSG_NOTICE([cppunit not found, tests disabled])])
 AM_CONDITIONAL([BUILD_TESTS], [test "x$no_cppunit" != "xyes"])
