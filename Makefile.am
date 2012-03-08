@@ -4,9 +4,13 @@ AM_CFLAGS = -Wall ${PCAP_CFLAGS}
 lib_LTLIBRARIES = libcap_utils-07.la libcap_filter-07.la libcap_stream-07.la libcap_marc-07.la
 bin_PROGRAMS = 
 man1_MANS =
-man3_MANS = \
-	man/libcaputils.3 \
-	man/libcap_filter.3 \
+man3_MANS =             \
+	man/libcaputils.3     \
+	man/libcap_filter.3   \
+	man/stream_read.3
+notrans_dist_man_MANS = \
+	man/libcaputils.3     \
+	man/libcap_filter.3   \
 	man/stream_read.3
 
 if BUILD_PCAP
@@ -20,31 +24,26 @@ endif
 if BUILD_CAPDUMP
 bin_PROGRAMS += capdump
 man1_MANS += man/capdump.1
+notrans_dist_man_MANS += man/capdump.1
 endif
 
 if BUILD_CAPFILTER
 bin_PROGRAMS += capfilter
 man1_MANS += man/capfilter.1
+notrans_dist_man_MANS += man/capfilter.1
 endif
 
 if BUILD_CAPFILTER
 bin_PROGRAMS += capmarker
 man1_MANS += man/capmarker.1
+notrans_dist_man_MANS += man/capmarker.1
 endif
 
 if BUILD_CAPSHOW
 bin_PROGRAMS += capshow
 man1_MANS += man/capshow.1
+notrans_dist_man_MANS += man/capshow.1
 endif
-
-notrans_dist_man_MANS =     \
-	man/libcaputils.3   \
-	man/libcap_filter.3 \
-	man/stream_read.3   \
-	man/capdump.1       \
-	man/capfilter.1     \
-	man/capmarker.1     \
-	man/capshow.1
 
 if BUILD_TESTS
 TESTS = tests/filter_argv tests/address tests/endian tests/timepico
