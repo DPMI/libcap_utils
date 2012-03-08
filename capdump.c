@@ -387,6 +387,7 @@ int main(int argc, char **argv){
 
 	stream_close(src);
 	stream_close(dst);
+	free(fmt_basename);
 
 	fprintf(stderr, "There was a total of %'ld packets read.\n", pkts);
 	return 0;
