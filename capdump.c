@@ -29,7 +29,7 @@ static struct option long_options[]= {
 	{"iface",   required_argument, 0, 'i'},
 	{"comment", required_argument, 0, 'c'},
 	{"timeout", required_argument, 0, 't'},
-	{"marker",  no_argument,       &marker, 1},
+	{"marker",  required_argument, 0, 'm'},
 	{"marker-format", required_argument, 0, 'f'},
 	{"help",    no_argument,       0, 'h'},
 	{0, 0, 0, 0} /* sentinel */
@@ -54,7 +54,7 @@ static void show_usage(void){
 	       "  -p, --packets=INT    Stop capture after INT packages.\n"
 	       "  -c, --comment        Set stream comment.\n"
 	       "  -t, --timeout=N      Wait for N ms while buffer fills [default: 1000ms].\n"
-	       "      --marker         Split streams based on marker packet. See capdump(1) for\n"
+	       "      --marker=PORT    Split streams based on marker packet. See capdump(1) for\n"
 	       "                       further description of this feature.\n"
 	       "      --marker-format  Renaming format for marker.\n"
 	       "  -h, --help           This text.\n");
@@ -78,7 +78,7 @@ static int is_marker(struct cap_header* cp, struct marker* ptr){
 	/* match udp packet */
 	uint16_t src, dst;
 	const struct udphdr* udp = find_udp_header(cp->payload, cp->ethhdr, ip, &src, &dst);
-	if ( !(udp && src == MARKERPORT && dst == MARKERPORT) ){ return 0; }
+	if ( !(udp && src == marker && dst == marker) ){ return 0; }
 
 	/* match magic */
 	struct marker* marker = (struct marker*)((char*)udp + sizeof(struct udphdr));
@@ -220,6 +220,10 @@ int main(int argc, char **argv){
 
 		case 'i':
 			iface = optarg;
+			break;
+
+		case 'm': /* --marker */
+			marker = atoi(optarg);
 			break;
 
 		case 'f': /* --marker-format */

@@ -31,10 +31,10 @@ buffer might not be fully utilized. High timeouts will fill the buffer but may
 instead cause drops because while it drains the buffer OS starts dropping
 packets. Default is 1000ms. 
 .TP
-\fB\-\-marker
-Split stream based on marker packet. It looks for a specific packet in the
-stream and once found it stops the current output and starts outputting to a new
-destination.
+\fB\-\-marker\fR=\fIPORT\fR
+Split stream based on marker packet on port \fiPORT\fP. It looks for a specific
+packet in the stream and once found it stops the current output and starts
+outputting to a new destination.
 
 If \fB\-o\fR is used files will be named according to the format specified with
 \fB\-\-marker\-format\fR, if using redirection or pipes EOF will be sent and the
