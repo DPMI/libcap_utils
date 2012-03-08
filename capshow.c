@@ -266,7 +266,7 @@ int main(int argc, char **argv){
 
 	/* Open stream(s) */
 	struct stream* stream;
-	if ( (ret=stream_from_getopt(&stream, argv, optind, argc, iface, program_name, 0)) != 0 ) {
+	if ( (ret=stream_from_getopt(&stream, argv, optind, argc, iface, "-", program_name, 0)) != 0 ) {
 		return ret; /* Error already shown */
 	}
 	const stream_stat_t* stat = stream_get_stat(stream);

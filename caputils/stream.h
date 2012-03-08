@@ -56,9 +56,24 @@ int stream_add(stream_t st, const stream_addr_t* addr);
 
 /**
  * Shorthand for opening multiple streams from command-line arguments.
- * Calls stream_open followed by stream_add, with error checking.
+ * Calls stream_open followed by stream_add, with error checking. Errors is
+ * printed on stderr.
+ *
+ * @param st Stream
+ * @param argv
+ * @param argc
+ * @param optind
+ * @param iface Ethernet interface to use for ethernet streams.
+ * @param defaddr Default address to use if no address was specified or NULL to
+ *                raise an error. Use "-" for stdin (which will ensure it is not
+ *                connected to a terminal)
+ * @param program_name
+ * @param buffer_size Buffer size in bytes or 0 for default.
  */
-int stream_from_getopt(stream_t* st, char* argv[], int optind, int argc, const char* iface, const char* program_name, size_t buffer_size);
+int stream_from_getopt(stream_t* st,
+                       char* argv[], int optind, int argc,
+                       const char* iface, const char* defaddr,
+                       const char* program_name, size_t buffer_size);
 
 /**
  * Close stream.

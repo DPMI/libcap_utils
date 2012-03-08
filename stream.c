@@ -11,6 +11,7 @@
 #include <assert.h>
 #include <arpa/inet.h>
 #include <errno.h>
+#include <unistd.h>
 
 int stream_alloc(struct stream** stptr, enum protocol_t protocol, size_t size, size_t buffer_size){
 	assert(stptr);
@@ -360,7 +361,7 @@ int stream_read(struct stream *myStream, cap_head** data, const struct filter *m
 }
 
 static const char* type[4] = {"file", "ethernet", "udp", "tcp"};
-int stream_from_getopt(stream_t* st, char* argv[], int optind, int argc, const char* iface, const char* program_name, size_t buffer_size){
+int stream_from_getopt(stream_t* st, char* argv[], int optind, int argc, const char* iface, const char* defaddr, const char* program_name, size_t buffer_size){
 	int ret;
 	stream_addr_t addr;
 	memset(&addr, 0, sizeof(stream_addr_t));
@@ -368,16 +369,36 @@ int stream_from_getopt(stream_t* st, char* argv[], int optind, int argc, const c
 	/* force it to be null so finding bugs may be easier */
 	*st = NULL;
 
+	const char* address = defaddr;
+	if ( optind < argc ){
+		address = argv[optind];
+	}
+
 	/* verify that at least one address is present */
-	if ( optind == argc ){
-		fprintf(stderr, "%s: no stream address specified.", program_name);
+	if ( !address ){
+		fprintf(stderr, "%s: no stream address specified.\n", program_name);
 		return EINVAL;
 	}
 
+	/* parse '-' as stdin */
+	if ( strcmp(address, "-") == 0 ){
+		if ( isatty(STDIN_FILENO) ){
+			fprintf(stderr, "%s: Cannot read from stdin when connected to a terminal and no stream address was specified.\n", program_name);
+			return EINVAL;
+		}
+		address = "/dev/stdin";
+	}
+
 	/* parse first stream address */
-	if ( (ret=stream_addr_aton(&addr, argv[optind], STREAM_ADDR_GUESS, 0)) != 0 ){
+	if ( (ret=stream_addr_aton(&addr, address, STREAM_ADDR_GUESS, 0)) != 0 ){
 		fprintf(stderr, "%s: Failed to parse stream address: %s\n", program_name, caputils_error_string(ret));
 		return ret;
+	}
+
+	/* ensure an interface was specified for ethernet streams */
+	if ( stream_addr_type(&addr) == STREAM_ADDR_ETHERNET && !iface ){
+		fprintf(stderr, "%s: ethernet stream requested but no interface was specified.\n", program_name);
+		return EINVAL;
 	}
 
 	/* open first stream */
@@ -388,7 +409,7 @@ int stream_from_getopt(stream_t* st, char* argv[], int optind, int argc, const c
 	}
 
 	/* no secondary present */
-	if ( ++optind == argc ){
+	if ( ++optind >= argc ){
 		return 0;
 	}
 
