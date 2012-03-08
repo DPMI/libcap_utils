@@ -242,6 +242,10 @@ int stream_write(struct stream *outStream, const void* data, size_t size){
 	return outStream->write(outStream, data, size);
 }
 
+int stream_copy(stream_t st, caphead_t head){
+	return stream_write(st, head, sizeof(struct cap_header) + head->caplen);
+}
+
 static int fill_buffer(stream_t st, struct timeval* timeout){
 	if( st->flushed==1 ){
 		return -1;

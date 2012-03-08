@@ -114,6 +114,12 @@ void stream_print_info(const stream_t st, FILE* dst);
 int stream_write(stream_t st, const void* data, size_t size);
 
 /**
+ * Copy a capture packet into stream.
+ * This a shorthand for `stream_write(st, head, sizeof(struct cap_header) + head->caplen)`.
+ */
+int stream_copy(stream_t st, caphead_t head);
+
+/**
  * Read the next matching frame from a stream.
  * @param st Stream to read from.
  * @param header Returns a pointer to the frame header (in the internal buffer).
