@@ -1,6 +1,10 @@
 caputils-0.7.6
 --------------
 
+	* fix: fixing capfilter.
+	* add: stream_copy as wrapper for stream_write operating on caphead.
+	* add: caphead_t typedef
+	* change: added default address argument for stream_from_getopt
 	* change: capdump --marker now takes a port number.
 	* add: functions for working with timepico.
 	* add: improvements to capshow.
