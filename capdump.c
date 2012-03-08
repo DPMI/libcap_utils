@@ -327,6 +327,9 @@ int main(int argc, char **argv){
 				break;
 			}
 
+			/* close current stream */
+			stream_close(dst);
+
 			stream_addr_str(&output, format_filename(marker_format, &mark), STREAM_ADDR_LOCAL);
 			if ( (ret=stream_create(&dst, &output, NULL, stream_get_mampid(src), comment)) != 0 ){
 				fprintf(stderr, "stream_create() failed with code 0x%08lX: %s\n", ret, caputils_error_string(ret));
