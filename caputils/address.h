@@ -32,7 +32,7 @@
  *
  * To force a specific type use a prefix, e.g. file://127.0.0.1 reference a file
  * called "127.0.0.1". TCP/UDP is only supported using prefix.
- * 
+ *
  */
 
 #ifdef __cplusplus
@@ -43,17 +43,17 @@ extern "C" {
     union {
       /* raw buffer for backwards compability (may not be null-terminated) (includes old port) */
       unsigned char buffer[22 + 4];
-      
+
       /* for ethernet streams */
       struct ether_addr ether_addr;
-      
+
       /* for capfiles (null-terminated) */
       char filename[22];
 
       /* for locally stored capfiles (null-terminated) */
       /* these cannot be sent across network */
       const char* local_filename;
-      
+
       /* for TCP/UDP streams */
       struct {
 	struct in_addr in_addr;
