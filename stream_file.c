@@ -102,7 +102,7 @@ static long stream_file_destroy(struct stream_file* st){
  * Initialize file stream.
  * @return Non-zero on error (see errno(3) for descriptions).
  */
-long stream_file_open(struct stream** stptr, const char* filename){
+long stream_file_open(struct stream** stptr, const char* filename, size_t buffer_size){
   assert(stptr);
   *stptr = NULL;
   int ret = 0;
@@ -119,7 +119,7 @@ long stream_file_open(struct stream** stptr, const char* filename){
   }
 
   /* Initialize the structure */
-  if ( (ret = stream_alloc(stptr, PROTOCOL_LOCAL_FILE, sizeof(struct stream_file), 0) != 0) ){
+  if ( (ret = stream_alloc(stptr, PROTOCOL_LOCAL_FILE, sizeof(struct stream_file), buffer_size) != 0) ){
     return ret;
   }
 

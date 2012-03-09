@@ -63,7 +63,7 @@ int stream_tcp_init(struct stream* st, const char* address, int port);
 long stream_ethernet_open(struct stream** stptr, const struct ether_addr* address, const char* iface, size_t buffer_size);
 long stream_ethernet_create(struct stream** stptr, const struct ether_addr* address, const char* iface, const char* mpid, const char* comment, int flags);
 
-long stream_file_open(struct stream** stptr, const char* filename);
+long stream_file_open(struct stream** stptr, const char* filename, size_t buffer_size);
 
 /**
  * @param fp Optional

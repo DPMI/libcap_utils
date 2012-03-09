@@ -116,7 +116,7 @@ int stream_open(stream_t* stptr, const stream_addr_t* dest, const char* iface, s
 		break;
 
 	case PROTOCOL_LOCAL_FILE:
-		ret = stream_file_open(stptr, stream_addr_have_flag(dest, STREAM_ADDR_LOCAL) ? dest->local_filename : dest->filename);
+		ret = stream_file_open(stptr, stream_addr_have_flag(dest, STREAM_ADDR_LOCAL) ? dest->local_filename : dest->filename, buffer_size);
 		break;
 
 	default:
