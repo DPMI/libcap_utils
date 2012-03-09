@@ -322,8 +322,6 @@ int main(int argc, char **argv){
 	/* install signal handler so loop can be aborted */
 	signal(SIGINT, sigint_handler);
 
-	const size_t len = sizeof(struct cap_header);
-
 	while( keep_running ){
 		/* A short timeout is used to allow the application to "breathe", i.e
 		 * terminate if SIGINT was received. */
@@ -364,13 +362,18 @@ int main(int argc, char **argv){
 			/* open new stream */
 			stream_addr_str(&output, filename, STREAM_ADDR_LOCAL);
 			if ( (ret=stream_create(&dst, &output, NULL, stream_get_mampid(src), comment)) != 0 ){
-				fprintf(stderr, "stream_create() failed with code 0x%08lX: %s\n", ret, caputils_error_string(ret));
+				fprintf(stderr, "%s: stream_create() failed with code 0x%08lX: %s\n", program_name, ret, caputils_error_string(ret));
 				return 1;
 			}
 		}
 
-		if( stream_write(dst, (char*)cp, cp->caplen + len) != 0 ) {
-			fprintf(stderr, "Problems writing data to file!");
+		if ( (ret=stream_copy(dst, cp)) != 0 ) {
+			static int hitcount = 0;
+			fprintf(stderr, "%s: stream_copy() failed with code 0x%08lX: %s\n", program_name, ret, caputils_error_string(ret) );
+			if ( ++hitcount == 3 ){
+				fprintf(stderr, "%s: more than three errors detected, giving up.\n", program_name);
+				break;
+			}
 		}
 
 		if ( max_packets > 0 && stat->read >= max_packets ){
@@ -382,10 +385,10 @@ int main(int argc, char **argv){
 	 * In addition EINTR should not give any errors because it is implied when the
 	 * user presses C-c */
 	if ( ret > 0 && ret != EINTR ){
-		fprintf(stderr, "stream_read() returned 0x%08lX: %s\n", ret, caputils_error_string(ret));
+		fprintf(stderr, "%s: stream_read() returned 0x%08lX: %s\n", program_name, ret, caputils_error_string(ret));
 	}
 
-	fprintf(stderr, "There was a total of %'ld packets read.\n", stat->read);
+	fprintf(stderr, "%s: There was a total of %'ld packets read.\n", program_name, stat->read);
 
 	stream_close(src);
 	stream_close(dst);
