@@ -17,6 +17,9 @@ struct stream_stat {
 	uint64_t recv;     /* number of packets read into buffer */
 	uint64_t read;     /* number of packets user (tried to) read, that is, before filtering */
 	uint64_t matched;  /* number of packets matched filter */
+
+	uint64_t buffer_size;  /* size of buffer in bytes */
+	uint64_t buffer_usage; /* number of bytes used */
 };
 typedef struct stream_stat stream_stat_t;
 

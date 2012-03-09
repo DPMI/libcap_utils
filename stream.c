@@ -35,6 +35,8 @@ int stream_alloc(struct stream** stptr, enum protocol_t protocol, size_t size, s
 	st->flushed = 0;
 	st->stat.recv = 0;
 	st->stat.matched = 0;
+	st->stat.buffer_size = buffer_size;
+	st->stat.buffer_usage = 0;
 
 	/* callbacks */
 	st->fill_buffer = NULL;
@@ -353,6 +355,7 @@ int stream_read(struct stream *myStream, cap_head** data, const struct filter *m
 		*data = cp;
 		myStream->readPos += packet_size;
 		myStream->stat.read++;
+		myStream->stat.buffer_usage = myStream->writePos - myStream->readPos;
 
 		filterStatus = 1; /* match by default, i.e. if no filter is used. */
 		if ( my_Filter ){
