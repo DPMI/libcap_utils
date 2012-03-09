@@ -317,12 +317,12 @@ int main(int argc, char **argv){
 		fprintf(stderr, "stream_create() failed with code 0x%08lX: %s\n", ret, caputils_error_string(ret));
 		return 1;
 	}
+	const struct stream_stat* stat = stream_get_stat(src);
 
 	/* install signal handler so loop can be aborted */
 	signal(SIGINT, sigint_handler);
 
 	const size_t len = sizeof(struct cap_header);
-	long int pkts = 0;
 
 	while( keep_running ){
 		/* A short timeout is used to allow the application to "breathe", i.e
@@ -337,7 +337,6 @@ int main(int argc, char **argv){
 		} else if ( ret != 0 ){ /* either an error or proper shutdown */
 			break;
 		}
-		pkts++;
 
 		/* Detect marker in stream */
 		struct marker mark;
@@ -374,7 +373,7 @@ int main(int argc, char **argv){
 			fprintf(stderr, "Problems writing data to file!");
 		}
 
-		if ( max_packets > 0 && pkts >= max_packets ){
+		if ( max_packets > 0 && stat->read >= max_packets ){
 			break;
 		}
 	}
@@ -386,10 +385,11 @@ int main(int argc, char **argv){
 		fprintf(stderr, "stream_read() returned 0x%08lX: %s\n", ret, caputils_error_string(ret));
 	}
 
+	fprintf(stderr, "There was a total of %'ld packets read.\n", stat->read);
+
 	stream_close(src);
 	stream_close(dst);
 	free(fmt_basename);
 
-	fprintf(stderr, "There was a total of %'ld packets read.\n", pkts);
 	return 0;
 }
