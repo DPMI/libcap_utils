@@ -135,14 +135,32 @@ tests_timepico_SOURCES = tests/timepico.cpp
 
 tests_disabled_SOURCES = tests/disabled.cpp
 
-deb: all
-	mkdir -p libcap-utils-dev_@VERSION@_@ARCH@/DEBIAN
-	cp dist/deb-control libcap-utils-dev_@VERSION@_@ARCH@/DEBIAN/control
-	$(MAKE) install DESTDIR=`pwd`/libcap-utils-dev_@VERSION@_@ARCH@
-	dpkg-deb --build libcap-utils-dev_@VERSION@_@ARCH@
+#
+# Hooks
+#
 
 if BUILD_CAPSHOW
 install-exec-hook:
 	cd $(DESTDIR)$(bindir) && \
 	  test -h consumer-ls$(EXEEXT) || $(LN_S) capshow$(EXEEXT) consumer-ls$(EXEEXT)
 endif
+
+#
+# Relase related targets
+#
+
+debpkgname=libcap-utils_@VERSION@_@ARCH@
+releasedir=/var/www/releases
+
+deb: all
+	@test "x${prefix}" = "x/usr" || (echo "Error: --prefix must be /usr when creating debian release (currently ${prefix})"; exit 1)
+	mkdir -p $(debpkgname)/DEBIAN
+	cp dist/deb-control $(debpkgname)/DEBIAN/control
+	$(MAKE) install DESTDIR=`pwd`/$(debpkgname)
+	dpkg-deb --build $(debpkgname)
+
+# special target for dsvmarc releases
+release_marc: dist distcheck deb
+	cp $(distdir).tar.gz $(releasedir)
+	cp $(debpkgname).deb $(releasedir)
+	cat $(top_srcdir)//ChangeLog | awk -vRS= '{print; if ( NR == 2 ){ exit }}' > $(releasedir)/$(distdir).changelog.txt

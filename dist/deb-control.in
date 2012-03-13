@@ -1,5 +1,6 @@
-Package: libcap-utils-dev
+Package: libcap-utils
 Version: @VERSION@
 Architecture: @ARCH@
 Maintainer: David Sveningsson [dsv@bth.se]
 Description: MA capture utilities
+Homepage: https://194.47.151.119/trac/

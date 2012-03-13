@@ -1,6 +1,6 @@
 m4_define([__VERSION_MAJOR__], [0])
 m4_define([__VERSION_MINOR__], [7])
-m4_define([__VERSION_MICRO__], [6_git])
+m4_define([__VERSION_MICRO__], [7_git])
 
 AC_INIT([libcap_utils],[__VERSION_MAJOR__.__VERSION_MINOR__.__VERSION_MICRO__],[dsv@bth.se])
 
@@ -95,7 +95,10 @@ AX_PCAP($with_pcap)
 AM_PATH_CPPUNIT(1.9.6,,[AC_MSG_NOTICE([cppunit not found, tests disabled])])
 AM_CONDITIONAL([BUILD_TESTS], [test "x$no_cppunit" != "xyes"])
 
+dnl Find out what arch is used for (debian) packaging.
+dnl Includes a fulhack because debian is fucked^W using i386.
 ARCH=`echo $host|cut -d '-' -f 1`
+AS_IF([test "$ARCH" = "i686"], [ARCH="i386"])
 AC_SUBST(ARCH)
 
 AC_OUTPUT
