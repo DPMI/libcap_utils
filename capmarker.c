@@ -195,7 +195,7 @@ int main(int argc, char **argv){
 	/* send marker */
 	for ( int i = optind; i < argc; i++ ){
 		struct in_addr ip_addr;
-		in_port_t ip_port;
+		in_port_t ip_port = 0; /* silence gcc stupid warning about initialized value, it is never used uninitialized */
 		char* tmp;
 
 		/* parse address */
