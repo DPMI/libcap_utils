@@ -1,3 +1,11 @@
+caputils-0.7.6
+--------------
+
+  * caphead_t typedef
+  * prototype for stream_from_getopt changed, abi breakage.
+  * additional functions for dealing with picotime
+  * capshow and capfilter improvements.
+
 caputils-0.7.5
 --------------
 
