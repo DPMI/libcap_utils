@@ -1,6 +1,7 @@
 caputils-0.7.6
 --------------
 
+	* fix: uint64_t printing in capdump.
 	* fix: fixing capfilter.
 	* add: stream_copy as wrapper for stream_write operating on caphead.
 	* add: caphead_t typedef

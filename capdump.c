@@ -18,6 +18,7 @@
 #include <libgen.h> /* for dirname */
 #include <sys/stat.h>
 #include <netinet/udp.h>
+#include <inttypes.h>
 #include "be64toh.h" /* for compability */
 
 static const size_t FILENAME_SUFFIX_MAX = 1000; /* maximum number of filename suffixes */
@@ -388,7 +389,7 @@ int main(int argc, char **argv){
 		fprintf(stderr, "%s: stream_read() returned 0x%08lX: %s\n", program_name, ret, caputils_error_string(ret));
 	}
 
-	fprintf(stderr, "%s: There was a total of %'ld packets read.\n", program_name, stat->read);
+	fprintf(stderr, "%s: There was a total of %'"PRIu64" packets read.\n", program_name, stat->read);
 
 	stream_close(src);
 	stream_close(dst);
