@@ -54,8 +54,10 @@ int stream_alloc(struct stream** stptr, enum protocol_t protocol, size_t size, s
 
 void match_inc_seqnr(long unsigned int* restrict seq, const struct sendhead* restrict sh){
 	/* validate sequence number */
-	if( *seq != ntohl(sh->sequencenr) ){
-		fprintf(stderr,"Missmatch of sequence numbers. Expeced %ld got %d\n", *seq, ntohl(sh->sequencenr));
+	const int expected = *seq;
+	const int got = ntohl(sh->sequencenr);
+	if( expected != got ){
+		fprintf(stderr,"Missmatch of sequence numbers. Expeced %d got %d (%d frame(s) missing)\n", expected, got, (got-expected));
 		*seq = ntohl(sh->sequencenr); /* reset sequence number */
 	}
 
