@@ -22,11 +22,14 @@
 #include "be64toh.h" /* for compability */
 
 static const size_t FILENAME_SUFFIX_MAX = 1000; /* maximum number of filename suffixes */
+static const size_t PROGRESS_REPORT_DELAY = 60;  /* seconds between progress reports */
 static int keep_running = 1;
 static int marker = 0;
 static char* fmt_basename = NULL;  /* used by generate_filename */
 static char* fmt_extension = NULL; /* used by generate_filename */
 static const char* program_name = NULL;
+static const struct stream_stat* stream_stat = NULL;
+static int progress = -1;          /* if >0 progress reports is written to this file descriptor */
 static struct option long_options[]= {
 	{"output",  required_argument, 0, 'o'},
 	{"packets", required_argument, 0, 'p'},
@@ -36,6 +39,7 @@ static struct option long_options[]= {
 	{"bufsize", required_argument, 0, 'b'},
 	{"marker",  required_argument, 0, 'm'},
 	{"marker-format", required_argument, 0, 'f'},
+	{"progress", optional_argument, 0, 's'},
 	{"help",    no_argument,       0, 'h'},
 	{0, 0, 0, 0} /* sentinel */
 };
@@ -47,6 +51,14 @@ static void sigint_handler(int signum){
 	}
 	fprintf(stderr, "\rAborting capture.\n");
 	keep_running = 0;
+}
+
+static void progress_report(int signum){
+	static char buf[1024];
+	ssize_t bytes = snprintf(buf, 1024, "%s: progress report: %'"PRIu64" packets read.\n", program_name, stream_stat->read);
+	if ( write(progress, buf, bytes) == -1 ){
+		fprintf(stderr, "progress report failed: %s\n", strerror(errno));
+	}
 }
 
 static void show_usage(void){
@@ -63,6 +75,7 @@ static void show_usage(void){
 	       "      --marker=PORT    Split streams based on marker packet. See capdump(1) for\n"
 	       "                       further description of this feature.\n"
 	       "      --marker-format  Renaming format for marker.\n"
+	       "      --progress[=FD]  Write progress report to FD every 60 seconds.\n"
 	       "  -h, --help           This text.\n");
 	printf("\n");
 	printf("Streams can be specified in the following formats:\n");
@@ -268,6 +281,21 @@ int main(int argc, char **argv){
 			marker_format = optarg;
 			break;
 
+		case 's': /* --progress */
+			progress = STDERR_FILENO;
+			if ( optarg ){
+				progress = atoi(optarg);
+				int fd = dup(progress);
+				if (fd < 0) {
+					fprintf(stderr, "%s: invalid progress file descriptor: %s\n", program_name, strerror(errno));
+					return 1;
+				}
+				close(fd);
+				break;
+
+			}
+			break;
+
 		case 'h':
 			show_usage();
 			exit(0);
@@ -312,10 +340,20 @@ int main(int argc, char **argv){
 		fprintf(stderr, "stream_create() failed with code 0x%08lX: %s\n", ret, caputils_error_string(ret));
 		return 1;
 	}
-	const struct stream_stat* stat = stream_get_stat(src);
+	stream_stat = stream_get_stat(src);
 
 	/* install signal handler so loop can be aborted */
 	signal(SIGINT, sigint_handler);
+
+	/* progress report */
+	if ( progress > 0 ){
+		struct itimerval tv = {
+			{PROGRESS_REPORT_DELAY, 0},
+			{PROGRESS_REPORT_DELAY, 0},
+		};
+		setitimer(ITIMER_REAL, &tv, NULL);
+		signal(SIGALRM, progress_report);
+	}
 
 	while( keep_running ){
 		/* A short timeout is used to allow the application to "breathe", i.e
@@ -326,6 +364,8 @@ int main(int argc, char **argv){
 		cap_head* cp;
 		ret = stream_read(src, &cp, NULL, &tv);
 		if ( ret == EAGAIN ){ /* a timeout occured */
+			continue;
+		} else if ( ret == EINTR && keep_running != 0 ){ /* don't abort unless signal caused a halt */
 			continue;
 		} else if ( ret != 0 ){ /* either an error or proper shutdown */
 			break;
@@ -371,7 +411,7 @@ int main(int argc, char **argv){
 			}
 		}
 
-		if ( max_packets > 0 && stat->read >= max_packets ){
+		if ( max_packets > 0 && stream_stat->read >= max_packets ){
 			break;
 		}
 	}
@@ -383,7 +423,7 @@ int main(int argc, char **argv){
 		fprintf(stderr, "%s: stream_read() returned 0x%08lX: %s\n", program_name, ret, caputils_error_string(ret));
 	}
 
-	fprintf(stderr, "%s: There was a total of %'"PRIu64" packets read.\n", program_name, stat->read);
+	fprintf(stderr, "%s: There was a total of %'"PRIu64" packets read.\n", program_name, stream_stat->read);
 
 	stream_close(src);
 	stream_close(dst);

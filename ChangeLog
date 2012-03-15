@@ -1,6 +1,9 @@
 caputils-0.7.7
 --------------
 
+	* add: progress report to capdump.
+	* fix: regression fix for capdump buffer size causing ethernet streams
+	       to fail for mtu > 4096.
 	* fix: regression fix. multiple streams caused the second stream to be
 	       ignored.
 
