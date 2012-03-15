@@ -33,6 +33,7 @@ static struct option long_options[]= {
 	{"iface",   required_argument, 0, 'i'},
 	{"comment", required_argument, 0, 'c'},
 	{"timeout", required_argument, 0, 't'},
+	{"bufsize", required_argument, 0, 'b'},
 	{"marker",  required_argument, 0, 'm'},
 	{"marker-format", required_argument, 0, 'f'},
 	{"help",    no_argument,       0, 'h'},
@@ -58,6 +59,7 @@ static void show_usage(void){
 	       "  -p, --packets=INT    Stop capture after INT packages.\n"
 	       "  -c, --comment        Set stream comment.\n"
 	       "  -t, --timeout=N      Wait for N ms while buffer fills [default: 1000ms].\n"
+	       "  -b, --bufsize=BYTES  Use BYTES buffer size [default depends on driver].\n"
 	       "      --marker=PORT    Split streams based on marker packet. See capdump(1) for\n"
 	       "                       further description of this feature.\n"
 	       "      --marker-format  Renaming format for marker.\n"
@@ -209,13 +211,14 @@ int main(int argc, char **argv){
 	const char* comment = "capdump-" VERSION " stream";
 	char* iface = NULL;
 	struct timeval timeout = {1, 0};
+	size_t buffer_size = 0;
 	stream_addr_t input;
 	stream_addr_t output;
 	stream_addr_aton(&output, "/dev/stdout", STREAM_ADDR_CAPFILE, STREAM_ADDR_LOCAL);
 
 	long max_packets = -1;
 
-	while ( (op = getopt_long(argc, argv, "ho:p:c:i:t:", long_options, &option_index)) != -1 ){
+	while ( (op = getopt_long(argc, argv, "ho:p:c:i:t:b:", long_options, &option_index)) != -1 ){
 		switch (op){
 		case 0:   /* long opt */
 		case '?': /* unknown opt */
@@ -248,6 +251,10 @@ int main(int argc, char **argv){
 				timeout.tv_sec  = tmp / 1000;
 				timeout.tv_usec = tmp % 1000 * 1000;
 			}
+			break;
+
+		case 'b': /* --bufsize */
+			buffer_size = atoi(optarg);
 			break;
 
 		case 'i':
@@ -309,7 +316,7 @@ int main(int argc, char **argv){
 	}
 
 	/* open input stream (using a small buffer so pipes will fill faster) */
-	if ( (ret=stream_from_getopt(&src, argv, optind, argc, iface, "-", program_name, 0)) != 0 ) {
+	if ( (ret=stream_from_getopt(&src, argv, optind, argc, iface, "-", program_name, buffer_size)) != 0 ) {
 		return 1;
 	}
 
