@@ -212,7 +212,6 @@ int main(int argc, char **argv){
 	char* iface = NULL;
 	struct timeval timeout = {1, 0};
 	size_t buffer_size = 0;
-	stream_addr_t input;
 	stream_addr_t output;
 	stream_addr_aton(&output, "/dev/stdout", STREAM_ADDR_CAPFILE, STREAM_ADDR_LOCAL);
 
@@ -293,18 +292,6 @@ int main(int argc, char **argv){
 	stream_t src;
 	stream_t dst;
 	long ret;
-
-	/* parse stream address */
-	if ( (ret=stream_addr_aton(&input, argv[optind], STREAM_ADDR_GUESS, 0)) != 0 ){
-		fprintf(stderr, "Failed to parse stream address: %s\n", caputils_error_string(ret));
-		return 1;
-	}
-
-	/* ensure iface has been configured for ethernet streams */
-	if ( stream_addr_type(&input) == STREAM_ADDR_ETHERNET && !iface ){
-		fprintf(stderr, "Ethernet streams require --iface\n");
-		return 1;
-	}
 
 	/* cannot output to stdout if it is a terminal */
 	if ( stream_addr_type(&output) == STREAM_ADDR_CAPFILE &&
