@@ -426,12 +426,13 @@ int stream_from_getopt(stream_t* st, char* argv[], int optind, int argc, const c
 	}
 
 	/* try secondary addresses */
-	for ( int i = ++optind; i < argc; i++ ){
+	for ( int i = optind++; i < argc; i++ ){
 		if ( (ret=stream_addr_aton(&addr, argv[i], STREAM_ADDR_ETHERNET, 0)) != 0 ){
 			fprintf(stderr, "%s: Failed to parse stream address: %s\n", program_name, caputils_error_string(ret));
 			return ret;
 		}
 
+		fprintf(stderr, "Adding %s stream: %s\n", type[stream_addr_type(&addr)], stream_addr_ntoa(&addr));
 		if( (ret=stream_add(*st, &addr)) != 0 ) {
 			fprintf(stderr, "%s: stream_add() failed with code 0x%08X: %s\n", program_name, ret, caputils_error_string(ret));
 			return ret;

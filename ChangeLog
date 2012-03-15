@@ -1,3 +1,9 @@
+caputils-0.7.7
+--------------
+
+	* fix: regression fix. multiple streams caused the second stream to be
+	       ignored.
+
 caputils-0.7.6
 --------------
 
