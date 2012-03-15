@@ -309,7 +309,7 @@ int main(int argc, char **argv){
 	}
 
 	/* open input stream (using a small buffer so pipes will fill faster) */
-	if ( (ret=stream_from_getopt(&src, argv, optind, argc, iface, "-", program_name, 4096)) != 0 ) {
+	if ( (ret=stream_from_getopt(&src, argv, optind, argc, iface, "-", program_name, 0)) != 0 ) {
 		return 1;
 	}
 

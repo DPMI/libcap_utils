@@ -118,6 +118,12 @@ long stream_file_open(struct stream** stptr, const char* filename, size_t buffer
     return errno;
   }
 
+  /* Use a relative smaller buffer-size by default as it will yield faster
+   * response-times when using pipes  */
+  if ( buffer_size == 0 ){
+	  buffer_size = 4096;
+  }
+
   /* Initialize the structure */
   if ( (ret = stream_alloc(stptr, PROTOCOL_LOCAL_FILE, sizeof(struct stream_file), buffer_size) != 0) ){
     return ret;
