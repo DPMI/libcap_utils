@@ -349,7 +349,7 @@ void filter_from_argv_usage(){
 	printf("      --ip.dst=ADDR[/MASK]    Filter on destination ip address, dotted decimal\n");
 	printf("      --tp.sport=PORT[/MASK]  Filter on source portnumber\n");
 	printf("      --tp.dport=PORT[/MASK]  Filter on destination portnumber\n");
-	printf("      --tp.port=PORT[/MASK]   Filter or source or destination portnumber (if"
+	printf("      --tp.port=PORT[/MASK]   Filter or source or destination portnumber (if\n"
 	       "                              either is a match the packet matches\n");
 	printf("      --caplen=BYTES          Store BYTES of the captured packet. [default=ALL]\n");
 }
