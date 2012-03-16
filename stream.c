@@ -41,6 +41,8 @@ int stream_alloc(struct stream** stptr, enum protocol_t protocol, size_t size, s
 	/* callbacks */
 	st->fill_buffer = NULL;
 	st->destroy = NULL;
+	st->write = NULL;
+	st->read = NULL;
 
 	/* reset memory */
 	memset(st->buffer, 0, buffer_size);
@@ -281,6 +283,10 @@ static int fill_buffer(stream_t st, struct timeval* timeout){
 }
 
 int stream_read(struct stream *myStream, cap_head** data, const struct filter *my_Filter, struct timeval* timeout){
+	if ( myStream->read ){
+		return myStream->read(myStream, data, my_Filter, timeout);
+	}
+
 	int filterStatus=0;
 	int skip_counter=-1;
 	int ret = 0;

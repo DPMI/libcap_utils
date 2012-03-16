@@ -29,9 +29,10 @@ struct stream_ethernet {
 	long unsigned int seqnum[MAX_ADDRESS];
 	unsigned int num_address;
 
-	char** frames;
 	size_t num_frames;  /* how many frames that buffer can hold */
 	size_t num_packets; /* how many packets is left in current frame */
+	char* read_ptr;     /* where inside a frame it currently is */
+	char* frame[0];
 };
 
 /**
@@ -59,83 +60,63 @@ static int match_ma_pkt(const struct stream_ethernet* st, const struct ethhdr* e
 	return match;
 }
 
-static int fill_buffer(struct stream_ethernet* st, struct timeval* timeout){
+static int read_packet(struct stream_ethernet* st, struct timeval* timeout){
 	assert(st);
 
-	int total_bytes = 0;
-  size_t available = st->base.buffer_size - st->base.writePos;
+	do {
+		fd_set fds;
+		FD_ZERO(&fds);
+		FD_SET(st->socket, &fds);
 
-  //fprintf(stderr, "s: %d e: %d l: %d\n", st->base.readPos, st->base.writePos, st->base.writePos - st->base.readPos);
+		struct timeval tv = {0,0};
+		if ( select(st->socket+1, &fds, NULL, NULL, &tv) != 1 ){
+			break;
+		}
 
-  /* copy old content */
-  if ( ((float)st->base.readPos / st->base.buffer_size > 0.4f) && (st->base.buffer_size - st->base.writePos < st->if_mtu) ){
-    const size_t bytes = st->base.writePos - st->base.readPos;
-    memmove(st->base.buffer, st->base.buffer + st->base.readPos, bytes); /* move content */
-    st->base.writePos = bytes;
-    st->base.readPos = 0;
-    available = st->base.buffer_size - bytes;
-  }
+		/* Read data into framebuffer. */
+		char* dst = st->frame[st->base.writePos];
+		int bytes = recvfrom(st->socket, dst, st->if_mtu, 0, NULL, NULL);
+		if ( bytes < 0 ){ /* error occurred */
+			perror("Cannot receive Ethernet data.");
+			break;
+		} else if ( bytes == 0 ){ /* proper shutdown */
+			perror("Connection closed by client.");
+			break;
+		}
 
-  if ( available < st->if_mtu ){
-	  /* fulhack so it won't signal an error if the buffer is full */
-	  return 1;
-  }
+		/* Setup pointers */
+		const struct ethhdr* eh = (const struct ethhdr*)dst;
+		const struct sendhead* sh = (const struct sendhead*)(dst + sizeof(struct ethhdr));
 
-  while ( available >= st->if_mtu ){
-    fd_set fds;
-    FD_ZERO(&fds);
-    FD_SET(st->socket, &fds);
+		/* Check if it is a valid packet and if it was destinationed here */
+		int match;
+		if ( (match=match_ma_pkt(st, eh)) == -1 ){
+			continue;
+		}
 
-    /* here we depend on the linux extension where select modifies the timeout
-     * to return the amount of time that wasn't slept. This will be a
-     * portability issue if porting to another OS. */
-    switch ( select(st->socket+1, &fds, NULL, NULL, timeout) ){
-    case -1:
-      return -1;
-    case 0:
-      errno = EAGAIN;
-      return -1;
-    case 1:
-      break;
-    }
+#ifdef DEBUG
+		// fprintf(stderr, "got measurement frame with %d capture packets [BU: %3.2f%%]\n", ntohl(sh->nopkts), 0.0f);
+		//printf("write: %d read %d\n", st->base.writePos, st->base.readPos);
+#endif
 
-    /* Read data into a temporary buffer. */
-    char temp[st->if_mtu];
-    int bytes = recvfrom(st->socket, temp, st->if_mtu, 0, NULL, NULL);
-    if ( bytes < 0 ){ /* error occurred */
-      perror("Cannot receive Ethernet data.");
-      return -1;
-    } else if ( bytes == 0 ){ /* proper shutdown */
-      perror("Connection closed by client.");
-      return -1; /* return -1 so it won't try again */
-    }
 
-    /* Setup pointers */
-    const struct ethhdr* eh = (const struct ethhdr*)temp;
-    const struct sendhead* sh = (const struct sendhead*)(temp + sizeof(struct ethhdr));
-
-    /* Check if it is a valid packet and if it was destinationed here */
-    int match;
-    if ( (match=match_ma_pkt(st, eh)) == -1 ){
-	    continue;
-    }
-
-    /* increase packet count */
-    st->base.stat.recv += ntohs(sh->nopkts);
+		/* increase packet count */
+		st->base.stat.recv += ntohs(sh->nopkts);
 
     /* if no sequencenr is set some additional checks are made.
      * they will also run when the sequence number wraps, but that ok since the
      * sequence number will match in that case anyway. */
     if ( st->seqnum[match] == 0 ){
       /* read stream version */
-      struct file_header_t FH;
-      FH.version.major=ntohs(sh->version.major);
-      FH.version.minor=ntohs(sh->version.minor);
+	    struct file_header_t FH;
+	    FH.version.major=ntohs(sh->version.major);
+	    FH.version.minor=ntohs(sh->version.minor);
 
-      /* ensure we can read this version */
-      if ( !is_valid_version(&FH) ){
-	      return -1;
-      }
+	    /* ensure we can read this version */
+	    if ( !is_valid_version(&FH) ){
+		    perror("invalid stream version");
+		    break;
+	    }
 
       /* this is set last, as we want to wait until a packet with valid version
        * arrives before proceeding. */
@@ -143,28 +124,82 @@ static int fill_buffer(struct stream_ethernet* st, struct timeval* timeout){
     }
     match_inc_seqnr(&st->seqnum[match], sh);
 
-    /* copy packets to stream buffer */
-    const size_t header_size = sizeof(struct ethhdr) + sizeof(struct sendhead);
-    const size_t capture_bytes = bytes - header_size;
-    memcpy(st->base.buffer + st->base.writePos, temp + header_size, capture_bytes);
-    st->base.writePos += capture_bytes;
-    available -= capture_bytes;
-    total_bytes += capture_bytes;
-
-    assert(st->base.writePos <= buffLen);
-
-#ifdef DEBUG
-    fprintf(stderr, "got measurement frame with %d capture packets [BU: %3.2f%%]\n", ntohl(sh->nopkts), (float)(st->base.writePos-st->base.readPos) / buffLen * 100);
-#endif
+    st->base.writePos = (st->base.writePos+1) % st->num_frames;
 
     /* This indicates a flush from the sender.. */
     if( ntohs(sh->flush) == 1 ){
 	    fprintf(stderr, "Sender terminated.\n");
 	    st->base.flushed=1;
     }
-  }
 
-  return total_bytes;
+    return 1;
+
+	} while (1);
+
+	return 0;
+}
+
+int stream_ethernet_read(struct stream_ethernet* st, cap_head** header, const struct filter* filter, struct timeval* timeout){
+	/* I heard ext is a pretty cool guy, uses goto and doesn't afraid of anything */
+  retry:
+
+	/* empty buffer */
+	if ( !st->read_ptr ){
+		if ( !read_packet(st, timeout) ){
+			return EAGAIN;
+		}
+
+		char* frame = st->frame[st->base.readPos];
+		struct sendhead* sh = (struct sendhead*)(frame + sizeof(struct ethhdr));
+		st->read_ptr = frame + sizeof(struct ethhdr) + sizeof(struct sendhead);
+		st->num_packets = ntohl(sh->nopkts);
+	}
+
+	/* always read if there is space available */
+	if ( st->base.writePos != st->base.readPos ){
+		read_packet(st, timeout);
+	}
+
+	/* no packets available */
+	if ( st->num_packets == 0 ){
+		return EAGAIN;
+	}
+
+	/* fetch next matching packet */
+	struct cap_header* cp = (struct cap_header*)(st->read_ptr);
+	const size_t packet_size = sizeof(struct cap_header) + cp->caplen;
+	st->num_packets--;
+	st->read_ptr += packet_size;
+
+	if ( st->num_packets == 0 ){
+		st->base.readPos = (st->base.readPos+1) % st->num_frames;
+		if ( st->base.readPos == st->base.writePos ){
+			st->read_ptr = NULL;
+		} else {
+			char* frame = st->frame[st->base.readPos];
+			struct sendhead* sh = (struct sendhead*)(frame + sizeof(struct ethhdr));
+			st->read_ptr = frame + sizeof(struct ethhdr) + sizeof(struct sendhead);
+			st->num_packets = ntohl(sh->nopkts);
+		}
+	}
+
+	if ( cp->caplen == 0 ){
+		return ERROR_CAPFILE_INVALID;
+	}
+
+	assert(packet_size > 0);
+
+	/* set next packet and advance the read pointer */
+	*header = cp;
+	st->base.stat.read++;
+	st->base.stat.buffer_usage = 0;
+
+	if ( filter && !filter_match(filter, cp->payload, cp) ){
+		goto retry;
+	}
+
+	st->base.stat.matched++;
+	return 0;
 }
 
 static long stream_ethernet_write(struct stream_ethernet* st, const void* data, size_t size){
@@ -244,6 +279,29 @@ static long stream_ethernet_init(struct stream** stptr, const struct ether_addr*
     return errno;
   }
 
+  /* get iface MTU */
+  if ( ioctl(fd, SIOCGIFMTU, &ifr) == -1 ){
+    return errno;
+  }
+  int if_mtu = ifr.ifr_mtu;
+
+  /* default buffer_size of 25*MTU */
+  if ( buffer_size == 0 ){
+	  buffer_size = 250 * if_mtu;
+  }
+
+  /* ensure buffer is a multiple of MTU and can hold at least one frame */
+  if ( buffer_size < if_mtu ){
+	  return ERROR_BUFFER_LENGTH;
+  } else if ( buffer_size % if_mtu != 0 ){
+	  return ERROR_BUFFER_MULTIPLE;
+  }
+
+  /* additional memory for the frame pointers */
+  size_t frames = buffer_size / if_mtu;
+  size_t frame_offset = sizeof(char*) * frames;
+  buffer_size += frame_offset;
+
   /* Initialize the structure */
   if ( (ret = stream_alloc(stptr, PROTOCOL_ETHERNET_MULTICAST, sizeof(struct stream_ethernet), buffer_size) != 0) ){
     return ret;
@@ -251,6 +309,7 @@ static long stream_ethernet_init(struct stream** stptr, const struct ether_addr*
   struct stream_ethernet* st = (struct stream_ethernet*)*stptr;
   st->socket = fd;
   st->num_address = 0;
+  st->if_mtu = if_mtu;
   memset(st->seqnum, 0, sizeof(long unsigned int) * MAX_ADDRESS);
 
   /* get iface index */
@@ -259,17 +318,14 @@ static long stream_ethernet_init(struct stream** stptr, const struct ether_addr*
   }
   st->if_index = ifr.ifr_ifindex;
 
-  /* get iface MTU */
-  if ( ioctl(fd, SIOCGIFMTU, &ifr) == -1 ){
-    return errno;
-  }
-  st->if_mtu = ifr.ifr_mtu;
-
-  /* ensure buffer is a multiple of MTU and can hold at least one frame */
-  if ( st->base.buffer_size < st->if_mtu ){
-	  return ERROR_BUFFER_LENGTH;
-  } else if ( st->base.buffer_size % st->if_mtu != 0 ){
-	  return ERROR_BUFFER_MULTIPLE;
+  /* setup buffer pointers (see brief overview at struct declaration) */
+  st->num_frames = frames;
+  st->num_packets = 0;
+  st->read_ptr = NULL;
+  st->base.readPos = 0;
+  st->base.writePos = 0;
+  for ( unsigned int i = 0; i < frames; i++ ){
+	  st->frame[i] = st->base.buffer + frame_offset + i * if_mtu;
   }
 
   /* bind MA MAC */
@@ -315,7 +371,7 @@ long stream_ethernet_create(struct stream** stptr, const struct ether_addr* addr
   st->base.comment = strdup(comment);
 
   /* callbacks */
-  st->base.fill_buffer = (fill_buffer_callback)fill_buffer;
+  st->base.fill_buffer = NULL;
   st->base.destroy = (destroy_callback)destroy;
   st->base.write = (write_callback)stream_ethernet_write;
 
@@ -336,8 +392,10 @@ long stream_ethernet_open(struct stream** stptr, const struct ether_addr* addr, 
   st->base.comment = NULL;
 
   /* callbacks */
-  st->base.fill_buffer = (fill_buffer_callback)fill_buffer;
+  st->base.fill_buffer = NULL;
   st->base.destroy = (destroy_callback)destroy;
+  st->base.write = NULL;
+  st->base.read = (read_callback)stream_ethernet_read;
 
   return 0;
 }

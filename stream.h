@@ -26,6 +26,8 @@ typedef long (*destroy_callback)(struct stream* st);
 
 typedef int (*write_callback)(struct stream* st, const void* data, size_t size);
 
+typedef int (*read_callback)(struct stream* st, cap_head** header, const struct filter* filter, struct timeval* timeout);
+
 // Stream structure, used to manage different types of streams
 struct stream {
   enum protocol_t type;                 // What type of stream do we have?
@@ -50,6 +52,7 @@ struct stream {
   fill_buffer_callback fill_buffer;
   destroy_callback destroy;
   write_callback write;
+	read_callback read;
 };
 
 #endif /* CAPUTILS_INT_STREAM_H */
