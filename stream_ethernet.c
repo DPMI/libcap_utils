@@ -28,6 +28,10 @@ struct stream_ethernet {
   struct ether_addr address[MAX_ADDRESS];
 	long unsigned int seqnum[MAX_ADDRESS];
 	unsigned int num_address;
+
+	char** frames;
+	size_t num_frames;  /* how many frames that buffer can hold */
+	size_t num_packets; /* how many packets is left in current frame */
 };
 
 /**
@@ -261,9 +265,11 @@ static long stream_ethernet_init(struct stream** stptr, const struct ether_addr*
   }
   st->if_mtu = ifr.ifr_mtu;
 
-  /* ensure buffer is larger than MTU */
+  /* ensure buffer is a multiple of MTU and can hold at least one frame */
   if ( st->base.buffer_size < st->if_mtu ){
 	  return ERROR_BUFFER_LENGTH;
+  } else if ( st->base.buffer_size % st->if_mtu != 0 ){
+	  return ERROR_BUFFER_MULTIPLE;
   }
 
   /* bind MA MAC */

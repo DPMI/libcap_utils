@@ -44,6 +44,8 @@ enum {
   ERROR_INVALID_HWADDR_MULTICAST,
   ERROR_INVALID_IFACE,
   ERROR_BUFFER_LENGTH,
+  ERROR_BUFFER_MULTIPLE,
+
   ERROR_NOT_IMPLEMENTED, /* should not normally be used but during the transition period it is useful */
 
   ERROR_LAST
