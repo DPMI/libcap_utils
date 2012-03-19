@@ -3,6 +3,7 @@
 #endif /* HAVE_CONFIG_H */
 
 #include "caputils/log.h"
+#include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
 #include <time.h>
@@ -15,10 +16,10 @@ static void write_time(FILE* fp){
   struct timeval tid1;
   gettimeofday(&tid1,NULL);
 
-  struct tm *dagtid;  
+  struct tm *dagtid;
   dagtid=localtime(&tid1.tv_sec);
 
-  char time[20] = {0,};  
+  char time[20] = {0,};
   strftime(time, sizeof(time), "%Y-%m-%d %H.%M.%S", dagtid);
   fprintf(fp, "[%s] ", time);
 }
@@ -59,36 +60,47 @@ int logmsg(FILE* fp, const char* tag, const char* fmt, ...){
   return ret;
 }
 
-void hexdump(FILE* fp, const char* data, size_t size){
+void hexdump(FILE* dst, const char* data, size_t size){
+	char* tmp = hexdump_str(data, size);
+	fputs(tmp, dst);
+	free(tmp);
+}
+
+char* hexdump_str(const char* data, size_t size){
+	char* buffer = malloc(size*2); /* more than really needed */
+	char* dst = buffer;
+
   const size_t align = size + (size % 16);
-  fputs("[0000]  ", fp);
+  dst += sprintf(dst, "[0000]  ");
   for( unsigned int i=0; i < align; i++){
     if ( i < size ){
-      fprintf(fp, "%02X ", data[i] & 0xff);
+      dst += sprintf(dst, "%02X ", data[i] & 0xff);
     } else {
-      fputs("   ", fp);
+	    dst += sprintf(dst, "   ");
     }
     if ( i % 4 == 3 ){
-      fputs("   ", fp);
+      dst += sprintf(dst, "   ");
     }
     if ( i % 16 == 15 ){
-      fputs("    |", fp);
+      dst += sprintf(dst, "    |");
       for ( unsigned int j = i-15; j<=i; j++ ){
         char ch = data[j];
-	
+
         if ( j >= size ){
           ch = ' ';
         } else if ( !isprint(data[j]) ){
           ch = '.';
         }
-	
-        fputc(ch, fp);
+
+        dst += sprintf(dst, "%c", ch);
       }
-      fputs("|", fp);
+      dst += sprintf(dst, "|");
       if ( (i+1) < align){
-        fprintf(fp, "\n[%04X]  ", i+1);
+        dst += sprintf(dst, "\n[%04X]  ", i+1);
       }
     }
   }
-  fprintf(fp, "\n");
+  dst += sprintf(dst, "\n");
+
+  return buffer;
 }

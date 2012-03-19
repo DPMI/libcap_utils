@@ -1,6 +1,8 @@
 caputils-0.7.7
 --------------
 
+	* add: hexdump_str() which is the same as old hexdump() but saves to a
+	       string instead of writing to FILE.
 	* add: progress report to capdump.
 	* fix: regression fix for capdump buffer size causing ethernet streams
 	       to fail for mtu > 4096.
