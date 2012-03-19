@@ -12,7 +12,7 @@ int vlogmsg(FILE* fp, const char* tag, const char* fmt, va_list ap);
 int logmsg(FILE* fp, const char* tag, const char* fmt, ...) __attribute__ ((format (printf, 3, 4)));
 
 /**
- * Dump the content of data as hexadecimal (and its ascii repr.)
+ * Kind of `fputs(hexdump_str(..), fp)`
  */
 void hexdump(FILE* fp, const char* data, size_t size);
 
