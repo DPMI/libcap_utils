@@ -4,6 +4,7 @@
 
 #include <caputils/caputils.h>
 #include <caputils/marker.h>
+#include <caputils/picotime.h>
 #include "caputils_int.h"
 
 #include <stdio.h>
@@ -20,6 +21,7 @@
 #include <netinet/udp.h>
 #include <inttypes.h>
 #include "be64toh.h" /* for compability */
+#include <time.h>
 
 static const size_t FILENAME_SUFFIX_MAX = 1000; /* maximum number of filename suffixes */
 static const size_t PROGRESS_REPORT_DELAY = 60;  /* seconds between progress reports */
@@ -55,7 +57,17 @@ static void sigint_handler(int signum){
 
 static void progress_report(int signum){
 	static char buf[1024];
-	ssize_t bytes = snprintf(buf, 1024, "%s: progress report: %'"PRIu64" packets read.\n", program_name, stream_stat->read);
+	static char timestr[64];
+	time_t t = time(NULL);
+	struct tm tm = *gmtime(&t);
+	strftime(timestr, sizeof(timestr), "%a, %d %b %Y %H:%M:%S +0000", &tm);
+
+	static uint64_t last = 0;
+	uint64_t delta = stream_stat->read - last;
+	last = stream_stat->read;
+	uint64_t pps = delta / PROGRESS_REPORT_DELAY;
+
+	ssize_t bytes = snprintf(buf, 1024, "%s: [%s] progress report: %'"PRIu64" packets read (%"PRIu64" new, %"PRIu64"pkt/s).\n", program_name, timestr, stream_stat->read, delta, pps);
 	if ( write(progress, buf, bytes) == -1 ){
 		fprintf(stderr, "progress report failed: %s\n", strerror(errno));
 	}
@@ -331,7 +343,7 @@ int main(int argc, char **argv){
 
 		/* Read the next packet */
 		cap_head* cp;
-		ret = stream_read(src, &cp, NULL, &tv);
+		ret = stream_read(src, &cp, NULL, NULL);
 		if ( ret == EAGAIN ){ /* a timeout occured */
 			continue;
 		} else if ( ret == EINTR && keep_running != 0 ){ /* don't abort unless signal caused a halt */
@@ -339,7 +351,6 @@ int main(int argc, char **argv){
 		} else if ( ret != 0 ){ /* either an error or proper shutdown */
 			break;
 		}
-
 		/* Detect marker in stream */
 		struct marker mark;
 		if ( marker && is_marker(cp, &mark, marker) ){

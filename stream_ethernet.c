@@ -99,9 +99,8 @@ static int read_packet(struct stream_ethernet* st, struct timeval* timeout){
 		//printf("write: %d read %d\n", st->base.writePos, st->base.readPos);
 #endif
 
-
 		/* increase packet count */
-		st->base.stat.recv += ntohs(sh->nopkts);
+		st->base.stat.recv += ntohl(sh->nopkts);
 
     /* if no sequencenr is set some additional checks are made.
      * they will also run when the sequence number wraps, but that ok since the
@@ -122,7 +121,7 @@ static int read_packet(struct stream_ethernet* st, struct timeval* timeout){
        * arrives before proceeding. */
       st->seqnum[match] = ntohl(sh->sequencenr);
     }
-    match_inc_seqnr(&st->seqnum[match], sh);
+    match_inc_seqnr(&st->base, &st->seqnum[match], sh);
 
     st->base.writePos = (st->base.writePos+1) % st->num_frames;
 

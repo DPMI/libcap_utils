@@ -12,6 +12,7 @@
 #include <arpa/inet.h>
 #include <errno.h>
 #include <unistd.h>
+#include <time.h>
 
 int stream_alloc(struct stream** stptr, enum protocol_t protocol, size_t size, size_t buffer_size){
 	assert(stptr);
@@ -54,13 +55,19 @@ int stream_alloc(struct stream** stptr, enum protocol_t protocol, size_t size, s
 	return 0;
 }
 
-void match_inc_seqnr(long unsigned int* restrict seq, const struct sendhead* restrict sh){
+void match_inc_seqnr(const struct stream* st, long unsigned int* restrict seq, const struct sendhead* restrict sh){
 	/* validate sequence number */
 	const int expected = *seq;
 	const int got = ntohl(sh->sequencenr);
-	if( expected != got ){
-		fprintf(stderr,"Missmatch of sequence numbers. Expeced %d got %d (%d frame(s) missing)\n", expected, got, (got-expected));
+	if( __builtin_expect(expected != got, 0) ){
+		static char timestr[64];
+		time_t t = time(NULL);
+		struct tm tm = *gmtime(&t);
+		strftime(timestr, sizeof(timestr), "%a, %d %b %Y %H:%M:%S +0000", &tm);
+
+		fprintf(stderr,"[%s] Mismatch of sequence numbers. Expected %d got %d (%d frame(s) missing, pkgcount: %zd)\n", timestr, expected, got, (got-expected), st->stat.recv);
 		*seq = ntohl(sh->sequencenr); /* reset sequence number */
+		abort();
 	}
 
 	/* increment sequence number (next packet is expected to have +1) */

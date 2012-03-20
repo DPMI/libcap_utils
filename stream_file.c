@@ -55,12 +55,12 @@ static int stream_file_fillbuffer(struct stream_file* st){
 }
 
 static int stream_file_write(struct stream_file* st, const void* data, size_t size){
-  if( fwrite(data, 1, size, st->file) != size ){
+	if( fwrite(data, size, 1, st->file) != size ){
     return errno; /* @bug must check with feof(3) and ferror(3) */
   }
 
   /* make sure the data is flushed */
-  if ( st->force_flush ){
+  if ( __builtin_expect(st->force_flush,0) ){
     fflush(st->file);
     fsync(fileno(st->file));
   }
