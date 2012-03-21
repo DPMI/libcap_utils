@@ -74,7 +74,7 @@ static void progress_report(int signum){
 }
 
 static void show_usage(void){
-	printf("capdump-" VERSION "\n");
+	printf("capdump-" VERSION_FULL "\n");
 	printf("(C) 2011 David Sveningsson <david.sveningsson@bth.se>\n");
 	printf("Usage: %s [OPTIONS] STREAM\n", program_name);
 	printf("  -o, --output=FILE    Save output in capfile. [default=stdout]\n"

@@ -11,6 +11,7 @@ VERSION_MICRO=__VERSION_MICRO__
 AC_DEFINE_UNQUOTED([VERSION_MAJOR], [${VERSION_MAJOR}], [Major version number of package])
 AC_DEFINE_UNQUOTED([VERSION_MINOR], [${VERSION_MINOR}], [Minor version number of package])
 AC_DEFINE_UNQUOTED([VERSION_MICRO], [${VERSION_MICRO}], [Micro version number of package])
+AC_DEFINE_UNQUOTED([VERSION_FULL], ["$VERSION"], [Verson number of package including suffixes (e.g. PF_RING)])
 AC_SUBST([VERSION_MAJOR])
 AC_SUBST([VERSION_MINOR])
 AC_SUBST([VERSION_MICRO])
@@ -68,6 +69,7 @@ AS_IF([test "x$enable_debug" = "xyes"],
 AC_ARG_WITH([pfring], [AS_HELP_STRING([--with-pfring], [Use PF_RING for ethernet capture @<:@default=auto@:>@])])
 AX_PFRING([$with_pfring])
 AM_CONDITIONAL([BUILD_PFRING], [test "x$ax_have_pfring" = "xyes"])
+AS_IF([test "x$ax_have_pfring" = "xyes"], [AC_DEFINE_UNQUOTED([VERSION_FULL], ["$VERSION (PF_RING enabled)"])])
 
 AC_ARG_ENABLE([capdump], [AS_HELP_STRING([--enable-capdump], [Build capdump utility (record a stream) @<:@default=enabled@:>@])])
 AC_ARG_ENABLE([capinfo], [AS_HELP_STRING([--enable-capinfo], [Build capinfo utility (show info about a stream) @<:@default=enabled@:>@])])

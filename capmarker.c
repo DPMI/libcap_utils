@@ -88,7 +88,7 @@ static int send_udp(const struct in_addr dst, in_port_t port){
 }
 
 static void show_usage(void){
-	printf("capmarker-" VERSION "\n");
+	printf("capmarker-" VERSION_FULL "\n");
 	printf("(C) 2012 David Sveningsson <david.sveningsson@bth.se>\n");
 	printf("Usage: %s [OPTIONS] IP:PORT..\n", program_name);
 	printf("  -e, --experiment=ID  Current experiment ID.\n"

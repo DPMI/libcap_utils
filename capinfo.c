@@ -32,7 +32,7 @@ static long ipproto[UINT8_MAX] = {0,}; /* protocol is defined as 1 octet */
 static timepico first, last;
 
 static void show_usage(void){
-	printf("capinfo  caputils-" CAPUTILS_VERSION "\n");
+	printf("capinfo-" VERSION_FULL "\n");
 	printf("(c) 2011 David Sveningsson\n\n");
 	printf("Open a capstream and show information about it.\n");
 	printf("Usage: capinfo [OPTIONS] FILENAME..\n\n");
