@@ -123,7 +123,7 @@ int stream_open(stream_t* stptr, const stream_addr_t* dest, const char* iface, s
 		/*   return stream_udp_init(myStream, address, port); */
 
 	case PROTOCOL_ETHERNET_MULTICAST:
-		ret = stream_ethernet_open(stptr, &dest->ether_addr, iface, buffer_size);
+		ret = stream_pfring_open(stptr, &dest->ether_addr, iface, buffer_size);
 		break;
 
 	case PROTOCOL_LOCAL_FILE:

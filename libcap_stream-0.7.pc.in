@@ -6,5 +6,5 @@ includedir=@includedir@
 Name: libcap_stream
 Description: 
 Version: @VERSION@
-Libs: -L${libdir} -lcap_stream-07
+Libs: -L${libdir} -lcap_stream-07 -L/home/ext/prefix/pfring/lib -lpfring -lpcap
 Cflags: -I${includedir}

@@ -52,6 +52,19 @@ static void format_bytes(char* dst, size_t size, uint64_t bytes){
 	snprintf(dst, size, "%.1f %s (%"PRIu64" bytes)", tmp, prefix[n], bytes);
 }
 
+static void format_rate(char* dst, size_t size, uint64_t bytes, uint64_t seconds){
+	static const char* prefix[] = { "bps", "Kbps", "Mbps", "Gbps", "Tbps", "Pbps", "Ebps", "Zbps", "Ybps" };
+	const uint64_t rate = (bytes*8) / seconds;
+	unsigned int n = 0;
+	uint64_t multiplier = 1;
+	while ( rate / multiplier >= 1024 && n < 8 ){
+		multiplier *= 1024;
+		n++;
+	}
+	float tmp = (float)rate / multiplier;
+	snprintf(dst, size, "%.1f %s", tmp, prefix[n]);
+}
+
 static void format_seconds(char* dst, size_t size, timepico first, timepico last){
 	const timepico time_diff = timepico_sub(last, first);
 	uint64_t hseconds = time_diff.tv_sec * 10 + time_diff.tv_psec / (PICODIVIDER / 10);
@@ -74,6 +87,7 @@ static void print_overview(){
 	printf("  comment: %s\n", comment ? comment : "(unset)");
 
 	char byte_str[128];
+	char rate_str[128];
 	char first_str[128];
 	char last_str[128];
 	char sec_str[128];
@@ -86,13 +100,14 @@ static void print_overview(){
 	timepico_to_string_r(&first, first_str, 128, "%F %T");
 	timepico_to_string_r(&last,  last_str,  128, "%F %T");
 	format_bytes(byte_str, 128, bytes);
+	format_rate(rate_str, 128, bytes, hseconds/10);
 	format_seconds(sec_str, 128, first, last);
 	printf(" captured: %s to %s\n", first_str, last_str);
 	printf("  markers: %s\n", marker_str);
 	printf(" duration: %s (%.1f seconds)\n", sec_str, (float)hseconds/10);
 	printf("  packets: %ld\n", packets);
 	printf("    bytes: %s\n", byte_str);
-	printf(" avg rate: %.1fkbps\n", (float)(bytes / (hseconds/10)) / 1024);
+	printf(" avg rate: %s\n", rate_str);
 	printf("\n");
 }
 
