@@ -15,6 +15,10 @@
  *                                                                         *
  ***************************************************************************/
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include "caputils/caputils.h"
 #include "caputils_int.h"
 #include <stdlib.h>
@@ -26,7 +30,7 @@ int eth_aton(struct ether_addr* dst, const char* addr){
   assert(addr);
 
   struct ether_addr* tmp = ether_aton(addr);
-  
+
   if ( !tmp ){
     return 0;
   }
@@ -41,12 +45,25 @@ const char* hexdump_address_r(const struct ether_addr* address, char buf[IFHWADD
 
   for ( i = 0; i < IFHWADDRLEN - 1; i++ ) {
     sprintf (buf + 3*i, "%2.2X:", address->ether_addr_octet[i]);
-  }  
+  }
   sprintf (buf + 15, "%2.2X", address->ether_addr_octet[i]);
 
   return buf;
 }
+
 const char* hexdump_address(const struct ether_addr* address){
   static char buf[IFHWADDRLEN*3];
   return hexdump_address_r(address, buf);
+}
+
+const char* caputils_version(caputils_version_t* version){
+#define str(x) #x
+	if ( version ){
+		version->major = VERSION_MAJOR;
+		version->minor = VERSION_MAJOR;
+		version->micro = atoi(str(VERSION_MICRO)); /* hack because micro may include suffix like _git */
+		version->features = 0;
+	}
+#undef str
+	return VERSION;
 }
