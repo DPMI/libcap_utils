@@ -212,7 +212,9 @@ static long stream_ethernet_write(struct stream_ethernet* st, const void* data, 
   return 0;
 }
 
-static long stream_ethernet_add(struct stream_ethernet* st, const struct ether_addr* addr){
+long stream_ethernet_add(struct stream* stt, const struct ether_addr* addr){
+	struct stream_ethernet* st= (struct stream_ethernet*)stt;
+
 	if ( st->num_address == MAX_ADDRESS ){
 		return EBUSY;
 	}
@@ -344,7 +346,7 @@ static long stream_ethernet_init(struct stream** stptr, const struct ether_addr*
   }
 
   /* add membership to group */
-  if ( (ret=stream_ethernet_add(st, addr)) != 0 ){
+  if ( (ret=stream_ethernet_add(&st->base, addr)) != 0 ){
 	  return ret;
   }
 
@@ -397,17 +399,4 @@ long stream_ethernet_open(struct stream** stptr, const struct ether_addr* addr, 
   st->base.read = (read_callback)stream_ethernet_read;
 
   return 0;
-}
-
-int stream_add(struct stream* st, const stream_addr_t* addr){
-	if ( !st || stream_addr_type(addr) != STREAM_ADDR_ETHERNET ){
-		return EINVAL;
-	}
-
-	if ( st->type != PROTOCOL_ETHERNET_MULTICAST ){
-		return ERROR_INVALID_PROTOCOL;
-	}
-
-	struct stream_ethernet* se = (struct stream_ethernet*)st;
-	return stream_ethernet_add(se, &addr->ether_addr);
 }

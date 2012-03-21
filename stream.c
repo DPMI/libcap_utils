@@ -123,7 +123,11 @@ int stream_open(stream_t* stptr, const stream_addr_t* dest, const char* iface, s
 		/*   return stream_udp_init(myStream, address, port); */
 
 	case PROTOCOL_ETHERNET_MULTICAST:
+#ifdef HAVE_PFRING
 		ret = stream_pfring_open(stptr, &dest->ether_addr, iface, buffer_size);
+#else
+		ret = stream_ethernet_open(stptr, &dest->ether_addr, iface, buffer_size);
+#endif
 		break;
 
 	case PROTOCOL_LOCAL_FILE:
@@ -157,7 +161,11 @@ int stream_create(stream_t* stptr, const stream_addr_t* dest, const char* nic, c
 
 	switch ( stream_addr_type(dest) ){
 	case PROTOCOL_ETHERNET_MULTICAST:
+#ifdef HAVE_PFRING
+		return stream_pfring_create(stptr, &dest->ether_addr, nic, mpid, comment, flags);
+#else
 		return stream_ethernet_create(stptr, &dest->ether_addr, nic, mpid, comment, flags);
+#endif
 
 	case PROTOCOL_LOCAL_FILE:
 		filename = stream_addr_have_flag(dest, STREAM_ADDR_LOCAL) ? dest->local_filename : dest->filename;
@@ -465,4 +473,20 @@ void stream_print_info(const stream_t st, FILE* dst){
 	fprintf(dst, "%s caputils %d.%d stream\n", stream_addr_ntoa(&st->addr), version.major, version.minor);
 	fprintf(dst, "     mpid: %s\n", mampid[0] != 0 ? mampid : "(unset)");
 	fprintf(dst, "  comment: %s\n", comment ? comment : "(unset)");
+}
+
+int stream_add(struct stream* st, const stream_addr_t* addr){
+	if ( !st || stream_addr_type(addr) != STREAM_ADDR_ETHERNET ){
+		return EINVAL;
+	}
+
+	if ( st->type != PROTOCOL_ETHERNET_MULTICAST ){
+		return ERROR_INVALID_PROTOCOL;
+	}
+
+#ifdef HAVE_PFRING
+	return stream_pfring_add(st, &addr->ether_addr);
+#else
+	return stream_ethernet_add(st, &addr->ether_addr);
+#endif
 }

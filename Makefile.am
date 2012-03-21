@@ -71,11 +71,13 @@ pkgconfig_DATA = libcap_stream-0.7.pc libcap_filter-0.7.pc libcap_utils-0.7.pc l
 
 libcap_stream_07_la_LDFLAGS = -version-info 1:0:1 -lpfring -L/home/ext/prefix/pfring/lib
 libcap_stream_07_la_LIBADD = libcap_utils-07.la libcap_filter-07.la -lpfring -lpcap
-libcap_stream_07_la_SOURCES =  \
-	stream.c stream.h   \
-	stream_ethernet.c   \
-	stream_pfring.c     \
-	stream_file.c
+libcap_stream_07_la_SOURCES = stream.c stream.h stream_file.c
+
+if BUILD_PFRING
+libcap_stream_07_la_SOURCES += stream_pfring.c
+else
+libcap_stream_07_la_SOURCES += stream_ethernet.c
+endif
 
 libcap_utils_07_la_LDFLAGS = -version-info 0:1:0
 libcap_utils_07_la_SOURCES =   \

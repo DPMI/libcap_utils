@@ -65,6 +65,10 @@ AS_IF([test "x$enable_debug" = "xyes"],
 	[AC_DEFINE([NDEBUG], [1], [Define to disable extra debug prints])]
 )
 
+AC_ARG_WITH([pfring], [AS_HELP_STRING([--with-pfring], [Use PF_RING for ethernet capture @<:@default=auto@:>@])])
+AX_PFRING([$with_pfring])
+AM_CONDITIONAL([BUILD_PFRING], [test "x$ax_have_pfring" = "xyes"])
+
 AC_ARG_ENABLE([capdump], [AS_HELP_STRING([--enable-capdump], [Build capdump utility (record a stream) @<:@default=enabled@:>@])])
 AC_ARG_ENABLE([capinfo], [AS_HELP_STRING([--enable-capinfo], [Build capinfo utility (show info about a stream) @<:@default=enabled@:>@])])
 AC_ARG_ENABLE([capfilter], [AS_HELP_STRING([--enable-capfilter], [Build capfilter utility (filter existing stream) @<:@default=enabled@:>@])])
