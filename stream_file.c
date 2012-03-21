@@ -55,8 +55,14 @@ static int stream_file_fillbuffer(struct stream_file* st){
 }
 
 static int stream_file_write(struct stream_file* st, const void* data, size_t size){
-	if( fwrite(data, size, 1, st->file) != size ){
-    return errno; /* @bug must check with feof(3) and ferror(3) */
+	if( fwrite(data, size, 1, st->file) != 1 ){
+		if ( feof(st->file) ){
+			fprintf(stderr, "feof\n");
+			return ENOSPC;
+		} else {
+			fprintf(stderr, "
+			return ferror(st->file);
+		}
   }
 
   /* make sure the data is flushed */

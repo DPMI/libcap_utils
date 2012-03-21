@@ -24,7 +24,7 @@
 #include <time.h>
 
 static const size_t FILENAME_SUFFIX_MAX = 1000; /* maximum number of filename suffixes */
-static const size_t PROGRESS_REPORT_DELAY = 60;  /* seconds between progress reports */
+static const size_t PROGRESS_REPORT_DELAY = 3;  /* seconds between progress reports */
 static int keep_running = 1;
 static int marker = 0;
 static char* fmt_basename = NULL;  /* used by generate_filename */
@@ -63,11 +63,12 @@ static void progress_report(int signum){
 	strftime(timestr, sizeof(timestr), "%a, %d %b %Y %H:%M:%S +0000", &tm);
 
 	static uint64_t last = 0;
-	uint64_t delta = stream_stat->read - last;
+	const uint64_t delta = stream_stat->read - last;
 	last = stream_stat->read;
-	uint64_t pps = delta / PROGRESS_REPORT_DELAY;
+	const uint64_t pps = delta / PROGRESS_REPORT_DELAY;
+	const float rate = (float)(delta * 8 / PROGRESS_REPORT_DELAY / 1024 / 1024);
 
-	ssize_t bytes = snprintf(buf, 1024, "%s: [%s] progress report: %'"PRIu64" packets read (%"PRIu64" new, %"PRIu64"pkt/s).\n", program_name, timestr, stream_stat->read, delta, pps);
+	ssize_t bytes = snprintf(buf, 1024, "%s: [%s] progress report: %'"PRIu64" packets read (%"PRIu64" new, %"PRIu64"pkt/s, avg bitrate %.1fMpbs).\n", program_name, timestr, stream_stat->read, delta, pps, rate);
 	if ( write(progress, buf, bytes) == -1 ){
 		fprintf(stderr, "progress report failed: %s\n", strerror(errno));
 	}

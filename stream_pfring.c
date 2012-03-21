@@ -69,13 +69,13 @@ static int read_packet(struct stream_pfring* st, struct timeval* timeout){
 		struct pfring_pkthdr hdr;
 		while ( pfring_recv(st->pd, (u_char**)&st->frame[st->base.writePos], 0, &hdr, 1) == 0 ) {
 		}
-		
+
 		char* dst = st->frame[st->base.writePos];
-		
+
 		/* Setup pointers */
 		const struct ethhdr* eh = (const struct ethhdr*)dst;
 		const struct sendhead* sh = (const struct sendhead*)(dst + sizeof(struct ethhdr));
-		
+
 		/* Check if it is a valid packet and if it was destinationed here */
 		int match;
 		if ( (match=match_ma_pkt(st, eh)) == -1 ){
@@ -111,9 +111,6 @@ static int read_packet(struct stream_pfring* st, struct timeval* timeout){
       st->seqnum[match] = ntohl(sh->sequencenr);
     }
     match_inc_seqnr(&st->base, &st->seqnum[match], sh);
-
-    fprintf(stderr, "keeping %d\n", ntohl(sh->sequencenr));
-
 
     st->base.writePos = (st->base.writePos+1) % st->num_frames;
 
@@ -245,7 +242,7 @@ long stream_pfring_open(struct stream** stptr, const struct ether_addr* addr, co
   pfring_set_application_name(pd, "libcap_utils");
 
   uint32_t version;
-  pfring_version(pd, &version);  
+  pfring_version(pd, &version);
   fprintf(stderr, "Using PF_RING v.%d.%d.%d\n",
           (version & 0xFFFF0000) >> 16,
           (version & 0x0000FF00) >> 8,
@@ -349,7 +346,7 @@ int pcap_compile_nopcap(int snaplen_arg, int linktype_arg,
 {
 	pcap_t *p;
 	int ret;
-	
+
 	p = pcap_open_dead(linktype_arg, snaplen_arg);
 	if (p == NULL)
 		return (-1);
