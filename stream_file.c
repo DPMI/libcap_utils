@@ -57,11 +57,12 @@ static int stream_file_fillbuffer(struct stream_file* st){
 static int stream_file_write(struct stream_file* st, const void* data, size_t size){
 	if( fwrite(data, size, 1, st->file) != 1 ){
 		if ( feof(st->file) ){
-			fprintf(stderr, "feof\n");
 			return ENOSPC;
+		} else if ( ferror(st->file) ){
+			return errno;
 		} else {
-			fprintf(stderr, "
-			return ferror(st->file);
+			fprintf(stderr, "fwrite() returned error but neither feof or ferror set. Dragons ahead!\n");
+			return EINVAL;
 		}
   }
 
