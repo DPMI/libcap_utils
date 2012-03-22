@@ -13,6 +13,7 @@
 #include <errno.h>
 #include <unistd.h>
 #include <time.h>
+#include <inttypes.h>
 
 int stream_alloc(struct stream** stptr, enum protocol_t protocol, size_t size, size_t buffer_size){
 	assert(stptr);
@@ -65,7 +66,7 @@ void match_inc_seqnr(const struct stream* st, long unsigned int* restrict seq, c
 		struct tm tm = *gmtime(&t);
 		strftime(timestr, sizeof(timestr), "%a, %d %b %Y %H:%M:%S +0000", &tm);
 
-		fprintf(stderr,"[%s] Mismatch of sequence numbers. Expected %d got %d (%d frame(s) missing, pkgcount: %zd)\n", timestr, expected, got, (got-expected), st->stat.recv);
+		fprintf(stderr,"[%s] Mismatch of sequence numbers. Expected %d got %d (%d frame(s) missing, pkgcount: %"PRIu64")\n", timestr, expected, got, (got-expected), st->stat.recv);
 		*seq = ntohl(sh->sequencenr); /* reset sequence number */
 		abort();
 	}
