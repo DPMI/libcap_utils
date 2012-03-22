@@ -24,7 +24,7 @@
 #include <time.h>
 
 static const size_t FILENAME_SUFFIX_MAX = 1000; /* maximum number of filename suffixes */
-static const size_t PROGRESS_REPORT_DELAY = 3;  /* seconds between progress reports */
+static const size_t PROGRESS_REPORT_DELAY = 60;  /* seconds between progress reports */
 static int keep_running = 1;
 static int marker = 0;
 static char* fmt_basename = NULL;  /* used by generate_filename */
