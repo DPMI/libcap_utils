@@ -18,6 +18,7 @@
 #include <pfring.h>
 #include <pcap/pcap.h>
 #include <pcap/bpf.h>
+#include <unistd.h>
 
 #define MAX_ADDRESS 100
 
@@ -221,6 +222,29 @@ long stream_pfring_create(struct stream** stptr, const struct ether_addr* addr, 
   return EINVAL;
 }
 
+static int iface_mtu(const char* iface){
+	/* store the iface name */
+	struct ifreq ifr;
+	strncpy(ifr.ifr_name, iface, IFNAMSIZ);
+
+	/* open raw socket */
+	int sd = socket(AF_PACKET, SOCK_RAW, htons(LLPROTO));
+	if ( sd < 0 ){
+		return -1;
+	}
+
+  /* get iface MTU */
+  if ( ioctl(sd, SIOCGIFMTU, &ifr) == -1 ){
+    return -1;
+  }
+  int if_mtu = ifr.ifr_mtu;
+
+  /* close socket */
+  close(sd);
+
+  return if_mtu;
+}
+
 long stream_pfring_open(struct stream** stptr, const struct ether_addr* addr, const char* iface, size_t buffer_size){
   int ret = 0;
   assert(stptr);
@@ -229,6 +253,9 @@ long stream_pfring_open(struct stream** stptr, const struct ether_addr* addr, co
   if ( !(addr && iface) ){
     return EINVAL;
   }
+
+  /* get MTU for interface */
+  const int if_mtu = iface_mtu(iface);
 
   pfring_config(99);
 
@@ -248,17 +275,8 @@ long stream_pfring_open(struct stream** stptr, const struct ether_addr* addr, co
           (version & 0x0000FF00) >> 8,
           version & 0x000000FF);
 
-/*u_char mac_address[6] = { 0 };
-
-  if(pfring_get_bound_device_address(pd, mac_address) != 0)
-    fprintf(stderr, "Impossible to know the device address\n");
-  else
-    printf("Capturing from %s [%s]\n", iface, etheraddr_string(mac_address, buf));
-*/
-  printf("# Device RX channels: %d\n", pfring_get_num_rx_channels(pd));
-
   if((ret = pfring_set_direction(pd, rx_and_tx_direction)) != 0)
-    ; //fprintf(stderr, "pfring_set_direction returned %d (perhaps you use a direction other than rx only with DNA ?)\n", ret);
+    fprintf(stderr, "pfring_set_direction returned %d (perhaps you use a direction other than rx only with DNA ?)\n", ret);
 
   if((ret = pfring_set_socket_mode(pd, recv_only_mode)) != 0)
     fprintf(stderr, "pfring_set_socket_mode returned [rc=%d]\n", ret);
@@ -270,8 +288,6 @@ long stream_pfring_open(struct stream** stptr, const struct ether_addr* addr, co
 	  printf("pfring_set_bpf_filter(%s) returned %d\n", bpfFilter, ret);
   else
 	  printf("Successfully set BPF filter '%s'\n", bpfFilter);
-
-  int if_mtu = 9000;
 
   /* default buffer_size of 25*MTU */
   if ( buffer_size == 0 ){
