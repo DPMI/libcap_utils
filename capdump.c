@@ -48,10 +48,10 @@ static struct option long_options[]= {
 
 static void sigint_handler(int signum){
 	if ( keep_running == 0 ){
-		fprintf(stderr, "\rGot SIGINT again, terminating.\n");
+		fprintf(stderr, "\r%s: Got SIGINT again, aborting.\n", program_name);
 		abort();
 	}
-	fprintf(stderr, "\rAborting capture.\n");
+	fprintf(stderr, "\r%s: Got SIGINT, terminating gracefully.\n", program_name);
 	keep_running = 0;
 }
 
@@ -349,9 +349,15 @@ int main(int argc, char **argv){
 			continue;
 		} else if ( ret == EINTR && keep_running != 0 ){ /* don't abort unless signal caused a halt */
 			continue;
-		} else if ( ret != 0 ){ /* either an error or proper shutdown */
+		} else if ( ret > 0 ){ /* either an error or proper shutdown */
+			fprintf(stderr, "%s: stream_read() returned 0x%08lX: %s\n", program_name, ret, caputils_error_string(ret));
 			break;
+		} else if ( ret == -1 ){
+			break;
+		} else if ( ret != 0 ){
+			abort();
 		}
+
 		/* Detect marker in stream */
 		struct marker mark;
 		if ( marker && is_marker(cp, &mark, marker) ){
@@ -384,24 +390,13 @@ int main(int argc, char **argv){
 		}
 
 		if ( (ret=stream_copy(dst, cp)) != 0 ) {
-			static int hitcount = 0;
 			fprintf(stderr, "%s: stream_copy() failed with code 0x%08lX: %s\n", program_name, ret, caputils_error_string(ret) );
-			if ( ++hitcount == 3 ){
-				fprintf(stderr, "%s: more than three errors detected, giving up.\n", program_name);
-				break;
-			}
+			break;
 		}
 
 		if ( max_packets > 0 && stream_stat->read >= max_packets ){
 			break;
 		}
-	}
-
-	/* if ret == -1 the stream was closed properly (e.g EOF or TCP shutdown)
-	 * In addition EINTR should not give any errors because it is implied when the
-	 * user presses C-c */
-	if ( ret > 0 && ret != EINTR ){
-		fprintf(stderr, "%s: stream_read() returned 0x%08lX: %s\n", program_name, ret, caputils_error_string(ret));
 	}
 
 	fprintf(stderr, "%s: There was a total of %'"PRIu64" packets recv.\n", program_name, stream_stat->recv);
