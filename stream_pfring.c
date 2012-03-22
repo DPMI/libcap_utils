@@ -256,6 +256,9 @@ long stream_pfring_open(struct stream** stptr, const struct ether_addr* addr, co
 
   /* get MTU for interface */
   const int if_mtu = iface_mtu(iface);
+  if ( if_mtu < 0 ){
+	  return errno;
+  }
 
   pfring_config(99);
 
