@@ -85,37 +85,6 @@ static void show_usage(void){
 	       "  - FILENAME           Open capfile for reading.\n");
 }
 
-/**
- * Test if packet is a marker packet.
- * ptr is undefined if packet isn't a marker.
- */
-static int is_marker(struct cap_header* cp, struct marker* ptr){
-	/* match ip packet */
-	const struct ip* ip = find_ip_header(cp->ethhdr);
-	if ( !ip ){ return 0; }
-
-	/* match udp packet */
-	uint16_t src, dst;
-	const struct udphdr* udp = find_udp_header(cp->payload, cp->ethhdr, ip, &src, &dst);
-	if ( !(udp && src == MARKERPORT && dst == marker) ){ return 0; }
-
-	/* match magic */
-	struct marker* marker = (struct marker*)((char*)udp + sizeof(struct udphdr));
-	if ( ntohl(marker->magic) != MARKER_MAGIC ){ return 0; }
-
-	/* assume it is a marker */
-	ptr->magic = ntohl(marker->magic);
-	ptr->version = marker->version;
-	ptr->flags = marker->flags;
-	ptr->reserved = ntohs(marker->reserved);
-	ptr->exp_id = ntohl(marker->exp_id);
-	ptr->run_id = ntohl(marker->run_id);
-	ptr->key_id = ntohl(marker->key_id);
-	ptr->seq_num = ntohl(marker->seq_num);
-	ptr->timestamp = be64toh(marker->timestamp);
-	return 1;
-}
-
 static const char* generate_filename(const char* fmt, const struct marker* marker){
 	static char buffer[1024];
 	char* dst = buffer;
@@ -373,7 +342,7 @@ int main(int argc, char **argv){
 
 		/* Detect marker in stream */
 		struct marker mark;
-		if ( marker && is_marker(cp, &mark) ){
+		if ( marker && is_marker(cp, &mark, marker) ){
 			char timestamp[200];
 			struct tm* tm = localtime((time_t*)&mark.timestamp);
 			strftime(timestamp, 200, "%a, %d %b %Y %T %z", tm);

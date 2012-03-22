@@ -24,6 +24,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <netinet/udp.h>
 
 int eth_aton(struct ether_addr* dst, const char* addr){
   assert(dst);
@@ -66,4 +67,34 @@ const char* caputils_version(caputils_version_t* version){
 	}
 #undef str
 	return VERSION;
+}
+
+int is_marker(struct cap_header* cp, struct marker* ptr, int port){
+	/* match ip packet */
+	const struct ip* ip = find_ip_header(cp->ethhdr);
+	if ( !ip ){ return 0; }
+
+	/* match udp packet */
+	uint16_t src, dst;
+	const struct udphdr* udp = find_udp_header(cp->payload, cp->ethhdr, ip, &src, &dst);
+	if ( !(udp && src == MARKERPORT && (dst == port || port == 0)) ){ return 0; }
+
+	/* match magic */
+	struct marker* marker = (struct marker*)((char*)udp + sizeof(struct udphdr));
+	if ( ntohl(marker->magic) != MARKER_MAGIC ){ return 0; }
+
+	/* assume it is a marker */
+	if ( ptr ){
+		ptr->magic = ntohl(marker->magic);
+		ptr->version = marker->version;
+		ptr->flags = marker->flags;
+		ptr->reserved = ntohs(marker->reserved);
+		ptr->exp_id = ntohl(marker->exp_id);
+		ptr->run_id = ntohl(marker->run_id);
+		ptr->key_id = ntohl(marker->key_id);
+		ptr->seq_num = ntohl(marker->seq_num);
+		ptr->timestamp = be64toh(marker->timestamp);
+	}
+
+	return 1;
 }

@@ -5,6 +5,7 @@
 #define __STDC_FORMAT_MACROS
 
 #include "caputils/caputils.h"
+#include "caputils_int.h"
 #include <getopt.h>
 #include <string.h>
 #include <inttypes.h>
@@ -19,6 +20,7 @@
 static stream_t st = NULL;
 static long int packets = 0;
 static uint64_t bytes = 0;
+static int marker_present = 0;
 static long ipv4 = 0;
 static long ipv6 = 0;
 static long arp = 0;
@@ -81,6 +83,7 @@ static void print_overview(){
 	format_bytes(byte_str, 128, bytes);
 	format_seconds(sec_str, 128, first, last);
 	printf(" captured: %s to %s\n", first_str, last_str);
+	printf("  markers: %s\n", marker_present ? "present" : "no");
 	printf(" duration: %s (%.1f seconds)\n", sec_str, (float)hseconds/10);
 	printf("  packets: %ld\n", packets);
 	printf("    bytes: %s\n", byte_str);
@@ -151,6 +154,7 @@ static int show_info(const char* filename){
 		}
 		last = cp->ts; /* overwritten each time */
 		bytes += cp->len;
+		marker_present |= is_marker(cp, NULL, 0);
 
 		struct ethhdr* eth = (struct ethhdr*)cp->payload;
 		struct iphdr* ip = NULL;

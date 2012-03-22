@@ -2,6 +2,7 @@
 #define CAPUTILS_INT_H
 
 #include "caputils/caputils.h"
+#include "caputils/marker.h"
 #include <netinet/ether.h>
 #include <net/if.h>
 
@@ -69,5 +70,11 @@ long stream_file_open(struct stream** stptr, const char* filename, size_t buffer
  * @param fp Optional
  */
 int stream_file_create(struct stream** stptr, FILE* fp, const char* filename, const char* mpid, const char* comment, int flags);
+
+/**
+ * Test if packet is a marker packet.
+ * ptr is undefined if packet isn't a marker.
+ */
+int is_marker(struct cap_header* cp, struct marker* ptr, int port);
 
 #endif /* CAPUTILS_INT_H */
