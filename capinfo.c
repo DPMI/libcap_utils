@@ -5,6 +5,7 @@
 #define __STDC_FORMAT_MACROS
 
 #include "caputils/caputils.h"
+#include "caputils/marker.h"
 #include "caputils_int.h"
 #include <getopt.h>
 #include <string.h>
@@ -76,6 +77,10 @@ static void print_overview(){
 	char first_str[128];
 	char last_str[128];
 	char sec_str[128];
+	char marker_str[128] = "no";
+	if ( marker_present ){
+		sprintf(marker_str, "present on port %d\n", marker_present);
+	}
 	const timepico time_diff = timepico_sub(last, first);
 	uint64_t hseconds = time_diff.tv_sec * 10 + time_diff.tv_psec / (PICODIVIDER / 10);
 	timepico_to_string(&first, first_str, 128, "%F %T");
@@ -83,7 +88,7 @@ static void print_overview(){
 	format_bytes(byte_str, 128, bytes);
 	format_seconds(sec_str, 128, first, last);
 	printf(" captured: %s to %s\n", first_str, last_str);
-	printf("  markers: %s\n", marker_present ? "present" : "no");
+	printf("  markers: %s\n", marker_str);
 	printf(" duration: %s (%.1f seconds)\n", sec_str, (float)hseconds/10);
 	printf("  packets: %ld\n", packets);
 	printf("    bytes: %s\n", byte_str);
@@ -154,7 +159,9 @@ static int show_info(const char* filename){
 		}
 		last = cp->ts; /* overwritten each time */
 		bytes += cp->len;
-		marker_present |= is_marker(cp, NULL, 0);
+		if ( !marker_present ){
+			marker_present = is_marker(cp, NULL, 0);
+		}
 
 		struct ethhdr* eth = (struct ethhdr*)cp->payload;
 		struct iphdr* ip = NULL;
