@@ -82,6 +82,7 @@ libcap_utils_07_la_SOURCES =   \
 	address.c           \
 	error.c             \
 	log.c               \
+	marker.c            \
 	utils.c             \
 	picotime.c
 
