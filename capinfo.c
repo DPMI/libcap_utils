@@ -83,8 +83,8 @@ static void print_overview(){
 	}
 	const timepico time_diff = timepico_sub(last, first);
 	uint64_t hseconds = time_diff.tv_sec * 10 + time_diff.tv_psec / (PICODIVIDER / 10);
-	timepico_to_string(&first, first_str, 128, "%F %T");
-	timepico_to_string(&last,  last_str,  128, "%F %T");
+	timepico_to_string_r(&first, first_str, 128, "%F %T");
+	timepico_to_string_r(&last,  last_str,  128, "%F %T");
 	format_bytes(byte_str, 128, bytes);
 	format_seconds(sec_str, 128, first, last);
 	printf(" captured: %s to %s\n", first_str, last_str);
