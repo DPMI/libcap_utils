@@ -136,3 +136,17 @@ timepico timepico_sub(timepico x, timepico y){
   /* Return 1 if result is negative. */
   return result;
 }
+
+timepico timepico_add(timepico a, timepico b){
+	timepico tmp = {
+		a.tv_sec + b.tv_sec,
+		a.tv_psec + b.tv_psec,
+	};
+
+	while ( tmp.tv_psec > PICODIVIDER ){
+		tmp.tv_sec++;
+		tmp.tv_psec -= PICODIVIDER;
+	}
+
+	return tmp;
+}

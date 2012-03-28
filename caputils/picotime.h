@@ -50,6 +50,11 @@ int timecmp(const timepico *ts1, const timepico *ts2);
  */
 timepico timepico_sub(timepico a, timepico b);
 
+/**
+ * Calculate a + b.
+ */
+timepico timepico_add(timepico a, timepico b);
+
 #ifdef __cplusplus
 }
 #endif
