@@ -56,8 +56,8 @@ extern "C" {
 
       /* for TCP/UDP streams */
       struct {
-	struct in_addr in_addr;
-	uint16_t in_port;
+	      struct in_addr in_addr;
+	      uint16_t in_port;
       };
     } __attribute__((packed));
 
