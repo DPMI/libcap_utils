@@ -318,8 +318,9 @@ void filter_pack(struct filter* src, struct filter_packed* dst){
   dst->src_port_mask	= htons(src->src_port_mask);
   dst->dst_port_mask	= htons(src->dst_port_mask);
   dst->port_mask      = htons(src->port_mask);
-  dst->consumer		= htonl(src->consumer);
-  dst->caplen		= htonl(src->caplen);
+  dst->consumer	      = htonl(src->consumer);
+  dst->caplen         = htonl(src->caplen);
+  dst->mode           = src->mode;
 
   /* ip source and dest */
   dst->ip_src = src->ip_src;
@@ -341,7 +342,7 @@ void filter_pack(struct filter* src, struct filter_packed* dst){
   memcpy(&dst->dest, &src->dest, sizeof(stream_addr_t));
 
   /* filter version */
-  dst->version = htonl(0x01);
+  dst->version = htonl(0x02);
 }
 
 void filter_unpack(struct filter_packed* src, struct filter* dst){
@@ -359,8 +360,10 @@ void filter_unpack(struct filter_packed* src, struct filter* dst){
   dst->consumer		= ntohl(src->consumer);
   dst->caplen		= ntohl(src->caplen);
 
-  /* legacy filters are converted from ascii */
-  if ( ntohl(src->version) == 0 ){
+  const int version = ntohl(src->version);
+
+  if ( version == 0 ){
+	  /* legacy filters are converted from ascii */
 	  inet_aton((const char*)src->_ip_src, &dst->ip_src);
 	  inet_aton((const char*)src->_ip_dst, &dst->ip_dst);
 	  inet_aton((const char*)src->_ip_src_mask, &dst->ip_src_mask);
@@ -370,6 +373,13 @@ void filter_unpack(struct filter_packed* src, struct filter* dst){
 	  dst->ip_dst = src->ip_dst;
 	  dst->ip_src_mask = src->ip_src_mask;
 	  dst->ip_dst_mask = src->ip_dst_mask;
+  }
+
+  /* Check if mode was supplied */
+  if ( version >= 2 ){
+	  dst->mode = src->mode;
+  } else {
+	  dst->mode = FILTER_AND;
   }
 
   memcpy(dst->iface, src->iface, 8);
@@ -382,5 +392,5 @@ void filter_unpack(struct filter_packed* src, struct filter* dst){
   memcpy(&dst->dest, &src->dest, sizeof(stream_addr_t));
 
   /* filter version */
-  dst->version = htonl(0x01);
+  dst->version = htonl(0x02);
 }

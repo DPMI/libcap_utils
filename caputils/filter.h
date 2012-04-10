@@ -11,6 +11,14 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
+/**
+ * Filter versions
+ *
+ * Version 0 (legacy filter) sends lots of fields as ASCII (e.g. ip-adresses)
+ * Version 1 deprecates ASCII fields and adds integer fields but still has old fields (but unset during transit)
+ * Version 2 adds mode flag which toggles between AND and OR.
+ */
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -38,6 +46,12 @@ enum FilterBitmask {
 	FILTER_DST_PORT = (1<<0),
 };
 
+enum FilterMode {
+	FILTER_UNKNOWN = 0,
+	FILTER_AND,
+	FILTER_OR,
+};
+
 /**
  * This is the structure as represented internally within the host.
  */
@@ -45,6 +59,7 @@ struct filter {
 	/* Integer identifying the rule. This should be uniqe for the MP. */
 	uint32_t filter_id;
 	uint32_t version;                  /* filter version */
+	enum FilterMode mode;
 
 	/* Which fields should we check? Bitmask (see further fields for values) */
 	uint32_t index;
@@ -126,6 +141,7 @@ struct filter_packed {
 	struct in_addr ip_dst_mask;
 	uint16_t port;                     /* 8192: src or dst port */
 	uint16_t port_mask;
+	uint8_t mode;
 } __attribute__((packed));
 
 int filter_from_argv(int* argc, char** argv, struct filter*);
