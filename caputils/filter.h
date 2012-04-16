@@ -25,25 +25,42 @@ extern "C" {
 
 typedef char CI_handle_t[8];
 
-enum FilterBitmask {
-	/* filter 0.7 extensions */
-	FILTER_PORT     = (1<<13), /* either src or dst port */
-	FILTER_START_TIME=(1<<12),
-	FILTER_END_TIME = (1<<11),
-	FILTER_MAMPID   = (1<<10),
+enum FilterOffset {
+	OFFSET_DST_PORT = 0,
+	OFFSET_SRC_PORT,
+	OFFSET_IP_DST,
+	OFFSET_IP_SRC,
+	OFFSET_IP_PROTO,
+	OFFSET_ETH_DST,
+	OFFSET_ETH_SRC,
+	OFFSET_ETH_TYPE,
+	OFFSET_VLAN,
+	OFFSET_IFACE,
+	OFFSET_MAMPID,
+	OFFSET_END_TIME,
+	OFFSET_START_TIME,
+	OFFSET_PORT,
+};
 
+enum FilterBitmask {
 	/* original */
-	FILTER_CI       = (1<<9), /* alias for FILTER_IFACE */
-	FILTER_IFACE    = (1<<9),
-	FILTER_VLAN     = (1<<8),
-	FILTER_ETH_TYPE = (1<<7),
-	FILTER_ETH_SRC  = (1<<6),
-	FILTER_ETH_DST  = (1<<5),
-	FILTER_IP_PROTO = (1<<4),
-	FILTER_IP_SRC   = (1<<3),
-	FILTER_IP_DST   = (1<<2),
-	FILTER_SRC_PORT = (1<<1),
-	FILTER_DST_PORT = (1<<0),
+	FILTER_DST_PORT = (1<<OFFSET_DST_PORT),
+	FILTER_SRC_PORT = (1<<OFFSET_SRC_PORT),
+	FILTER_IP_DST   = (1<<OFFSET_IP_DST),
+	FILTER_IP_SRC   = (1<<OFFSET_IP_SRC),
+	FILTER_IP_PROTO = (1<<OFFSET_IP_PROTO),
+	FILTER_ETH_DST  = (1<<OFFSET_ETH_DST),
+	FILTER_ETH_SRC  = (1<<OFFSET_ETH_SRC),
+	FILTER_ETH_TYPE = (1<<OFFSET_ETH_TYPE),
+	FILTER_VLAN     = (1<<OFFSET_VLAN),
+	FILTER_IFACE    = (1<<OFFSET_IFACE),
+	FILTER_CI       = (1<<OFFSET_IFACE), /* alias for FILTER_IFACE */
+
+	/* filter 0.7 extensions */
+	FILTER_MAMPID   = (1<<OFFSET_MAMPID),
+	FILTER_END_TIME = (1<<OFFSET_END_TIME),
+	FILTER_START_TIME=(1<<OFFSET_START_TIME),
+	FILTER_PORT     = (1<<OFFSET_PORT), /* either src or dst port */
 };
 
 enum FilterMode {
