@@ -67,7 +67,7 @@ void hexdump(FILE* dst, const char* data, size_t size){
 }
 
 char* hexdump_str(const char* data, size_t size){
-	char* buffer = malloc(size*2); /* more than really needed */
+	char* buffer = malloc(size*10); /* more than really needed */
 	char* dst = buffer;
 
   const size_t align = size + (size % 16);
