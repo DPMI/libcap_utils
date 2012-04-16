@@ -236,7 +236,7 @@ void filter_print(const struct filter* filter, FILE* fp, int verbose){
   fprintf(fp, "\t%-14s: %s\n", stream_addr_type(&filter->dest) == STREAM_ADDR_CAPFILE ? "DESTFILE" : "DESTADDRESS", stream_addr_ntoa(&filter->dest));
   fprintf(fp, "\tCAPLEN        : %d\n", filter->caplen);
   fprintf(fp, "\tindex         : %d\n", filter->index);
-  fprintf(fp, "\tmode          : %s\n", filter->mode == FILTER_AND ? "AND" : "OR");
+  fprintf(fp, "\tmode          : %s (%d)\n", filter->mode == FILTER_AND ? "AND" : "OR", filter->mode);
 
   if ( verbose || filter->index & FILTER_MAMPID ){
     fprintf(fp, "\tMAMPid        : %s\n", filter->mampid);
