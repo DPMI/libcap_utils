@@ -154,7 +154,7 @@ endif
 #
 
 debpkgname=libcap-utils_@VERSION@_@ARCH@
-releasedir=/var/www/releases
+releasedir=/var/marc/releases
 
 deb: all
 	@test "x${prefix}" = "x/usr" || (echo "Error: --prefix must be /usr when creating debian release (currently ${prefix})"; exit 1)
