@@ -19,13 +19,13 @@
 #define MAX_ADDRESS 100
 
 struct stream_ethernet {
-  struct stream base;
-  int socket;
-  int port;
-  int if_index;
-  int if_mtu;
-  struct sockaddr_ll sll;
-  struct ether_addr address[MAX_ADDRESS];
+	struct stream base;
+	int socket;
+	int port;
+	int if_index;
+	int if_mtu;
+	struct sockaddr_ll sll;
+	struct ether_addr address[MAX_ADDRESS];
 	long unsigned int seqnum[MAX_ADDRESS];
 	unsigned int num_address;
 
