@@ -1,3 +1,10 @@
+caputils-0.7.7
+--------------
+
+  * More statistics and debugging messages.
+  * Support for AND/OR filters.
+  * Additional functions for developers
+
 caputils-0.7.6
 --------------
 
