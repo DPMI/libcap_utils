@@ -105,6 +105,7 @@ dnl Find out what arch is used for (debian) packaging.
 dnl Includes a fulhack because debian is fucked^W using i386.
 ARCH=`echo $host|cut -d '-' -f 1`
 AS_IF([test "$ARCH" = "i686"], [ARCH="i386"])
+AS_IF([test "$ARCH" = "x86_64"], [ARCH="amd64"])
 AC_SUBST(ARCH)
 
 AC_OUTPUT
