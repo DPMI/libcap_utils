@@ -1,4 +1,5 @@
 Package: libcap-utils
+Section: net
 Version: @VERSION@
 Architecture: @ARCH@
 Maintainer: David Sveningsson [dsv@bth.se]
