@@ -1,5 +1,5 @@
 ACLOCAL_AMFLAGS = -I m4
-AM_CFLAGS = -Wall ${PCAP_CFLAGS} -I/home/ext/prefix/pfring/include
+AM_CFLAGS = -Wall ${PCAP_CFLAGS} ${PFRING_CFLAGS}
 
 lib_LTLIBRARIES = libcap_utils-07.la libcap_filter-07.la libcap_stream-07.la libcap_marc-07.la
 bin_PROGRAMS = 
@@ -69,8 +69,8 @@ nobase_include_HEADERS =    \
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = libcap_stream-0.7.pc libcap_filter-0.7.pc libcap_utils-0.7.pc libcap_marc-0.7.pc
 
-libcap_stream_07_la_LDFLAGS = -version-info 1:0:1 -lpfring -L/home/ext/prefix/pfring/lib
-libcap_stream_07_la_LIBADD = libcap_filter-07.la -lpfring -lpcap
+libcap_stream_07_la_LDFLAGS = -version-info 1:0:1 ${PFRING_LIBS}
+libcap_stream_07_la_LIBADD = libcap_filter-07.la
 libcap_stream_07_la_SOURCES = stream.c stream.h stream_file.c
 
 if BUILD_PFRING
