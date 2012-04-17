@@ -364,6 +364,7 @@ int filter_from_argv(int* argcptr, char** argv, struct filter* filter){
 	/* reset filter */
 	memset(filter, 0, sizeof(struct filter));
 	filter->caplen = -1; /* capture everything (-1 overflows to a very large int) */
+	filter->mode = FILTER_AND;
 
 	/* fast path */
 	if ( argc == 0 ){
