@@ -8,14 +8,6 @@ VERSION_MAJOR=__VERSION_MAJOR__
 VERSION_MINOR=__VERSION_MINOR__
 VERSION_MICRO=__VERSION_MICRO__
 
-AC_DEFINE_UNQUOTED([VERSION_MAJOR], [${VERSION_MAJOR}], [Major version number of package])
-AC_DEFINE_UNQUOTED([VERSION_MINOR], [${VERSION_MINOR}], [Minor version number of package])
-AC_DEFINE_UNQUOTED([VERSION_MICRO], [${VERSION_MICRO}], [Micro version number of package])
-AC_DEFINE_UNQUOTED([VERSION_FULL], ["$VERSION"], [Verson number of package including suffixes (e.g. PF_RING)])
-AC_SUBST([VERSION_MAJOR])
-AC_SUBST([VERSION_MINOR])
-AC_SUBST([VERSION_MICRO])
-
 AC_CONFIG_AUX_DIR([build-aux])
 AM_INIT_AUTOMAKE([1.11 check-news foreign color-tests subdir-objects -Wall -Werror])
 AM_SILENT_RULES([yes])
@@ -30,6 +22,14 @@ AC_CONFIG_FILES([
 	Makefile
   dist/deb-control
 ])
+
+AC_DEFINE_UNQUOTED([VERSION_MAJOR], [${VERSION_MAJOR}], [Major version number of package])
+AC_DEFINE_UNQUOTED([VERSION_MINOR], [${VERSION_MINOR}], [Minor version number of package])
+AC_DEFINE_UNQUOTED([VERSION_MICRO], [${VERSION_MICRO}], [Micro version number of package])
+AC_DEFINE_UNQUOTED([VERSION_FULL], ["$VERSION"], [Verson number of package including suffixes (e.g. PF_RING)])
+AC_SUBST([VERSION_MAJOR])
+AC_SUBST([VERSION_MINOR])
+AC_SUBST([VERSION_MICRO])
 
 AC_PROG_CC_C_O
 AC_PROG_CC_C99
