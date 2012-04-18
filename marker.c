@@ -6,6 +6,10 @@
 #include "caputils_int.h"
 #include <netinet/udp.h>
 
+#ifndef HAVE_BE64TOH
+#include "be64toh.h"
+#endif
+
 int is_marker(struct cap_header* cp, struct marker* ptr, int port){
 	/* match ip packet */
 	const struct ip* ip = find_ip_header(cp->ethhdr);
