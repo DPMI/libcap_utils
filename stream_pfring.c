@@ -80,7 +80,6 @@ static int read_packet(struct stream_pfring* st, struct timeval* timeout){
 		/* Check if it is a valid packet and if it was destinationed here */
 		int match;
 		if ( (match=match_ma_pkt(st, eh)) == -1 ){
-			fprintf(stderr, "throwing away because no matching address\n");
 			continue;
 		}
 
