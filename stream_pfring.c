@@ -96,10 +96,9 @@ static int read_packet(struct stream_pfring* st, int block){
 			continue;
 		}
 
-#ifdef DEBUG
-		// fprintf(stderr, "got measurement frame with %d capture packets [BU: %3.2f%%]\n", ntohl(sh->nopkts), 0.0f);
-		//printf("write: %d read %d\n", st->base.writePos, st->base.readPos);
-#endif
+		#ifdef DEBUG
+		fprintf(stderr, "got measurement frame with %d capture packets [BU: %3.2f%%]\n", ntohl(sh->nopkts), 0.0f);
+		#endif
 
 		/* increase packet count */
 		st->base.stat.recv += ntohl(sh->nopkts);
@@ -185,7 +184,6 @@ int stream_pfring_read(struct stream_pfring* st, cap_head** header, const struct
 	}
 
 	if ( cp->caplen == 0 ){
-		fprintf(stderr, "caplen 0\n");
 		return ERROR_CAPFILE_INVALID;
 	}
 
@@ -230,7 +228,7 @@ static long destroy(struct stream_pfring* st){
 }
 
 long stream_pfring_create(struct stream** stptr, const struct ether_addr* addr, const char* iface, const char* mpid, const char* comment, int flags){
-  fprintf(stderr, "pf_ring is not supported for output streams\n");
+  fprintf(stderr, "libcap_utils with pf_ring does not yet support output streams\n");
   return EINVAL;
 }
 
@@ -299,10 +297,11 @@ long stream_pfring_open(struct stream** stptr, const struct ether_addr* addr, co
 
   char bpfFilter[] = "ether proto 0x810";
   ret = pfring_set_bpf_filter(pd, bpfFilter);
-  if(ret != 0)
-	  printf("pfring_set_bpf_filter(%s) returned %d\n", bpfFilter, ret);
-  else
-	  printf("Successfully set BPF filter '%s'\n", bpfFilter);
+  if ( ret != 0 ) {
+	  fprintf(stderr, "pfring_set_bpf_filter(%s) returned %d\n", bpfFilter, ret);
+  } else {
+	  fprintf(stderr, "Successfully set BPF filter '%s'\n", bpfFilter);
+  }
 
   /* default buffer_size of 25*MTU */
   if ( buffer_size == 0 ){
@@ -332,7 +331,7 @@ long stream_pfring_open(struct stream** stptr, const struct ether_addr* addr, co
   memset(st->seqnum, 0, sizeof(long unsigned int) * MAX_ADDRESS);
 
   if (pfring_enable_ring(pd) != 0) {
-    printf("Unable to enable ring :-(\n");
+	  fprintf(stderr, "Unable to enable ring :-(\n");
     pfring_close(pd);
     return(-1);
   }
