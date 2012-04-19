@@ -1,6 +1,7 @@
 caputils-0.7.8
 --------------
 
+	* add: capshow displays markers.
 	* fix: is_marker properly returns dst port instead of zero when passing
 	       zero as port.
 

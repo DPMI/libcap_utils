@@ -6,6 +6,7 @@
 #include "caputils/stream.h"
 #include "caputils/filter.h"
 #include "caputils/utils.h"
+#include "caputils/marker.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -128,7 +129,6 @@ static void print_eth(FILE* dst, const struct ethhdr* eth){
 	void* payload = ((char*)eth) + sizeof(struct ethhdr);
 	uint16_t h_proto = ntohs(eth->h_proto);
 	uint16_t vlan_tci;
-
 
  begin:
 
@@ -301,7 +301,15 @@ int main(int argc, char **argv){
 		}
 
 		fprintf(stdout, "%012"PRId64":LINK(%4d):CAPLEN(%4d):", cp->ts.tv_psec, cp->len, cp->caplen);
-		print_eth(stdout, (struct ethhdr*)cp->payload);
+		/* Test for libcap_utils marker packet */
+		struct marker mark;
+		int marker_port;
+		if ( (marker_port=is_marker(cp, &mark, 0)) != 0 ){
+			fprintf(stdout, "Marker [e=%d, r=%d, k=%d, s=%d, port=%d]\n",
+			        mark.exp_id, mark.run_id, mark.key_id, mark.seq_num, marker_port);
+		} else {
+			print_eth(stdout, cp->ethhdr);
+		}
 
 		if ( max_packets > 0 && stat->matched >= max_packets) {
 			/* Read enough pkts lets break. */
