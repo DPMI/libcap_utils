@@ -55,11 +55,16 @@ static void sig_handler(int signum){
 	default: name = names[2];
 	}
 
+	static char timestr[64];
+	time_t t = time(NULL);
+	struct tm tm = *localtime(&t);
+	strftime(timestr, sizeof(timestr), "%a, %d %b %Y %H:%M:%S %z", &tm);
+
 	if ( keep_running == 0 ){
-		fprintf(stderr, "\r%s: Got %s again, aborting.\n", program_name, name);
+		fprintf(stderr, "\r%s: [%s] Got %s again, aborting.\n", program_name, timestr, name);
 		abort();
 	}
-	fprintf(stderr, "\r%s: Got %s, terminating gracefully.\n", program_name, name);
+	fprintf(stderr, "\r%s: [%s] Got %s, terminating gracefully.\n", program_name, timestr, name);
 	keep_running = 0;
 }
 
