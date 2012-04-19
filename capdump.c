@@ -46,12 +46,20 @@ static struct option long_options[]= {
 	{0, 0, 0, 0} /* sentinel */
 };
 
-static void sigint_handler(int signum){
+static void sig_handler(int signum){
+	static const char* names[] = {"SIGINT", "SIGTERM", "unknown signal"};
+	const char* name;
+	switch ( signum ){
+	case SIGINT: name = names[0];
+	case SIGTERM: name = names[1];
+	default: name = names[2];
+	}
+
 	if ( keep_running == 0 ){
-		fprintf(stderr, "\r%s: Got SIGINT again, aborting.\n", program_name);
+		fprintf(stderr, "\r%s: Got %s again, aborting.\n", program_name, name);
 		abort();
 	}
-	fprintf(stderr, "\r%s: Got SIGINT, terminating gracefully.\n", program_name);
+	fprintf(stderr, "\r%s: Got %s, terminating gracefully.\n", program_name, name);
 	keep_running = 0;
 }
 
@@ -325,7 +333,8 @@ int main(int argc, char **argv){
 	stream_stat = stream_get_stat(src);
 
 	/* install signal handler so loop can be aborted */
-	signal(SIGINT, sigint_handler);
+	signal(SIGINT, sig_handler);
+	signal(SIGTERM, sig_handler);
 
 	/* progress report */
 	if ( progress > 0 ){
