@@ -1,6 +1,9 @@
 caputils-0.7.8
 --------------
 
+	* fix: pfring_recv no longer blocks when reading additional frames while
+	       buffer is neither full or empty (i.e no packets can be read even
+	       if buffer isn't empty)
 	* add: capshow displays markers.
 	* fix: is_marker properly returns dst port instead of zero when passing
 	       zero as port.

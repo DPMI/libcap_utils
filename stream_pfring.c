@@ -38,6 +38,11 @@ struct stream_pfring {
 	char* frame[0];
 };
 
+enum {
+	NONBLOCK = 0,
+	BLOCK = 1,
+};
+
 /**
  * Test if a MA packet is valid and matches our expected destinations
  * Returns the matching address index or -1 for invalid packets.
@@ -63,12 +68,20 @@ static int match_ma_pkt(const struct stream_pfring* st, const struct ethhdr* eth
 	return match;
 }
 
-static int read_packet(struct stream_pfring* st, struct timeval* timeout){
+static int read_packet(struct stream_pfring* st, int block){
 	assert(st);
 
 	do {
+		/* read next frame */
 		struct pfring_pkthdr hdr;
-		while ( pfring_recv(st->pd, (u_char**)&st->frame[st->base.writePos], 0, &hdr, 1) == 0 ) {
+		switch ( pfring_recv(st->pd, (u_char**)&st->frame[st->base.writePos], 0, &hdr, block) ){
+		case 0:
+			return 0;
+		case 1:
+			break;
+		case -1:
+			fprintf(stderr, "pfring_recv(..) failed.\n");
+			return 0;
 		}
 
 		char* dst = st->frame[st->base.writePos];
@@ -133,7 +146,7 @@ int stream_pfring_read(struct stream_pfring* st, cap_head** header, const struct
 
 	/* empty buffer */
 	if ( !st->read_ptr ){
-		if ( !read_packet(st, timeout) ){
+		if ( !read_packet(st, BLOCK) ){
 			return EAGAIN;
 		}
 
@@ -145,7 +158,7 @@ int stream_pfring_read(struct stream_pfring* st, cap_head** header, const struct
 
 	/* always read if there is space available */
 	if ( st->base.writePos != st->base.readPos ){
-		read_packet(st, timeout);
+		read_packet(st, NONBLOCK);
 	}
 
 	/* no packets available */
