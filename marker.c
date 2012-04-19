@@ -37,5 +37,5 @@ int is_marker(struct cap_header* cp, struct marker* ptr, int port){
 		ptr->timestamp = be64toh(marker->timestamp);
 	}
 
-	return port;
+	return dst;
 }
