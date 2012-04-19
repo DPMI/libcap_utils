@@ -50,8 +50,8 @@ static void sig_handler(int signum){
 	static const char* names[] = {"SIGINT", "SIGTERM", "unknown signal"};
 	const char* name;
 	switch ( signum ){
-	case SIGINT: name = names[0];
-	case SIGTERM: name = names[1];
+	case SIGINT: name = names[0]; break;
+	case SIGTERM: name = names[1]; break;
 	default: name = names[2];
 	}
 
