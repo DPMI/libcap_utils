@@ -82,6 +82,26 @@ static void progress_report(int signum){
 	}
 }
 
+static void marker_report(const struct marker* marker){
+	static char timestr[64];
+	static char timestamp[200];
+	static struct tm* tm;
+
+	/* timestamp for log */
+	time_t t = time(NULL);
+	tm = gmtime(&t);
+	strftime(timestr, sizeof(timestr), "%a, %d %b %Y %H:%M:%S +0000", tm);
+
+	/* timestamp from marker */
+	tm = localtime((time_t*)&marker->timestamp);
+	strftime(timestamp, 200, "%a, %d %b %Y %T %z", tm);
+
+	fprintf(stderr, "%s: [%s] marker v%d found (flags: %d)\n", program_name, timestr, marker->version, marker->flags);
+	fprintf(stderr, "\texp / run / key id: %d / %d / %d\n", marker->exp_id, marker->run_id, marker->key_id);
+	fprintf(stderr, "\tseq num: %d\n", marker->seq_num);
+	fprintf(stderr, "\ttimestamp: %s\n", timestamp);
+}
+
 static void show_usage(void){
 	printf("(C) 2011 David Sveningsson <david.sveningsson@bth.se>\n");
 	printf("Usage: %s [OPTIONS] STREAM\n", program_name);
@@ -370,13 +390,8 @@ int main(int argc, char **argv){
 		/* Detect marker in stream */
 		struct marker mark;
 		if ( marker && is_marker(cp, &mark, marker) ){
-			char timestamp[200];
-			struct tm* tm = localtime((time_t*)&mark.timestamp);
-			strftime(timestamp, 200, "%a, %d %b %Y %T %z", tm);
-			fprintf(stderr, "marker v%d found (flags: %d)\n", mark.version, mark.flags);
-			fprintf(stderr, "  exp / run / key id: %d / %d / %d\n", mark.exp_id, mark.run_id, mark.key_id);
-			fprintf(stderr, "  seq num: %d\n", mark.seq_num);
-			fprintf(stderr, "  timestamp: %s\n", timestamp);
+			/* show marker */
+			marker_report(&mark);
 
 			/* abort if output is pipe */
 			if ( strcmp("/dev/stdout", output.local_filename) == 0 ){
@@ -388,7 +403,7 @@ int main(int argc, char **argv){
 
 			/* generate next filename */
 			const char* filename = generate_filename(marker_format, &mark);
-			fprintf(stderr, "  filename: `%s'\n", filename);
+			fprintf(stderr, "\tfilename: `%s'\n", filename);
 
 			/* open new stream */
 			stream_addr_str(&output, filename, STREAM_ADDR_LOCAL);
