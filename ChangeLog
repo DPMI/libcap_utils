@@ -1,3 +1,9 @@
+caputils-0.7.9
+--------------
+
+	* change: show localtime instead of UTC (but it show timezone as well)
+	* change: changed marker report to match progress report.
+
 caputils-0.7.8
 --------------
 

@@ -67,8 +67,8 @@ static void progress_report(int signum){
 	static char buf[1024];
 	static char timestr[64];
 	time_t t = time(NULL);
-	struct tm tm = *gmtime(&t);
-	strftime(timestr, sizeof(timestr), "%a, %d %b %Y %H:%M:%S +0000", &tm);
+	struct tm tm = *localtime(&t);
+	strftime(timestr, sizeof(timestr), "%a, %d %b %Y %H:%M:%S %z", &tm);
 
 	static uint64_t last = 0;
 	const uint64_t delta = stream_stat->read - last;
@@ -85,16 +85,16 @@ static void progress_report(int signum){
 static void marker_report(const struct marker* marker){
 	static char timestr[64];
 	static char timestamp[200];
-	static struct tm* tm;
+	static struct tm tm;
 
 	/* timestamp for log */
 	time_t t = time(NULL);
-	tm = gmtime(&t);
-	strftime(timestr, sizeof(timestr), "%a, %d %b %Y %H:%M:%S +0000", tm);
+	tm = *localtime(&t);
+	strftime(timestr, sizeof(timestr), "%a, %d %b %Y %H:%M:%S %z", &tm);
 
 	/* timestamp from marker */
-	tm = localtime((time_t*)&marker->timestamp);
-	strftime(timestamp, 200, "%a, %d %b %Y %T %z", tm);
+	tm = *localtime((time_t*)&marker->timestamp);
+	strftime(timestamp, 200, "%a, %d %b %Y %T %z", &tm);
 
 	fprintf(stderr, "%s: [%s] marker v%d found (flags: %d)\n", program_name, timestr, marker->version, marker->flags);
 	fprintf(stderr, "\texp / run / key id: %d / %d / %d\n", marker->exp_id, marker->run_id, marker->key_id);
