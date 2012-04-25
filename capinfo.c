@@ -30,6 +30,8 @@ static long cdpvtp = 0;
 static long other = 0;
 static long ipproto[UINT8_MAX] = {0,}; /* protocol is defined as 1 octet */
 static timepico first, last;
+static char* mpid[] = NULL;
+static size_t mpid_num = 0;
 
 static void show_usage(void){
 	printf("capinfo-" VERSION_FULL "\n");
@@ -170,6 +172,19 @@ static void print_distribution(){
 
 }
 
+static void store_mampid(struct cap_header* cp){
+	const char** cur = &mpid[0];
+	while ( cur ){
+		if ( ctrcmp(*cur, mampid_get(cp->mampid)) == 0 ){
+			break;
+		}
+
+		cur++;
+	}
+
+	if (
+}
+
 static int show_info(const char* filename){
 	stream_addr_t addr;
 	stream_addr_str(&addr, filename, 0);
@@ -192,6 +207,8 @@ static int show_info(const char* filename){
 		if ( !marker_present ){
 			marker_present = is_marker(cp, NULL, 0);
 		}
+
+		store_mampid(cp);
 
 		struct ethhdr* eth = (struct ethhdr*)cp->payload;
 		struct iphdr* ip = NULL;
@@ -256,6 +273,11 @@ int main(int argc, char* argv[]){
 		show_usage();
 		return 0;
 	}
+
+	/* initialize mampid storage */
+	mpid = malloc(sizeof(char*)*2); /* assume one mampid + one sentinel */
+	memset(mpid, 0, sizeof(char*)*2);
+	mpid_num = 2;
 
 	/* parse arguments */
 	while (1){
