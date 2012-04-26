@@ -60,7 +60,7 @@ const char* caputils_version(caputils_version_t* version){
 #define str(x) #x
 	if ( version ){
 		version->major = VERSION_MAJOR;
-		version->minor = VERSION_MAJOR;
+		version->minor = VERSION_MINOR;
 		version->micro = atoi(str(VERSION_MICRO)); /* hack because micro may include suffix like _git */
 		version->features = 0;
 	}
