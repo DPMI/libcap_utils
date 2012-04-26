@@ -57,13 +57,11 @@ const char* hexdump_address(const struct ether_addr* address){
 }
 
 const char* caputils_version(caputils_version_t* version){
-#define str(x) #x
 	if ( version ){
 		version->major = VERSION_MAJOR;
 		version->minor = VERSION_MINOR;
-		version->micro = atoi(str(VERSION_MICRO)); /* hack because micro may include suffix like _git */
+		version->micro = VERSION_MICRO;
 		version->features = 0;
 	}
-#undef str
 	return VERSION;
 }

@@ -1,12 +1,14 @@
 m4_define([__VERSION_MAJOR__], [0])
 m4_define([__VERSION_MINOR__], [7])
-m4_define([__VERSION_MICRO__], [9_git])
+m4_define([__VERSION_MICRO__], [9])
+m4_define([__VERSION_SUFFIX__], [git])
 
-AC_INIT([libcap_utils],[__VERSION_MAJOR__.__VERSION_MINOR__.__VERSION_MICRO__],[dsv@bth.se])
+AC_INIT([libcap_utils],[__VERSION_MAJOR__.__VERSION_MINOR__.__VERSION_MICRO__-__VERSION_SUFFIX__],[dsv@bth.se])
 
 VERSION_MAJOR=__VERSION_MAJOR__
 VERSION_MINOR=__VERSION_MINOR__
 VERSION_MICRO=__VERSION_MICRO__
+VERSION_SUFFIX=__VERSION_SUFFIX__
 
 AC_CONFIG_AUX_DIR([build-aux])
 AM_INIT_AUTOMAKE([1.11 check-news foreign color-tests subdir-objects -Wall -Werror])
@@ -23,13 +25,15 @@ AC_CONFIG_FILES([
   dist/deb-control
 ])
 
-AC_DEFINE_UNQUOTED([VERSION_MAJOR], [${VERSION_MAJOR}], [Major version number of package])
-AC_DEFINE_UNQUOTED([VERSION_MINOR], [${VERSION_MINOR}], [Minor version number of package])
-AC_DEFINE_UNQUOTED([VERSION_MICRO], [${VERSION_MICRO}], [Micro version number of package])
+AC_DEFINE_UNQUOTED([VERSION_MAJOR],  [${VERSION_MAJOR}], [Major version number of package])
+AC_DEFINE_UNQUOTED([VERSION_MINOR],  [${VERSION_MINOR}], [Minor version number of package])
+AC_DEFINE_UNQUOTED([VERSION_MICRO],  [${VERSION_MICRO}], [Micro version number of package])
+AC_DEFINE_UNQUOTED([VERSION_SUFFIX], [${VERSION_SUFFIX}], [Suffix of package (e.g. git)])
 AC_DEFINE_UNQUOTED([VERSION_FULL], ["$VERSION"], [Verson number of package including suffixes (e.g. PF_RING)])
 AC_SUBST([VERSION_MAJOR])
 AC_SUBST([VERSION_MINOR])
 AC_SUBST([VERSION_MICRO])
+AC_SUBST([VERSION_SUFFIX])
 
 AC_PROG_CC_C_O
 AC_PROG_CC_C99
