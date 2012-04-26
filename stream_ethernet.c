@@ -95,9 +95,19 @@ static int read_packet(struct stream_ethernet* st, struct timeval* timeout){
 		}
 
 #ifdef DEBUG
-		// fprintf(stderr, "got measurement frame with %d capture packets [BU: %3.2f%%]\n", ntohl(sh->nopkts), 0.0f);
-		//printf("write: %d read %d\n", st->base.writePos, st->base.readPos);
+		fprintf(stderr, "got measurement frame with %d capture packets [BU: %3.2f%%]\n", ntohl(sh->nopkts), 0.0f);
+		fprintf(stderr, "  address: %s (%d)\n", hexdump_address(&st->address[match]), match);
 #endif
+
+		/* quick sanity check */
+		if ( bytes < ntohl(sh->nopkts) ){
+			fprintf(stderr, "invalid measurement frame received.\n"
+			                "  seqnum: 0x%04X [raw: 0x%08X]\n"
+			                "  nopkts: %d [raw: 0x%08X]\n"
+			                "  frame size: %d bytes\n",
+			        ntohl(sh->sequencenr), sh->sequencenr, ntohl(sh->nopkts), sh->nopkts, bytes);
+			continue;
+		}
 
 		/* increase packet count */
 		st->base.stat.recv += ntohl(sh->nopkts);
