@@ -3,6 +3,7 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <caputils/caputils.h>
+#include <caputils/log.h>
 #include "caputils_int.h"
 #include "stream.h"
 
@@ -261,6 +262,12 @@ int stream_close(stream_t st){
 int stream_write(struct stream *outStream, const void* data, size_t size){
 	assert(outStream);
 	assert(outStream->write);
+
+	if ( size == 0 ){
+		logmsg(stderr, "stream", "stream_write called with invalid size 0\n");
+		return EINVAL;
+	}
+
 	return outStream->write(outStream, data, size);
 }
 
