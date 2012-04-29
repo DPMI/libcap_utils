@@ -55,13 +55,18 @@ static int stream_file_fillbuffer(struct stream_file* st){
 }
 
 static int stream_file_write(struct stream_file* st, const void* data, size_t size){
-	if( fwrite(data, size, 1, st->file) != 1 ){
+	assert(st);
+	assert(data);
+	assert(size > 0);
+
+	int ret;
+	if( (ret=fwrite(data, size, 1, st->file)) != 1 ){
 		if ( feof(st->file) ){
 			return ENOSPC;
 		} else if ( ferror(st->file) ){
 			return errno;
 		} else {
-			fprintf(stderr, "fwrite() returned error but neither feof or ferror set. Dragons ahead!\n");
+			fprintf(stderr, "fwrite(%p, %zd, 1, %p[fd:%d]) returned error (ret: %d, errno: %d) but neither feof or ferror set. Dragons ahead!\n", data, size, st->file, fileno(st->file), ret, errno);
 			return EINVAL;
 		}
   }
