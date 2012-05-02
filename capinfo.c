@@ -34,7 +34,7 @@ static char** mpid;
 static size_t mpid_num = 0;
 
 static struct option long_options[] = {
-	{"help",    0,            0, 'h'},
+	{"help",    no_argument, 0, 'h'},
 	{0, 0, 0, 0}, /* sentinel */
 };
 
