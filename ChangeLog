@@ -1,6 +1,7 @@
 caputils-0.7.9
 --------------
 
+	* add: [capinfo] show mampids
 	* add: --filter-mode argument.
 	* fix: capinfo now properly resets the packet counters when using
 	       multiple files.
