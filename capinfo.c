@@ -71,7 +71,7 @@ static void format_bytes(char* dst, size_t size, uint64_t bytes){
 
 static void format_rate(char* dst, size_t size, uint64_t bytes, uint64_t seconds){
 	static const char* prefix[] = { "bps", "Kbps", "Mbps", "Gbps", "Tbps", "Pbps", "Ebps", "Zbps", "Ybps" };
-	const uint64_t rate = (bytes*8) / seconds;
+	const uint64_t rate = (bytes*8) / (seconds > 0 ? seconds : 1);
 	unsigned int n = 0;
 	uint64_t multiplier = 1;
 	while ( rate / multiplier >= 1024 && n < 8 ){
@@ -91,7 +91,7 @@ static void format_seconds(char* dst, size_t size, timepico first, timepico last
 	int m = hseconds % 60;
 	int h = hseconds / 60;
 
-	snprintf(dst, size, "%02d:%02d:%02.1f", h, m, (float)s/10);
+	snprintf(dst, size, "%02d:%02d:%02.1f", h, m, s > 0 ? (float)s/10 : 0);
 }
 
 static void print_overview(){
