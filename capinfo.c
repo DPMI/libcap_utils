@@ -290,7 +290,8 @@ int main(int argc, char* argv[]){
 	/* parse arguments */
 	while (1){
 		static struct option long_options[] = {
-			{"help",    0,            0, 'h'}
+			{"help",    0,            0, 'h'},
+			{0, 0, 0, 0}, /* sentinel */
 		};
 
 		int option_index = 0;
