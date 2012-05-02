@@ -95,12 +95,18 @@ static void format_seconds(char* dst, size_t size, timepico first, timepico last
 }
 
 static void print_overview(){
-	const char* mampid = stream_get_mampid(st);
 	const char* comment = stream_get_comment(st);
 
 	printf("Overview\n"
 	       "--------\n");
-	printf("     mpid: %s\n", mampid != 0 ? mampid : "(unset)");
+
+	/* show mampids */
+	printf("     mpid: ");
+	for ( int i = 0; i < mpid_num && mpid[i]; i++ ){
+		printf("%s%s", (i>0?", ":""), mpid[i]);
+	}
+	printf("\n");
+
 	printf("  comment: %s\n", comment ? comment : "(unset)");
 
 	char byte_str[128];
