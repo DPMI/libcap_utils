@@ -30,7 +30,7 @@ static long cdpvtp = 0;
 static long other = 0;
 static long ipproto[UINT8_MAX] = {0,}; /* protocol is defined as 1 octet */
 static timepico first, last;
-static char* mpid[] = NULL;
+static char** mpid;
 static size_t mpid_num = 0;
 
 static void show_usage(void){
@@ -173,16 +173,23 @@ static void print_distribution(){
 }
 
 static void store_mampid(struct cap_header* cp){
-	const char** cur = &mpid[0];
-	while ( cur ){
-		if ( ctrcmp(*cur, mampid_get(cp->mampid)) == 0 ){
-			break;
-		}
+	static char mampid[9] = {0,};
+	memcpy(mampid, cp->mampid, 8); /* last by is left as null-terminator */
 
-		cur++;
+	int i;
+	for ( i = 0; i < mpid_num && mpid[i]; i++ ){
+		if ( strcmp(mpid[i], mampid) == 0 ){
+			return;
+		}
 	}
 
-	if (
+	/* allocate more memory if needed */
+	if ( i == mpid_num ){
+		mpid_num *= 2;
+		mpid = realloc(mpid, sizeof(char*) * mpid_num);
+	}
+
+	mpid[i] = strdup(mampid);
 }
 
 static int show_info(const char* filename){
@@ -274,11 +281,6 @@ int main(int argc, char* argv[]){
 		return 0;
 	}
 
-	/* initialize mampid storage */
-	mpid = malloc(sizeof(char*)*2); /* assume one mampid + one sentinel */
-	memset(mpid, 0, sizeof(char*)*2);
-	mpid_num = 2;
-
 	/* parse arguments */
 	while (1){
 		static struct option long_options[] = {
@@ -306,12 +308,25 @@ int main(int argc, char* argv[]){
 		return 0;
 	}
 
+	/* initial mampid storage */
+	mpid_num = 8;
+	mpid = malloc(sizeof(char*) * mpid_num);
+	memset(mpid, 0, sizeof(char*) * mpid_num);
+
 	/* visit all targets */
 	while ( optind < argc ){
 		reset();
 		show_info(argv[optind++]);
+
 		if ( optind < argc ){
 			putchar('\n');
+		}
+
+		/* reset mampid storage (must be done for each iteration so the results is
+		 * only for the current file.) */
+		for ( int i = 0; i < mpid_num; i++ ){
+			free(mpid[i]);
+			mpid[i] = NULL;
 		}
 	}
 
