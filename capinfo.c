@@ -288,21 +288,15 @@ int main(int argc, char* argv[]){
 	}
 
 	/* parse arguments */
-	while (1){
-		static struct option long_options[] = {
-			{"help",    0,            0, 'h'},
-			{0, 0, 0, 0}, /* sentinel */
-		};
+	static struct option long_options[] = {
+		{"help",    0,            0, 'h'},
+		{0, 0, 0, 0}, /* sentinel */
+	};
 
-		int option_index = 0;
-
-		int c = getopt_long(argc, argv, "h", long_options, &option_index);
-
-		if ( c == -1 ){
-			break;
-		}
-
-		switch (c){
+	int option_index = 0;
+	int op;
+	while ( (op=getopt_long(argc, argv, "h", long_options, &option_index)) != -1 ){
+		switch ( op ){
 		case 'h':
 			show_usage();
 			return 0;
