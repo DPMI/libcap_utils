@@ -33,6 +33,11 @@ static timepico first, last;
 static char** mpid;
 static size_t mpid_num = 0;
 
+static struct option long_options[] = {
+	{"help",    0,            0, 'h'},
+	{0, 0, 0, 0}, /* sentinel */
+};
+
 static void show_usage(void){
 	printf("capinfo-" VERSION_FULL "\n");
 	printf("(c) 2011 David Sveningsson\n\n");
@@ -288,11 +293,6 @@ int main(int argc, char* argv[]){
 	}
 
 	/* parse arguments */
-	static struct option long_options[] = {
-		{"help",    0,            0, 'h'},
-		{0, 0, 0, 0}, /* sentinel */
-	};
-
 	int option_index = 0;
 	int op;
 	while ( (op=getopt_long(argc, argv, "h", long_options, &option_index)) != -1 ){
