@@ -94,6 +94,7 @@ class FilterCreate : public CppUnit::TestFixture {
   CPPUNIT_TEST( test_tp_dport      );
   CPPUNIT_TEST( test_missing       );
   CPPUNIT_TEST( test_equal_sign    );
+	CPPUNIT_TEST( test_shortname     );
   CPPUNIT_TEST_SUITE_END();
 
   struct filter filter;
@@ -327,6 +328,12 @@ public:
     CPPUNIT_ASSERT_EQUAL((uint32_t)123, filter.endtime.tv_sec);
     CPPUNIT_ASSERT_EQUAL((uint64_t)4007000000000, filter.endtime.tv_psec);
   }
+
+	void test_shortname(){
+		argc = generate_argv(argv, "programname", "3.cap", NULL);
+    CPPUNIT_ASSERT_SUCCESS(filter_from_argv(&argc, argv, &filter), 1);
+    CPPUNIT_ASSERT_EQUAL(2, argc); /* should not consume "3.cap" */
+	}
 };
 
 CPPUNIT_TEST_SUITE_REGISTRATION(FilterCreate);
