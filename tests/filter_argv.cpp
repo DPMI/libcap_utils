@@ -354,7 +354,8 @@ public:
 
 	void test_mode_invalid(){
 		argc = generate_argv(argv, "programname", "--filter-mode", "foo", NULL);
-    CPPUNIT_ASSERT_FAILURE(filter_from_argv(&argc, argv, &filter), 1);
+    CPPUNIT_ASSERT_SUCCESS(filter_from_argv(&argc, argv, &filter), 1);
+    CPPUNIT_ASSERT_EQUAL(1, argc); /* must consume filter mode and argument*/
 	}
 
 };

@@ -46,6 +46,7 @@
  * regular filter. */
 enum Parameters {
 	PARAM_CAPLEN = 1,
+	PARAM_MODE,
 };
 
 static struct option options[]= {
@@ -68,6 +69,7 @@ static struct option options[]= {
 	{"tp.sport",  1, 0,    2},
 	{"tp.dport",  1, 0,    1},
 	{"caplen",    1, 0,    PARAM_CAPLEN | PARAM_BIT},
+	{"filter-mode", required_argument, 0, PARAM_MODE | PARAM_BIT},
 	{0, 0, 0, 0}
 };
 
@@ -352,6 +354,7 @@ void filter_from_argv_usage(){
 	printf("      --tp.port=PORT[/MASK]   Filter or source or destination portnumber (if\n"
 	       "                              either is a match the packet matches\n");
 	printf("      --caplen=BYTES          Store BYTES of the captured packet. [default=ALL]\n");
+	printf("      --filter-mode=MODE      Set filter mode to AND or OR [default=AND]\n");
 }
 
 int filter_from_argv(int* argcptr, char** argv, struct filter* filter){
@@ -399,9 +402,17 @@ int filter_from_argv(int* argcptr, char** argv, struct filter* filter){
 			switch ((enum Parameters)(op ^ PARAM_BIT)){
 			case PARAM_CAPLEN:
 				filter->caplen = atoi(optarg);
-				printf("caplen: %d\n", filter->caplen);
-			}
+				break;
 
+			case PARAM_MODE:
+				if      ( strcasecmp(optarg, "and") == 0 ){ filter->mode = FILTER_AND; }
+				else if ( strcasecmp(optarg, "or")  == 0 ){ filter->mode = FILTER_OR; }
+				else {
+					fprintf(stderr, "%s: Invalid filter mode `%s'. Ignored.\n", argv[0], optarg);
+				}
+				break;
+
+			}
 			continue;
 		}
 
