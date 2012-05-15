@@ -45,6 +45,8 @@ static void slist_free(struct simple_list* slist){
 static stream_t st = NULL;
 static long int packets = 0;
 static uint64_t bytes = 0;
+static unsigned int byte_min;
+static unsigned int byte_max;
 static int marker_present = 0;
 static long ipv4 = 0;
 static long ipv6 = 0;
@@ -76,6 +78,8 @@ static void show_usage(void){
 static void reset(){
 	packets = 0;
 	bytes = 0;
+	byte_min = UINT16_MAX;
+	byte_max = 0;
 	marker_present = 0;
 	ipv4 = 0;
 	ipv6 = 0;
@@ -86,6 +90,14 @@ static void reset(){
 	for ( int i = 0; i < UINT8_MAX; i++ ){
 		ipproto[i] = 0;
 	}
+}
+
+static unsigned int min(unsigned int a, unsigned int b){
+	return (a<b) ? a : b;
+}
+
+static unsigned int max(unsigned int a, unsigned int b){
+	return (a>b) ? a : b;
 }
 
 static void format_bytes(char* dst, size_t size, uint64_t bytes){
@@ -184,6 +196,7 @@ static void print_overview(){
 	printf(" duration: %s (%.1f seconds)\n", sec_str, (float)hseconds/10);
 	printf("  packets: %ld\n", packets);
 	printf("    bytes: %s\n", byte_str);
+	printf(" pkt size: min/avg/max = %d/%ld/%d\n", byte_min, bytes / packets, byte_max);
 	printf(" avg rate: %s\n", rate_str);
 	printf("\n");
 }
@@ -277,6 +290,8 @@ static int show_info(const char* filename){
 		}
 		last = cp->ts; /* overwritten each time */
 		bytes += cp->len;
+		byte_min = min(byte_min, cp->len);
+		byte_max = max(byte_max, cp->len);
 		if ( !marker_present ){
 			marker_present = is_marker(cp, NULL, 0);
 		}
