@@ -115,6 +115,10 @@ static void print_ipv4(FILE* dst, const struct ip* ip){
 		print_icmp(dst, ip, (const struct icmphdr*)payload);
 		break;
 
+	case IPPROTO_IGMP:
+		fprintf(dst, "IGMP");
+		break;
+
 	default:
 		fprintf(dst, "Unknown transport protocol: %d \n", ip->ip_p);
 		break;
