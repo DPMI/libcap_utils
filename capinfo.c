@@ -39,6 +39,21 @@ static void show_usage(void){
 	printf("  -h, --help                 Show this help.\n");
 }
 
+static void reset(){
+	packets = 0;
+	bytes = 0;
+	marker_present = 0;
+	ipv4 = 0;
+	ipv6 = 0;
+	arp = 0;
+	stp = 0;
+	cdpvtp = 0;
+	other = 0;
+	for ( int i = 0; i < UINT8_MAX; i++ ){
+		ipproto[i] = 0;
+	}
+}
+
 static void format_bytes(char* dst, size_t size, uint64_t bytes){
 	static const char* prefix[] = { "", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB" };
 	unsigned int n = 0;
@@ -271,6 +286,7 @@ int main(int argc, char* argv[]){
 
 	/* visit all targets */
 	while ( optind < argc ){
+		reset();
 		show_info(argv[optind++]);
 		if ( optind < argc ){
 			putchar('\n');

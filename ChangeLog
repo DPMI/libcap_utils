@@ -1,6 +1,8 @@
 caputils-0.7.9
 --------------
 
+	* fix: capinfo now properly resets the packet counters when using
+	       multiple files.
 	* change: stream_read now drops invalid measurement frames.
 	* fix: capdump properly handles SIGTERM.
 	* change: show localtime instead of UTC (but it show timezone as well)
