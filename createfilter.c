@@ -102,10 +102,8 @@ static void split_argv(int* src_argc, char** src_argv, int* dst_argc, char** dst
 		/* check if it is consumed */
 		struct option* cur = options;
 		for ( cur = options; cur->name; cur++ ){
-
-			if ( strncmp(cur->name, &arg[2], maxlen-2) != 0 ){
-				continue;
-			}
+			if ( arg[0] != '-' || arg[1] != '-' ) continue;
+			if ( strncmp(cur->name, &arg[2], maxlen-2) != 0 ) continue;
 
 			/* got a match, proceed with copy and shift argument */
 			size_t n = 2;

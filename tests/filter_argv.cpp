@@ -334,28 +334,24 @@ public:
 
 	void test_shortname(){
 		argc = generate_argv(argv, "programname", "3.cap", NULL);
-    CPPUNIT_ASSERT_SUCCESS(filter_from_argv(&argc, argv, &filter), 1);
-    CPPUNIT_ASSERT_EQUAL(2, argc); /* must not consume "3.cap" */
+    CPPUNIT_ASSERT_SUCCESS(filter_from_argv(&argc, argv, &filter), 2);
 	}
 
 	void test_mode_and(){
 		argc = generate_argv(argv, "programname", "--filter-mode", "aNd", NULL);
     CPPUNIT_ASSERT_SUCCESS(filter_from_argv(&argc, argv, &filter), 1);
-    CPPUNIT_ASSERT_EQUAL(1, argc); /* must consume filter mode and argument*/
     CPPUNIT_ASSERT_EQUAL(FILTER_AND, filter.mode);
 	}
 
 	void test_mode_or(){
 		argc = generate_argv(argv, "programname", "--filter-mode", "Or", NULL);
     CPPUNIT_ASSERT_SUCCESS(filter_from_argv(&argc, argv, &filter), 1);
-    CPPUNIT_ASSERT_EQUAL(1, argc); /* must consume filter mode and argument*/
     CPPUNIT_ASSERT_EQUAL(FILTER_OR, filter.mode);
 	}
 
 	void test_mode_invalid(){
 		argc = generate_argv(argv, "programname", "--filter-mode", "foo", NULL);
     CPPUNIT_ASSERT_SUCCESS(filter_from_argv(&argc, argv, &filter), 1);
-    CPPUNIT_ASSERT_EQUAL(1, argc); /* must consume filter mode and argument*/
 	}
 
 };
