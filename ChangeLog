@@ -1,6 +1,7 @@
 caputils-0.7.14
 ---------------
 
+	* add: [capinfo] show both packet count and bytes per protocol.
 	* add: [pcap2cap] support for specifying capture interface.
 	* fix: [marcd] improving compability with 0.6 MPs.
 	* fix: timepico_from_string now properly parses picoseconds.
