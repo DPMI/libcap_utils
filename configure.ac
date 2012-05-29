@@ -39,6 +39,7 @@ AC_PROG_CC_C_O
 AC_PROG_CC_C99
 AC_PROG_CXX
 AC_PROG_LN_S
+AC_ARG_PROGRAM
 AC_USE_SYSTEM_EXTENSIONS
 AC_DISABLE_STATIC([])
 LT_INIT
@@ -111,5 +112,15 @@ ARCH=`echo $host|cut -d '-' -f 1`
 AS_IF([test "$ARCH" = "i686"], [ARCH="i386"])
 AS_IF([test "$ARCH" = "x86_64"], [ARCH="amd64"])
 AC_SUBST(ARCH)
+
+dnl Check for setcap
+have_setcap=no
+AC_PATH_PROG(SETCAP, setcap,,"/sbin:$PATH")
+AS_IF([test -n "$SETCAP"], [have_setcap=yes])
+AC_ARG_ENABLE(setcap, AS_HELP_STRING([--enable-setcap], [install with cap_net_raw capability @<:@default=auto@:>@]),[
+   AS_IF([test "x$enable_setcap" == "xyes" -a "x$have_setcap" == "xno"], [AC_MSG_ERROR([Could not find setcap, make sure it is installed or disable setcap.])])
+   AS_IF([test "x$enable_setcap" != "xyes"], [have_setcap=no])
+])
+AM_CONDITIONAL(SETCAP, [test "x$have_setcap" == "xyes"])
 
 AC_OUTPUT

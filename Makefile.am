@@ -143,10 +143,19 @@ tests_disabled_SOURCES = tests/disabled.cpp
 # Hooks
 #
 
+setcap:
+if SETCAP
+	test -e $(DESTDIR)$(bindir)/capdump && $(SETCAP) cap_net_raw+ep $(DESTDIR)$(bindir)/capdump
+	test -e $(DESTDIR)$(bindir)/capshow && $(SETCAP) cap_net_raw+ep $(DESTDIR)$(bindir)/capshow
+	test -e $(DESTDIR)$(bindir)/capdump && chmod o-rws $(DESTDIR)$(bindir)/capdump
+	test -e $(DESTDIR)$(bindir)/capshow && chmod o-rws $(DESTDIR)$(bindir)/capshow
+else
+	@echo "ignoring setcap, use \`--enable-setcap' to enable."
+endif
+
+install-exec-hook: setcap
 if BUILD_CAPSHOW
-install-exec-hook:
-	cd $(DESTDIR)$(bindir) && \
-	  test -h consumer-ls$(EXEEXT) || $(LN_S) capshow$(EXEEXT) consumer-ls$(EXEEXT)
+	cd $(DESTDIR)$(bindir) && test -h consumer-ls$(EXEEXT) || $(LN_S) capshow$(EXEEXT) consumer-ls$(EXEEXT)
 endif
 
 #
