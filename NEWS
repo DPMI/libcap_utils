@@ -1,6 +1,7 @@
 caputils-0.7.9
 --------------
 
+  * capinfo output improvements.
   * capdump output improvements.
   * Drops invalid measurement frames.
 
