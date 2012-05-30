@@ -68,8 +68,7 @@ static int read_packet(struct stream_ethernet* st, struct timeval* timeout){
 		FD_ZERO(&fds);
 		FD_SET(st->socket, &fds);
 
-		struct timeval tv = {0,0};
-		if ( select(st->socket+1, &fds, NULL, NULL, &tv) != 1 ){
+		if ( select(st->socket+1, &fds, NULL, NULL, timeout) != 1 ){
 			break;
 		}
 
@@ -166,12 +165,14 @@ int stream_ethernet_read(struct stream_ethernet* st, cap_head** header, const st
 
 	/* always read if there is space available */
 	if ( st->base.writePos != st->base.readPos ){
-		read_packet(st, timeout);
+		struct timeval tv = {0,0}; /* dont read with a timeout as we don't want to introduce delays here */
+		read_packet(st, &tv);
 	}
 
 	/* no packets available */
 	if ( st->num_packets == 0 ){
-		return EAGAIN;
+		fprintf(stderr, "stream_ethernet: st->num_packets is 0 but st->read_ptr is set\n");
+		abort();
 	}
 
 	/* fetch next matching packet */
