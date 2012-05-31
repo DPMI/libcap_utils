@@ -129,7 +129,7 @@ static void print_overview(){
 	char sec_str[128];
 	char marker_str[128] = "no";
 	if ( marker_present ){
-		sprintf(marker_str, "present on port %d\n", marker_present);
+		sprintf(marker_str, "present on port %d", marker_present);
 	}
 	const timepico time_diff = timepico_sub(last, first);
 	uint64_t hseconds = time_diff.tv_sec * 10 + time_diff.tv_psec / (PICODIVIDER / 10);

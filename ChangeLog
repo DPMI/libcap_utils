@@ -1,6 +1,7 @@
 caputils-0.7.11
 ---------------
 
+	* fix: [capinfo] removing extra newline after marker info.
 	* fix: [filter] update documentation.
 	* fix: [capshow] retain the packet number when filtering.
 	* fix: [utils] Ensure IFHWADDRLEN is defined.
