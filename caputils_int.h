@@ -72,10 +72,13 @@ long stream_ethernet_create(struct stream** stptr, const struct ether_addr* addr
 long stream_ethernet_add(struct stream* st, const struct ether_addr* addr);
 #endif
 
-long stream_file_open(struct stream** stptr, const char* filename, size_t buffer_size);
+/**
+ * @param fp Optional, if null filename is used.
+ */
+int stream_file_open(struct stream** stptr, FILE* fp, const char* filename, size_t buffer_size);
 
 /**
- * @param fp Optional
+ * @param fp Optional, if null filename is used.
  */
 int stream_file_create(struct stream** stptr, FILE* fp, const char* filename, const char* mpid, const char* comment, int flags);
 

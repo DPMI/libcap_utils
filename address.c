@@ -199,6 +199,10 @@ int stream_addr_aton(stream_addr_t* dst, const char* src, enum AddressType type,
 			dst->filename[21] = 0; /* force null-terminator */
 		}
 		break;
+
+	case STREAM_ADDR_FP:
+		return EINVAL;
+
 	}
 
 	return 0;
@@ -208,6 +212,13 @@ int stream_addr_str(stream_addr_t* dst, const char* src, int flags){
 	dst->_type = htons(STREAM_ADDR_CAPFILE);
 	dst->_flags = htons(STREAM_ADDR_LOCAL|flags);
 	dst->local_filename = src;
+	return 0;
+}
+
+int stream_addr_fp(stream_addr_t* dst, FILE* fp, int flags){
+	dst->_type = htons(STREAM_ADDR_FP);
+	dst->_flags = htons(STREAM_ADDR_LOCAL|flags);
+	dst->fp = fp;
 	return 0;
 }
 
@@ -237,6 +248,9 @@ const char* stream_addr_ntoa_r(const stream_addr_t* src, char* buf, size_t bytes
 			strncpy(buf, src->filename, bytes);
 		}
 		buf[bytes-1] = 0; /* force null-terminator */
+		break;
+	case STREAM_ADDR_FP:
+		snprintf(buf, bytes, "/dev/fd/%d", fileno(src->fp));
 		break;
 	}
 

@@ -1,6 +1,7 @@
 #ifndef CAPUTILS_ADDRESS_H
 #define CAPUTILS_ADDRESS_H
 
+#include <stdio.h>
 #include <netinet/ether.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -54,6 +55,9 @@ extern "C" {
       /* these cannot be sent across network */
       const char* local_filename;
 
+	    /* Using existing FILE pointer */
+	    FILE* fp;
+
       /* for TCP/UDP streams */
       struct {
 	      struct in_addr in_addr;
@@ -84,6 +88,7 @@ extern "C" {
     STREAM_ADDR_ETHERNET,
     STREAM_ADDR_UDP,
     STREAM_ADDR_TCP,
+    STREAM_ADDR_FP,
   };
 
   enum AddressFlags {
@@ -113,6 +118,12 @@ extern "C" {
    * Set address to a local string (only referencing the memory)
    */
   int stream_addr_str(stream_addr_t* dst, const char* src, int flags);
+
+  /**
+   * Set address to an existing local file pointer. User must ensure it is open in the
+   * correct mode for the operation.
+   */
+  int stream_addr_fp(stream_addr_t* dst, FILE* fp, int flags);
 
   /**
    * Convert destination to string. The string is returned in a statically

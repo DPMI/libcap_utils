@@ -115,7 +115,7 @@ int is_valid_version(struct file_header_t* fhptr){
 }
 
 int stream_open(stream_t* stptr, const stream_addr_t* dest, const char* iface, size_t buffer_size){
-	int ret;
+	int ret = EINVAL;
 
 	switch(stream_addr_type(dest)){
 		/* case PROTOCOL_TCP_UNICAST: */
@@ -133,7 +133,11 @@ int stream_open(stream_t* stptr, const stream_addr_t* dest, const char* iface, s
 		break;
 
 	case STREAM_ADDR_CAPFILE:
-		ret = stream_file_open(stptr, stream_addr_have_flag(dest, STREAM_ADDR_LOCAL) ? dest->local_filename : dest->filename, buffer_size);
+		ret = stream_file_open(stptr, NULL, stream_addr_have_flag(dest, STREAM_ADDR_LOCAL) ? dest->local_filename : dest->filename, buffer_size);
+		break;
+
+	case STREAM_ADDR_FP:
+		ret = stream_file_open(stptr, dest->fp, NULL, buffer_size);
 		break;
 
 	case STREAM_ADDR_GUESS:
@@ -176,6 +180,9 @@ int stream_create(stream_t* stptr, const stream_addr_t* dest, const char* nic, c
 	case STREAM_ADDR_CAPFILE:
 		filename = stream_addr_have_flag(dest, STREAM_ADDR_LOCAL) ? dest->local_filename : dest->filename;
 		return stream_file_create(stptr, NULL, filename, mpid, comment, flags);
+
+	case STREAM_ADDR_FP:
+		return stream_file_create(stptr, dest->fp, NULL, mpid, comment, flags);
 
 	case STREAM_ADDR_GUESS:
 		return EINVAL;
@@ -280,7 +287,7 @@ int stream_write(struct stream *outStream, const void* data, size_t size){
 	return outStream->write(outStream, data, size);
 }
 
-int stream_copy(stream_t st, caphead_t head){
+int stream_copy(stream_t st, const caphead_t head){
 	return stream_write(st, head, sizeof(struct cap_header) + head->caplen);
 }
 

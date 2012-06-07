@@ -2,6 +2,7 @@
 #define CAPUTILS__STREAM_H
 
 #include <caputils/filter.h>
+#include <caputils/capture.h>
 
 #include <stdint.h>
 #include <netinet/ether.h>
@@ -38,13 +39,6 @@ int stream_open(stream_t* stptr, const stream_addr_t* addr, const char* nic, siz
  * Create a new stream.
  */
 int stream_create(stream_t* st, const stream_addr_t* addr, const char* nic, const char* mpid, const char* comment);
-
-/**
- * Create a filestream.
- * @param file A stream open for writing.
- * @return Zero on failures.
- */
-//int createstream_file(struct stream** stptr, FILE* file, const char* filename, const char* mpid, const char* comment);
 
 /**
  * Add source to stream (currently only for ethernet multicast)
@@ -120,7 +114,7 @@ int stream_write(stream_t st, const void* data, size_t size);
  * Copy a capture packet into stream.
  * This a shorthand for `stream_write(st, head, sizeof(struct cap_header) + head->caplen)`.
  */
-int stream_copy(stream_t st, caphead_t head);
+int stream_copy(stream_t st, const caphead_t head);
 
 /**
  * Read the next matching frame from a stream.

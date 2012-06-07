@@ -112,20 +112,22 @@ static long stream_file_destroy(struct stream_file* st){
  * Initialize file stream.
  * @return Non-zero on error (see errno(3) for descriptions).
  */
-long stream_file_open(struct stream** stptr, const char* filename, size_t buffer_size){
+int stream_file_open(struct stream** stptr, FILE* fp, const char* filename, size_t buffer_size){
   assert(stptr);
   *stptr = NULL;
-  int ret = 0;
+  int ret;
 
-  /* validate that filename is set */
-  if ( !filename ){
+  /* validate that filename or fp is set */
+  if ( !(filename||fp) ){
     return ENOENT;
   }
 
   /* try to open the file */
-  FILE* fp = fopen(filename, "rb");
-  if( !fp ){
-    return errno;
+  if ( !fp ) {
+    fp = fopen(filename, "rb");
+    if( !fp ){
+      return errno;
+    }
   }
 
   /* Use a relative smaller buffer-size by default as it will yield faster
@@ -204,7 +206,7 @@ int stream_file_create(struct stream** stptr, FILE* fp, const char* filename, co
   int ret = 0;
 
   /* validate that filename is set */
-  if ( !filename ){
+  if ( !(filename||fp) ){
     return ENOENT;
   }
 
