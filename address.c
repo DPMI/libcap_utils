@@ -137,7 +137,7 @@ int stream_addr_aton(stream_addr_t* dst, const char* src, enum AddressType type,
 				*delim = 0;
 				const char* prefix = buf;
 				const char* addr = delim + 3;
-	    
+
 				if ( strcasecmp("tcp", prefix) == 0 ){
 					return stream_addr_aton(dst, addr, STREAM_ADDR_TCP, flags);
 				} else if ( strcasecmp("udp", prefix) == 0 ){
@@ -147,15 +147,15 @@ int stream_addr_aton(stream_addr_t* dst, const char* src, enum AddressType type,
 				} else if ( strcasecmp("file", prefix) == 0 ){
 					return stream_addr_aton(dst, src+7, STREAM_ADDR_CAPFILE, flags | STREAM_ADDR_LOCAL);
 				}
-      
+
 				return EINVAL;
 			}
-    
+
 			/* try ethernet */
 			if ( stream_addr_aton(dst, src, STREAM_ADDR_ETHERNET, flags) == 0 ){
 				return 0;
 			}
-    
+
 			/* last option: parse as local filename */
 			return stream_addr_aton(dst, src, STREAM_ADDR_CAPFILE, flags | STREAM_ADDR_LOCAL);
 		}
@@ -185,7 +185,7 @@ int stream_addr_aton(stream_addr_t* dst, const char* src, enum AddressType type,
 
 	case STREAM_ADDR_ETHERNET: // Ethernet
 		homogenize_eth_addr(buf);
-    
+
 		if ( !eth_aton(&dst->ether_addr, buf) ){
 			return EINVAL;
 		}
