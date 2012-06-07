@@ -14,7 +14,6 @@
 struct stream_file {
   struct stream base;
   FILE* file;
-  const char* filename;
   int force_flush; /* force stream to be flushed on every write */
 };
 
@@ -105,7 +104,6 @@ static int load_legacy_06(struct file_header_06* fh, FILE* src){
 static long stream_file_destroy(struct stream_file* st){
 	fclose(st->file);
 	free(st->base.comment);
-	free((char*)st->filename); /* casting to avoid warning */
 	free(st);
 	return 0;
 }
@@ -192,8 +190,6 @@ long stream_file_open(struct stream** stptr, const char* filename, size_t buffer
     return EINVAL;
   }
 
-  st->filename = strdup(filename);
-
   /* add callbacks */
   st->base.fill_buffer = (fill_buffer_callback)stream_file_fillbuffer;
   st->base.destroy = (destroy_callback)stream_file_destroy;
@@ -233,7 +229,6 @@ int stream_file_create(struct stream** stptr, FILE* fp, const char* filename, co
   struct stream_file* st = (struct stream_file*)*stptr;
 
   st->file = fp;
-  st->filename = strdup(filename);
   st->force_flush = flags & STREAM_ADDR_FLUSH;
 
   st->base.comment = strdup(comment);
