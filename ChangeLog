@@ -1,6 +1,9 @@
 caputils-0.7.10
 ---------------
 
+	* fix: stream_copy now truncates packets where caplen is greater than
+	       wire len, e.g. when capturing using "novalen slen=1500" on a DAG
+	       card. The truncated part is only zeroes.
 	* fix: [capinfo] pad duration seconds with zero when single digit.
 	* fix: stream_read timeout works again.
 

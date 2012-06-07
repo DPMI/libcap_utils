@@ -272,7 +272,7 @@ int stream_write(struct stream *outStream, const void* data, size_t size){
 }
 
 int stream_copy(stream_t st, caphead_t head){
-	return stream_write(st, head, sizeof(struct cap_header) + head->caplen);
+	return stream_write(st, head, sizeof(struct cap_header) + (head->caplen < head->len ? head->caplen : head->len));
 }
 
 static int fill_buffer(stream_t st, struct timeval* timeout){
