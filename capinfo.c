@@ -96,7 +96,7 @@ static void format_seconds(char* dst, size_t size, timepico first, timepico last
 	int m = hseconds % 60;
 	int h = hseconds / 60;
 
-	snprintf(dst, size, "%02d:%02d:%02.1f", h, m, s > 0 ? (float)s/10 : 0);
+	snprintf(dst, size, "%02d:%02d:%04.1f", h, m, s > 0 ? (float)s/10 : 0);
 }
 
 static void print_overview(){

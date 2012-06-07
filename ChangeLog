@@ -1,6 +1,7 @@
 caputils-0.7.10
 ---------------
 
+	* fix: [capinfo] pad duration seconds with zero when single digit.
 	* fix: stream_read timeout works again.
 
 caputils-0.7.9
