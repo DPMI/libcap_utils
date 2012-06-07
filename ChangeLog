@@ -1,6 +1,7 @@
 caputils-0.7.10
 ---------------
 
+	* add: capmerge: a tool to merge cap-files.
 	* add: stream_peek to look at packet but don't pop it.
 	* fix: stream_copy now truncates packets where caplen is greater than
 	       wire len, e.g. when capturing using "novalen slen=1500" on a DAG

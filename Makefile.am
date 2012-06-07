@@ -33,10 +33,16 @@ man1_MANS += man/capfilter.1
 notrans_dist_man_MANS += man/capfilter.1
 endif
 
-if BUILD_CAPFILTER
+if BUILD_CAPMARKER
 bin_PROGRAMS += capmarker
 man1_MANS += man/capmarker.1
 notrans_dist_man_MANS += man/capmarker.1
+endif
+
+if BUILD_CAPMERGE
+bin_PROGRAMS += capmerge
+man1_MANS += man/capmerge.1
+notrans_dist_man_MANS += man/capmerge.1
 endif
 
 if BUILD_CAPSHOW
@@ -111,6 +117,7 @@ capinfo_LDADD = libcap_utils-07.la libcap_filter-07.la libcap_stream-07.la
 capdump_LDADD = libcap_utils-07.la libcap_filter-07.la libcap_stream-07.la
 capfilter_LDADD = libcap_filter-07.la libcap_utils-07.la libcap_stream-07.la
 capmarker_LDADD = 
+capmerge_LDADD = libcap_filter-07.la libcap_utils-07.la libcap_stream-07.la
 capshow_LDADD = libcap_filter-07.la libcap_utils-07.la libcap_stream-07.la
 
 tests_filter_argv_CXXFLAGS = ${AM_CFLAGS} $(CPPUNIT_CFLAGS)
