@@ -398,6 +398,51 @@ int stream_read(struct stream *myStream, cap_head** data, const struct filter *m
 	return 0;
 }
 
+int stream_peek(stream_t st, cap_head** header, const struct filter* filter){
+	if ( st->read ){
+		fprintf(stderr, "stream_peek not implemented for this stream type\n");
+		abort();
+	}
+
+	struct timeval timeout = {0,0};
+
+	int ret;
+	int match;
+	do {
+		if( st->writePos - st->readPos < sizeof(struct cap_header) ){
+			switch ( (ret=fill_buffer(st, &timeout)) ){
+			case 0: return EAGAIN;
+			default: return ret;
+			}
+		}
+
+		struct cap_header* cp = (struct cap_header*)(st->buffer + st->readPos);
+		const size_t packet_size = sizeof(struct cap_header) + cp->caplen;
+		const size_t start_pos = st->readPos;
+		const size_t end_pos = start_pos + packet_size;
+
+		if ( cp->caplen == 0 ){
+			return ERROR_CAPFILE_INVALID;
+		}
+
+		if( end_pos > st->writePos ) {
+			switch ( (ret=fill_buffer(st, &timeout)) ){
+			case 0: return EAGAIN;
+			default: return ret;
+			}
+		}
+
+		*header = cp;
+
+		match = 1;
+		if ( filter ){
+			match = filter_match(filter, cp->payload, cp);
+		}
+	} while ( match == 0 );
+
+	return 0;
+}
+
 static const char* type[4] = {"file", "ethernet", "udp", "tcp"};
 int stream_from_getopt(stream_t* st, char* argv[], int optind, int argc, const char* iface, const char* defaddr, const char* program_name, size_t buffer_size){
 	int ret;

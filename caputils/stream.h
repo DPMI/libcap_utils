@@ -132,6 +132,15 @@ int stream_copy(stream_t st, caphead_t head);
  */
 int stream_read(stream_t st, cap_head** header, const struct filter* filter, struct timeval* timeout);
 
+/**
+ * Similar to stream_read but does not pop packet from stream.
+ * @note If a filter is passed it _will_ discard non-matches, e.g. if you use
+ *       stream_peek with filter and later call stream_read without you have
+ *       lost the non-matches already.
+ * @return same as stream_read. EAGAIN if there is no packet to read, there is no blocking version of this call.
+ */
+int stream_peek(stream_t st, cap_head** header, const struct filter* filter);
+
 #ifdef __cplusplus
 }
 #endif
