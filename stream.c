@@ -124,7 +124,7 @@ int stream_open(stream_t* stptr, const stream_addr_t* dest, const char* iface, s
 		/* case PROTOCOL_UDP_MULTICAST: */
 		/*   return stream_udp_init(myStream, address, port); */
 
-	case PROTOCOL_ETHERNET_MULTICAST:
+	case STREAM_ADDR_ETHERNET:
 #ifdef HAVE_PFRING
 		ret = stream_pfring_open(stptr, &dest->ether_addr, iface, buffer_size);
 #else
@@ -132,11 +132,15 @@ int stream_open(stream_t* stptr, const stream_addr_t* dest, const char* iface, s
 #endif
 		break;
 
-	case PROTOCOL_LOCAL_FILE:
+	case STREAM_ADDR_CAPFILE:
 		ret = stream_file_open(stptr, stream_addr_have_flag(dest, STREAM_ADDR_LOCAL) ? dest->local_filename : dest->filename, buffer_size);
 		break;
 
-	default:
+	case STREAM_ADDR_GUESS:
+		return EINVAL;
+
+	case STREAM_ADDR_TCP:
+	case STREAM_ADDR_UDP:
 		fprintf(stderr, "Unhandled protocol %d\n", stream_addr_type(dest));
 		return ERROR_NOT_IMPLEMENTED;
 	}
