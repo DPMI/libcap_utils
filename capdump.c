@@ -418,6 +418,7 @@ int main(int argc, char **argv){
 			}
 		}
 
+		cp->caplen = cp->caplen < cp->len ? cp->caplen : cp->len; /* truncate */
 		if ( (ret=stream_copy(dst, cp)) != 0 ) {
 			fprintf(stderr, "%s: stream_copy() failed with code 0x%08lX: %s\n", program_name, ret, caputils_error_string(ret) );
 			break;
