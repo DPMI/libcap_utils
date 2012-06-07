@@ -10,6 +10,7 @@
 #include <unistd.h>
 
 static const char* program_name;
+static FILE* sort = NULL;
 
 static const char* shortopts = "o:c:sVh";
 static struct option longopts[] = {
@@ -38,6 +39,8 @@ int main(int argc, char* argv[]){
 	fprintf(stderr, "capmerge-" VERSION_FULL "\n");
 
 	const char* comment = "capmerge-" VERSION " stream";
+	char* sort_buffer = NULL;
+	size_t sort_size = 0;
 	stream_addr_t output;
 	stream_addr_aton(&output, "/dev/stdout", STREAM_ADDR_CAPFILE, STREAM_ADDR_LOCAL);
 
@@ -64,6 +67,10 @@ int main(int argc, char* argv[]){
 			comment = optarg;
 			break;
 
+		case 's': /* --sort */
+			sort = open_memstream(&sort_buffer, &sort_size);
+			break;
+
 		case 'h': /* --help */
 			show_usage();
 			exit(0);
@@ -87,7 +94,9 @@ int main(int argc, char* argv[]){
 
 	/* open output stream */
 	stream_t dst;
-	if ( (ret=stream_create(&dst, &output, NULL, "CONV", comment)) != 0 ){
+	stream_addr_t real_addr = output;
+	if ( sort ) stream_addr_fp(&real_addr, sort, 0);
+	if ( (ret=stream_create(&dst, &real_addr, NULL, "CONV", comment)) != 0 ){
 		fprintf(stderr, "stream_create() failed with code 0x%08X: %s\n", ret, caputils_error_string(ret));
 		return 1;
 	}
@@ -108,6 +117,7 @@ int main(int argc, char* argv[]){
 
 	/* read packets */
 	int streams = files;
+	unsigned long packets = 0;
 	while ( streams > 0 ){
 		struct cap_header* pkt[streams];
 
@@ -151,7 +161,9 @@ int main(int argc, char* argv[]){
 		struct cap_header* cp;
 		stream_read(st[oldest], &cp, NULL, NULL);
 
-		if ( (ret=stream_write(dst, cp, sizeof(struct cap_header) + min(cp->caplen, cp->len))) != 0 ){
+		packets++;
+		cp->caplen = min(cp->caplen, cp->len); /* truncate when caplen > len */
+		if ( (ret=stream_write(dst, cp, sizeof(struct cap_header) + cp->caplen)) != 0 ){
 			fprintf(stderr, "%s: stream_write(..) returned %d: %s\n", program_name, ret, caputils_error_string(ret));
 			stream_close(dst);
 			exit(1);
@@ -162,6 +174,59 @@ int main(int argc, char* argv[]){
 		stream_close(st[i]);
 	}
 	stream_close(dst);
+
+	if ( sort ){
+		fprintf(stderr, "%s starting sort of %zd bytes\n", program_name, sort_size);
+
+		if ( (ret=stream_create(&dst, &output, NULL, "CONV", comment)) != 0 ){
+			fprintf(stderr, "stream_create() failed with code 0x%08X: %s\n", ret, caputils_error_string(ret));
+			return 1;
+		}
+
+		struct file_header_t* fh = (struct file_header_t*)sort_buffer;
+		const char* begin = sort_buffer + fh->header_offset + fh->comment_size;
+		const char* end = sort_buffer + sort_size;
+
+		unsigned long int written = 0;
+		do {
+			/* recalculate begin pointer */
+			do {
+				caphead_t cp = (caphead_t)begin;
+				if ( cp->len > 0 ) break;
+				begin += cp->caplen + sizeof(struct cap_header);
+			} while ( begin < end );
+
+			const char* ptr = begin;
+			caphead_t pkt = NULL;
+			timepico cur = {-1, -1};
+
+			while ( ptr < end ){
+				caphead_t cp = (caphead_t)ptr;
+				if ( cp->len > 0 && timecmp(&cur, &cp->ts) > 0 ){
+					pkt = cp;
+					cur = cp->ts;
+				}
+
+				ptr += cp->caplen + sizeof(struct cap_header);
+			}
+
+			if ( !pkt ) break;
+			if ( written == 10000) break;
+
+			written++;
+			stream_copy(dst, pkt);
+			pkt->len = 0;
+
+			if ( written % 250 == 0 ){
+				fprintf(stderr, "\r%lu / %lu (%p - %p)", written, packets, begin, end);
+				fflush(stderr);
+			}
+		} while ( 1 );
+
+		fprintf(stderr, "\r%lu / %lu (%p - %p)", written, packets, begin, end);
+		fflush(stderr);
+		stream_close(dst);
+	}
 
 	return 0;
 }
