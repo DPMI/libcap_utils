@@ -166,21 +166,26 @@ int stream_create(stream_t* stptr, const stream_addr_t* dest, const char* nic, c
 	int flags = stream_addr_flags(dest);
 
 	switch ( stream_addr_type(dest) ){
-	case PROTOCOL_ETHERNET_MULTICAST:
+	case STREAM_ADDR_ETHERNET:
 #ifdef HAVE_PFRING
 		return stream_pfring_create(stptr, &dest->ether_addr, nic, mpid, comment, flags);
 #else
 		return stream_ethernet_create(stptr, &dest->ether_addr, nic, mpid, comment, flags);
 #endif
 
-	case PROTOCOL_LOCAL_FILE:
+	case STREAM_ADDR_CAPFILE:
 		filename = stream_addr_have_flag(dest, STREAM_ADDR_LOCAL) ? dest->local_filename : dest->filename;
 		return stream_file_create(stptr, NULL, filename, mpid, comment, flags);
 
-	default:
+	case STREAM_ADDR_GUESS:
+		return EINVAL;
+
+	case STREAM_ADDR_TCP:
+	case STREAM_ADDR_UDP:
 		return ERROR_NOT_IMPLEMENTED;
 	}
 
+	return EINVAL;
 
 	/* switch(protocol){ */
 	/*   case 3: // TCP unicast */
