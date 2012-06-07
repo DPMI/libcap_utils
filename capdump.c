@@ -140,49 +140,49 @@ static const char* generate_filename(const char* fmt, const struct marker* marke
 
 		switch ( ch ){
 		case '%':
-			{
-				char w[4] = {0,};
-				int n = 0;
-				while ( isdigit(*(++src)) ) {
-					if ( n == 4 ){ fprintf(stderr, "field width specifier to great"); abort(); }
-					w[n++] = *src;
-				}
-
-				const int zeropad = w[0] == '0';
-				const int width = atoi(w);
-				const char specifier = *src++;
-
-				switch ( specifier ){
-				case 'e': /* extension */
-					dst += sprintf(dst, "%s", fmt_extension);
-					break;
-
-				case 'f': /* filename */
-					dst += sprintf(dst, "%s", fmt_basename);
-					break;
-
-				case 's': /* sequence number */
-					dst += sprintf(dst, zeropad ? "%0*d" : "%*d", width, marker->seq_num);
-					break;
-
-				case 'k': /* key */
-					dst += sprintf(dst, zeropad ? "%0*d" : "%*d", width, marker->key_id);
-					break;
-
-				case 'r': /* run id */
-					dst += sprintf(dst, zeropad ? "%0*d" : "%*d", width, marker->run_id);
-					break;
-
-				case 'x': /* experiment id */
-					dst += sprintf(dst, zeropad ? "%0*d" : "%*d", width, marker->exp_id);
-					break;
-
-				default:
-					fprintf(stderr, "unknown specifier `%c'\n", specifier);
-					abort();
-				}
-				break;
+		{
+			char w[4] = {0,};
+			int n = 0;
+			while ( isdigit(*(++src)) ) {
+				if ( n == 4 ){ fprintf(stderr, "field width specifier to great"); abort(); }
+				w[n++] = *src;
 			}
+
+			const int zeropad = w[0] == '0';
+			const int width = atoi(w);
+			const char specifier = *src++;
+
+			switch ( specifier ){
+			case 'e': /* extension */
+				dst += sprintf(dst, "%s", fmt_extension);
+				break;
+
+			case 'f': /* filename */
+				dst += sprintf(dst, "%s", fmt_basename);
+				break;
+
+			case 's': /* sequence number */
+				dst += sprintf(dst, zeropad ? "%0*d" : "%*d", width, marker->seq_num);
+				break;
+
+			case 'k': /* key */
+				dst += sprintf(dst, zeropad ? "%0*d" : "%*d", width, marker->key_id);
+				break;
+
+			case 'r': /* run id */
+				dst += sprintf(dst, zeropad ? "%0*d" : "%*d", width, marker->run_id);
+				break;
+
+			case 'x': /* experiment id */
+				dst += sprintf(dst, zeropad ? "%0*d" : "%*d", width, marker->exp_id);
+				break;
+
+			default:
+				fprintf(stderr, "unknown specifier `%c'\n", specifier);
+				abort();
+			}
+			break;
+		}
 
 		default:
 			*dst++ = ch;
@@ -227,15 +227,15 @@ int main(int argc, char **argv){
 	fprintf(stderr, "capdump-" VERSION_FULL "\n");
 	int op, option_index = -1;
 
-  /* extract program name from path. e.g. /path/to/MArCd -> MArCd */
-  const char* separator = strrchr(argv[0], '/');
-  if ( separator ){
-    program_name = separator + 1;
-  } else {
-    program_name = argv[0];
-  }
+	/* extract program name from path. e.g. /path/to/MArCd -> MArCd */
+	const char* separator = strrchr(argv[0], '/');
+	if ( separator ){
+		program_name = separator + 1;
+	} else {
+		program_name = argv[0];
+	}
 
-  const char* marker_format = "%f-%x-%03s.%e";
+	const char* marker_format = "%f-%x-%03s.%e";
 	const char* comment = "capdump-" VERSION " stream";
 	char* iface = NULL;
 	struct timeval timeout = {1, 0};
@@ -273,12 +273,12 @@ int main(int argc, char **argv){
 			break;
 
 		case 't':
-			{
-				int tmp = atoi(optarg);
-				timeout.tv_sec  = tmp / 1000;
-				timeout.tv_usec = tmp % 1000 * 1000;
-			}
-			break;
+		{
+			int tmp = atoi(optarg);
+			timeout.tv_sec  = tmp / 1000;
+			timeout.tv_usec = tmp % 1000 * 1000;
+		}
+		break;
 
 		case 'b': /* --bufsize */
 			buffer_size = atoi(optarg);
