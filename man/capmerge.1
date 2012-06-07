@@ -1,0 +1,26 @@
+.TH capmerge 1 "7 June 2012" "BTH" "Measurement Area Manual"
+.SH NAME
+capmerge \- Merge DPMI capture files.
+.SH SYNOPSIS
+.nf
+.B capmerge [-o \fIFILE\fP] [\fIOPTIONS\fP...] \fIFILE\fP...
+.SH DESCRIPTION
+Takes multiple capture files and merges them into a single one. The order of the
+packets will be sorted only if all inputs are already sorted. If the packets are
+arriving out-of-order they can be sorted using \fB\-\-sort\fR.
+.TP
+\fB\-o\fR, \fB\-\-output\fR=\fIFILE\fR
+Save output in capfile.
+.TP
+\fB\-c\fR, \fB\-\-comment\fR=\fISTRING\fR
+Set the comment for the output stream.
+.TP
+\fB\-h\fR, \fB\-\-help
+Short help.
+.TP
+\fB\-s\fR, \fB\-\-sort
+Sort all packets based on timestamp but at expense of high memory consumption.
+.SH COPYRIGHT
+Copyright (C) 2011-2012 David Sveningsson <dsv@bth.se>.
+.SH "SEE ALSO"
+capdump(1)
