@@ -76,12 +76,12 @@ AX_PFRING([$with_pfring])
 AM_CONDITIONAL([BUILD_PFRING], [test "x$ax_have_pfring" = "xyes"])
 AS_IF([test "x$ax_have_pfring" = "xyes"], [AC_DEFINE_UNQUOTED([VERSION_FULL], ["$VERSION (PF_RING enabled)"])])
 
-AC_ARG_ENABLE([capdump], [AS_HELP_STRING([--enable-capdump], [Build capdump utility (record a stream) @<:@default=enabled@:>@])])
-AC_ARG_ENABLE([capinfo], [AS_HELP_STRING([--enable-capinfo], [Build capinfo utility (show info about a stream) @<:@default=enabled@:>@])])
+AC_ARG_ENABLE([capdump],   [AS_HELP_STRING([--enable-capdump], [Build capdump utility (record a stream) @<:@default=enabled@:>@])])
+AC_ARG_ENABLE([capinfo],   [AS_HELP_STRING([--enable-capinfo], [Build capinfo utility (show info about a stream) @<:@default=enabled@:>@])])
 AC_ARG_ENABLE([capfilter], [AS_HELP_STRING([--enable-capfilter], [Build capfilter utility (filter existing stream) @<:@default=enabled@:>@])])
 AC_ARG_ENABLE([capmarker], [AS_HELP_STRING([--enable-capmarker], [Build capmarker utility @<:@default=enabled@:>@])])
-AC_ARG_ENABLE([capshow], [AS_HELP_STRING([--enable-capshow], [Build capshow utility @<:@default=enabled@:>@])])
-AC_ARG_ENABLE([utils], [AS_HELP_STRING([--enable-utils], [By default all utils are build, this flag disables all utils unless they are explicitly enabled. This also disables pcap support by default but can be explicitly enabled with --with-pcap])])
+AC_ARG_ENABLE([capshow],   [AS_HELP_STRING([--enable-capshow], [Build capshow utility @<:@default=enabled@:>@])])
+AC_ARG_ENABLE([utils],     [AS_HELP_STRING([--enable-utils], [By default all utils are build, this flag disables all utils unless they are explicitly enabled. This also disables pcap support by default but can be explicitly enabled with --with-pcap])])
 AC_ARG_WITH([pcap], [AS_HELP_STRING([--with-pcap@<:@=PREFIX@:>@], [Build utilities for conversion to and from pcap files. @<:@default=enabled@:>@])])
 
 utils_unset="x"
