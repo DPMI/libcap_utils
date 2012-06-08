@@ -1,6 +1,7 @@
 caputils-0.7.10
 ---------------
 
+	* fix: [gcc 3.3] using alias instead of weakref for be64toh workaround.
 	* add: function to open stream from FILE pointer.
 	* add: capmerge: a tool to merge cap-files.
 	* add: stream_peek to look at packet but don't pop it.
