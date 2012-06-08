@@ -189,13 +189,15 @@ endif
 # Relase related targets
 #
 
-debpkgname=libcap-utils_@VERSION@_@ARCH@
+version=@VERSION@
+debversion=`echo $(version) | sed 's/_//'`
+debpkgname=libcap-utils_$(debversion)_@ARCH@
 releasedir=/var/marc/releases
 
 deb: all
 	@test "x${prefix}" = "x/usr" || (echo "Error: --prefix must be /usr when creating debian release (currently ${prefix})"; exit 1)
 	mkdir -p $(debpkgname)/DEBIAN
-	cp dist/deb-control $(debpkgname)/DEBIAN/control
+	sed 's/_git/git/g'  < dist/deb-control > $(debpkgname)/DEBIAN/control
 	$(MAKE) install DESTDIR=`pwd`/$(debpkgname)
 	dpkg-deb --build $(debpkgname)
 
