@@ -91,6 +91,7 @@ libcap_utils_07_la_SOURCES =   \
 	caputils_int.h      \
 	address.c           \
 	error.c             \
+	format.c            \
 	log.c               \
 	marker.c            \
 	utils.c             \
