@@ -10,7 +10,7 @@
 #include "be64toh.h"
 #endif
 
-int is_marker(struct cap_header* cp, struct marker* ptr, int port){
+int is_marker(const struct cap_header* cp, struct marker* ptr, int port){
 	/* match ip packet */
 	const struct ip* ip = find_ip_header(cp->ethhdr);
 	if ( !ip ){ return 0; }

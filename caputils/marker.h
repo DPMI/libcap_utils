@@ -33,6 +33,6 @@ struct marker {
  * It returns the port the marker was detected on or 0 if packet wasn't a
  * marker. ptr is undefined if packet isn't a marker.
  */
-int is_marker(struct cap_header* cp, struct marker* ptr, int port);
+int is_marker(const struct cap_header* cp, struct marker* ptr, int port);
 
 #endif /* CAPUTILS__MARKER_H */
