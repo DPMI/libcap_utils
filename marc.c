@@ -26,9 +26,15 @@
 /* might be a portability problem, add ifdefs for GCC if this fails */
 #define UNUSED __attribute__((unused))
 
+enum context_type {
+	CONTEXT_SERVER,
+	CONTEXT_CLIENT,
+};
+
 struct marc_context {
 	const char* iface;
 	struct ether_addr hwaddr;
+	enum context_type type;
 	int sd;
 	enum MPEvent (*compat)(enum MPEvent);
 };
@@ -254,6 +260,7 @@ int marc_init_client(marc_context_t* ctxptr, const char* iface, struct marc_clie
 
 	/* fill context */
 	ctx->iface = strdup(iface);
+	ctx->type = CONTEXT_CLIENT;
 	ctx->sd = sd;
 	ctx->compat = NULL;
 	memcpy(&ctx->hwaddr, &hwaddr, sizeof(struct ether_addr));
@@ -334,6 +341,7 @@ int marc_init_server(marc_context_t* ctxptr, int port){
 
 	/* fill context */
 	ctx->iface = NULL;
+	ctx->type = CONTEXT_SERVER;
 	ctx->sd = sd;
 	ctx->compat = NULL;
 	memset(&ctx->hwaddr, 0, sizeof(struct ether_addr));
