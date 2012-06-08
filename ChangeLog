@@ -1,6 +1,7 @@
 caputils-0.7.14
 ---------------
 
+	* fix: [marcd] improving compability with 0.6 MPs.
 	* fix: timepico_from_string now properly parses picoseconds.
 	* fix: [capshow] always show TCP flags when printing transport layer.
 	* fix: [capinfo] crash when 0 packets.

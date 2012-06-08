@@ -472,15 +472,24 @@ int marc_poll_event(marc_context_t ctx, MPMessage* event, size_t* size, struct s
 	event->type = ntohl(event->type);
 
 	/* fill in version field for old MArCd versions */
-	if ( event->type == MP_LEGACY_AUTH_EVENT && (size_t)bytes < sizeof(struct MPauth) ){
+	const int legacy_marc = ctx->type == CONTEXT_CLIENT && event->type == MP_LEGACY_AUTH_EVENT && bytes < sizeof(struct MPauth);
+	const int legacy_mp   = ctx->type == CONTEXT_SERVER && event->type == MP_LEGACY_INIT_EVENT && bytes < sizeof(struct MPinitialization);
+	if ( legacy_marc ){
 		event->type = MP_CONTROL_AUTHORIZE_EVENT;
 		event->auth.version.major = 0;
-		event->auth.version.major = 6;
+		event->auth.version.minor = 6;
 		ctx->compat = legacy_compat;
 
 		out_func(dst_error, "Activating MArCd compatibility mode (v0.6). Please update MArCd. This can also\n");
 		out_func(dst_error, "happen if using a legacy version of the webgui to authorize, if so please\n");
 		out_func(dst_error, "restart this measurement point.\n");
+	} else if ( legacy_mp ){
+		event->type = MP_CONTROL_INIT_EVENT;
+		event->init.noCI = 0;
+		event->init.version.protocol.major = htons(0);
+		event->init.version.protocol.minor = htons(6);
+
+		out_func(dst_error, "Activating MP compatibility mode (v0.6). Please update MP to a later version.\n");
 	}
 
 	/* intercept auth event to store version */
