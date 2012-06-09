@@ -10,6 +10,7 @@
 #include "stream.h"
 
 #include <stdio.h>
+#include <string.h>
 #include <stdint.h>
 #include <stddef.h>
 #include <time.h>
@@ -112,7 +113,54 @@ static void print_ieee8023(FILE* dst, const struct llc_pdu_sn* llc){
 	fprintf(dst,"dsap=%02x ssap=%02x ctrl1 = %02x ctrl2 = %02x\n", llc->dsap, llc->ssap, llc->ctrl_1, llc->ctrl_2);
 }
 
-static void print_eth(FILE* dst, const struct ethhdr* eth){
+static void print_arp(FILE* dst, const struct cap_header* cp, const struct ether_arp* arp){
+	fprintf(dst, "ARP, ");
+
+	const int format = ntohs(arp->arp_hrd);
+	const int op = ntohs(arp->arp_op);
+
+	if ( format == ARPHRD_ETHER ){
+		union {
+			uint8_t v[4];
+			struct in_addr addr;
+		} spa, tpa;
+		memcpy(spa.v, arp->arp_spa, 4);
+		memcpy(tpa.v, arp->arp_tpa, 4);
+
+		switch ( op ){
+		case ARPOP_REQUEST:
+			fputs("Request who-has ", dst);
+			fputs(inet_ntoa(tpa.addr), dst);
+			fputs(" tell ", dst);
+			fputs(inet_ntoa(spa.addr), dst);
+			break;
+
+		case ARPOP_REPLY:
+			fputs("Reply ", dst);
+			fputs(inet_ntoa(spa.addr), dst);
+			fputs(" is-at ", dst);
+			fputs(hexdump_address((const struct ether_addr*)arp->arp_sha), dst);
+			break;
+
+		case ARPOP_RREQUEST:
+			fputs("RARP request", dst);
+			break;
+
+		case ARPOP_RREPLY:
+			fputs("RARP reply", dst);
+			break;
+
+		default:
+			fprintf(dst, "Unknown op: %d", op);
+		}
+	} else {
+		fprintf(dst, "Unknown format: %d\n", format);
+	}
+
+	fprintf(dst, ", length %zd\n", cp->len - sizeof(struct ethhdr));
+}
+
+static void print_eth(FILE* dst, const struct cap_header* cp, const struct ethhdr* eth){
 	void* payload = ((char*)eth) + sizeof(struct ethhdr);
 	uint16_t h_proto = ntohs(eth->h_proto);
 	uint16_t vlan_tci;
@@ -143,7 +191,7 @@ static void print_eth(FILE* dst, const struct ethhdr* eth){
 			break;
 
 		case ETHERTYPE_ARP:
-			printf("arp\n");
+			print_arp(dst, cp, (const struct ether_arp*)payload);
 			break;
 
 		case 0x0810:
@@ -209,7 +257,7 @@ static void print_linklayer(FILE* fp, const struct cap_header* cp, int flags){
 		return;
 	}
 
-	print_eth(fp, cp->ethhdr);
+	print_eth(fp, cp, cp->ethhdr);
 }
 
 void format_pkg(FILE* fp, const stream_t st, const struct cap_header* cp, int flags){
