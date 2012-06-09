@@ -24,6 +24,8 @@
 #include <sys/socket.h>
 #include <sys/time.h>
 
+static int min(int a, int b){ return a<b?a:b; }
+
 static void print_tcp(FILE* dst, const struct ip* ip, const struct tcphdr* tcp){
 	fprintf(dst, "TCP(HDR[%d]DATA[%0x]):\t [",4*tcp->doff, ntohs(ip->ip_len) - 4*tcp->doff - 4*ip->ip_hl);
 	if(tcp->syn) {
@@ -265,4 +267,8 @@ void format_pkg(FILE* fp, const stream_t st, const struct cap_header* cp, int fl
 
 	print_timestamp(fp, cp, flags);
 	print_linklayer(fp, cp, flags);
+
+	if ( flags & FORMAT_HEXDUMP ){
+		hexdump(fp, cp->payload, min(cp->caplen, cp->len));
+	}
 }

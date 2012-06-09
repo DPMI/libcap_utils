@@ -34,9 +34,8 @@ void handle_sigint(int signum){
 	keep_running = 0;
 }
 
-static const char* shortopts = "cp:i:t:cDarh";
+static const char* shortopts = "cp:i:t:cDarhx";
 static struct option longopts[]= {
-	{"content",  no_argument,       0, 'c'},
 	{"packets",  required_argument, 0, 'p'},
 	{"iface",    required_argument, 0, 'i'},
 	{"timeout",  required_argument, 0, 't'},
@@ -60,7 +59,7 @@ static void show_usage(void){
 	       "  -h, --help           This text.\n"
 	       "\n"
 	       "Formatting options:\n"
-	       "  -c, --content        Write full package content as hexdump.\n"
+	       "  -x                   Write full package content as hexdump.\n"
 	       "  -d, --calender       Show timestamps in human-readable format (UTC).\n"
 	       "  -D, --localtime      Show timestamps in human-readable format (local time).\n"
 	       "  -a, --absolute       Show absolute timestamps.\n"
@@ -118,8 +117,8 @@ int main(int argc, char **argv){
 			}
 			break;
 
-		case 'c':
-			//print_content = 1;
+		case 'x':
+			flags |= FORMAT_HEXDUMP;
 			break;
 
 		case 'i':

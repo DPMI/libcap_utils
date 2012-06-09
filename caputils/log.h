@@ -34,6 +34,7 @@ enum FORMAT_FLAGS {
 	FORMAT_DATE_LOCALTIME = 0x02,    /* Show date in local time. (only in effect when printing date as string)*/
 
 	FORMAT_REL_TIMESTAMP  = (1<<2),  /* Show timestamps relative to first packet */
+	FORMAT_HEXDUMP        = (1<<3),  /* Print hexdump of entire packet */
 };
 
 /**
