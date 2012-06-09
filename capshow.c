@@ -34,7 +34,7 @@ void handle_sigint(int signum){
 	keep_running = 0;
 }
 
-static const char* shortopts = "cp:i:t:cDarhx1234";
+static const char* shortopts = "cp:i:t:cDarhx1234H";
 static struct option longopts[]= {
 	{"packets",  required_argument, 0, 'p'},
 	{"iface",    required_argument, 0, 'i'},
@@ -63,6 +63,7 @@ static void show_usage(void){
 	       "  -2                     .. include link layer.\n"
 	       "  -3                     .. include transport layer.\n"
 	       "  -4                     .. include application layer. [default]\n"
+	       "  -H                   Show layer headers.\n"
 	       "  -x                   Write full package content as hexdump.\n"
 	       "  -d, --calender       Show timestamps in human-readable format (UTC).\n"
 	       "  -D, --localtime      Show timestamps in human-readable format (local time).\n"
@@ -118,6 +119,10 @@ int main(int argc, char **argv){
 
 		case 'r':
 			flags |= FORMAT_REL_TIMESTAMP;
+			break;
+
+		case 'H':
+			flags |= FORMAT_HEADER;
 			break;
 
 		case 'p':

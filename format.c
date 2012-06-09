@@ -26,38 +26,37 @@
 
 static int min(int a, int b){ return a<b?a:b; }
 
-static void print_tcp(FILE* dst, const struct ip* ip, const struct tcphdr* tcp){
-	fprintf(dst, "TCP(HDR[%d]DATA[%0x]):\t [",4*tcp->doff, ntohs(ip->ip_len) - 4*tcp->doff - 4*ip->ip_hl);
-	if(tcp->syn) {
-		fprintf(dst, "S");
-	}
-	if(tcp->fin) {
-		fprintf(dst, "F");
-	}
-	if(tcp->ack) {
-		fprintf(dst, "A");
-	}
-	if(tcp->psh) {
-		fprintf(dst, "P");
-	}
-	if(tcp->urg) {
-		fprintf(dst, "U");
-	}
-	if(tcp->rst) {
-		fprintf(dst, "R");
+static void print_tcp(FILE* dst, const struct ip* ip, const struct tcphdr* tcp, unsigned int flags){
+	fputs("TCP", dst);
+
+	if ( flags & FORMAT_HEADER ){
+		fprintf(dst, "(HDR[%d]DATA[%0x]): [",4*tcp->doff, ntohs(ip->ip_len) - 4*tcp->doff - 4*ip->ip_hl);
+		if(tcp->syn) fputc('S', dst);
+		if(tcp->fin) fputc('F', dst);
+		if(tcp->ack) fputc('A', dst);
+		if(tcp->psh) fputc('P', dst);
+		if(tcp->urg) fputc('U', dst);
+		if(tcp->rst) fputc('R', dst);
+		fputc(']', dst);
 	}
 
-	fprintf(dst, "] %s:%d ",inet_ntoa(ip->ip_src),(u_int16_t)ntohs(tcp->source));
+	fprintf(dst, ": %s:%d",inet_ntoa(ip->ip_src),(u_int16_t)ntohs(tcp->source));
 	fprintf(dst, " --> %s:%d",inet_ntoa(ip->ip_dst),(u_int16_t)ntohs(tcp->dest));
 }
 
-static void print_udp(FILE* dst, const struct ip* ip, const struct udphdr* udp){
-	fprintf(dst, "UDP(HDR[8]DATA[%d]):\t %s:%d ",(u_int16_t)(ntohs(udp->len)-8),inet_ntoa(ip->ip_src),(u_int16_t)ntohs(udp->source));
+static void print_udp(FILE* dst, const struct ip* ip, const struct udphdr* udp, unsigned int flags){
+	fputs("UDP", dst);
+
+	if ( flags & FORMAT_HEADER ){
+		fprintf(dst, "(HDR[8]DATA[%d])", (u_int16_t)(ntohs(udp->len)-8));
+	}
+
+	fprintf(dst, ": %s:%d", inet_ntoa(ip->ip_src), (u_int16_t)ntohs(udp->source));
 	fprintf(dst, " --> %s:%d", inet_ntoa(ip->ip_dst),(u_int16_t)ntohs(udp->dest));
 }
 
 static void print_icmp(FILE* dst, const struct ip* ip, const struct icmphdr* icmp){
-	fprintf(dst, "ICMP:\t %s ",inet_ntoa(ip->ip_src));
+	fprintf(dst, "ICMP: %s ",inet_ntoa(ip->ip_src));
 	fprintf(dst, " --> %s ",inet_ntoa(ip->ip_dst));
 	fprintf(dst, "Type %d , code %d", icmp->type, icmp->code);
 	if( icmp->type==0 && icmp->code==0){
@@ -68,30 +67,28 @@ static void print_icmp(FILE* dst, const struct ip* ip, const struct icmphdr* icm
 	}
 }
 
-static void print_ipv4(FILE* dst, const struct ip* ip){
+static void print_ipv4(FILE* dst, const struct ip* ip, unsigned int flags){
 	void* payload = ((char*)ip) + 4*ip->ip_hl;
-	fprintf(dst, "(HDR[%d])[", 4*ip->ip_hl);
-	fprintf(dst, "Len=%d:",(u_int16_t)ntohs(ip->ip_len));
-	fprintf(dst, "ID=%d:",(u_int16_t)ntohs(ip->ip_id));
-	fprintf(dst, "TTL=%d:",(u_int8_t)ip->ip_ttl);
-	fprintf(dst, "Chk=%d:",(u_int16_t)ntohs(ip->ip_sum));
 
-	if(ntohs(ip->ip_off) & IP_DF) {
-		fprintf(dst, "DF");
+	if ( flags & FORMAT_HEADER ){
+		fprintf(dst, "(HDR[%d])[", 4*ip->ip_hl);
+		fprintf(dst, "Len=%d:",(u_int16_t)ntohs(ip->ip_len));
+		fprintf(dst, "ID=%d:",(u_int16_t)ntohs(ip->ip_id));
+		fprintf(dst, "TTL=%d:",(u_int8_t)ip->ip_ttl);
+		fprintf(dst, "Chk=%d:",(u_int16_t)ntohs(ip->ip_sum));
+		if ( ntohs(ip->ip_off) & IP_DF) fprintf(dst, "DF");
+		if ( ntohs(ip->ip_off) & IP_MF) fprintf(dst, "MF");
+		fprintf(dst, " Tos:%0x]",(u_int8_t)ip->ip_tos);
 	}
-	if(ntohs(ip->ip_off) & IP_MF) {
-		fprintf(dst, "MF");
-	}
-
-	fprintf(dst, " Tos:%0x]: ",(u_int8_t)ip->ip_tos);
+	fputs(": ", dst);
 
 	switch( ip->ip_p ) {
 	case IPPROTO_TCP:
-		print_tcp(dst, ip, (const struct tcphdr*)payload);
+		print_tcp(dst, ip, (const struct tcphdr*)payload, flags);
 		break;
 
 	case IPPROTO_UDP:
-		print_udp(dst, ip, (const struct udphdr*)payload);
+		print_udp(dst, ip, (const struct udphdr*)payload, flags);
 		break;
 
 	case IPPROTO_ICMP:
@@ -113,7 +110,7 @@ static void print_ieee8023(FILE* dst, const struct llc_pdu_sn* llc){
 }
 
 static void print_arp(FILE* dst, const struct cap_header* cp, const struct ether_arp* arp){
-	fprintf(dst, " ARP, ");
+	fprintf(dst, " ARP: ");
 
 	const int format = ntohs(arp->arp_hrd);
 	const int op = ntohs(arp->arp_op);
@@ -175,14 +172,14 @@ static void print_eth(FILE* dst, const struct cap_header* cp, const struct ethhd
 		goto begin;
 
 	case ETHERTYPE_IP:
-		fputs("IPv4", dst);
+		fputs(" IPv4", dst);
 		if ( flags >= FORMAT_LAYER_TRANSPORT ){
-			print_ipv4(dst, (struct ip*)payload);
+			print_ipv4(dst, (struct ip*)payload, flags);
 		}
 		break;
 
 	case ETHERTYPE_IPV6:
-		fputs("IPv6", dst);
+		fputs(" IPv6", dst);
 		break;
 
 	case ETHERTYPE_ARP:
@@ -190,19 +187,19 @@ static void print_eth(FILE* dst, const struct cap_header* cp, const struct ethhd
 		break;
 
 	case 0x0810:
-		fprintf(dst, "MP packet");
+		fprintf(dst, " MP packet");
 		break;
 
 	case STPBRIDGES:
-		fprintf(dst, "STP(0x%04x): (spanning-tree for bridges)", h_proto);
+		fprintf(dst, " STP(0x%04x): (spanning-tree for bridges)", h_proto);
 		break;
 
 	case CDPVTP:
-		fprintf(dst, "CDP(0x%04x): (CISCO Discovery Protocol)", h_proto);
+		fprintf(dst, " CDP(0x%04x): (CISCO Discovery Protocol)", h_proto);
 		break;
 
 	default:
-		fprintf(dst, "IEEE802.3 [0x%04x] ", h_proto);
+		fprintf(dst, " IEEE802.3 [0x%04x] ", h_proto);
 		fputs(hexdump_address((const struct ether_addr*)eth->h_source), dst);
 		fputs(" -> ", dst);
 		fputs(hexdump_address((const struct ether_addr*)eth->h_dest), dst);

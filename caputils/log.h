@@ -35,6 +35,7 @@ enum FORMAT_FLAGS {
 
 	FORMAT_REL_TIMESTAMP  = (1<<2),  /* Show timestamps relative to first packet */
 	FORMAT_HEXDUMP        = (1<<3),  /* Print hexdump of entire packet */
+	FORMAT_HEADER         = (1<<4),  /* Show additional header information (e.g IP header length) */
 
 	/* layer limitations */
 	FORMAT_LAYER_BIT         = 29,
