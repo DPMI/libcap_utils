@@ -79,8 +79,6 @@ int main(int argc, char **argv){
 		return 0; /* error already shown */
 	}
 
-	filter_print(&filter, stderr, 0);
-
 	int op, option_index = -1;
 	while ( (op = getopt_long(argc, argv, "hcdDrai:p:t:", long_options, &option_index)) != -1 ){
 		switch (op){
