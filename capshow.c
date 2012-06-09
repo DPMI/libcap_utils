@@ -52,16 +52,19 @@ static void show_usage(void){
 	printf("(C) 2004 Patrik Arlos <patrik.arlos@bth.se>\n");
 	printf("(C) 2012 David Sveningsson <david.sveningsson@bth.se>\n");
 	printf("Usage: %s [OPTIONS] STREAM\n", program_name);
-	printf("  -c, --content        Write full package content as hexdump. [default=no]\n"
-	       "  -i, --iface          For ethernet-based streams, this is the interface to listen\n"
+	printf("  -i, --iface          For ethernet-based streams, this is the interface to listen\n"
 	       "                       on. For other streams it is ignored.\n"
 	       "  -p, --packets=N      Stop after N packets.\n"
 	       "  -t, --timeout=N      Wait for N ms while buffer fills [default: 1000ms].\n"
+	       "  -h, --help           This text.\n"
+	       "\n"
+	       "Formatting options:\n"
+	       "  -c, --content        Write full package content as hexdump.\n"
 	       "  -d, --calender       Show timestamps in human-readable format (UTC).\n"
 	       "  -D, --localtime      Show timestamps in human-readable format (local time).\n"
 	       "  -a, --absolute       Show absolute timestamps.\n"
 	       "  -r, --relative       Show timestamps relative to first packet. [default]\n"
-	       "  -h, --help           This text.\n\n");
+	       "\n");
 	filter_from_argv_usage();
 }
 
