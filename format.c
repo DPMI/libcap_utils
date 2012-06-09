@@ -6,6 +6,7 @@
 #include "caputils/log.h"
 #include "caputils/marker.h"
 #include "caputils/stream.h"
+#include "caputils/picotime.h"
 #include "stream.h"
 
 #include <stdio.h>
@@ -170,9 +171,20 @@ static void print_eth(FILE* dst, const struct ethhdr* eth){
 static void print_timestamp(FILE* fp, const struct cap_header* cp, int flags){
 	const int format_date  = flags & FORMAT_DATE_BIT;
 	const int format_local = flags & FORMAT_LOCAL_BIT;
+	const int relative     = flags & FORMAT_REL_TIMESTAMP;
 
 	if( !format_date ) {
-		fprintf(fp, "%u.%012"PRIu64, cp->ts.tv_sec, cp->ts.tv_psec);
+		timepico t = cp->ts;
+		if ( relative ){
+			static timepico ref;;
+			static int first = 1;
+			if ( first ){
+				ref = t;
+				first = 0;
+			}
+			t = timepico_sub(t, ref);
+		}
+		fprintf(fp, "%u.%012"PRIu64, t.tv_sec, t.tv_psec);
 		return;
 	}
 

@@ -19,7 +19,7 @@
 #include <signal.h>
 
 static int keep_running = 1;
-static int flags = 0;
+static int flags = FORMAT_REL_TIMESTAMP;
 static int max_packets = 0;
 static const char* iface = NULL;
 static struct timeval timeout = {1,0};
@@ -41,6 +41,8 @@ static struct option long_options[]= {
 	{"timeout",  required_argument, 0, 't'},
 	{"calender", no_argument,       0, 'd'},
 	{"localtime",no_argument,       0, 'D'},
+	{"absolute", no_argument,       0, 'a'},
+	{"relative", no_argument,       0, 'r'},
 	{"help",     no_argument,       0, 'h'},
 	{0, 0, 0, 0} /* sentinel */
 };
@@ -57,6 +59,8 @@ static void show_usage(void){
 	       "  -t, --timeout=N      Wait for N ms while buffer fills [default: 1000ms].\n"
 	       "  -d, --calender       Show timestamps in human-readable format (UTC).\n"
 	       "  -D, --localtime      Show timestamps in human-readable format (local time).\n"
+	       "  -a, --absolute       Show absolute timestamps.\n"
+	       "  -r, --relative       Show timestamps relative to first packet. [default]\n"
 	       "  -h, --help           This text.\n\n");
 	filter_from_argv_usage();
 }
@@ -78,7 +82,7 @@ int main(int argc, char **argv){
 	filter_print(&filter, stderr, 0);
 
 	int op, option_index = -1;
-	while ( (op = getopt_long(argc, argv, "hcdDi:p:t:", long_options, &option_index)) != -1 ){
+	while ( (op = getopt_long(argc, argv, "hcdDrai:p:t:", long_options, &option_index)) != -1 ){
 		switch (op){
 		case 0:   /* long opt */
 		case '?': /* unknown opt */
@@ -90,6 +94,14 @@ int main(int argc, char **argv){
 
 		case 'D':
 			flags |= FORMAT_DATE_STR | FORMAT_DATE_LOCALTIME;
+			break;
+
+		case 'a':
+			flags &= ~FORMAT_REL_TIMESTAMP;
+			break;
+
+		case 'r':
+			flags |= FORMAT_REL_TIMESTAMP;
 			break;
 
 		case 'p':

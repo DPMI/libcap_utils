@@ -1,6 +1,8 @@
 caputils-0.7.10
 ---------------
 
+	* add: [capshow] support for showing timestamps relative to first
+	       packet. Enabled by default.
 	* fix: [gcc 3.3] using alias instead of weakref for be64toh workaround.
 	* add: function to open stream from FILE pointer.
 	* add: capmerge: a tool to merge cap-files.

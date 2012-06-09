@@ -28,11 +28,12 @@ char* hexdump_str(const char* data, size_t size);
 enum FORMAT_FLAGS {
 	FORMAT_DATE_BIT       = (1<<0),
 	FORMAT_LOCAL_BIT      = (1<<1),
-
 	FORMAT_DATE_UNIX      = 0x00,    /* Format date as unix timestamp. */
 	FORMAT_DATE_STR       = 0x01,    /* Format date as string */
 	FORMAT_DATE_UTC       = 0x00,    /* Show date in UTC. */
 	FORMAT_DATE_LOCALTIME = 0x02,    /* Show date in local time. (only in effect when printing date as string)*/
+
+	FORMAT_REL_TIMESTAMP  = (1<<2),  /* Show timestamps relative to first packet */
 };
 
 /**
