@@ -35,13 +35,20 @@ enum FORMAT_FLAGS {
 
 	FORMAT_REL_TIMESTAMP  = (1<<2),  /* Show timestamps relative to first packet */
 	FORMAT_HEXDUMP        = (1<<3),  /* Print hexdump of entire packet */
+
+	/* layer limitations */
+	FORMAT_LAYER_BIT         = 29,
+	FORMAT_LAYER_APPLICATION = (4<<FORMAT_LAYER_BIT),
+	FORMAT_LAYER_TRANSPORT   = (3<<FORMAT_LAYER_BIT),
+	FORMAT_LAYER_LINK        = (2<<FORMAT_LAYER_BIT),
+	FORMAT_LAYER_DPMI        = (1<<FORMAT_LAYER_BIT),
 };
 
 /**
  * Write a description of the packet in cp to fp.
  * @param flags Bitmask of FORMAT_FLAGS.
  */
-void format_pkg(FILE* fp, const stream_t st, const struct cap_header* cp, int flags);
+void format_pkg(FILE* fp, const stream_t st, const struct cap_header* cp, unsigned int flags);
 
 #ifdef __cplusplus
 }

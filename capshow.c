@@ -19,7 +19,7 @@
 #include <signal.h>
 
 static int keep_running = 1;
-static int flags = FORMAT_REL_TIMESTAMP;
+static unsigned int flags = FORMAT_REL_TIMESTAMP;
 static int max_packets = 0;
 static const char* iface = NULL;
 static struct timeval timeout = {1,0};
@@ -34,7 +34,7 @@ void handle_sigint(int signum){
 	keep_running = 0;
 }
 
-static const char* shortopts = "cp:i:t:cDarhx";
+static const char* shortopts = "cp:i:t:cDarhx1234";
 static struct option longopts[]= {
 	{"packets",  required_argument, 0, 'p'},
 	{"iface",    required_argument, 0, 'i'},
@@ -59,6 +59,10 @@ static void show_usage(void){
 	       "  -h, --help           This text.\n"
 	       "\n"
 	       "Formatting options:\n"
+	       "  -1                   Show only DPMI information.\n"
+	       "  -2                     .. include link layer.\n"
+	       "  -3                     .. include transport layer.\n"
+	       "  -4                     .. include application layer. [default]\n"
 	       "  -x                   Write full package content as hexdump.\n"
 	       "  -d, --calender       Show timestamps in human-readable format (UTC).\n"
 	       "  -D, --localtime      Show timestamps in human-readable format (local time).\n"
@@ -88,6 +92,17 @@ int main(int argc, char **argv){
 		case 0:   /* long opt */
 		case '?': /* unknown opt */
 			break;
+
+		case '1':
+		case '2':
+		case '3':
+		case '4':
+		{
+			const unsigned int mask = (7<<FORMAT_LAYER_BIT);
+			flags &= ~mask; /* reset all layer bits */
+			flags |= (op-'0')<<FORMAT_LAYER_BIT;
+			break;
+		}
 
 		case 'd':
 			flags |= FORMAT_DATE_STR | FORMAT_DATE_UTC;

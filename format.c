@@ -49,13 +49,11 @@ static void print_tcp(FILE* dst, const struct ip* ip, const struct tcphdr* tcp){
 
 	fprintf(dst, "] %s:%d ",inet_ntoa(ip->ip_src),(u_int16_t)ntohs(tcp->source));
 	fprintf(dst, " --> %s:%d",inet_ntoa(ip->ip_dst),(u_int16_t)ntohs(tcp->dest));
-	fprintf(dst, "\n");
 }
 
 static void print_udp(FILE* dst, const struct ip* ip, const struct udphdr* udp){
 	fprintf(dst, "UDP(HDR[8]DATA[%d]):\t %s:%d ",(u_int16_t)(ntohs(udp->len)-8),inet_ntoa(ip->ip_src),(u_int16_t)ntohs(udp->source));
 	fprintf(dst, " --> %s:%d", inet_ntoa(ip->ip_dst),(u_int16_t)ntohs(udp->dest));
-	fprintf(dst, "\n");
 }
 
 static void print_icmp(FILE* dst, const struct ip* ip, const struct icmphdr* icmp){
@@ -68,12 +66,11 @@ static void print_icmp(FILE* dst, const struct ip* ip, const struct icmphdr* icm
 	if( icmp->type==8 && icmp->code==0){
 		fprintf(dst, " echo reqest: SEQNR = %d ", icmp->un.echo.sequence);
 	}
-	fprintf(dst, "\n");
 }
 
 static void print_ipv4(FILE* dst, const struct ip* ip){
 	void* payload = ((char*)ip) + 4*ip->ip_hl;
-	fprintf(dst, "IPv4(HDR[%d])[", 4*ip->ip_hl);
+	fprintf(dst, "(HDR[%d])[", 4*ip->ip_hl);
 	fprintf(dst, "Len=%d:",(u_int16_t)ntohs(ip->ip_len));
 	fprintf(dst, "ID=%d:",(u_int16_t)ntohs(ip->ip_id));
 	fprintf(dst, "TTL=%d:",(u_int8_t)ip->ip_ttl);
@@ -86,7 +83,7 @@ static void print_ipv4(FILE* dst, const struct ip* ip){
 		fprintf(dst, "MF");
 	}
 
-	fprintf(dst, " Tos:%0x]:\t",(u_int8_t)ip->ip_tos);
+	fprintf(dst, " Tos:%0x]: ",(u_int8_t)ip->ip_tos);
 
 	switch( ip->ip_p ) {
 	case IPPROTO_TCP:
@@ -106,17 +103,17 @@ static void print_ipv4(FILE* dst, const struct ip* ip){
 		break;
 
 	default:
-		fprintf(dst, "Unknown transport protocol: %d \n", ip->ip_p);
+		fprintf(dst, "Unknown transport protocol: %d", ip->ip_p);
 		break;
 	}
 }
 
 static void print_ieee8023(FILE* dst, const struct llc_pdu_sn* llc){
-	fprintf(dst,"dsap=%02x ssap=%02x ctrl1 = %02x ctrl2 = %02x\n", llc->dsap, llc->ssap, llc->ctrl_1, llc->ctrl_2);
+	fprintf(dst,"dsap=%02x ssap=%02x ctrl1 = %02x ctrl2 = %02x", llc->dsap, llc->ssap, llc->ctrl_1, llc->ctrl_2);
 }
 
 static void print_arp(FILE* dst, const struct cap_header* cp, const struct ether_arp* arp){
-	fprintf(dst, "ARP, ");
+	fprintf(dst, " ARP, ");
 
 	const int format = ntohs(arp->arp_hrd);
 	const int op = ntohs(arp->arp_op);
@@ -156,13 +153,13 @@ static void print_arp(FILE* dst, const struct cap_header* cp, const struct ether
 			fprintf(dst, "Unknown op: %d", op);
 		}
 	} else {
-		fprintf(dst, "Unknown format: %d\n", format);
+		fprintf(dst, "Unknown format: %d", format);
 	}
 
-	fprintf(dst, ", length %zd\n", cp->len - sizeof(struct ethhdr));
+	fprintf(dst, ", length %zd", cp->len - sizeof(struct ethhdr));
 }
 
-static void print_eth(FILE* dst, const struct cap_header* cp, const struct ethhdr* eth){
+static void print_eth(FILE* dst, const struct cap_header* cp, const struct ethhdr* eth, unsigned int flags){
 	void* payload = ((char*)eth) + sizeof(struct ethhdr);
 	uint16_t h_proto = ntohs(eth->h_proto);
 	uint16_t vlan_tci;
@@ -185,11 +182,14 @@ static void print_eth(FILE* dst, const struct cap_header* cp, const struct ethhd
 			goto begin;
 
 		case ETHERTYPE_IP:
-			print_ipv4(dst, (struct ip*)payload);
+			fputs("IPv4", dst);
+			if ( flags >= FORMAT_LAYER_TRANSPORT ){
+				print_ipv4(dst, (struct ip*)payload);
+			}
 			break;
 
 		case ETHERTYPE_IPV6:
-			printf("ipv6\n");
+			fputs("IPv6", dst);
 			break;
 
 		case ETHERTYPE_ARP:
@@ -197,28 +197,28 @@ static void print_eth(FILE* dst, const struct cap_header* cp, const struct ethhd
 			break;
 
 		case 0x0810:
-			fprintf(dst, "MP packet\n");
+			fprintf(dst, "MP packet");
 			break;
 
 		case STPBRIDGES:
-			fprintf(dst, "STP(0x%04x): (spanning-tree for bridges)\n", h_proto);
+			fprintf(dst, "STP(0x%04x): (spanning-tree for bridges)", h_proto);
 			break;
 
 		case CDPVTP:
-			fprintf(dst, "CDP(0x%04x): (CISCO Discovery Protocol)\n", h_proto);
+			fprintf(dst, "CDP(0x%04x): (CISCO Discovery Protocol)", h_proto);
 			break;
 
 		default:
 			fprintf(dst, "Unknown ethernet protocol (0x%04x),  ", h_proto);
-			fprintf(dst, " %02x:%02x:%02x:%02x:%02x:%02x -> %02x:%02x:%02x:%02x:%02x:%02x \n",
-			        eth->h_source[0],eth->h_source[1],eth->h_source[2],eth->h_source[3],eth->h_source[4],eth->h_source[5],
-			        eth->h_dest[0],  eth->h_dest[1],  eth->h_dest[2],  eth->h_dest[3],  eth->h_dest[4],  eth->h_dest[5]);
+			fputs(hexdump_address((const struct ether_addr*)eth->h_source), dst);
+			fputs(" -> ", dst);
+			fputs(hexdump_address((const struct ether_addr*)eth->h_dest), dst);
 			break;
 		}
 	}
 }
 
-static void print_timestamp(FILE* fp, const struct cap_header* cp, int flags){
+static void print_timestamp(FILE* fp, const struct cap_header* cp, unsigned int flags){
 	const int format_date  = flags & FORMAT_DATE_BIT;
 	const int format_local = flags & FORMAT_LOCAL_BIT;
 	const int relative     = flags & FORMAT_REL_TIMESTAMP;
@@ -247,26 +247,36 @@ static void print_timestamp(FILE* fp, const struct cap_header* cp, int flags){
 	fprintf(fp, " %s", buffer);
 }
 
-static void print_linklayer(FILE* fp, const struct cap_header* cp, int flags){
-	fprintf(fp, ":LINK(%4d):CAPLEN(%4d):", cp->len, cp->caplen);
+static void print_linklayer(FILE* fp, const struct cap_header* cp, unsigned int flags){
+	fputc(':', fp);
 
 	/* Test for libcap_utils marker packet */
 	struct marker mark;
 	int marker_port;
 	if ( (marker_port=is_marker(cp, &mark, 0)) != 0 ){
-		fprintf(stdout, "Marker [e=%d, r=%d, k=%d, s=%d, port=%d]\n",
+		fprintf(stdout, "Marker [e=%d, r=%d, k=%d, s=%d, port=%d]",
 		        mark.exp_id, mark.run_id, mark.key_id, mark.seq_num, marker_port);
 		return;
 	}
 
-	print_eth(fp, cp, cp->ethhdr);
+	print_eth(fp, cp, cp->ethhdr, flags);
 }
 
-void format_pkg(FILE* fp, const stream_t st, const struct cap_header* cp, int flags){
+void format_pkg(FILE* fp, const stream_t st, const struct cap_header* cp, unsigned int flags){
 	fprintf(fp, "[%4"PRIu64"]:%.4s:%.8s:", st->stat.read, cp->nic, cp->mampid);
 
+	/* by default show all */
+	if ( flags >> FORMAT_LAYER_BIT == 0){
+		flags |= FORMAT_LAYER_APPLICATION;
+	}
+
 	print_timestamp(fp, cp, flags);
-	print_linklayer(fp, cp, flags);
+	fprintf(fp, ":LINK(%4d):CAPLEN(%4d)", cp->len, cp->caplen);
+
+	if ( flags >= FORMAT_LAYER_LINK ){
+		print_linklayer(fp, cp, flags);
+	}
+	fputc('\n', fp);
 
 	if ( flags & FORMAT_HEXDUMP ){
 		hexdump(fp, cp->payload, min(cp->caplen, cp->len));
