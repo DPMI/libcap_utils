@@ -34,7 +34,8 @@ void handle_sigint(int signum){
 	keep_running = 0;
 }
 
-static struct option long_options[]= {
+static const char* shortopts = "cp:i:t:cDarh";
+static struct option longopts[]= {
 	{"content",  no_argument,       0, 'c'},
 	{"packets",  required_argument, 0, 'p'},
 	{"iface",    required_argument, 0, 'i'},
@@ -83,7 +84,7 @@ int main(int argc, char **argv){
 	}
 
 	int op, option_index = -1;
-	while ( (op = getopt_long(argc, argv, "hcdDrai:p:t:", long_options, &option_index)) != -1 ){
+	while ( (op = getopt_long(argc, argv, shortopts, longopts, &option_index)) != -1 ){
 		switch (op){
 		case 0:   /* long opt */
 		case '?': /* unknown opt */
@@ -130,7 +131,7 @@ int main(int argc, char **argv){
 			return 0;
 
 		default:
-			printf ("?? getopt returned character code 0%o ??\n", op);
+			fprintf (stderr, "%s: argument '-%c' declared but not handled\n", argv[0], op);
 		}
 	}
 
