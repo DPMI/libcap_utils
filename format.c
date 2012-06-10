@@ -24,6 +24,10 @@
 #include <sys/socket.h>
 #include <sys/time.h>
 
+#ifndef IPPROTO_OSPF
+#define IPPROTO_OSPF 89
+#endif
+
 static int min(int a, int b){ return a<b?a:b; }
 
 static void print_tcp(FILE* dst, const struct ip* ip, const struct tcphdr* tcp, unsigned int flags){
@@ -97,6 +101,10 @@ static void print_ipv4(FILE* dst, const struct ip* ip, unsigned int flags){
 
 	case IPPROTO_IGMP:
 		fprintf(dst, "IGMP");
+		break;
+
+	case IPPROTO_OSPF:
+		fprintf(dst, "OSPF");
 		break;
 
 	default:
