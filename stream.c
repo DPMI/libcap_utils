@@ -563,6 +563,6 @@ int stream_add(struct stream* st, const stream_addr_t* addr){
 #endif
 }
 
-unsigned int stream_num_addresses(const stream_t st){
+unsigned int stream_num_address(const stream_t st){
 	return st->num_addresses;
 }

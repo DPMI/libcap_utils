@@ -103,7 +103,7 @@ const struct stream_stat* stream_get_stat(const stream_t st);
 /**
  * Get number of addresses associated with this stream.
  */
-unsigned int stream_num_addresses(const stream_t st);
+unsigned int stream_num_address(const stream_t st);
 
 /**
  * Print information about stream.
