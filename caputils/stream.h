@@ -101,6 +101,11 @@ const char* stream_get_mampid(const stream_t st);
 const struct stream_stat* stream_get_stat(const stream_t st);
 
 /**
+ * Get number of addresses associated with this stream.
+ */
+unsigned int stream_num_addresses(const stream_t st);
+
+/**
  * Print information about stream.
  */
 void stream_print_info(const stream_t st, FILE* dst);

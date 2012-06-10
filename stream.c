@@ -36,6 +36,7 @@ int stream_alloc(struct stream** stptr, enum protocol_t protocol, size_t size, s
 	st->writePos=0;
 	st->readPos=0;
 	st->flushed = 0;
+	st->num_addresses = 1;
 	st->stat.recv = 0;
 	st->stat.matched = 0;
 	st->stat.buffer_size = buffer_size;
@@ -553,9 +554,15 @@ int stream_add(struct stream* st, const stream_addr_t* addr){
 		return ERROR_INVALID_PROTOCOL;
 	}
 
+	st->num_addresses++;
+
 #ifdef HAVE_PFRING
 	return stream_pfring_add(st, &addr->ether_addr);
 #else
 	return stream_ethernet_add(st, &addr->ether_addr);
 #endif
+}
+
+unsigned int stream_num_addresses(const stream_t st){
+	return st->num_addresses;
 }
