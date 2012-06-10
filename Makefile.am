@@ -53,7 +53,7 @@ notrans_dist_man_MANS += man/capshow.1
 endif
 
 if BUILD_TESTS
-TESTS = tests/filter_argv tests/address tests/endian tests/timepico
+TESTS = tests/filter_argv tests/address tests/endian tests/stream tests/timepico
 else
 TESTS = tests/disabled
 endif
@@ -138,6 +138,10 @@ tests_endian_CXXFLAGS = ${AM_CFLAGS} $(CPPUNIT_CFLAGS)
 tests_endian_LDFLAGS = $(CPPUNIT_LIBS)
 tests_endian_LDADD = libcap_utils-07.la
 tests_endian_SOURCES = tests/endian.cpp be64toh.c
+
+tests_stream_CXXFLAGS = ${AM_CFLAGS} $(CPPUNIT_CFLAGS)
+tests_stream_LDFLAGS = $(CPPUNIT_LIBS)
+tests_stream_LDADD = libcap_utils-07.la
 
 tests_timepico_CXXFLAGS = ${AM_CFLAGS} $(CPPUNIT_CFLAGS)
 tests_timepico_LDFLAGS = $(CPPUNIT_LIBS)
