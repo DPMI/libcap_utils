@@ -55,8 +55,11 @@ static void print_udp(FILE* dst, const struct ip* ip, const struct udphdr* udp, 
 		fprintf(dst, "(HDR[8]DATA[%d])", (u_int16_t)(ntohs(udp->len)-8));
 	}
 
-	fprintf(dst, ": %s:%d", inet_ntoa(ip->ip_src), (u_int16_t)ntohs(udp->source));
-	fprintf(dst, " --> %s:%d", inet_ntoa(ip->ip_dst),(u_int16_t)ntohs(udp->dest));
+	const uint16_t sport = ntohs(udp->source);
+	const uint16_t dport = ntohs(udp->dest);
+
+	fprintf(dst, ": %s:%d",    inet_ntoa(ip->ip_src), sport);
+	fprintf(dst, " --> %s:%d", inet_ntoa(ip->ip_dst), dport);
 }
 
 static void print_icmp(FILE* dst, const struct ip* ip, const struct icmphdr* icmp, unsigned int flags){
