@@ -59,15 +59,68 @@ static void print_udp(FILE* dst, const struct ip* ip, const struct udphdr* udp, 
 	fprintf(dst, " --> %s:%d", inet_ntoa(ip->ip_dst),(u_int16_t)ntohs(udp->dest));
 }
 
-static void print_icmp(FILE* dst, const struct ip* ip, const struct icmphdr* icmp){
-	fprintf(dst, "ICMP: %s ",inet_ntoa(ip->ip_src));
-	fprintf(dst, " --> %s ",inet_ntoa(ip->ip_dst));
-	fprintf(dst, "Type %d , code %d", icmp->type, icmp->code);
-	if( icmp->type==0 && icmp->code==0){
-		fprintf(dst, " echo reply: SEQNR = %d ", icmp->un.echo.sequence);
+static void print_icmp(FILE* dst, const struct ip* ip, const struct icmphdr* icmp, unsigned int flags){
+	fputs("ICMP", dst);
+	if ( flags & FORMAT_HEADER ){
+		fprintf(dst, "[Type=%d, code=%d]", icmp->type, icmp->code);
 	}
-	if( icmp->type==8 && icmp->code==0){
-		fprintf(dst, " echo reqest: SEQNR = %d ", icmp->un.echo.sequence);
+
+	fprintf(dst, ": %s ",inet_ntoa(ip->ip_src));
+	fprintf(dst, "--> %s: ",inet_ntoa(ip->ip_dst));
+
+	switch ( icmp->type ){
+	case ICMP_ECHOREPLY:
+		fprintf(dst, "echo reply: SEQNR = %d ", icmp->un.echo.sequence);
+		break;
+
+	case ICMP_DEST_UNREACH:
+		switch ( icmp->code ){
+		case ICMP_NET_UNREACH:    fprintf(dst, "Destination network unreachable"); break;
+		case ICMP_HOST_UNREACH:   fprintf(dst, "Destination host unreachable"); break;
+		case ICMP_PROT_UNREACH:   fprintf(dst, "Destination protocol unreachable"); break;
+		case ICMP_PORT_UNREACH:   fprintf(dst, "Destination port unreachable"); break;
+		case ICMP_FRAG_NEEDED:    fprintf(dst, "Fragmentation required"); break;
+		case ICMP_SR_FAILED:      fprintf(dst, "Source route failed"); break;
+		case ICMP_NET_UNKNOWN:    fprintf(dst, "Destination network unknown"); break;
+		case ICMP_HOST_UNKNOWN:   fprintf(dst, "Destination host unknown"); break;
+		case ICMP_HOST_ISOLATED:  fprintf(dst, "Source host isolated"); break;
+		case ICMP_NET_ANO:        fprintf(dst, "Network administratively prohibited"); break;
+		case ICMP_HOST_ANO:       fprintf(dst, "Host administratively prohibited"); break;
+		case ICMP_NET_UNR_TOS:    fprintf(dst, "Network unreachable for TOS"); break;
+		case ICMP_HOST_UNR_TOS:   fprintf(dst, "Host unreachable for TOS"); break;
+		case ICMP_PKT_FILTERED:   fprintf(dst, "Communication administratively prohibited"); break;
+		case ICMP_PREC_VIOLATION: fprintf(dst, "Host Precedence Violation"); break;
+		case ICMP_PREC_CUTOFF:    fprintf(dst, "Precedence cutoff in effect"); break;
+		default: fprintf(dst, "Destination unreachable (code %d)\n", icmp->code);
+		}
+		break;
+
+	case ICMP_SOURCE_QUENCH:
+		fprintf(dst, "source quench");
+		break;
+
+	case ICMP_REDIRECT:
+		fprintf(dst, "redirect");
+		break;
+
+	case ICMP_ECHO:
+		fprintf(dst, "echo reqest: SEQNR = %d ", icmp->un.echo.sequence);
+		break;
+
+	case ICMP_TIME_EXCEEDED:
+		fprintf(dst, "time exceeded");
+		break;
+
+	case ICMP_TIMESTAMP:
+		fprintf(dst, "timestamp request");
+		break;
+
+	case ICMP_TIMESTAMPREPLY:
+		fprintf(dst, "timestamp reply");
+		break;
+
+	default:
+		fprintf(dst, "Type %d\n", icmp->type);
 	}
 }
 
@@ -96,7 +149,7 @@ static void print_ipv4(FILE* dst, const struct ip* ip, unsigned int flags){
 		break;
 
 	case IPPROTO_ICMP:
-		print_icmp(dst, ip, (const struct icmphdr*)payload);
+		print_icmp(dst, ip, (const struct icmphdr*)payload, flags);
 		break;
 
 	case IPPROTO_IGMP:
