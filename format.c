@@ -52,7 +52,7 @@ static void print_udp(FILE* dst, const struct ip* ip, const struct udphdr* udp, 
 	fputs("UDP", dst);
 
 	if ( flags & FORMAT_HEADER ){
-		fprintf(dst, "(HDR[8]DATA[%d])", (u_int16_t)(ntohs(udp->len)-8));
+		fprintf(dst, "(HDR[%zd]DATA[%zd])", sizeof(struct udphdr), ntohs(udp->len)-sizeof(struct udphdr));
 	}
 
 	const uint16_t sport = ntohs(udp->source);
