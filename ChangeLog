@@ -1,6 +1,7 @@
 caputils-0.7.10
 ---------------
 
+	* add: support for automatically creating and unlinking when reading.
 	* add: timepico_now function to get current time as timepico.
 	* add: stream_num_addresses to get number of addresses associated with
 	       a stream.
