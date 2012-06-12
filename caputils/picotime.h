@@ -26,6 +26,12 @@ timepico timeval_to_timepico(struct timeval);
 timepico timespec_to_timepico(struct timespec);
 
 /**
+ * Get current timestamp expressed as picotime.
+ * The precision is limited to nanoseconds.
+ */
+timepico timepico_now();
+
+/**
  * Set timepico from string.
  * Return 0 on success.
  */

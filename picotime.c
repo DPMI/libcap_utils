@@ -54,6 +54,12 @@ int timecmp(const timepico *ts1, const timepico *ts2)
   return 0; // if ts1 and ts2 are identical
 }
 
+timepico timepico_now(){
+	struct timespec ts;
+	clock_gettime(CLOCK_REALTIME, &ts);
+	return timespec_to_timepico(ts);
+}
+
 int timepico_from_string(timepico* dst , const char* input){
   const char* fraction;
   struct tm tm = {0,};
