@@ -194,6 +194,18 @@ int stream_create(stream_t* stptr, const stream_addr_t* dest, const char* nic, c
 #endif
 		break;
 
+	case STREAM_ADDR_FIFO:
+		if ( (ret=mkfifo(dest->local_filename, 0660)) == -1 ){
+			if ( errno == EEXIST ){
+				return ERROR_CAPFILE_FIFO_EXIST; /* a more descriptive error message */
+			}
+			return errno;
+		}
+		if ( (ret=stream_file_create(stptr, NULL, dest->local_filename, mpid, comment, flags)) != 0 ){
+			unlink(dest->local_filename);
+		}
+		break;
+
 	case STREAM_ADDR_CAPFILE:
 		filename = stream_addr_have_flag(dest, STREAM_ADDR_LOCAL) ? dest->local_filename : dest->filename;
 		ret = stream_file_create(stptr, NULL, filename, mpid, comment, flags);
@@ -206,7 +218,6 @@ int stream_create(stream_t* stptr, const stream_addr_t* dest, const char* nic, c
 	case STREAM_ADDR_GUESS:
 		return EINVAL;
 
-	case STREAM_ADDR_FIFO:
 	case STREAM_ADDR_TCP:
 	case STREAM_ADDR_UDP:
 		return ERROR_NOT_IMPLEMENTED;
