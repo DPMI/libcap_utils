@@ -15,6 +15,8 @@
 #include <unistd.h>
 #include <time.h>
 #include <inttypes.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 int stream_alloc(struct stream** stptr, enum protocol_t protocol, size_t size, size_t buffer_size){
 	assert(stptr);
@@ -133,6 +135,16 @@ int stream_open(stream_t* stptr, const stream_addr_t* dest, const char* iface, s
 #endif
 		break;
 
+	case STREAM_ADDR_FIFO:
+		if ( (ret=mkfifo(dest->local_filename, 0660)) == -1 ){
+			return errno;
+		}
+		if ( (ret=stream_file_open(stptr, NULL, dest->local_filename, buffer_size)) != 0 ){
+			unlink(dest->local_filename);
+		}
+		return ret;
+		break;
+
 	case STREAM_ADDR_CAPFILE:
 		ret = stream_file_open(stptr, NULL, stream_addr_have_flag(dest, STREAM_ADDR_LOCAL) ? dest->local_filename : dest->filename, buffer_size);
 		break;
@@ -192,6 +204,7 @@ int stream_create(stream_t* stptr, const stream_addr_t* dest, const char* nic, c
 	case STREAM_ADDR_GUESS:
 		return EINVAL;
 
+	case STREAM_ADDR_FIFO:
 	case STREAM_ADDR_TCP:
 	case STREAM_ADDR_UDP:
 		return ERROR_NOT_IMPLEMENTED;
