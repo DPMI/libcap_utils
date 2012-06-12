@@ -51,6 +51,11 @@ buffer <dst> of size <bytes>. Return <dst> or NULL on errors.
   * `STREAM_ADDR_FP`:
     Use a file descriptor. Cannot be entered on commandline.
 
+  * `STREAM_ADDR_FIFO` fifo://:
+    Automatically create and destroy a FIFO. Only one end of the pipe can use
+    this type. E.g. writer can use fifo:///path/to/fifo and reader can open this
+    as a regular STREAM_ADDR_CAPFILE.
+
   * `STREAM_ADDR_GUESS`:
     When reading address from a string it makes a guess what kind of address
     that was passed. Ethernet takes precedence.
@@ -65,6 +70,10 @@ buffer <dst> of size <bytes>. Return <dst> or NULL on errors.
     drastic negative effects on performance but can be useful for low-traffic
     streams when real-time data is required. Might not be implemented for all
     stream types.
+
+  * `STREAM_ADDR_UNLINK`:
+    Unlink filename in stream_close. Useful for FIFOs but should not be used by
+    end users.
 
 ## COPYRIGHT
 
