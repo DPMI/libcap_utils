@@ -38,9 +38,12 @@ class AddressTest: public CppUnit::TestFixture {
   CPPUNIT_TEST( test_ethernet_short  );
   CPPUNIT_TEST( test_ethernet_leading);
   CPPUNIT_TEST( test_guess_eth       );
+  CPPUNIT_TEST( test_guess_filename  );
 	CPPUNIT_TEST( test_prefix_eth      );
   CPPUNIT_TEST( test_prefix_filename );
+  CPPUNIT_TEST( test_prefix_fifo     );
   CPPUNIT_TEST( test_prefix_invalid  );
+	CPPUNIT_TEST( test_ntoa_fifo       );
   CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -141,12 +144,40 @@ public:
     CPPUNIT_ASSERT_EQUAL(std::string("cb:a9:87:65:43:21"), std::string(addr.local_filename));
 	}
 
+	void test_prefix_fifo(){
+    const char* sample = "fifo:///var/tmp/fifo_test";
+    stream_addr_t addr;
+    int ret;
+
+    if ( (ret=stream_addr_aton(&addr, sample, STREAM_ADDR_GUESS, 0)) != 0 ){
+      sprintf(msg, "stream_addr_aton() returned %d: %s", ret, strerror(ret));
+      CppUnit::Asserter::fail(msg);
+    }
+
+    CPPUNIT_ASSERT_EQUAL(STREAM_ADDR_FIFO, stream_addr_type(&addr));
+    CPPUNIT_ASSERT_EQUAL(std::string("/var/tmp/fifo_test"), std::string(addr.local_filename));
+	}
+
 	void test_prefix_invalid(){
     stream_addr_t addr;
     if ( stream_addr_aton(&addr, "nonsense://foobar", STREAM_ADDR_GUESS, 0) == 0 ){
       CppUnit::Asserter::fail("invalid prefix was accepted");
     }
 	}
+
+	void test_ntoa_fifo(){
+    const char* sample = "fifo:///var/tmp/fifo_test";
+    stream_addr_t addr;
+    int ret;
+
+    if ( (ret=stream_addr_aton(&addr, sample, STREAM_ADDR_GUESS, 0)) != 0 ){
+      sprintf(msg, "stream_addr_aton() returned %d: %s", ret, strerror(ret));
+      CppUnit::Asserter::fail(msg);
+    }
+
+    CPPUNIT_ASSERT_EQUAL(std::string(sample), std::string(stream_addr_ntoa(&addr)));
+	}
+
 };
 
 CPPUNIT_TEST_SUITE_REGISTRATION(AddressTest);

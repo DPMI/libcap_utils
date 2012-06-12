@@ -89,6 +89,7 @@ extern "C" {
     STREAM_ADDR_UDP,
     STREAM_ADDR_TCP,
     STREAM_ADDR_FP,
+    STREAM_ADDR_FIFO,
   };
 
   enum AddressFlags {

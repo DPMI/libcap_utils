@@ -146,6 +146,8 @@ int stream_addr_aton(stream_addr_t* dst, const char* src, enum AddressType type,
 					return stream_addr_aton(dst, addr, STREAM_ADDR_ETHERNET, flags);
 				} else if ( strcasecmp("file", prefix) == 0 ){
 					return stream_addr_aton(dst, src+7, STREAM_ADDR_CAPFILE, flags | STREAM_ADDR_LOCAL);
+				} else if ( strcasecmp("fifo", prefix) == 0 ){
+					return stream_addr_aton(dst, src+7, STREAM_ADDR_FIFO, flags | STREAM_ADDR_LOCAL);
 				}
 
 				return EINVAL;
@@ -192,6 +194,7 @@ int stream_addr_aton(stream_addr_t* dst, const char* src, enum AddressType type,
 		break;
 
 	case STREAM_ADDR_CAPFILE: // File
+	case STREAM_ADDR_FIFO:
 		if ( flags & STREAM_ADDR_LOCAL ){
 			dst->local_filename = src;
 		} else {
@@ -241,6 +244,10 @@ const char* stream_addr_ntoa_r(const stream_addr_t* src, char* buf, size_t bytes
 	case STREAM_ADDR_ETHERNET:
 		written = snprintf(buf, bytes, "eth://%s", hexdump_address(&src->ether_addr));
 		break;
+	case STREAM_ADDR_FIFO:
+		written = snprintf(buf, bytes, "fifo://%s", src->local_filename);
+		break;
+
 	case STREAM_ADDR_CAPFILE:
 		if ( stream_addr_have_flag(src, STREAM_ADDR_LOCAL) ){
 			strncpy(buf, src->local_filename, bytes);
