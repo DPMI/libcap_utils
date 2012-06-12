@@ -252,7 +252,7 @@ int main(int argc, char **argv){
 			break;
 
 		case 'o':
-			stream_addr_aton(&output, optarg, STREAM_ADDR_CAPFILE, STREAM_ADDR_LOCAL);
+			stream_addr_aton(&output, optarg, STREAM_ADDR_GUESS, 0);
 			free(fmt_basename);
 			fmt_basename = strdup(optarg);
 			fmt_extension = fmt_basename;
