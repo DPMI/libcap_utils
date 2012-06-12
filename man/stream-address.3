@@ -1,0 +1,95 @@
+.TH stream-address 3 "12 June 2012" "BTH" "DPMI Manual"
+.SH NAME
+stream-address -- DPMI Stream address
+.SH SYNOPSIS
+.nf
+.B #include <caputils/address.h>
+.sp
+.B int stream_addr_aton(stream_addr_t* \fIdst\fP>, const char* \fIsrc\fP, enum AddressType \fItype\fP, int \fIflags\fP)
+.B int stream_addr_str(stream_addr_t* \fIdst\fP, const char* \fIsrc\fP, int \fIflags\fP)
+.B int stream_addr_fp(stream_addr_t* \fIdst\fP, FILE* \fIfp\fP, int \fIflags\fP)
+.B const char* stream_addr_ntoa_r(const stream_addr_t* \fIsrc\fP, char* \fIbuf\fP, size_t \fIbytes\fP)
+.SH DESCRIPTION
+\fBstream_addr_aton\fP parses address in \fIsrc\fP and stores the result in \fIdst\fP.
+\fItype\fP decides which type of address it is or if \fISTREAM_ADDR_GUESS\fP it will
+guess based on prefix and content. \fIflags\fP is a bitmask, see below for values.
+
+\fBstream_addr_str\fP reads \fIsrc\fP as a local filename and is the same as using type
+`STREAM_ADDR_CAPFILE` with `STREAM_ADDR_LOCAL` flag.
+
+\fBstream_addr_fp\fP passes file descriptor \fIfp\fP directly.
+
+\fBstream_addr_ntoa_r\fP converts adress in \fIsrc\fP to a textual representation in
+buffer \fIdst\fP of size \fIbytes\fP. Return \fIdst\fP or NULL on errors.
+
+.SH ADDRESS TYPES
+
+\fBenum AddressType\fP can take following values:
+.IP \[bu] 2
+STREAM_ADDR_CAPFILE file://
+.in +.5i
+Represents a filename. It comes in two flavors: local and remote. Local
+filenames can be any path but remote filenames is limited to 22 characters.
+Usually remote filenames are only used in MP filters, local filenames are
+always prefered.
+
+.IP \[bu] 2
+STREAM_ADDR_ETHERNET eth://
+.in +.5i
+An ethernet multicast stream in the form of NN:NN:NN:NN:NN:NN.
+.br
+Both dash and colon is accepted as optional but recommended delimiter.
+Leading zero can be ignored and it recognizes double delimiters as blanks
+filled with zeroes (e.g. 01::01 is read as 01:00:00:00:00:01).
+
+.IP \[bu] 2
+STREAM_ADDR_TCP tcp://
+.in +.5i
+TCP ip:port
+
+.IP \[bu] 2
+STREAM_ADDR_UDP tcp://
+.in +.5i
+UDP ip:port
+
+.IP \[bu] 2
+STREAM_ADDR_FP
+.in +.5i
+Use a file descriptor. Cannot be entered on commandline.
+
+.IP \[bu] 2
+STREAM_ADDR_FIFO fifo://
+.in +.5i
+Automatically create and destroy a FIFO. Only one end of the pipe can use
+this type. E.g. writer can use fifo:///path/to/fifo and reader can open this
+as a regular STREAM_ADDR_CAPFILE.
+
+.IP \[bu] 2
+STREAM_ADDR_GUESS
+.in +.5i
+When reading address from a string it makes a guess what kind of address
+that was passed. Ethernet takes precedence.
+
+.SH ADDRESS FLAGS
+.IP \[bu] 2
+STREAM_ADDR_LOCAL
+.in +.5i
+Used to create a local capfile path.
+
+.IP \[bu] 2
+STREAM_ADDR_FLUSH
+.in +.5i
+Never cache anything, send data as soon as it arrives. This will have drastic
+negative effects on performance but can be useful for low-traffic streams when
+real-time data is required. Might not be implemented for all stream types.
+
+.IP \[bu] 2
+STREAM_ADDR_UNLINK
+.in +.5i
+Unlink filename in stream_close. Useful for FIFOs but should not be used by end
+users.
+
+.SH COPYRIGHT
+Copyright (C) 2011-2012 David Sveningsson <dsv@bth.se>
+.SH SEE ALSO
+stream-address-get(3)

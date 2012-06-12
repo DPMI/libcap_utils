@@ -8,10 +8,12 @@ man1_MANS =
 man3_MANS =             \
 	man/libcaputils.3     \
 	man/libcap_filter.3   \
+	man/stream-address.3  \
 	man/stream_read.3
 notrans_dist_man_MANS = \
 	man/libcaputils.3     \
 	man/libcap_filter.3   \
+	man/stream-address.3  \
 	man/stream_read.3
 
 if BUILD_PCAP
