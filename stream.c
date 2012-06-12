@@ -471,7 +471,7 @@ int stream_peek(stream_t st, cap_head** header, const struct filter* filter){
 	return 0;
 }
 
-static const char* type[4] = {"file", "ethernet", "udp", "tcp"};
+static const char* type[6] = {"file", "ethernet", "udp", "tcp", "file", "fifo"};
 int stream_from_getopt(stream_t* st, char* argv[], int optind, int argc, const char* iface, const char* defaddr, const char* program_name, size_t buffer_size){
 	int ret;
 	stream_addr_t addr;
@@ -515,7 +515,7 @@ int stream_from_getopt(stream_t* st, char* argv[], int optind, int argc, const c
 	/* open first stream */
 	fprintf(stderr, "Opening %s stream: %s\n", type[stream_addr_type(&addr)], stream_addr_ntoa(&addr));
 	if ( (ret=stream_open(st, &addr, iface, buffer_size)) != 0 ) {
-		fprintf(stderr, "%s: stream_open() failed with code 0x%08X: %s\n", program_name, ret, caputils_error_string(ret));
+		fprintf(stderr, "%s: stream_open(..) returned with code %d: %s\n", program_name, ret, caputils_error_string(ret));
 		return ret;
 	}
 
