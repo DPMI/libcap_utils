@@ -11,6 +11,7 @@ static const char* errstr[ERROR_LAST - ERROR_FIRST] = {
 
   /* ERROR_CAPFILE_INVALID   */ "not a valid capfile.",
   /* ERROR_CAPFILE_TRUNCATED */ "file is truncated.",
+  /* ERROR_CAPFILE_FIFO_EXIST */ "filename already exists, ensure no other process is using this FIFO already",
 
   /* ERROR_INVALID_PROTOCOL */  "unsupported protocol",
   /* ERROR_INVALID_HWADDR */    "failed to parse hwaddr",

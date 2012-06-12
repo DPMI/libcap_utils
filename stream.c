@@ -137,6 +137,9 @@ int stream_open(stream_t* stptr, const stream_addr_t* dest, const char* iface, s
 
 	case STREAM_ADDR_FIFO:
 		if ( (ret=mkfifo(dest->local_filename, 0660)) == -1 ){
+			if ( errno == EEXIST ){
+				return ERROR_CAPFILE_FIFO_EXIST; /* a more descriptive error message */
+			}
 			return errno;
 		}
 		if ( (ret=stream_file_open(stptr, NULL, dest->local_filename, buffer_size)) != 0 ){

@@ -37,6 +37,7 @@ enum {
   /* errors related to capfiles */
   ERROR_CAPFILE_INVALID,
   ERROR_CAPFILE_TRUNCATED,
+  ERROR_CAPFILE_FIFO_EXIST,
 
   /* misc */
   ERROR_INVALID_PROTOCOL,
