@@ -142,7 +142,6 @@ int stream_open(stream_t* stptr, const stream_addr_t* dest, const char* iface, s
 		if ( (ret=stream_file_open(stptr, NULL, dest->local_filename, buffer_size)) != 0 ){
 			unlink(dest->local_filename);
 		}
-		return ret;
 		break;
 
 	case STREAM_ADDR_CAPFILE:

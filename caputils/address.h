@@ -103,6 +103,11 @@ extern "C" {
      * streams or to ensure real-time data. Not necessarily implemented for all
      * types.*/
     STREAM_ADDR_FLUSH = (1<<1),
+
+    /* For files, FIFOs and similar, unlink the file in stream_close. This is
+     * most useful for FIFO which is created dynamically and should not really
+     * be used by end-users. */
+    STREAM_ADDR_UNLINK = (1<<2),
   };
 
   /**

@@ -147,7 +147,7 @@ int stream_addr_aton(stream_addr_t* dst, const char* src, enum AddressType type,
 				} else if ( strcasecmp("file", prefix) == 0 ){
 					return stream_addr_aton(dst, src+7, STREAM_ADDR_CAPFILE, flags | STREAM_ADDR_LOCAL);
 				} else if ( strcasecmp("fifo", prefix) == 0 ){
-					return stream_addr_aton(dst, src+7, STREAM_ADDR_FIFO, flags | STREAM_ADDR_LOCAL);
+					return stream_addr_aton(dst, src+7, STREAM_ADDR_FIFO, flags | STREAM_ADDR_LOCAL | STREAM_ADDR_UNLINK);
 				}
 
 				return EINVAL;
