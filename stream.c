@@ -169,21 +169,25 @@ int stream_create(stream_t* stptr, const stream_addr_t* dest, const char* nic, c
 	/* struct ether_addr ethernet_address; */
 	const char* filename;
 	int flags = stream_addr_flags(dest);
+	int ret;
 
 	switch ( stream_addr_type(dest) ){
 	case STREAM_ADDR_ETHERNET:
 #ifdef HAVE_PFRING
-		return stream_pfring_create(stptr, &dest->ether_addr, nic, mpid, comment, flags);
+		ret = stream_pfring_create(stptr, &dest->ether_addr, nic, mpid, comment, flags);
 #else
-		return stream_ethernet_create(stptr, &dest->ether_addr, nic, mpid, comment, flags);
+		ret = stream_ethernet_create(stptr, &dest->ether_addr, nic, mpid, comment, flags);
 #endif
+		break;
 
 	case STREAM_ADDR_CAPFILE:
 		filename = stream_addr_have_flag(dest, STREAM_ADDR_LOCAL) ? dest->local_filename : dest->filename;
-		return stream_file_create(stptr, NULL, filename, mpid, comment, flags);
+		ret = stream_file_create(stptr, NULL, filename, mpid, comment, flags);
+		break;
 
 	case STREAM_ADDR_FP:
-		return stream_file_create(stptr, dest->fp, NULL, mpid, comment, flags);
+		ret = stream_file_create(stptr, dest->fp, NULL, mpid, comment, flags);
+		break;
 
 	case STREAM_ADDR_GUESS:
 		return EINVAL;
@@ -193,7 +197,14 @@ int stream_create(stream_t* stptr, const stream_addr_t* dest, const char* nic, c
 		return ERROR_NOT_IMPLEMENTED;
 	}
 
-	return EINVAL;
+	/** @note Only shallow copy, it might cause issues if using a local path which
+	 * is referenced and freed after stream_open. Can only safely copy if open
+	 * succeeded because there is no guarantee stream is allocated if it fails.  */
+	if ( ret == 0 ){
+		(*stptr)->addr = *dest;
+	}
+
+	return ret;
 
 	/* switch(protocol){ */
 	/*   case 3: // TCP unicast */
