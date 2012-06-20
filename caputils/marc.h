@@ -102,17 +102,17 @@ struct CIinitialization {
 
 struct MPinitialization {
   uint32_t type;
-  struct ether_addr hwaddr; // MAC address of Measurement Point
-  char __padding[2];      // Padding for compatability
-  char hostname[200];     // Name of MP
-  uint8_t ipaddress[4];   // ipaddress 
-  uint16_t port;          // UDP port that the MP listens to
-  uint16_t maxFilters;    // Maximum number of filters
-  uint16_t noCI;          // Number of capture interfaces
-  mampid_t MAMPid;        // ID string provided by MARC.
+  struct ether_addr hwaddr;          // MAC address of Measurement Point
+  char __padding[2];                 // Padding for compatability
+  char hostname[200];                // Name of MP
+  uint8_t ipaddress[4];              // ipaddress
+  uint16_t port;                     // UDP port that the MP listens to
+  uint16_t maxFilters;               // Maximum number of filters
+  uint16_t noCI;                     // Number of capture interfaces
+  mampid_t MAMPid;                   // ID string provided by MARC.
 
   /* legacy MP's only send the fields above (and protocol version below), must
-   * look at the version header to detect if fields below are available. */  
+   * look at the version header to detect if fields below are available. */
   struct {
     version_t protocol;
     versionex_t caputils;
@@ -137,7 +137,7 @@ struct MPFilterID {
 
 struct MPFilter {
   uint32_t type;
-  mampid_t MAMPid;                 // Name of MP
+  mampid_t MAMPid;                  // Name of MP
   struct filter_packed filter;      // Filter specification.
 };
 
@@ -145,7 +145,7 @@ struct MPVerifyFilter{
   int type;
   mampid_t MAMPid;
   int filter_id;
-  int flags; // 0 No filter present,i.e., no filter matched the requested id. 
+  int flags; // 0 No filter present,i.e., no filter matched the requested id.
   struct filter_packed filter;
 };
 
@@ -205,7 +205,7 @@ typedef union {
 struct marc_client_info {
   const char* client_ip;
   int client_port;
-  
+
   int max_filters;
   int noCI;
 
