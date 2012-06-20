@@ -24,50 +24,50 @@
 #define DEFAULT_MARCD_PORT 1600
 
 /* might be a portability problem, add ifdefs for GCC if this fails */
-#define UNUSED __attribute__((unused)) 
+#define UNUSED __attribute__((unused))
 
 struct marc_context {
-  const char* iface;
-  struct ether_addr hwaddr;
-  int sd;
-  enum MPEvent (*compat)(enum MPEvent);
+	const char* iface;
+	struct ether_addr hwaddr;
+	int sd;
+	enum MPEvent (*compat)(enum MPEvent);
 };
 typedef struct marc_context context_t;
 
 struct client {
-  struct marc_context context;
-  struct sockaddr_in client_addr;
-  struct sockaddr_in relay_addr;
-  struct sockaddr_in server_addr;
-  version_t server_version;
+	struct marc_context context;
+	struct sockaddr_in client_addr;
+	struct sockaddr_in relay_addr;
+	struct sockaddr_in server_addr;
+	version_t server_version;
 };
 typedef struct client client_t;
 
 struct server {
-  struct marc_context context;
-  struct sockaddr_in addr;
-  version_t server_version;
+	struct marc_context context;
+	struct sockaddr_in addr;
+	version_t server_version;
 };
 typedef struct server server_t;
 
 /* Structure used to communicate to the MA relayer */
 struct MAINFO {
-  int version;
-  char address[16];
-  int port;
-  char database[64];
-  char user[64];
-  char password[64];
-  int portUDP;
+	int version;
+	char address[16];
+	int port;
+	char database[64];
+	char user[64];
+	char password[64];
+	int portUDP;
 };
 
 /**
  * wrapper around perror. saves and returns errno after calling perror.
  */
 static int perror2(const char* s){
-  int save = errno;
-  perror(s);
-  return save;
+	int save = errno;
+	perror(s);
+	return save;
 }
 
 static marc_output_handler_t out_func = fprintf;
@@ -76,446 +76,446 @@ static FILE* dst_error = NULL;
 static FILE* dst_verbose = NULL;
 
 void mampid_set(mampid_t dst, const char* src){
-  /* no garbage in field, mostly for viewing hexdumps of traffic */
-  memset(dst, 0, 16);
+	/* no garbage in field, mostly for viewing hexdumps of traffic */
+	memset(dst, 0, 16);
 
-  /* if no src is provided, it is considered a reset */
-  if ( src ){
-    strncpy(dst, src, 16);
-  }
+	/* if no src is provided, it is considered a reset */
+	if ( src ){
+		strncpy(dst, src, 16);
+	}
 }
 
 const char* mampid_get(const mampid_t src){
-  static char buf[17];
+	static char buf[17];
 
-  if ( src[0] != 0 ){
-    sprintf(buf, "%.16s", src);
-    return buf;
-  } else {
-    return "(nil)";
-  }
+	if ( src[0] != 0 ){
+		sprintf(buf, "%.16s", src);
+		return buf;
+	} else {
+		return "(nil)";
+	}
 }
 
 int marc_set_output_handler(marc_output_handler_t func, marc_output_handlerv_t vfunc, FILE* errors, FILE* verbose){
-  out_func = func;
-  out_funcv = vfunc;
-  dst_error = errors;
-  dst_verbose = verbose;
-  return 0;
+	out_func = func;
+	out_funcv = vfunc;
+	dst_error = errors;
+	dst_verbose = verbose;
+	return 0;
 }
 
 int marc_init_client(marc_context_t* ctxptr, const char* iface, struct marc_client_info* info){
-  assert(ctxptr);
-  assert(iface);
-  assert(info);
+	assert(ctxptr);
+	assert(iface);
+	assert(info);
 
-  if ( !dst_error ){
-    dst_error = stderr;
-    dst_verbose = stderr;
-  }
+	if ( !dst_error ){
+		dst_error = stderr;
+		dst_verbose = stderr;
+	}
 
-  struct ifreq ifreq;
-  memset(&ifreq, 0, sizeof(struct ifreq));
-  strncpy(ifreq.ifr_name, iface, IFNAMSIZ);
+	struct ifreq ifreq;
+	memset(&ifreq, 0, sizeof(struct ifreq));
+	strncpy(ifreq.ifr_name, iface, IFNAMSIZ);
 
-  /* open UDP socket */
-  int sd = socket(AF_INET, SOCK_DGRAM, 0);
-  if( sd < 0) {
-    return perror2("socket");
-  }
+	/* open UDP socket */
+	int sd = socket(AF_INET, SOCK_DGRAM, 0);
+	if( sd < 0) {
+		return perror2("socket");
+	}
 
-  /* query mac address on iface */
-  struct ether_addr hwaddr;
-  if ( ioctl(sd, SIOCGIFHWADDR, &ifreq) == -1) {
-    return perror2("ioctl SIOCGIFHWADDR");
-  }
-  memcpy(hwaddr.ether_addr_octet, ifreq.ifr_hwaddr.sa_data, ETH_ALEN);
+	/* query mac address on iface */
+	struct ether_addr hwaddr;
+	if ( ioctl(sd, SIOCGIFHWADDR, &ifreq) == -1) {
+		return perror2("ioctl SIOCGIFHWADDR");
+	}
+	memcpy(hwaddr.ether_addr_octet, ifreq.ifr_hwaddr.sa_data, ETH_ALEN);
 
-  /* query ip address on iface */
-  if( ioctl(sd, SIOCGIFADDR, &ifreq) == -1 ) {
-    return perror2("ioctl SIOCGIFADDR");
-  }
+	/* query ip address on iface */
+	if( ioctl(sd, SIOCGIFADDR, &ifreq) == -1 ) {
+		return perror2("ioctl SIOCGIFADDR");
+	}
 
-  /* check if a address was found */
-  if( ifreq.ifr_addr.sa_family != AF_INET) {
-    return perror2("ifr_addr.sa_family");
-  }
+	/* check if a address was found */
+	if( ifreq.ifr_addr.sa_family != AF_INET) {
+		return perror2("ifr_addr.sa_family");
+	}
 
-  /* setup broadcast */
-  int broadcast = 1;
-  if( setsockopt(sd, SOL_SOCKET, SO_BROADCAST, &broadcast, sizeof(int)) == -1 ){
-    return perror2("setsockopt SO_BROADCAST");
-  }
+	/* setup broadcast */
+	int broadcast = 1;
+	if( setsockopt(sd, SOL_SOCKET, SO_BROADCAST, &broadcast, sizeof(int)) == -1 ){
+		return perror2("setsockopt SO_BROADCAST");
+	}
 
-  /* create addr structs */
-  struct sockaddr_in client_addr;
-  struct sockaddr_in relay_addr;
-  struct sockaddr_in server_addr;
-  memset(&client_addr, 0, sizeof(struct sockaddr_in));
-  memset(&relay_addr,  0, sizeof(struct sockaddr_in));
-  memset(&server_addr, 0, sizeof(struct sockaddr_in));
+	/* create addr structs */
+	struct sockaddr_in client_addr;
+	struct sockaddr_in relay_addr;
+	struct sockaddr_in server_addr;
+	memset(&client_addr, 0, sizeof(struct sockaddr_in));
+	memset(&relay_addr,  0, sizeof(struct sockaddr_in));
+	memset(&server_addr, 0, sizeof(struct sockaddr_in));
 
-  /* setup client addr */
-  const int client_port = info->client_port == 0 ? DEFAULT_CLIENT_PORT : info->client_port;
-  memcpy(&client_addr, &ifreq.ifr_addr, sizeof(struct sockaddr_in));
-  if ( info->client_ip && inet_aton(info->client_ip, (struct in_addr*)&client_addr) == 0){
-    return perror2("inet_aton");
-  }
-  client_addr.sin_family = AF_INET;
-  client_addr.sin_port = htons(client_port);
+	/* setup client addr */
+	const int client_port = info->client_port == 0 ? DEFAULT_CLIENT_PORT : info->client_port;
+	memcpy(&client_addr, &ifreq.ifr_addr, sizeof(struct sockaddr_in));
+	if ( info->client_ip && inet_aton(info->client_ip, (struct in_addr*)&client_addr) == 0){
+		return perror2("inet_aton");
+	}
+	client_addr.sin_family = AF_INET;
+	client_addr.sin_port = htons(client_port);
 
-  /* setup relay addr */
-  relay_addr.sin_family = AF_INET;
-  relay_addr.sin_port   = htons(DEFAULT_RELAY_PORT);
-  relay_addr.sin_addr.s_addr = htonl(INADDR_BROADCAST);
+	/* setup relay addr */
+	relay_addr.sin_family = AF_INET;
+	relay_addr.sin_port   = htons(DEFAULT_RELAY_PORT);
+	relay_addr.sin_addr.s_addr = htonl(INADDR_BROADCAST);
 
-  /* bind socket to client addr */
-  if( bind(sd, (struct sockaddr*)&client_addr, sizeof(struct sockaddr_in)) == -1){
-    return perror2("bind");
-  }
+	/* bind socket to client addr */
+	if( bind(sd, (struct sockaddr*)&client_addr, sizeof(struct sockaddr_in)) == -1){
+		return perror2("bind");
+	}
 
-  /* send initialization request to relay */
-  {
-    struct MAINFO mainfo;
-    memset(&mainfo, 0, sizeof(struct MAINFO));
-    mainfo.version = htons(3);
-    mainfo.port = client_addr.sin_port;
-    sprintf(mainfo.address, "%s", inet_ntoa(client_addr.sin_addr));
-    
-    if ( sendto(sd, &mainfo, sizeof(struct MAINFO), 0, (struct sockaddr*)&relay_addr, sizeof(struct sockaddr_in)) == -1 ){
-      return perror2("sendto");
-    }
-  }
+	/* send initialization request to relay */
+	{
+		struct MAINFO mainfo;
+		memset(&mainfo, 0, sizeof(struct MAINFO));
+		mainfo.version = htons(3);
+		mainfo.port = client_addr.sin_port;
+		sprintf(mainfo.address, "%s", inet_ntoa(client_addr.sin_addr));
 
-  /* await relay reply */
-  struct MAINFO reply;
-  int n = 1;
-  static const int max_retries = 6; /* try at most n times */
-  static const int timeout_factor = 8; /* for each retry, wait n*x sec */
-  signal(SIGUSR1, SIG_IGN); /* why? --ext 2011-11-25 */
-  while ( n < max_retries ){
-    struct timeval timeout = { n * timeout_factor, 0 };
-    out_func(dst_verbose, "Sending init request to MArelayD (try: %d timeout: %d)\n", n, timeout.tv_sec);
-    fd_set fds;
-    
-    FD_ZERO(&fds);
-    FD_SET(sd, &fds);
+		if ( sendto(sd, &mainfo, sizeof(struct MAINFO), 0, (struct sockaddr*)&relay_addr, sizeof(struct sockaddr_in)) == -1 ){
+			return perror2("sendto");
+		}
+	}
 
-    switch ( select(sd+1, &fds, NULL, NULL, &timeout) ){
-    case -1:
-      if ( errno == EINTR ){ /* dont want to show perror for this */
-	return errno;
-      }
-      return perror2("select");
-    case 0:
-      out_func(dst_verbose, "Request timed out.\n");
-      n++;
-      continue;
-    default:
-      break;
-    }
+	/* await relay reply */
+	struct MAINFO reply;
+	int n = 1;
+	static const int max_retries = 6; /* try at most n times */
+	static const int timeout_factor = 8; /* for each retry, wait n*x sec */
+	signal(SIGUSR1, SIG_IGN); /* why? --ext 2011-11-25 */
+	while ( n < max_retries ){
+		struct timeval timeout = { n * timeout_factor, 0 };
+		out_func(dst_verbose, "Sending init request to MArelayD (try: %d timeout: %d)\n", n, timeout.tv_sec);
+		fd_set fds;
 
-    if ( recvfrom(sd, &reply, sizeof(struct MAINFO), 0, NULL, NULL) == -1 ){
-      return perror2("recvfrom");
-    }
-    
-    break;
-  }
+		FD_ZERO(&fds);
+		FD_SET(sd, &fds);
 
-  if ( n < max_retries ){
-    out_func(dst_verbose, "Got MArelayD reply (v%d): MArCd: udp://%s:%d\n", reply.version, reply.address, reply.portUDP);
-  } else {
-    out_func(dst_error, "Gave up trying to contact MArelayD after %d tries.\n", n-1);
-    return ECANCELED;
-  }
+		switch ( select(sd+1, &fds, NULL, NULL, &timeout) ){
+		case -1:
+			if ( errno == EINTR ){ /* dont want to show perror for this */
+				return errno;
+			}
+			return perror2("select");
+		case 0:
+			out_func(dst_verbose, "Request timed out.\n");
+			n++;
+			continue;
+		default:
+			break;
+		}
 
-  if ( ntohs(reply.version) == 1 ){
-    out_func(dst_error, "MA version 1 (mysql) is unsupported\n");
-    return ECONNREFUSED;
-  }
+		if ( recvfrom(sd, &reply, sizeof(struct MAINFO), 0, NULL, NULL) == -1 ){
+			return perror2("recvfrom");
+		}
 
-  /* Reusing socket, just disable broadcast. */
-  broadcast = 0; 
-  if( setsockopt(sd, SOL_SOCKET, SO_BROADCAST, &broadcast, sizeof(broadcast)) == -1 ){
-    return perror2("setsockopt SO_BROADCAST 0");
-  }
+		break;
+	}
 
-  /* setup server addr */
-  server_addr.sin_family = AF_INET;
-  server_addr.sin_port   = htons(reply.portUDP);
-  inet_aton(reply.address, (struct in_addr*)&server_addr.sin_addr.s_addr);
+	if ( n < max_retries ){
+		out_func(dst_verbose, "Got MArelayD reply (v%d): MArCd: udp://%s:%d\n", reply.version, reply.address, reply.portUDP);
+	} else {
+		out_func(dst_error, "Gave up trying to contact MArelayD after %d tries.\n", n-1);
+		return ECANCELED;
+	}
 
-  /* allocate context */
-  client_t* client = malloc(sizeof(struct client));
-  if ( !client ){
-    return perror2("malloc");
-  }
-  marc_context_t ctx = &client->context;
+	if ( ntohs(reply.version) == 1 ){
+		out_func(dst_error, "MA version 1 (mysql) is unsupported\n");
+		return ECONNREFUSED;
+	}
 
-  /* fill context */
-  ctx->iface = strdup(iface);
-  ctx->sd = sd;
-  ctx->compat = NULL;
-  memcpy(&ctx->hwaddr, &hwaddr, sizeof(struct ether_addr));
-  memcpy(&client->client_addr, &client_addr, sizeof(struct sockaddr_in));
-  memcpy(&client->relay_addr,  &relay_addr,  sizeof(struct sockaddr_in));
-  memcpy(&client->server_addr, &server_addr, sizeof(struct sockaddr_in));
+	/* Reusing socket, just disable broadcast. */
+	broadcast = 0;
+	if( setsockopt(sd, SOL_SOCKET, SO_BROADCAST, &broadcast, sizeof(broadcast)) == -1 ){
+		return perror2("setsockopt SO_BROADCAST 0");
+	}
 
-  *ctxptr = ctx;
+	/* setup server addr */
+	server_addr.sin_family = AF_INET;
+	server_addr.sin_port   = htons(reply.portUDP);
+	inet_aton(reply.address, (struct in_addr*)&server_addr.sin_addr.s_addr);
 
-  return marc_client_init_request(ctx, info);
+	/* allocate context */
+	client_t* client = malloc(sizeof(struct client));
+	if ( !client ){
+		return perror2("malloc");
+	}
+	marc_context_t ctx = &client->context;
+
+	/* fill context */
+	ctx->iface = strdup(iface);
+	ctx->sd = sd;
+	ctx->compat = NULL;
+	memcpy(&ctx->hwaddr, &hwaddr, sizeof(struct ether_addr));
+	memcpy(&client->client_addr, &client_addr, sizeof(struct sockaddr_in));
+	memcpy(&client->relay_addr,  &relay_addr,  sizeof(struct sockaddr_in));
+	memcpy(&client->server_addr, &server_addr, sizeof(struct sockaddr_in));
+
+	*ctxptr = ctx;
+
+	return marc_client_init_request(ctx, info);
 }
 
 int marc_client_init_request(marc_context_t ctx, struct marc_client_info* info){
-  MPMessage msg;
-  memset(&msg, 0, sizeof(MPMessage));
+	MPMessage msg;
+	memset(&msg, 0, sizeof(MPMessage));
 
-  struct MPinitialization* init = (struct MPinitialization*)&msg;
-  struct client* client = (struct client*)ctx;
+	struct MPinitialization* init = (struct MPinitialization*)&msg;
+	struct client* client = (struct client*)ctx;
 
-  msg.type = MP_CONTROL_INIT_EVENT;
+	msg.type = MP_CONTROL_INIT_EVENT;
 
-  memcpy(&init->hwaddr, &ctx->hwaddr, sizeof(struct ether_addr));
-  gethostname(init->hostname, 200);
-  memcpy(init->ipaddress, &client->client_addr.sin_addr.s_addr, sizeof(struct in_addr));
-  init->port = client->client_addr.sin_port;
-  init->maxFilters = htons(info->max_filters);
-  init->noCI = htons(info->noCI);
-  init->version.protocol.major = htons(CAPUTILS_VERSION_MAJOR);
-  init->version.protocol.minor = htons(CAPUTILS_VERSION_MINOR);
+	memcpy(&init->hwaddr, &ctx->hwaddr, sizeof(struct ether_addr));
+	gethostname(init->hostname, 200);
+	memcpy(init->ipaddress, &client->client_addr.sin_addr.s_addr, sizeof(struct in_addr));
+	init->port = client->client_addr.sin_port;
+	init->maxFilters = htons(info->max_filters);
+	init->noCI = htons(info->noCI);
+	init->version.protocol.major = htons(CAPUTILS_VERSION_MAJOR);
+	init->version.protocol.minor = htons(CAPUTILS_VERSION_MINOR);
 
-  /* extended version */
-  init->version.caputils = info->version.caputils;
-  init->version.self = info->version.self;
-  init->drivers = htonl(info->drivers);
-  memcpy(init->CI, info->CI, sizeof(struct CIinitialization) * info->noCI);
-  
-  return marc_push_event(ctx, (MPMessage*)&msg, (struct sockaddr*)&client->server_addr);
+	/* extended version */
+	init->version.caputils = info->version.caputils;
+	init->version.self = info->version.self;
+	init->drivers = htonl(info->drivers);
+	memcpy(init->CI, info->CI, sizeof(struct CIinitialization) * info->noCI);
+
+	return marc_push_event(ctx, (MPMessage*)&msg, (struct sockaddr*)&client->server_addr);
 }
 
 int marc_init_server(marc_context_t* ctxptr, int port){
-  assert(ctxptr);
+	assert(ctxptr);
 
-  if ( !dst_error ){
-    dst_error = stderr;
-    dst_verbose = stderr;
-  }
+	if ( !dst_error ){
+		dst_error = stderr;
+		dst_verbose = stderr;
+	}
 
-  /* socket creation. */
-  int sd = socket(AF_INET, SOCK_DGRAM, 0);
-  if ( sd < 0 ) {
-    return perror2("socket");
-  }
+	/* socket creation. */
+	int sd = socket(AF_INET, SOCK_DGRAM, 0);
+	if ( sd < 0 ) {
+		return perror2("socket");
+	}
 
-  /* setup broadcast */
-  int broadcast = 1;
-  if( setsockopt(sd, SOL_SOCKET, SO_BROADCAST, &broadcast, sizeof(int)) == -1 ){
-    return perror2("setsockopt SO_BROADCAST");
-  }
-  
-  const int server_port = port == 0 ? DEFAULT_MARCD_PORT : port;
-  struct sockaddr_in server_addr;
-  server_addr.sin_family = AF_INET;
-  server_addr.sin_addr.s_addr = 0;
+	/* setup broadcast */
+	int broadcast = 1;
+	if( setsockopt(sd, SOL_SOCKET, SO_BROADCAST, &broadcast, sizeof(int)) == -1 ){
+		return perror2("setsockopt SO_BROADCAST");
+	}
 
-  /* bind legacy server port */ 
-  server_addr.sin_port = htons(server_port);
-  out_func(dst_error, "Listens to %s:%d\n", inet_ntoa(server_addr.sin_addr), ntohs(server_addr.sin_port));
-  if ( bind(sd, (struct sockaddr *) &server_addr, sizeof(server_addr)) < 0 ){
-    return perror2("bind");
-  }
+	const int server_port = port == 0 ? DEFAULT_MARCD_PORT : port;
+	struct sockaddr_in server_addr;
+	server_addr.sin_family = AF_INET;
+	server_addr.sin_addr.s_addr = 0;
 
-  /* allocate context */
-  server_t* server = malloc(sizeof(struct server));
-  if ( !server ){
-    return perror2("malloc");
-  }
-  marc_context_t ctx = &server->context;
+	/* bind legacy server port */
+	server_addr.sin_port = htons(server_port);
+	out_func(dst_error, "Listens to %s:%d\n", inet_ntoa(server_addr.sin_addr), ntohs(server_addr.sin_port));
+	if ( bind(sd, (struct sockaddr *) &server_addr, sizeof(server_addr)) < 0 ){
+		return perror2("bind");
+	}
 
-  /* fill context */
-  ctx->iface = NULL;
-  ctx->sd = sd;
-  ctx->compat = NULL;
-  memset(&ctx->hwaddr, 0, sizeof(struct ether_addr));
-  memcpy(&server->addr, &server_addr, sizeof(struct sockaddr_in));
+	/* allocate context */
+	server_t* server = malloc(sizeof(struct server));
+	if ( !server ){
+		return perror2("malloc");
+	}
+	marc_context_t ctx = &server->context;
 
-  *ctxptr = ctx;
+	/* fill context */
+	ctx->iface = NULL;
+	ctx->sd = sd;
+	ctx->compat = NULL;
+	memset(&ctx->hwaddr, 0, sizeof(struct ether_addr));
+	memcpy(&server->addr, &server_addr, sizeof(struct sockaddr_in));
+
+	*ctxptr = ctx;
 
 
-  return 0;
+	return 0;
 }
 
 int marc_cleanup(marc_context_t ctx){
-  return 0;
+	return 0;
 }
 
 static size_t event_size(MPMessage* event){
-  assert(event);
+	assert(event);
 
-  const enum MPEvent type = (enum MPEvent)event->type;
-  switch ( type ){
-  case MP_CONTROL_INIT_EVENT:
-    return sizeof(struct MPinitialization) + ntohs(sizeof(struct CIinitialization) * ((struct MPinitialization*)event)->noCI);
+	const enum MPEvent type = (enum MPEvent)event->type;
+	switch ( type ){
+	case MP_CONTROL_INIT_EVENT:
+		return sizeof(struct MPinitialization) + ntohs(sizeof(struct CIinitialization) * ((struct MPinitialization*)event)->noCI);
 
-  case MP_CONTROL_AUTHORIZE_EVENT:
-    return sizeof(struct MPauth);    
+	case MP_CONTROL_AUTHORIZE_EVENT:
+		return sizeof(struct MPauth);
 
-  case MP_STATUS_EVENT:
-    return offsetof(struct MPstatus, CIstats) + strlen(((struct MPstatus*)event)->CIstats) + 1; /* +1 nullterminator */
+	case MP_STATUS_EVENT:
+		return offsetof(struct MPstatus, CIstats) + strlen(((struct MPstatus*)event)->CIstats) + 1; /* +1 nullterminator */
 
-  case MP_STATUS2_EVENT:
-    return sizeof(struct MPstatus2) + sizeof(struct CIstats) * ((struct MPstatus2*)event)->noCI;
+	case MP_STATUS2_EVENT:
+		return sizeof(struct MPstatus2) + sizeof(struct CIstats) * ((struct MPstatus2*)event)->noCI;
 
-  case MP_FILTER_EVENT:
-    return sizeof(struct MPFilter);
+	case MP_FILTER_EVENT:
+		return sizeof(struct MPFilter);
 
-  case MP_FILTER_REQUEST_EVENT:
-    return sizeof(struct MPFilterID);
+	case MP_FILTER_REQUEST_EVENT:
+		return sizeof(struct MPFilterID);
 
-  case MP_FILTER_INVALID_ID:
-    return sizeof(uint32_t); /* only type is sent */
+	case MP_FILTER_INVALID_ID:
+		return sizeof(uint32_t); /* only type is sent */
 
-  case MP_CONTROL_TERMINATE_EVENT:
-  case MP_CONTROL_STOP_EVENT:
-  case MP_CONTROL_START_EVENT:
-  case MP_CONTROL_DISTRESS:
-    return sizeof(uint32_t) + sizeof(mampid_t); /* only type and MAMPid is sent */
+	case MP_CONTROL_TERMINATE_EVENT:
+	case MP_CONTROL_STOP_EVENT:
+	case MP_CONTROL_START_EVENT:
+	case MP_CONTROL_DISTRESS:
+		return sizeof(uint32_t) + sizeof(mampid_t); /* only type and MAMPid is sent */
 
-  default:
-    assert(0 && "sizeof for unknown type");
-    return sizeof(uint32_t);
-  }
+	default:
+		assert(0 && "sizeof for unknown type");
+		return sizeof(uint32_t);
+	}
 }
 
 enum MPEvent legacy_compat(enum MPEvent event){
-  switch ( event ){
-  /* from client */
-  case MP_CONTROL_INIT_EVENT:
-    return MP_LEGACY_INIT_EVENT;
+	switch ( event ){
+		/* from client */
+	case MP_CONTROL_INIT_EVENT:
+		return MP_LEGACY_INIT_EVENT;
 
-  case MP_STATUS_EVENT:
-    return MP_LEGACY_STATUS_EVENT;
+	case MP_STATUS_EVENT:
+		return MP_LEGACY_STATUS_EVENT;
 
-  case MP_FILTER_REQUEST_EVENT:
-    return 3;
-    
-  /* from server */
-  case MP_LEGACY_FILTER_ADD_EVENT:
-    return MP_FILTER_EVENT;
+	case MP_FILTER_REQUEST_EVENT:
+		return 3;
 
-  default:
-    return event;
-  }
+		/* from server */
+	case MP_LEGACY_FILTER_ADD_EVENT:
+		return MP_FILTER_EVENT;
+
+	default:
+		return event;
+	}
 }
 
 int marc_push_event(marc_context_t ctx, MPMessage* event, struct sockaddr* dst){
-  assert(ctx);
-  assert(event);
+	assert(ctx);
+	assert(event);
 
-  const size_t size = event_size(event);
+	const size_t size = event_size(event);
 
-  /* compatibility mode */
-  if ( ctx->compat ){
-    event->type = ctx->compat(event->type);
-  }
+	/* compatibility mode */
+	if ( ctx->compat ){
+		event->type = ctx->compat(event->type);
+	}
 
-  event->type = htonl(event->type);
+	event->type = htonl(event->type);
 
-  if ( !dst ){
-    struct client* client = (struct client*)ctx;
-    dst = (struct sockaddr*)&client->server_addr;
-  }
+	if ( !dst ){
+		struct client* client = (struct client*)ctx;
+		dst = (struct sockaddr*)&client->server_addr;
+	}
 
-  if ( sendto(ctx->sd, event, size, 0, dst, sizeof(struct sockaddr)) == -1 ){
-    return perror2("sendto");
-  }
+	if ( sendto(ctx->sd, event, size, 0, dst, sizeof(struct sockaddr)) == -1 ){
+		return perror2("sendto");
+	}
 
-  return 0;
+	return 0;
 }
 
 int marc_poll_event(marc_context_t ctx, MPMessage* event, size_t* size, struct sockaddr* from, struct timeval* timeout){
-  assert(ctx);
-  assert(event);
+	assert(ctx);
+	assert(event);
 
-  //static socklen_t addrlen = sizeof(struct sockaddr_in);
-  struct client* client = (struct client*)ctx;
+	//static socklen_t addrlen = sizeof(struct sockaddr_in);
+	struct client* client = (struct client*)ctx;
 
-  fd_set fds;
+	fd_set fds;
 
-  FD_ZERO(&fds);
-  FD_SET(ctx->sd, &fds);
-  memset(event, 0, sizeof(MPMessage));
+	FD_ZERO(&fds);
+	FD_SET(ctx->sd, &fds);
+	memset(event, 0, sizeof(MPMessage));
 
-  switch ( select(ctx->sd+1, &fds, NULL, NULL, timeout) ){
-  case -1:
-    return errno;
-  case 0:
-    return EAGAIN;
-  default:
-    break;
-  }
+	switch ( select(ctx->sd+1, &fds, NULL, NULL, timeout) ){
+	case -1:
+		return errno;
+	case 0:
+		return EAGAIN;
+	default:
+		break;
+	}
 
-  int bytes;
-  socklen_t socklen = sizeof(struct sockaddr);
-  if ( (bytes=recvfrom(ctx->sd, event, sizeof(MPMessage), 0, from, &socklen)) <= 0 ){
-    return errno;
-  }
-  
-  event->type = ntohl(event->type);
+	int bytes;
+	socklen_t socklen = sizeof(struct sockaddr);
+	if ( (bytes=recvfrom(ctx->sd, event, sizeof(MPMessage), 0, from, &socklen)) <= 0 ){
+		return errno;
+	}
 
-  /* fill in version field for old MArCd versions */
-  if ( event->type == MP_LEGACY_AUTH_EVENT && bytes < sizeof(struct MPauth) ){
-    event->type = MP_CONTROL_AUTHORIZE_EVENT;
-    event->auth.version.major = 0;
-    event->auth.version.major = 6;
-    ctx->compat = legacy_compat;
-    
-    out_func(dst_error, "Activating MArCd compatibility mode (v0.6). Please update MArCd. This can also\n");
-    out_func(dst_error, "happen if using a legacy version of the webgui to authorize, if so please\n");
-    out_func(dst_error, "restart this measurement point.\n");
-  }
+	event->type = ntohl(event->type);
 
-  /* intercept auth event to store version */
-  if ( event->type == MP_CONTROL_AUTHORIZE_EVENT ){
-    client->server_version = event->init.version.protocol;
-  }
+	/* fill in version field for old MArCd versions */
+	if ( event->type == MP_LEGACY_AUTH_EVENT && bytes < sizeof(struct MPauth) ){
+		event->type = MP_CONTROL_AUTHORIZE_EVENT;
+		event->auth.version.major = 0;
+		event->auth.version.major = 6;
+		ctx->compat = legacy_compat;
 
-  /* legacy hack. php-gui sends a events without full payload */
-  if ( bytes < 100 && event->type < 11 ){ /* keeping logic from MP (100 bytes is probably arbitrary)*/
-    switch ( event->type ){
-    case MP_CONTROL_AUTHORIZE_EVENT:
-      break; /* already handled */
+		out_func(dst_error, "Activating MArCd compatibility mode (v0.6). Please update MArCd. This can also\n");
+		out_func(dst_error, "happen if using a legacy version of the webgui to authorize, if so please\n");
+		out_func(dst_error, "restart this measurement point.\n");
+	}
 
-    case MP_LEGACY_FILTER_ADD_EVENT:
-      event->type = MP_FILTER_REQUEST_EVENT;
-      event->filter_id.id = htonl(atoi(event->payload));
-      break;
+	/* intercept auth event to store version */
+	if ( event->type == MP_CONTROL_AUTHORIZE_EVENT ){
+		client->server_version = event->init.version.protocol;
+	}
 
-    case MP_LEGACY_FILTER_DEL_EVENT:
-      event->type = MP_FILTER_DEL_EVENT;
-      event->filter_id.id = htonl(atoi(event->payload));
-      break;
+	/* legacy hack. php-gui sends a events without full payload */
+	if ( bytes < 100 && event->type < 11 ){ /* keeping logic from MP (100 bytes is probably arbitrary)*/
+		switch ( event->type ){
+		case MP_CONTROL_AUTHORIZE_EVENT:
+			break; /* already handled */
 
-    case MP_LEGACY_FILTER_RELOAD_EVENT:
-      event->type = MP_FILTER_RELOAD_EVENT;
-      event->filter_id.id = htonl(-1);
-      break;
+		case MP_LEGACY_FILTER_ADD_EVENT:
+			event->type = MP_FILTER_REQUEST_EVENT;
+			event->filter_id.id = htonl(atoi(event->payload));
+			break;
 
-    default:
-      out_func(dst_error, "Got unhandled legacy PHP message of type %d. Here be dragons.\n", event->type);
-    }
-  } else if ( ctx->compat ){ /* compatibility mode */
-    event->type = ctx->compat(event->type);
-  }
+		case MP_LEGACY_FILTER_DEL_EVENT:
+			event->type = MP_FILTER_DEL_EVENT;
+			event->filter_id.id = htonl(atoi(event->payload));
+			break;
 
-  *size = bytes;
-  return 0;
+		case MP_LEGACY_FILTER_RELOAD_EVENT:
+			event->type = MP_FILTER_RELOAD_EVENT;
+			event->filter_id.id = htonl(-1);
+			break;
+
+		default:
+			out_func(dst_error, "Got unhandled legacy PHP message of type %d. Here be dragons.\n", event->type);
+		}
+	} else if ( ctx->compat ){ /* compatibility mode */
+		event->type = ctx->compat(event->type);
+	}
+
+	*size = bytes;
+	return 0;
 }
 
 int marc_filter_request(marc_context_t ctx, const char* MAMPid, uint32_t filter_id){
-  struct MPFilterID msg;
-  msg.type = MP_FILTER_REQUEST_EVENT;
-  msg.id = htonl(filter_id);
-  mampid_set(msg.MAMPid, MAMPid);
-  return marc_push_event(ctx, (MPMessage*)&msg, NULL);
+	struct MPFilterID msg;
+	msg.type = MP_FILTER_REQUEST_EVENT;
+	msg.id = htonl(filter_id);
+	mampid_set(msg.MAMPid, MAMPid);
+	return marc_push_event(ctx, (MPMessage*)&msg, NULL);
 }
