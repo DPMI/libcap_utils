@@ -345,6 +345,12 @@ int main(int argc, char **argv){
 		return 1;
 	}
 
+	/* Install signal handler so loop can be aborted. Handlers are installed
+	 * before opening streams in case they block and SIGINT is passed to
+	 * terminate blocking call. */
+	signal(SIGINT, sig_handler);
+	signal(SIGTERM, sig_handler);
+
 	/* open input stream (using a small buffer so pipes will fill faster) */
 	if ( (ret=stream_from_getopt(&src, argv, optind, argc, iface, "-", program_name, buffer_size)) != 0 ) {
 		return 1;
@@ -356,10 +362,6 @@ int main(int argc, char **argv){
 		return 1;
 	}
 	stream_stat = stream_get_stat(src);
-
-	/* install signal handler so loop can be aborted */
-	signal(SIGINT, sig_handler);
-	signal(SIGTERM, sig_handler);
 
 	/* progress report */
 	if ( progress > 0 ){
