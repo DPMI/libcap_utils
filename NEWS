@@ -1,3 +1,10 @@
+caputils-0.7.10
+---------------
+
+  * Additional capshow package decoding.
+  * Added stream_peek, stream_num_addresses, timepico_now.
+  * stream_copy truncates packages to caplen.
+
 caputils-0.7.9
 --------------
 
