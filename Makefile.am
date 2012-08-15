@@ -1,6 +1,5 @@
 ACLOCAL_AMFLAGS = -I m4
 AM_CFLAGS = -Wall ${PCAP_CFLAGS} ${PFRING_CFLAGS}
-AM_DEFAULT_SOURCE_EXT = .cpp
 
 lib_LTLIBRARIES = libcap_utils-07.la libcap_filter-07.la libcap_stream-07.la libcap_marc-07.la
 bin_PROGRAMS = 
@@ -127,10 +126,12 @@ capshow_LDADD = libcap_filter-07.la libcap_utils-07.la libcap_stream-07.la
 tests_filter_argv_CXXFLAGS = ${AM_CFLAGS} $(CPPUNIT_CFLAGS)
 tests_filter_argv_LDFLAGS = $(CPPUNIT_LIBS)
 tests_filter_argv_LDADD = libcap_filter-07.la libcap_utils-07.la
+tests_filter_argv_SOURCES = tests/filter_argv.cpp
 
 tests_address_CXXFLAGS = ${AM_CFLAGS} $(CPPUNIT_CFLAGS)
 tests_address_LDFLAGS = $(CPPUNIT_LIBS)
 tests_address_LDADD = libcap_utils-07.la
+tests_address_SOURCES = tests/address.cpp
 
 # -Dfulhack is needed so libtool will become less confused about
 # multiple objects of be64toh. By having different cflags it will
@@ -148,6 +149,9 @@ tests_stream_LDADD = libcap_utils-07.la
 tests_timepico_CXXFLAGS = ${AM_CFLAGS} $(CPPUNIT_CFLAGS)
 tests_timepico_LDFLAGS = $(CPPUNIT_LIBS)
 tests_timepico_LDADD = libcap_utils-07.la
+tests_timepico_SOURCES = tests/timepico.cpp
+
+tests_disabled_SOURCES = tests/disabled.cpp
 
 #
 # Hooks
