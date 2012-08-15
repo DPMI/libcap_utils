@@ -14,6 +14,7 @@ notrans_dist_man_MANS = \
 	man/libcap_filter.3   \
 	man/stream-address.3  \
 	man/stream_read.3
+EXTRA_DIST =
 
 if BUILD_PCAP
 bin_PROGRAMS += pcap2cap cap2pcap
@@ -59,6 +60,7 @@ else
 TESTS = tests/disabled
 endif
 check_PROGRAMS = ${TESTS}
+EXTRA_DIST += tests/empty.cap
 
 nobase_include_HEADERS =    \
 	caputils/address.h  \
