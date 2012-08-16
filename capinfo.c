@@ -315,9 +315,10 @@ int main(int argc, char* argv[]){
 	memset(mpid, 0, sizeof(char*) * mpid_num);
 
 	/* visit all targets */
+	int status = 0;
 	while ( optind < argc ){
 		reset();
-		show_info(argv[optind++]);
+		status |= show_info(argv[optind++]);
 
 		if ( optind < argc ){
 			putchar('\n');
@@ -331,5 +332,5 @@ int main(int argc, char* argv[]){
 		}
 	}
 
-	return 0;
+	return status == 0 ? 0 : 1;
 }
