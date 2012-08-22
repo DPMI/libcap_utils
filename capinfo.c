@@ -70,6 +70,14 @@ static void format_bytes(char* dst, size_t size, uint64_t bytes){
 		n++;
 	}
 
+	/* Special case when there is no prefix. Since bytes cannot be fractional
+	 * it prints number of bytes directly without division and decimal. It also
+	 * "removes" the double space that was added when the prefix was empty. */
+	if ( n == 0 ){
+		snprintf(dst, size, "%"PRIu64" (%"PRIu64" bytes)", bytes, bytes);
+		return;
+	}
+
 	float tmp = (float)bytes / multiplier;
 	snprintf(dst, size, "%.1f %s (%"PRIu64" bytes)", tmp, prefix[n], bytes);
 }
