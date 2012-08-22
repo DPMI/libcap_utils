@@ -18,6 +18,7 @@ static size_t caplen = 9964;
 static const char* outFilename = NULL;
 static const char* iface = NULL;
 static int linktype = DLT_EN10MB;
+static int quiet = 0;
 
 int main (int argc, char **argv){
 	/* extract program name from path. e.g. /path/to/MArCd -> MArCd */
@@ -46,11 +47,12 @@ int main (int argc, char **argv){
 		{"iface", required_argument, 0, 'i'},
 		{"caplen", required_argument, 0, 'a'},
 		{"linktype",1,0,'l'},
+		{"quiet", no_argument, 0, 'q'},
 		{"help", 0, 0, 'h'},
 		{0, 0, 0, 0}
 	};
 
-	while ( (op = getopt_long(argc, argv, "i:l:o:h", long_options, &option_index)) != -1 ){
+	while ( (op = getopt_long(argc, argv, "i:l:o:qh", long_options, &option_index)) != -1 ){
 		switch (op){
 		case 0:   /* long opt */
 		case '?': /* unknown opt */
@@ -74,6 +76,10 @@ int main (int argc, char **argv){
 			       pcap_datalink_val_to_description(linktype));
 			break;
 
+		case 'q': /* --quiet */
+			quiet = 1;
+			break;
+
 		case 'h':
 	    printf("%s (caputils-" CAPUTILS_VERSION ")\n", program_name);
       printf("(c) 2004-2011 Patrik Arlos, David Sveningsson\n\n");
@@ -84,6 +90,7 @@ int main (int argc, char **argv){
 			printf("  -i, --iface=INTERFACE      Capture interface (used when converting live ethernet stream.\n");
 			printf("      --caplen=INT           Set caplen. Default %zd.\n", caplen);
 			printf("  -l, --linktype=INTEGER     pcap linktype (see PCAP-LINKTYPE(7))\n");
+			printf("  -q, --quiet                Silent output, only errors is printed.\n");
 			return 0;
 
 		default:
@@ -140,9 +147,11 @@ int main (int argc, char **argv){
 	const char* comment = stream_get_comment(st);
 	stream_get_version(st, &version);
 
-	fprintf(stderr, "%s: caputils %d.%d stream\n", stream_addr_ntoa(&src), version.major, version.minor);
-	fprintf(stderr, "     mpid: %s\n", mampid != 0 ? mampid : "(unset)");
-	fprintf(stderr, "  comment: %s\n", comment ? comment : "(unset)");
+	if ( !quiet ){
+		fprintf(stderr, "%s: caputils %d.%d stream\n", stream_addr_ntoa(&src), version.major, version.minor);
+		fprintf(stderr, "     mpid: %s\n", mampid != 0 ? mampid : "(unset)");
+		fprintf(stderr, "  comment: %s\n", comment ? comment : "(unset)");
+	}
 
 	struct cap_header* cp;
 	struct pcap_pkthdr pcapHeader;
@@ -156,7 +165,7 @@ int main (int argc, char **argv){
 		pcapHeader.caplen = cp->caplen;
 
 		// Let the user know that we are alive, good when processing large files.
-		if ( packets % 1000 == 0) {
+		if ( !quiet && packets % 1000 == 0) {
 			fprintf(stderr, ".");
 			fflush(stderr);
 		}
@@ -172,6 +181,8 @@ int main (int argc, char **argv){
 	/* close cap file */
 	stream_close(st);
 
-	fprintf(stderr, "\nThere was a total of %ld pkts that matched the filter.\n", packets);
+	if ( !quiet ){
+		fprintf(stderr, "\nThere was a total of %ld pkts that matched the filter.\n", packets);
+	}
 	return 0;
 }
