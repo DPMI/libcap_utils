@@ -120,7 +120,7 @@ static void homogenize_eth_addr(char* buf){
 }
 
 int stream_addr_aton(stream_addr_t* dst, const char* src, enum AddressType type, int flags){
-	char buf[48];          /* larger than max, just in case user provides large */
+	char buf[48] = {0,};   /* larger than max, just in case user provides large */
 	strncpy(buf, src, 48); /* input, will bail out later on bad data. */
 
 	memset(dst->buffer, 0, 26);
