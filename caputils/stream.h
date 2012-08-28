@@ -33,7 +33,7 @@ typedef struct stream_stat stream_stat_t;
  * @param buffer_size Buffer size in bytes, use 0 for default.
  * @return 0 if successful or error code on errors (use caputils_error_string to get description)
  */
-int stream_open(stream_t* stptr, const stream_addr_t* addr, const char* nic, size_t buffer_size);
+int stream_open(stream_t* stptr, const stream_addr_t* addr, const char* iface, size_t buffer_size);
 
 /**
  * Create a new stream.
