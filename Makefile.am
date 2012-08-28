@@ -4,16 +4,27 @@ AM_CFLAGS = -Wall ${PCAP_CFLAGS} ${PFRING_CFLAGS}
 lib_LTLIBRARIES = libcap_utils-07.la libcap_filter-07.la libcap_stream-07.la libcap_marc-07.la
 bin_PROGRAMS = 
 man1_MANS =
-man3_MANS =             \
+man3_MANS =                 \
 	man/libcaputils_reading.3 \
-	man/libcap_filter.3   \
-	man/stream-address.3  \
+	man/libcap_filter.3       \
+	man/stream-address.3      \
+	man/stream_add.3          \
+	man/stream_close.3        \
+	man/stream_from_getopt.3  \
+	man/stream_open.3         \
+	man/stream_peek.3         \
 	man/stream_read.3
-notrans_dist_man_MANS = \
+notrans_dist_man_MANS =     \
 	man/libcaputils_reading.3 \
-	man/libcap_filter.3   \
-	man/stream-address.3  \
+	man/libcap_filter.3       \
+	man/stream-address.3      \
+	man/stream_add.3          \
+	man/stream_close.3        \
+	man/stream_from_getopt.3  \
+	man/stream_open.3         \
+	man/stream_peek.3         \
 	man/stream_read.3
+
 EXTRA_DIST =
 
 if BUILD_PCAP
