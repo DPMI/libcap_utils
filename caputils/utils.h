@@ -4,6 +4,10 @@
 #include <net/if.h>
 #include <netinet/ether.h>
 
+#ifndef IFHWADDRLEN
+#define IFHWADDRLEN 6
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
