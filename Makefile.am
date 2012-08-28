@@ -5,12 +5,12 @@ lib_LTLIBRARIES = libcap_utils-07.la libcap_filter-07.la libcap_stream-07.la lib
 bin_PROGRAMS = 
 man1_MANS =
 man3_MANS =             \
-	man/libcaputils.3     \
+	man/libcaputils_reading.3 \
 	man/libcap_filter.3   \
 	man/stream-address.3  \
 	man/stream_read.3
 notrans_dist_man_MANS = \
-	man/libcaputils.3     \
+	man/libcaputils_reading.3 \
 	man/libcap_filter.3   \
 	man/stream-address.3  \
 	man/stream_read.3
