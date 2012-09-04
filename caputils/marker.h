@@ -4,6 +4,10 @@
 #include <stdint.h>
 #include <caputils/capture.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 enum MarkerFlags {
 	MARKER_TERMINATE = (1<<0),
 };
@@ -34,5 +38,9 @@ struct marker {
  * marker. ptr is undefined if packet isn't a marker.
  */
 int is_marker(const struct cap_header* cp, struct marker* ptr, int port);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* CAPUTILS__MARKER_H */
