@@ -65,7 +65,7 @@ int main(int argc, char* argv[]){
 
   int index = 0;
   int op = 0;
-  while ( (op=getopt_long(argc, argv, "i:o:h", options, &index)) != -1 ){
+  while ( (op=getopt_long(argc, argv, "i:o:r:h", options, &index)) != -1 ){
     switch (op){
     case 'o':
       dst_filename = optarg;
@@ -95,22 +95,22 @@ int main(int argc, char* argv[]){
   /* open source */
   stream_addr_str(&addr, src_filename, 0);
   if ( (ret=stream_open(&src, &addr, NULL, 0)) != 0 ){
-	  fprintf(stderr, "%s: failed to open `%s': %s\n", program_name, src_filename, caputils_error_string(ret));
+	  fprintf(stderr, "%s: failed to open input `%s': %s\n", program_name, src_filename, caputils_error_string(ret));
 	  return 1;
   }
 
   /* open destination */
   stream_addr_str(&addr, dst_filename, 0);
-  if ( (ret=stream_open(&dst, &addr, NULL, 0)) != 0 ){
-	  fprintf(stderr, "%s: failed to open `%s': %s\n", program_name, dst_filename, caputils_error_string(ret));
+  if ( (ret=stream_create(&dst, &addr, NULL, "CONV", "capfilter" VERSION " filtered stream")) != 0 ){
+	  fprintf(stderr, "%s: failed to open output `%s': %s\n", program_name, dst_filename, caputils_error_string(ret));
 	  return 1;
   }
 
   /* open rejects */
   if ( rej_filename ){
 	  stream_addr_str(&addr, rej_filename, 0);
-	  if ( (ret=stream_open(&rej, &addr, NULL, 0)) != 0 ){
-		  fprintf(stderr, "%s: failed to open `%s': %s\n", program_name, rej_filename, caputils_error_string(ret));
+	  if ( (ret=stream_create(&rej, &addr, NULL, "CONV", "capfilter" VERSION " filtered stream")) != 0 ){
+		  fprintf(stderr, "%s: failed to open rejects `%s': %s\n", program_name, rej_filename, caputils_error_string(ret));
 		  return 1;
 	  }
   }
