@@ -151,14 +151,17 @@ static const char* get_CI_list(const char* delimiter){
 	return array_join(CI.value, CI.size, delimiter);
 }
 
-static void print_overview(){
+static const char* get_comment(stream_t st){
 	const char* comment = stream_get_comment(st);
+	return comment ? comment : "(unset)";
+}
 
+static void print_overview(){
 	printf("Overview\n"
 	       "--------\n");
 	printf("       CI: %s\n", get_CI_list(", "));
 	printf("     mpid: %s\n", get_mampid_list(", "));
-	printf("  comment: %s\n", comment ? comment : "(unset)");
+	printf("  comment: %s\n", get_comment(st));
 
 	char byte_str[128];
 	char rate_str[128];
