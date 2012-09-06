@@ -56,6 +56,7 @@ static long ieee8023 = 0;
 static long ipproto[UINT8_MAX] = {0,}; /* protocol is defined as 1 octet */
 static timepico first, last;
 static struct simple_list mpid = {NULL, 0, 0};
+static struct simple_list CI = {NULL, 0, 0};
 
 static struct option long_options[] = {
 	{"help",    no_argument, 0, 'h'},
@@ -143,6 +144,13 @@ static void print_overview(){
 	printf("     mpid: ");
 	for ( int i = 0; i < mpid.size; i++ ){
 		printf("%s%s", (i>0?", ":""), mpid.value[i]);
+	}
+	printf("\n");
+
+	/* show CI */
+	printf("       CI: ");
+	for ( int i = 0; i < CI.size; i++ ){
+		printf("%s%s", (i>0?", ":""), CI.value[i]);
 	}
 	printf("\n");
 
@@ -239,6 +247,10 @@ static void store_mampid(struct cap_header* cp){
 	store_unique(&mpid, cp->mampid, 8);
 }
 
+static void store_CI(struct cap_header* cp){
+	store_unique(&CI, cp->nic, 8);
+}
+
 static int show_info(const char* filename){
 	stream_addr_t addr;
 	stream_addr_str(&addr, filename, 0);
@@ -263,6 +275,7 @@ static int show_info(const char* filename){
 		}
 
 		store_mampid(cp);
+		store_CI(cp);
 
 		const struct ethhdr* eth = cp->ethhdr;
 		const uint16_t h_proto = ntohs(eth->h_proto);
@@ -350,8 +363,9 @@ int main(int argc, char* argv[]){
 		return 0;
 	}
 
-	/* initial mampid storage */
+	/* initial storage */
 	slist_alloc(&mpid, 8);
+	slist_alloc(&CI, 8);
 
 	/* visit all targets */
 	int status = 0;
@@ -363,13 +377,15 @@ int main(int argc, char* argv[]){
 			putchar('\n');
 		}
 
-		/* reset mampid storage (must be done for each iteration so the results is
+		/* reset storage (must be done for each iteration so the results is
 		 * only for the current file.) */
 		slist_clear(&mpid);
+		slist_clear(&CI);
 	}
 
 	/* release resources */
 	slist_free(&mpid);
+	slist_free(&CI);
 
 	return status == 0 ? 0 : 1;
 }
