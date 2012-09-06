@@ -15,6 +15,9 @@ Read capture from FILE or use \- to read from stdin (default)
 .TP
 \fB\-o\fR, \fB\-\-output\fR=\fIFILE\fR
 Store result into FILE or use \- to write to stdout (default if not a TTY)
+.TP
+\fB\-r\fR, \fB\-\-rejects\fR=\fIFILE\fR
+Store packets rejected by the filter.
 .SH FILTER
 .TP
 \fB\-\-starttime\fR=\fIDATETIME\fR
@@ -41,6 +44,23 @@ Discard all packages not originating from MP with MAMPid STRING.
 \fB\-\-mpid\fR=\fISTRING\fR (deprecated)
 Alias for --mampid.
 .TP
+\fB\-\-eth.vlan\fR=\fITCO[/MASK]\fR
+Filter by VLAN Tag Control Information. Discards packets without a VLAN tag.
+.TP
+\fB\-\-eth.type\fR=\fITYPE[/MASK]\fR
+Discards packets not of ethernet protocol \fITYPE\fP which can either be entered as
+protocol number or name e.g. "ip" or "arp".
+.TP
+\fB\-\-eth.src\fR=\fIADDRESS[/MASK]\fR
+Discard packets not originating from \fIADDRESS\fP. See ETHERNET ADDRESS for format.
+.TP
+\fB\-\-eth.dst\fR=\fIADDRESS[/MASK]\fR
+Discard packets not destined to \fIADDRESS\fP. See ETHERNET ADDRESS for format.
+.TP
+\fB\-\-ip.proto\fR=\fIPROTOCOL\fR
+Discard packets not using IP protocol \fIPROTOCOL\fP which can either be entered as
+protocol number or a valid name from `/etc/protocols`.
+.TP
 \fB\-\-ip.src\fR=\fIADDRESS\fR[/\fINETMASK\fP]
 Discard all packages where source address doesn't match ADDRESS. A mask can be
 specified to match a network. Either pass a netmask (e.g. /255.255.255.0) or
@@ -49,6 +69,18 @@ CIDR-notation (e.g. /24).
 \fB\-\-ip.dst\fR=\fIADDRESS\fR[/\fINETMASK\fP]
 Discard all packages where destination address doesn't match ADDRESS. See
 \-\-ip.src for format.
+.TP
+\fB\-\-tp.sport\fR=\fIPORT[/MASK]\fR
+Discard packets not originating from \fIPORT\fP which can either be entered as
+protocol number or a valid name from `/etc/services`.
+\fB\-\-tp.dport\fR=\fIPORT[/MASK]\fR
+Discard packets not destined to \fIPORT\fP which can either be entered as
+protocol number or a valid name from `/etc/services`.
+.TP
+\fB\-\-filter-mode\fR=\fIMODE\fR
+\fIMODE\fP can be set to either OR or AND (default) which changes the operator
+when joining the different filters. By setting to OR only one of the filters
+has to match while AND all must match.
 .SH DATE FORMAT
 Valid date formats are:
 .sp
@@ -61,6 +93,12 @@ YYYYMMDD hh:mm:ss.x
 YYMMDD hh:mm:ss.x
 .TP
 where x describes picoseconds and can be up to 12 digits.
+.SH ETHERNET FORMAT
+Ethernet addresses can use an expansion syntax using :: where the space between
+the colon is filled with zeroes, e.g. 01::01 is expanded to 01:00:00:00:00:01.
+Digits may be separated by colon or dash but does not have to be separated (but
+expansion only works with colon). E.g. "ff:ff...", "ff-ff..." and "ffff..." is all
+identical.
 .SH AUTHOR
 Written by David Sveningsson <david.sveningsson@bth.se>.
 .SH "SEE ALSO"

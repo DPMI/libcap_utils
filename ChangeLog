@@ -1,6 +1,7 @@
 caputils-0.7.11
 ---------------
 
+	* fix: [filter] update documentation.
 	* fix: [capshow] retain the packet number when filtering.
 	* fix: [utils] Ensure IFHWADDRLEN is defined.
 	* add: [capinfo] Exit with code 1 if any error occurs.
