@@ -167,6 +167,7 @@ int main(int argc, char **argv){
 	/* handle C-c */
 	signal(SIGINT, handle_sigint);
 
+	unsigned long matched = 0;
 	while ( keep_running ) {
 		/* A short timeout is used to allow the application to "breathe", i.e
 		 * terminate if SIGINT was received. */
@@ -174,14 +175,17 @@ int main(int argc, char **argv){
 
 		/* Read the next packet */
 		cap_head* cp;
-		ret = stream_read(stream, &cp, &filter, &tv);
+		ret = stream_read(stream, &cp, NULL, &tv);
 		if ( ret == EAGAIN ){
 			continue; /* timeout */
 		} else if ( ret != 0 ){
 			break; /* shutdown or error */
 		}
 
-		format_pkg(stdout, stream, cp, flags);
+		if ( filter_match(&filter, cp->payload, cp) ){
+			format_pkg(stdout, stream, cp, flags);
+			matched++;
+		}
 
 		if ( max_packets > 0 && stat->matched >= max_packets) {
 			/* Read enough pkts lets break. */
@@ -199,7 +203,7 @@ int main(int argc, char **argv){
 
 	/* Write stats */
 	fprintf(stderr, "%"PRIu64" packets received.\n", stat->read);
-	fprintf(stderr, "%"PRIu64" packets matched filter.\n", stat->matched);
+	fprintf(stderr, "%"PRIu64" packets matched filter.\n", matched);
 
 	/* Release resources */
 	stream_close(stream);
