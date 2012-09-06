@@ -18,6 +18,30 @@
 #define STPBRIDGES 0x0026
 #define CDPVTP 0x016E
 
+struct simple_list {
+	char** value;
+	size_t size;        /* slots in use */
+	size_t capacity;    /* slots available */
+};
+
+static void slist_clear(struct simple_list* slist){
+	for ( int i = 0; i < slist->size; i++ ){
+		free(slist->value[i]);
+	}
+	slist->size = 0;
+}
+
+static void slist_alloc(struct simple_list* slist, size_t growth){
+	slist->capacity += growth;
+	slist->value = realloc(slist->value, sizeof(char*) * slist->capacity);
+}
+
+static void slist_free(struct simple_list* slist){
+	slist_clear(slist);
+	free(slist->value);
+	slist->capacity = 0;
+}
+
 static stream_t st = NULL;
 static long int packets = 0;
 static uint64_t bytes = 0;
@@ -31,8 +55,7 @@ static long other = 0;
 static long ieee8023 = 0;
 static long ipproto[UINT8_MAX] = {0,}; /* protocol is defined as 1 octet */
 static timepico first, last;
-static char** mpid;
-static size_t mpid_num = 0;
+static struct simple_list mpid = {NULL, 0, 0};
 
 static struct option long_options[] = {
 	{"help",    no_argument, 0, 'h'},
@@ -118,8 +141,8 @@ static void print_overview(){
 
 	/* show mampids */
 	printf("     mpid: ");
-	for ( int i = 0; i < mpid_num && mpid[i]; i++ ){
-		printf("%s%s", (i>0?", ":""), mpid[i]);
+	for ( int i = 0; i < mpid.size; i++ ){
+		printf("%s%s", (i>0?", ":""), mpid.value[i]);
 	}
 	printf("\n");
 
@@ -198,22 +221,22 @@ static void print_distribution(){
 
 static void store_mampid(struct cap_header* cp){
 	static char mampid[9] = {0,};
-	memcpy(mampid, cp->mampid, 8); /* last by is left as null-terminator */
+	memcpy(mampid, cp->mampid, 8); /* last byte is left as null-terminator */
 
 	int i;
-	for ( i = 0; i < mpid_num && mpid[i]; i++ ){
-		if ( strcmp(mpid[i], mampid) == 0 ){
+	for ( i = 0; i < mpid.size; i++ ){
+		if ( strcmp(mpid.value[i], mampid) == 0 ){
 			return;
 		}
 	}
 
 	/* allocate more memory if needed */
-	if ( i == mpid_num ){
-		mpid_num *= 2;
-		mpid = realloc(mpid, sizeof(char*) * mpid_num);
+	if ( mpid.size == mpid.capacity ){
+		slist_alloc(&mpid, /* growth = */ mpid.capacity);
 	}
 
-	mpid[i] = strdup(mampid);
+	mpid.value[i] = strdup(mampid);
+	mpid.size++;
 }
 
 static int show_info(const char* filename){
@@ -328,9 +351,7 @@ int main(int argc, char* argv[]){
 	}
 
 	/* initial mampid storage */
-	mpid_num = 8;
-	mpid = malloc(sizeof(char*) * mpid_num);
-	memset(mpid, 0, sizeof(char*) * mpid_num);
+	slist_alloc(&mpid, 8);
 
 	/* visit all targets */
 	int status = 0;
@@ -344,11 +365,11 @@ int main(int argc, char* argv[]){
 
 		/* reset mampid storage (must be done for each iteration so the results is
 		 * only for the current file.) */
-		for ( int i = 0; i < mpid_num; i++ ){
-			free(mpid[i]);
-			mpid[i] = NULL;
-		}
+		slist_clear(&mpid);
 	}
+
+	/* release resources */
+	slist_free(&mpid);
 
 	return status == 0 ? 0 : 1;
 }
