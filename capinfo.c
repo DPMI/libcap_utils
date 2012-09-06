@@ -219,24 +219,24 @@ static void print_distribution(){
 	}
 }
 
-static void store_mampid(struct cap_header* cp){
-	static char mampid[9] = {0,};
-	memcpy(mampid, cp->mampid, 8); /* last byte is left as null-terminator */
-
-	int i;
-	for ( i = 0; i < mpid.size; i++ ){
-		if ( strcmp(mpid.value[i], mampid) == 0 ){
-			return;
-		}
+static void store_unique(struct simple_list* slist, const char* value, size_t maxlen){
+	/* try to locate an existing string */
+	for ( int i = 0; i < mpid.size; i++ ){
+		if ( strncmp(mpid.value[i], value, maxlen) == 0 ) return;
 	}
 
 	/* allocate more memory if needed */
-	if ( mpid.size == mpid.capacity ){
-		slist_alloc(&mpid, /* growth = */ mpid.capacity);
+	if ( slist->size == slist->capacity ){
+		slist_alloc(slist, /* growth = */ slist->capacity);
 	}
 
-	mpid.value[i] = strdup(mampid);
-	mpid.size++;
+	/* store value */
+	slist->value[slist->size] = strndup(value, maxlen);
+	slist->size++;
+}
+
+static void store_mampid(struct cap_header* cp){
+	store_unique(&mpid, cp->mampid, 8);
 }
 
 static int show_info(const char* filename){
