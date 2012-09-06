@@ -28,6 +28,7 @@ static long arp = 0;
 static long stp = 0;
 static long cdpvtp = 0;
 static long other = 0;
+static long ieee8023 = 0;
 static long ipproto[UINT8_MAX] = {0,}; /* protocol is defined as 1 octet */
 static timepico first, last;
 static char** mpid;
@@ -187,10 +188,12 @@ static void print_distribution(){
 	if ( cdpvtp > 0 ){
 		printf("   cdpvtp: %ld\n", cdpvtp);
 	}
+	if ( ieee8023 > 0 ){
+		printf("IEEE802.3: %ld\n", ieee8023);
+	}
 	if ( other > 0 ){
 		printf("    Other: %ld\n", other);
 	}
-
 }
 
 static void store_mampid(struct cap_header* cp){
@@ -238,9 +241,14 @@ static int show_info(const char* filename){
 
 		store_mampid(cp);
 
-		struct ethhdr* eth = (struct ethhdr*)cp->payload;
+		const struct ethhdr* eth = cp->ethhdr;
+		const uint16_t h_proto = ntohs(eth->h_proto);
 		struct iphdr* ip = NULL;
-		uint16_t h_proto = ntohs(eth->h_proto);
+
+		if ( h_proto < 0x0600 ){
+			ieee8023++;
+			continue;
+		}
 
 		switch ( h_proto ){
 		case ETHERTYPE_VLAN:
