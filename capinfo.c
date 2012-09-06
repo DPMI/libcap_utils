@@ -221,8 +221,8 @@ static void print_distribution(){
 
 static void store_unique(struct simple_list* slist, const char* value, size_t maxlen){
 	/* try to locate an existing string */
-	for ( int i = 0; i < mpid.size; i++ ){
-		if ( strncmp(mpid.value[i], value, maxlen) == 0 ) return;
+	for ( int i = 0; i < slist->size; i++ ){
+		if ( strncmp(slist->value[i], value, maxlen) == 0 ) return;
 	}
 
 	/* allocate more memory if needed */
