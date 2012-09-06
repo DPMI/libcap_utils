@@ -157,12 +157,6 @@ static const char* get_comment(stream_t st){
 }
 
 static void print_overview(){
-	printf("Overview\n"
-	       "--------\n");
-	printf("       CI: %s\n", get_CI_list(", "));
-	printf("     mpid: %s\n", get_mampid_list(", "));
-	printf("  comment: %s\n", get_comment(st));
-
 	char byte_str[128];
 	char rate_str[128];
 	char first_str[128];
@@ -179,6 +173,12 @@ static void print_overview(){
 	format_bytes(byte_str, 128, bytes);
 	format_rate(rate_str, 128, bytes, hseconds/10);
 	format_seconds(sec_str, 128, first, last);
+
+	printf("Overview\n"
+	       "--------\n");
+	printf("       CI: %s\n", get_CI_list(", "));
+	printf("     mpid: %s\n", get_mampid_list(", "));
+	printf("  comment: %s\n", get_comment(st));
 	printf(" captured: %s to %s\n", first_str, last_str);
 	printf("  markers: %s\n", marker_str);
 	printf(" duration: %s (%.1f seconds)\n", sec_str, (float)hseconds/10);
