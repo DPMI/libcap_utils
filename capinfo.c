@@ -134,26 +134,30 @@ static void format_seconds(char* dst, size_t size, timepico first, timepico last
 	snprintf(dst, size, "%02d:%02d:%04.1f", h, m, s > 0 ? (float)s/10 : 0);
 }
 
+static const char* array_join(char* const src[], size_t n, const char* delimiter){
+	static char buffer[2048];
+	char* cur = buffer;
+	for ( int i = 0; i < n; i++ ){
+		cur += sprintf(cur, "%s%s", (i>0?delimiter:""), src[i]);
+	}
+	return buffer;
+}
+
+static const char* get_mampid_list(const char* delimiter){
+	return array_join(mpid.value, mpid.size, delimiter);
+}
+
+static const char* get_CI_list(const char* delimiter){
+	return array_join(CI.value, CI.size, delimiter);
+}
+
 static void print_overview(){
 	const char* comment = stream_get_comment(st);
 
 	printf("Overview\n"
 	       "--------\n");
-
-	/* show mampids */
-	printf("     mpid: ");
-	for ( int i = 0; i < mpid.size; i++ ){
-		printf("%s%s", (i>0?", ":""), mpid.value[i]);
-	}
-	printf("\n");
-
-	/* show CI */
-	printf("       CI: ");
-	for ( int i = 0; i < CI.size; i++ ){
-		printf("%s%s", (i>0?", ":""), CI.value[i]);
-	}
-	printf("\n");
-
+	printf("       CI: %s\n", get_CI_list(", "));
+	printf("     mpid: %s\n", get_mampid_list(", "));
 	printf("  comment: %s\n", comment ? comment : "(unset)");
 
 	char byte_str[128];
