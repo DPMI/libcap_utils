@@ -1,0 +1,55 @@
+.TH libcaputils_reading 3 "3 Aug 2011" "BTH" "Measurement Area Manual"
+.SH NAME
+libcaputils \- MA frame capture, stream library and utilities.
+.SH SYNOPSIS
+.nf
+.B #include <caputils/caputils.h>
+.sp
+.BI "int stream_open(stream_t* " stptr ", const stream_addr_t* " addr ", const char* " iface ", size_t " buffer_size ");"
+.BI "int stream_add(stream_t " st ", const stream_addr_t* " addr ");"
+.BI "int stream_from_getopt(stream_t* " st ", char* " argv "[], int " optind ", int " argc ", const char* " iface ", const char* " defaddr ", const char* " program_name ", size_t " buffer_size ");"
+.BI "int stream_close(stream_t " st ");"
+.BI "int stream_read(stream_t " st ", cap_head** " header ", const struct filter* " filter ", struct timeval* " timeout ");"
+.BI "int stream_peek(stream_t " st ", cap_head** " header ", const struct filter* " filter ");"
+
+void stream_get_version(const stream_t st, struct file_version* dst);
+const char* stream_get_comment(const stream_t st);
+const char* stream_get_mampid(const stream_t st);
+const struct stream_stat* stream_get_stat(const stream_t st);
+unsigned int stream_num_address(const stream_t st);
+void stream_print_info(const stream_t st, FILE* dst);
+
+int stream_create(stream_t* st, const stream_addr_t* addr, const char* nic, const char* mpid, const char* comment);
+int stream_write(stream_t st, const void* data, size_t size);
+int stream_copy(stream_t st, const caphead_t head);
+
+.SH DESCRIPTION
+.TP
+.BR stream_read()
+read the next matching packet from stream \fIst\fP. A pointer to the packet in
+an internal buffer is returned via \fIheader\fP. If you intend to modify or
+store the packet for a longer period of time the memory must be copied. For
+offline streams (i.e. capfiles) -1 can be returned to signal EOF. On errors
+\fIheader\fP is undefined. If \fItimeout\fP is non-null the function will not
+block and will return EAGAIN if timeout is reached.
+.TP
+.BR stream_from_getopt()
+Shorthand for opening multiple streams from command-line arguments. Calls
+stream_open followed by stream_add, with error checking. Errors is printed on
+stderr.
+.PP
+.SH RETURN VALUE
+All functions return zero if successful and unless otherwise specified non-zero
+corresponds to errno code or if greater than 0x80000000 they represents caputils
+errors. Use \fBcaputils_error_string\fP to get a string that describes the error.
+.SH ERRORS
+.TP
+.BR EINVAL
+Invalid parameter passed, e.g. invalid stream or a null-pointer.
+.TP
+.BR EAGAIN
+A timeout has occured.
+.SH AUTHOR
+Written by Patrik Arlos <patrik.arlos@bth.se> and David Sveningsson <david.sveningsson@bth.se>.
+.SH "SEE ALSO"
+mp(1), capfilter(1)
