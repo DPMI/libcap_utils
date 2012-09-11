@@ -18,7 +18,8 @@ static const char* src_filename = "/dev/stdin";
 static const char* rej_filename = NULL;
 static int keep_running = 1;
 
-static struct option options[] = {
+static const char* shortopts = "i:o:r:h";
+static struct option longopts[] = {
 	{"input",   required_argument, 0, 'i'},
 	{"output",  required_argument, 0, 'o'},
 	{"rejects", required_argument, 0, 'r'},
@@ -65,7 +66,7 @@ int main(int argc, char* argv[]){
 
   int index = 0;
   int op = 0;
-  while ( (op=getopt_long(argc, argv, "i:o:r:h", options, &index)) != -1 ){
+  while ( (op=getopt_long(argc, argv, shortopts, longopts, &index)) != -1 ){
     switch (op){
     case 'o':
       dst_filename = optarg;
