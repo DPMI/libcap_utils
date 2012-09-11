@@ -55,135 +55,135 @@ void handle_sigint(int signum){
 }
 
 int main(int argc, char* argv[]){
-  /* extract program name from path. e.g. /path/to/MArCd -> MArCd */
-  const char* separator = strrchr(argv[0], '/');
-  if ( separator ){
-    program_name = separator + 1;
-  } else {
-    program_name = argv[0];
-  }
+	/* extract program name from path. e.g. /path/to/MArCd -> MArCd */
+	const char* separator = strrchr(argv[0], '/');
+	if ( separator ){
+		program_name = separator + 1;
+	} else {
+		program_name = argv[0];
+	}
 
-  struct filter filter;
-  if ( filter_from_argv(&argc, argv, &filter) != 0 ){
-    fprintf(stderr, "Failed to create filter, aborting.\n");
-    exit(1); /* errors already displayed (on stderr) */
-  }
+	struct filter filter;
+	if ( filter_from_argv(&argc, argv, &filter) != 0 ){
+		fprintf(stderr, "Failed to create filter, aborting.\n");
+		exit(1); /* errors already displayed (on stderr) */
+	}
 
-  int index = 0;
-  int op = 0;
-  while ( (op=getopt_long(argc, argv, shortopts, longopts, &index)) != -1 ){
-    switch (op){
-    case 'o': /* --output */
-      dst_filename = optarg;
-      break;
+	int index = 0;
+	int op = 0;
+	while ( (op=getopt_long(argc, argv, shortopts, longopts, &index)) != -1 ){
+		switch (op){
+		case 'o': /* --output */
+			dst_filename = optarg;
+			break;
 
-    case 'i': /* --input */
-      src_filename = optarg;
-      break;
+		case 'i': /* --input */
+			src_filename = optarg;
+			break;
 
-    case 'r': /* --rejects */
-	    rej_filename = optarg;
-	    break;
+		case 'r': /* --rejects */
+			rej_filename = optarg;
+			break;
 
-    case 'v': /* --invert */
-	    invert = 1;
-	    break;
+		case 'v': /* --invert */
+			invert = 1;
+			break;
 
-    case 'h': /* --help */
-	    show_usage();
-      exit(0);
-    }
-  }
+		case 'h': /* --help */
+			show_usage();
+			exit(0);
+		}
+	}
 
-  int ret;
-  stream_addr_t addr;
-  stream_t src = NULL;
-  stream_t dst = NULL;
-  stream_t rej = NULL;
+	int ret;
+	stream_addr_t addr;
+	stream_t src = NULL;
+	stream_t dst = NULL;
+	stream_t rej = NULL;
 
-  /* ensure not reading/writing capfiles from terminal */
-  if ( src_filename == NULL && isatty(STDIN_FILENO) ){
-	  fprintf(stderr, "Cannot read input from stdin when it is connected to a terminal.\n");
-	  fprintf(stderr, "Either specify another destination with --input, use redirection or pipe from another process.\n");
-	  exit(1);
-  }
-  if ( dst_filename == NULL && isatty(STDOUT_FILENO) ){
-	  fprintf(stderr, "Cannot output to stdout when it is connected to a terminal.\n");
-	  fprintf(stderr, "Either specify another destination with --output, use redirection or pipe to another process.\n");
-	  exit(1);
-  }
+	/* ensure not reading/writing capfiles from terminal */
+	if ( src_filename == NULL && isatty(STDIN_FILENO) ){
+		fprintf(stderr, "Cannot read input from stdin when it is connected to a terminal.\n");
+		fprintf(stderr, "Either specify another destination with --input, use redirection or pipe from another process.\n");
+		exit(1);
+	}
+	if ( dst_filename == NULL && isatty(STDOUT_FILENO) ){
+		fprintf(stderr, "Cannot output to stdout when it is connected to a terminal.\n");
+		fprintf(stderr, "Either specify another destination with --output, use redirection or pipe to another process.\n");
+		exit(1);
+	}
 
-  /* defaults */
-  src_filename = src_filename ? src_filename : "/dev/stdin";
-  dst_filename = dst_filename ? dst_filename : "/dev/stdout";
+	/* defaults */
+	src_filename = src_filename ? src_filename : "/dev/stdin";
+	dst_filename = dst_filename ? dst_filename : "/dev/stdout";
 
-  /* open source */
-  stream_addr_str(&addr, src_filename, 0);
-  if ( (ret=stream_open(&src, &addr, NULL, 0)) != 0 ){
-	  fprintf(stderr, "%s: failed to open input `%s': %s\n", program_name, src_filename, caputils_error_string(ret));
-	  return 1;
-  }
+	/* open source */
+	stream_addr_str(&addr, src_filename, 0);
+	if ( (ret=stream_open(&src, &addr, NULL, 0)) != 0 ){
+		fprintf(stderr, "%s: failed to open input `%s': %s\n", program_name, src_filename, caputils_error_string(ret));
+		return 1;
+	}
 
-  /* open destination */
-  stream_addr_str(&addr, dst_filename, 0);
-  if ( (ret=stream_create(&dst, &addr, NULL, "CONV", "capfilter" VERSION " filtered stream")) != 0 ){
-	  fprintf(stderr, "%s: failed to open output `%s': %s\n", program_name, dst_filename, caputils_error_string(ret));
-	  return 1;
-  }
+	/* open destination */
+	stream_addr_str(&addr, dst_filename, 0);
+	if ( (ret=stream_create(&dst, &addr, NULL, "CONV", "capfilter" VERSION " filtered stream")) != 0 ){
+		fprintf(stderr, "%s: failed to open output `%s': %s\n", program_name, dst_filename, caputils_error_string(ret));
+		return 1;
+	}
 
-  /* open rejects */
-  if ( rej_filename ){
-	  stream_addr_str(&addr, rej_filename, 0);
-	  if ( (ret=stream_create(&rej, &addr, NULL, "CONV", "capfilter" VERSION " filtered stream")) != 0 ){
-		  fprintf(stderr, "%s: failed to open rejects `%s': %s\n", program_name, rej_filename, caputils_error_string(ret));
-		  return 1;
-	  }
-  }
+	/* open rejects */
+	if ( rej_filename ){
+		stream_addr_str(&addr, rej_filename, 0);
+		if ( (ret=stream_create(&rej, &addr, NULL, "CONV", "capfilter" VERSION " filtered stream")) != 0 ){
+			fprintf(stderr, "%s: failed to open rejects `%s': %s\n", program_name, rej_filename, caputils_error_string(ret));
+			return 1;
+		}
+	}
 
-  /* handle signals */
-  signal(SIGINT, handle_sigint);
+	/* handle signals */
+	signal(SIGINT, handle_sigint);
 
-  /* show filter */
-  filter_print(&filter, stderr, 0);
+	/* show filter */
+	filter_print(&filter, stderr, 0);
 
-  while ( keep_running ){
-	  caphead_t cp;
-	  struct timeval tv = {1,0};
-	  switch ( (ret=stream_read(src, &cp, NULL, &tv)) ){
-	  case EAGAIN: /* timeout */
-		  continue;
+	while ( keep_running ){
+		caphead_t cp;
+		struct timeval tv = {1,0};
+		switch ( (ret=stream_read(src, &cp, NULL, &tv)) ){
+		case EAGAIN: /* timeout */
+			continue;
 
-	  case 0: /* success */
-		  break;
+		case 0: /* success */
+			break;
 
-	  default: /* error */
-		  keep_running = 0;
-		  continue;
-	  }
+		default: /* error */
+			keep_running = 0;
+			continue;
+		}
 
-	  /* decide what to do with the packet */
-	  stream_t target = 0;
-	  const int match = filter_match(&filter, cp->payload, cp);
-	  const int post_match = invert ? (1-match) : match;
-	  if ( post_match ){
-		  target = dst;
-	  } else if ( rej ){
-		  target = rej;
-	  }
+		/* decide what to do with the packet */
+		stream_t target = 0;
+		const int match = filter_match(&filter, cp->payload, cp);
+		const int post_match = invert ? (1-match) : match;
+		if ( post_match ){
+			target = dst;
+		} else if ( rej ){
+			target = rej;
+		}
 
-	  /* copy packet */
-	  if ( target && (ret=stream_copy(target, cp)) != 0 ){
-		  fprintf(stderr, "%s: stream_copy() returned %d: %s\n", program_name, ret, caputils_error_string(ret));
-		  keep_running = 0;
-	  }
-  }
+		/* copy packet */
+		if ( target && (ret=stream_copy(target, cp)) != 0 ){
+			fprintf(stderr, "%s: stream_copy() returned %d: %s\n", program_name, ret, caputils_error_string(ret));
+			keep_running = 0;
+		}
+	}
 
-  filter_close(&filter);
+	filter_close(&filter);
 
-  if ( ret != 0 && ret != -1 ){
-	  fprintf(stderr, "%s: stream_read() returned %d: %s\n", program_name, ret, caputils_error_string(ret));
-	  return 1;
-  }
+	if ( ret != 0 && ret != -1 ){
+		fprintf(stderr, "%s: stream_read() returned %d: %s\n", program_name, ret, caputils_error_string(ret));
+		return 1;
+	}
 
-  return 0;
+	return 0;
 }
