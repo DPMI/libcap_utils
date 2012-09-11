@@ -119,7 +119,7 @@ int main(int argc, char* argv[]){
   signal(SIGINT, handle_sigint);
 
   /* show filter */
-  filter_print(&filter, stdout, 0);
+  filter_print(&filter, stderr, 0);
 
   while ( keep_running ){
 	  caphead_t cp;

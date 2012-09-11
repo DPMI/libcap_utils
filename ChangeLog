@@ -1,6 +1,7 @@
 caputils-0.7.11
 ---------------
 
+	* fix: [capfilter] print filter on stderr so it is possible to pipe.
 	* fix: [capfilter] fix crash when not using `--rejects`.
 	* fix: [capmerge] fix bug where it only sorted the first 10k packets.
 	* fix: [capfilter] make capfilter actually work.
