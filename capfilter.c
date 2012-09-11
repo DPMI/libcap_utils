@@ -12,9 +12,11 @@
 #include <getopt.h>
 #include <signal.h>
 #include <errno.h>
+#include <unistd.h>
+
 static const char* program_name = NULL;
-static const char* dst_filename = "/dev/stdout";
-static const char* src_filename = "/dev/stdin";
+static const char* dst_filename = NULL;
+static const char* src_filename = NULL;
 static const char* rej_filename = NULL;
 static int keep_running = 1;
 static int invert = 0;
@@ -98,6 +100,22 @@ int main(int argc, char* argv[]){
   stream_t src = NULL;
   stream_t dst = NULL;
   stream_t rej = NULL;
+
+  /* ensure not reading/writing capfiles from terminal */
+  if ( src_filename == NULL && isatty(STDIN_FILENO) ){
+	  fprintf(stderr, "Cannot read input from stdin when it is connected to a terminal.\n");
+	  fprintf(stderr, "Either specify another destination with --input, use redirection or pipe from another process.\n");
+	  exit(1);
+  }
+  if ( dst_filename == NULL && isatty(STDOUT_FILENO) ){
+	  fprintf(stderr, "Cannot output to stdout when it is connected to a terminal.\n");
+	  fprintf(stderr, "Either specify another destination with --output, use redirection or pipe to another process.\n");
+	  exit(1);
+  }
+
+  /* defaults */
+  src_filename = src_filename ? src_filename : "/dev/stdin";
+  dst_filename = dst_filename ? dst_filename : "/dev/stdout";
 
   /* open source */
   stream_addr_str(&addr, src_filename, 0);
