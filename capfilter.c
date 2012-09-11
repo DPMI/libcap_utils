@@ -88,9 +88,9 @@ int main(int argc, char* argv[]){
 
   int ret;
   stream_addr_t addr;
-  stream_t src;
-  stream_t dst;
-  stream_t rej;
+  stream_t src = NULL;
+  stream_t dst = NULL;
+  stream_t rej = NULL;
 
   /* open source */
   stream_addr_str(&addr, src_filename, 0);
@@ -145,7 +145,7 @@ int main(int argc, char* argv[]){
 	  }
 
 	  /* copy packet */
-	  if ( (ret=stream_copy(target, cp)) != 0 ){
+	  if ( target && (ret=stream_copy(target, cp)) != 0 ){
 		  fprintf(stderr, "%s: stream_copy() returned %d: %s\n", program_name, ret, caputils_error_string(ret));
 		  keep_running = 0;
 	  }
