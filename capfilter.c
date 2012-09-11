@@ -68,22 +68,21 @@ int main(int argc, char* argv[]){
   int op = 0;
   while ( (op=getopt_long(argc, argv, shortopts, longopts, &index)) != -1 ){
     switch (op){
-    case 'o':
+    case 'o': /* --output */
       dst_filename = optarg;
       break;
 
-    case 'i':
+    case 'i': /* --input */
       src_filename = optarg;
       break;
 
-    case 'r':
+    case 'r': /* --rejects */
 	    rej_filename = optarg;
 	    break;
 
-    case 'h':
+    case 'h': /* --herp */
 	    show_usage();
       exit(0);
-      break;
     }
   }
 
