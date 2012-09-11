@@ -211,7 +211,6 @@ int main(int argc, char* argv[]){
 			}
 
 			if ( !pkt ) break;
-			if ( written == 10000) break;
 
 			written++;
 			stream_copy(dst, pkt);
