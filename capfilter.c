@@ -17,12 +17,14 @@ static const char* dst_filename = "/dev/stdout";
 static const char* src_filename = "/dev/stdin";
 static const char* rej_filename = NULL;
 static int keep_running = 1;
+static int invert = 0;
 
-static const char* shortopts = "i:o:r:h";
+static const char* shortopts = "i:o:r:vh";
 static struct option longopts[] = {
 	{"input",   required_argument, 0, 'i'},
 	{"output",  required_argument, 0, 'o'},
 	{"rejects", required_argument, 0, 'r'},
+	{"invert",  no_argument,       0, 'v'},
 	{"help",    no_argument,       0, 'h'},
 	{0, 0, 0, 0} /* sentinel */
 };
@@ -34,6 +36,7 @@ static void show_usage(){
 	       "  -i, --input=FILE            read from FILE [default stdin].\n"
 	       "  -o, --output=FILE           write to FILE [default stdout].\n"
 	       "  -r, --rejects=FILE          write packets not matching to FILE.\n"
+	       "  -v, --invert                invert filter.\n"
 	       "  -h, --help                  help (this text).\n"
 	       "\n", program_name);
 	filter_from_argv_usage();
@@ -78,6 +81,10 @@ int main(int argc, char* argv[]){
 
     case 'r': /* --rejects */
 	    rej_filename = optarg;
+	    break;
+
+    case 'v': /* --invert */
+	    invert = 1;
 	    break;
 
     case 'h': /* --herp */
@@ -138,7 +145,9 @@ int main(int argc, char* argv[]){
 
 	  /* decide what to do with the packet */
 	  stream_t target = 0;
-	  if ( filter_match(&filter, cp->payload, cp) ){
+	  const int match = filter_match(&filter, cp->payload, cp);
+	  const int post_match = invert ? (1-match) : match;
+	  if ( post_match ){
 		  target = dst;
 	  } else if ( rej ){
 		  target = rej;
