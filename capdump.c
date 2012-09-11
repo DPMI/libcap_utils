@@ -340,7 +340,7 @@ int main(int argc, char **argv){
 	if ( stream_addr_type(&output) == STREAM_ADDR_CAPFILE &&
 	     strcmp("/dev/stdout", output.local_filename) == 0 &&
 	     isatty(STDOUT_FILENO) ){
-		fprintf(stderr, "Cannot output to stdout when is is connected to a terminal.\n");
+		fprintf(stderr, "Cannot output to stdout when it is connected to a terminal.\n");
 		fprintf(stderr, "Either specify another destination with --output, use redirection or pipe to another process.\n");
 		return 1;
 	}

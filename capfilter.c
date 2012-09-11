@@ -89,7 +89,7 @@ int main(int argc, char* argv[]){
 	    invert = 1;
 	    break;
 
-    case 'h': /* --herp */
+    case 'h': /* --help */
 	    show_usage();
       exit(0);
     }

@@ -87,7 +87,7 @@ int main(int argc, char* argv[]){
 	if ( stream_addr_type(&output) == STREAM_ADDR_CAPFILE &&
 	     strcmp("/dev/stdout", output.local_filename) == 0 &&
 	     isatty(STDOUT_FILENO) ){
-		fprintf(stderr, "%s: Cannot output to stdout when is is connected to a terminal.\n", program_name);
+		fprintf(stderr, "%s: Cannot output to stdout when it is connected to a terminal.\n", program_name);
 		fprintf(stderr, "%s: Either specify another destination with --output, use redirection or pipe to another process.\n", program_name);
 		return 1;
 	}
