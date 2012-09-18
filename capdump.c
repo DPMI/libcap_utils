@@ -37,7 +37,6 @@ static struct option long_options[]= {
 	{"packets", required_argument, 0, 'p'},
 	{"iface",   required_argument, 0, 'i'},
 	{"comment", required_argument, 0, 'c'},
-	{"timeout", required_argument, 0, 't'},
 	{"bufsize", required_argument, 0, 'b'},
 	{"marker",  required_argument, 0, 'm'},
 	{"marker-format", required_argument, 0, 'f'},
@@ -238,14 +237,13 @@ int main(int argc, char **argv){
 	const char* marker_format = "%f-%x-%03s.%e";
 	const char* comment = "capdump-" VERSION " stream";
 	char* iface = NULL;
-	struct timeval timeout = {1, 0};
 	size_t buffer_size = 0;
 	stream_addr_t output;
 	stream_addr_aton(&output, "/dev/stdout", STREAM_ADDR_CAPFILE, STREAM_ADDR_LOCAL);
 
 	long max_packets = -1;
 
-	while ( (op = getopt_long(argc, argv, "ho:p:c:i:t:b:", long_options, &option_index)) != -1 ){
+	while ( (op = getopt_long(argc, argv, "ho:p:c:i:b:", long_options, &option_index)) != -1 ){
 		switch (op){
 		case 0:   /* long opt */
 		case '?': /* unknown opt */
@@ -271,14 +269,6 @@ int main(int argc, char **argv){
 		case 'c':
 			comment = optarg;
 			break;
-
-		case 't':
-		{
-			int tmp = atoi(optarg);
-			timeout.tv_sec  = tmp / 1000;
-			timeout.tv_usec = tmp % 1000 * 1000;
-		}
-		break;
 
 		case 'b': /* --bufsize */
 			buffer_size = atoi(optarg);
@@ -374,10 +364,6 @@ int main(int argc, char **argv){
 	}
 
 	while( keep_running ){
-		/* A short timeout is used to allow the application to "breathe", i.e
-		 * terminate if SIGINT was received. */
-		struct timeval tv = timeout;
-
 		/* Read the next packet */
 		cap_head* cp;
 		ret = stream_read(src, &cp, NULL, NULL);
