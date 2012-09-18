@@ -32,7 +32,8 @@ static char* fmt_extension = NULL; /* used by generate_filename */
 static const char* program_name = NULL;
 static const struct stream_stat* stream_stat = NULL;
 static int progress = -1;          /* if >0 progress reports is written to this file descriptor */
-static struct option long_options[]= {
+static const char* shortopts = "o:p:i:c:b:m:f:s::g";
+static struct option longopts[]= {
 	{"output",  required_argument, 0, 'o'},
 	{"packets", required_argument, 0, 'p'},
 	{"iface",   required_argument, 0, 'i'},
@@ -243,7 +244,7 @@ int main(int argc, char **argv){
 
 	long max_packets = -1;
 
-	while ( (op = getopt_long(argc, argv, "ho:p:c:i:b:", long_options, &option_index)) != -1 ){
+	while ( (op = getopt_long(argc, argv, shortopts, longopts, &option_index)) != -1 ){
 		switch (op){
 		case 0:   /* long opt */
 		case '?': /* unknown opt */
@@ -308,7 +309,7 @@ int main(int argc, char **argv){
 
 		default:
 			if ( option_index >= 0 ){
-				fprintf(stderr, "flag --%s declared but not handled\n", long_options[option_index].name);
+				fprintf(stderr, "flag --%s declared but not handled\n", longopts[option_index].name);
 			} else {
 				fprintf(stderr, "flag -%c declared but not handled\n", op);
 			}
