@@ -55,7 +55,9 @@ extern "C" {
       /* these cannot be sent across network */
       const char* local_filename;
 
-	    /* Using existing FILE pointer */
+	    /* Using existing FILE pointer. By default the user has to close this
+	     * stream after stream_close. To automatically close it use
+	     * STREAM_ADDR_FCLOSE flag. */
 	    FILE* fp;
 
       /* for TCP/UDP streams */
@@ -108,6 +110,11 @@ extern "C" {
      * most useful for FIFO which is created dynamically and should not really
      * be used by end-users. */
     STREAM_ADDR_UNLINK = (1<<2),
+
+    /* Normally the file is closed automatically but when using STREAM_ADDR_FP
+     * that is not the case. Using this flag the FILE pointer will be closed
+     * automatically. */
+    STREAM_ADDR_FCLOSE = (1<<3),
   };
 
   /**

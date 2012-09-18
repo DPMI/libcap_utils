@@ -101,12 +101,19 @@ static int load_legacy_06(struct file_header_06* fh, FILE* src){
   return fh->version.major == 0 && fh->version.minor == 6;
 }
 
+static int need_fclose(const struct stream_file* st){
+	return stream_addr_type(&st->base.addr) == STREAM_ADDR_CAPFILE || stream_addr_have_flag(&st->base.addr, STREAM_ADDR_FCLOSE);
+}
+
 static long stream_file_destroy(struct stream_file* st){
 	if ( stream_addr_have_flag(&st->base.addr, STREAM_ADDR_UNLINK) ){
 		unlink(st->base.addr.local_filename);
 	}
 
-	fclose(st->file);
+	if ( need_fclose(st) ){
+		fclose(st->file);
+	}
+
 	free(st->base.comment);
 	free(st);
 	return 0;
