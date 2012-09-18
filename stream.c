@@ -183,7 +183,7 @@ int stream_create(stream_t* stptr, const stream_addr_t* dest, const char* nic, c
 	/* struct ether_addr ethernet_address; */
 	const char* filename;
 	int flags = stream_addr_flags(dest);
-	int ret;
+	int ret = ERROR_NOT_IMPLEMENTED; /* initialized to silence certain versions of gcc */
 
 	switch ( stream_addr_type(dest) ){
 	case STREAM_ADDR_ETHERNET:
