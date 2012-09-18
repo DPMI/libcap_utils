@@ -1,6 +1,7 @@
 caputils-0.7.13
 ---------------
 
+	* add: [capfilter] support for BPF filters.
 	* add: [capinfo] packet size min/avg/max.
 	* add: [capinfo] show present capture interfaces.
 

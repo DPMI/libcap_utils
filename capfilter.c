@@ -15,6 +15,10 @@
 #include <unistd.h>
 #include <inttypes.h>
 
+#ifdef HAVE_PCAP
+#include <pcap/pcap.h>
+#endif
+
 static const char* program_name = NULL;
 static const char* dst_filename = NULL;
 static const char* src_filename = NULL;
@@ -22,12 +26,14 @@ static const char* rej_filename = NULL;
 static int keep_running = 1;
 static int invert = 0;
 static int quiet = 0;
+static struct bpf_insn* bpf_ins = NULL;
 
-static const char* shortopts = "i:o:r:vqh";
+static const char* shortopts = "i:o:r:b:vqh";
 static struct option longopts[] = {
 	{"input",   required_argument, 0, 'i'},
 	{"output",  required_argument, 0, 'o'},
 	{"rejects", required_argument, 0, 'r'},
+	{"bpf",     required_argument, 0, 'b'},
 	{"invert",  no_argument,       0, 'v'},
 	{"quiet",   no_argument,       0, 'q'},
 	{"help",    no_argument,       0, 'h'},
@@ -43,12 +49,15 @@ static void show_usage(){
 	       "  -r, --rejects=FILE          write packets not matching to FILE.\n"
 	       "  -v, --invert                invert filter.\n"
 	       "  -q, --quiet                 suppress output.\n"
+#ifdef HAVE_PCAP
+	       "  -b, --bpf=STRING            use BPF filter (in addition to regular filter).\n"
+#endif
 	       "  -h, --help                  help (this text).\n"
 	       "\n", program_name);
 	filter_from_argv_usage();
 }
 
-void handle_sigint(int signum){
+static void handle_sigint(int signum){
 	if ( keep_running ){
 		fprintf(stderr, "\r%s: got SIGINT, terminating.\n", program_name);
 		keep_running = 0;
@@ -56,6 +65,36 @@ void handle_sigint(int signum){
 		fprintf(stderr, "\r%s: got SIGINT again, aborting.\n", program_name);
 		abort();
 	}
+}
+
+static void set_bpf_filter(const char* expr){
+#ifdef HAVE_PCAP
+	char errbuf[PCAP_ERRBUF_SIZE];
+	pcap_t* handle = pcap_open_dead(DLT_EN10MB, 2040); /* 2040 because it is default DAG snapshot according to souces, e.g. see dagconvert */
+	if ( !handle ){
+		fprintf(stderr, "%s: BPF error: cannot open pcap device: %s\n", program_name, errbuf);
+		exit(1);
+	}
+
+	struct bpf_program fcode;
+	if ( pcap_compile(handle, &fcode, expr, 0, PCAP_NETMASK_UNKNOWN) != 0 ){
+		fprintf(stderr, "%s: BPF error: %s\n", program_name, pcap_geterr(handle));
+		exit(1);
+	}
+	bpf_ins = fcode.bf_insns;
+
+	pcap_close(handle);
+#else
+	fprintf(stderr, "%s: warning: pcap support has been disabled, bpf filters cannot be used.\n", program_name);
+#endif
+}
+
+static int bpf_match(const struct bpf_insn* insns, caphead_t cp){
+#ifdef HAVE_PCAP
+	return bpf_filter(insns, (const u_char*)cp->payload, cp->len, cp->caplen);
+#else
+	return 1;
+#endif
 }
 
 int main(int argc, char* argv[]){
@@ -72,6 +111,10 @@ int main(int argc, char* argv[]){
 		fprintf(stderr, "Failed to create filter, aborting.\n");
 		exit(1); /* errors already displayed (on stderr) */
 	}
+
+#ifdef HAVE_PCAP
+	set_bpf_filter("");
+#endif
 
 	int index = 0;
 	int op = 0;
@@ -95,6 +138,10 @@ int main(int argc, char* argv[]){
 
 		case 'q': /* --quiet */
 			quiet = 1;
+			break;
+
+		case 'b': /* --bpf */
+			set_bpf_filter(optarg);
 			break;
 
 		case 'h': /* --help */
@@ -175,7 +222,7 @@ int main(int argc, char* argv[]){
 
 		/* decide what to do with the packet */
 		stream_t target = 0;
-		const int match = filter_match(&filter, cp->payload, cp);
+		const int match = filter_match(&filter, cp->payload, cp) && bpf_match(bpf_ins, cp);
 		const int post_match = invert ? (1-match) : match;
 		if ( post_match ){
 			target = dst;
