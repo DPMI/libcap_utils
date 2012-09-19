@@ -44,6 +44,8 @@ static void show_usage(void){
 	printf("Open a capstream and show information about it.\n");
 	printf("Usage: capinfo [OPTIONS] FILENAME..\n\n");
 	printf("  -h, --help                 Show this help.\n");
+	printf("\n");
+	printf("Hint: use `capfilter | capinfo` need to run capinfo on a filtered trace.\n");
 }
 
 static void reset(){
