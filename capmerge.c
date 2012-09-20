@@ -12,7 +12,7 @@
 static const char* program_name;
 static FILE* sort = NULL;
 
-static const char* shortopts = "o:c:sVh";
+static const char* shortopts = "o:c:sh";
 static struct option longopts[] = {
 	{"output",     required_argument, 0, 'o'},
 	{"comment",    required_argument, 0, 'c'},
