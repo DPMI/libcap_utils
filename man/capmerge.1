@@ -20,6 +20,12 @@ Short help.
 .TP
 \fB\-s\fR, \fB\-\-sort
 Sort all packets based on timestamp but at expense of high memory consumption.
+Only needed if the packets from the input streams arrives out-of-order, e.g. if
+it is known that all input files is sorted individually the resulting trace will be
+sorted even without this flag.
+.TP
+\fB\-q\fR, \fB\-\-quiet
+Suppress output from capmerge.
 .SH COPYRIGHT
 Copyright (C) 2011-2012 David Sveningsson <dsv@bth.se>.
 .SH "SEE ALSO"
