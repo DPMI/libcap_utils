@@ -11,22 +11,26 @@
 
 static const char* program_name;
 static FILE* sort = NULL;
+static int quiet = 0;
 
-static const char* shortopts = "o:c:sh";
+static const char* shortopts = "o:c:sqh";
 static struct option longopts[] = {
 	{"output",     required_argument, 0, 'o'},
 	{"comment",    required_argument, 0, 'c'},
 	{"sort",       no_argument,       0, 's'},
+	{"quiet",      no_argument,       0, 'q'},
 	{"help",       no_argument,       0, 'h'},
 	{0,0,0,0},
 };
 
 static void show_usage(){
+	printf("capmerge-" VERSION_FULL "\n");
 	printf("usage: %s [OPTIONS..] -o OUTPUT FILES..\n"
 	       "\n"
 	       "  -o, --output=FILE    Write merged file to FILE.\n"
 	       "  -c, --comment=STRING Set stream comment.\n"
-	       "  -s, --sort           Sort packets based on timestamp.\n"
+	       "  -s, --sort           Sort out-of-order packets based on timestamp.\n"
+	       "  -q, --quiet          Quiet output (no progressbar)\n"
 	       "  -h, --help           This text.\n",
 	       program_name);
 }
@@ -36,8 +40,6 @@ static size_t min(size_t a, size_t b){
 }
 
 int main(int argc, char* argv[]){
-	fprintf(stderr, "capmerge-" VERSION_FULL "\n");
-
 	const char* comment = "capmerge-" VERSION " stream";
 	char* sort_buffer = NULL;
 	size_t sort_size = 0;
@@ -69,6 +71,10 @@ int main(int argc, char* argv[]){
 
 		case 's': /* --sort */
 			sort = open_memstream(&sort_buffer, &sort_size);
+			break;
+
+		case 'q': /* --quiet */
+			quiet = 1;
 			break;
 
 		case 'h': /* --help */
@@ -176,7 +182,9 @@ int main(int argc, char* argv[]){
 	stream_close(dst);
 
 	if ( sort ){
-		fprintf(stderr, "%s starting sort of %zd bytes\n", program_name, sort_size);
+		if ( !quiet ){
+			fprintf(stderr, "%s starting sort of %zd bytes\n", program_name, sort_size);
+		}
 
 		if ( (ret=stream_create(&dst, &output, NULL, "CONV", comment)) != 0 ){
 			fprintf(stderr, "stream_create() failed with code 0x%08X: %s\n", ret, caputils_error_string(ret));
@@ -216,14 +224,16 @@ int main(int argc, char* argv[]){
 			stream_copy(dst, pkt);
 			pkt->len = 0;
 
-			if ( written % 250 == 0 ){
+			if ( !quiet && (written % 250 == 0) ){
 				fprintf(stderr, "\r%lu / %lu (%p - %p)", written, packets, begin, end);
 				fflush(stderr);
 			}
 		} while ( 1 );
 
-		fprintf(stderr, "\r%lu / %lu (%p - %p)\n", written, packets, begin, end);
-		fflush(stderr);
+		if ( !quiet ){
+			fprintf(stderr, "\r%lu / %lu (%p - %p)\n", written, packets, begin, end);
+			fflush(stderr);
+		}
 		stream_close(dst);
 		free(sort_buffer);
 	}
