@@ -1,3 +1,9 @@
+caputils-0.7.12
+---------------
+
+  * capfilter silent output.
+  * capmerge regression fixes.
+
 caputils-0.7.11
 ---------------
 

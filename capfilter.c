@@ -13,6 +13,7 @@
 #include <signal.h>
 #include <errno.h>
 #include <unistd.h>
+#include <inttypes.h>
 
 static const char* program_name = NULL;
 static const char* dst_filename = NULL;
@@ -20,25 +21,28 @@ static const char* src_filename = NULL;
 static const char* rej_filename = NULL;
 static int keep_running = 1;
 static int invert = 0;
+static int quiet = 0;
 
-static const char* shortopts = "i:o:r:vh";
+static const char* shortopts = "i:o:r:vqh";
 static struct option longopts[] = {
 	{"input",   required_argument, 0, 'i'},
 	{"output",  required_argument, 0, 'o'},
 	{"rejects", required_argument, 0, 'r'},
 	{"invert",  no_argument,       0, 'v'},
+	{"quiet",   no_argument,       0, 'q'},
 	{"help",    no_argument,       0, 'h'},
 	{0, 0, 0, 0} /* sentinel */
 };
 
 static void show_usage(){
-	printf("%s-"VERSION"\n", program_name);
+	printf("%s-"VERSION_FULL"\n", program_name);
 	printf("(C) 2011 david.sveningsson@bth.se\n"
 	       "Usage: %s [-i FILE] [-o FILE] [OPTIONS...]\n"
 	       "  -i, --input=FILE            read from FILE [default stdin].\n"
 	       "  -o, --output=FILE           write to FILE [default stdout].\n"
 	       "  -r, --rejects=FILE          write packets not matching to FILE.\n"
 	       "  -v, --invert                invert filter.\n"
+	       "  -q, --quiet                 suppress output.\n"
 	       "  -h, --help                  help (this text).\n"
 	       "\n", program_name);
 	filter_from_argv_usage();
@@ -87,6 +91,10 @@ int main(int argc, char* argv[]){
 
 		case 'v': /* --invert */
 			invert = 1;
+			break;
+
+		case 'q': /* --quiet */
+			quiet = 1;
 			break;
 
 		case 'h': /* --help */
@@ -144,8 +152,12 @@ int main(int argc, char* argv[]){
 	signal(SIGINT, handle_sigint);
 
 	/* show filter */
-	filter_print(&filter, stderr, 0);
+	if ( !quiet ){
+		filter_print(&filter, stderr, 0);
+	}
 
+	uint64_t matched = 0;
+	const struct stream_stat* stats = stream_get_stat(src);
 	while ( keep_running ){
 		caphead_t cp;
 		struct timeval tv = {1,0};
@@ -167,6 +179,7 @@ int main(int argc, char* argv[]){
 		const int post_match = invert ? (1-match) : match;
 		if ( post_match ){
 			target = dst;
+			matched++;
 		} else if ( rej ){
 			target = rej;
 		}
@@ -176,6 +189,11 @@ int main(int argc, char* argv[]){
 			fprintf(stderr, "%s: stream_copy() returned %d: %s\n", program_name, ret, caputils_error_string(ret));
 			keep_running = 0;
 		}
+	}
+
+	if ( !quiet ){
+		fprintf(stderr, "%s: There was a total of %'"PRIu64" packets read.\n", program_name, stats->read);
+		fprintf(stderr, "%s: There was a total of %'"PRIu64" packets matched.\n", program_name, matched);
 	}
 
 	filter_close(&filter);
