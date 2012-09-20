@@ -95,7 +95,7 @@ int main(int argc, char* argv[]){
 	/* open output stream */
 	stream_t dst;
 	stream_addr_t real_addr = output;
-	if ( sort ) stream_addr_fp(&real_addr, sort, 0);
+	if ( sort ) stream_addr_fp(&real_addr, sort, STREAM_ADDR_FCLOSE);
 	if ( (ret=stream_create(&dst, &real_addr, NULL, "CONV", comment)) != 0 ){
 		fprintf(stderr, "stream_create() failed with code 0x%08X: %s\n", ret, caputils_error_string(ret));
 		return 1;

@@ -1,3 +1,8 @@
+caputils-0.7.12
+---------------
+
+	* fix: [capmerge] fixing sorting regression from previous release.
+
 caputils-0.7.11
 ---------------
 
