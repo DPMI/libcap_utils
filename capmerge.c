@@ -225,6 +225,7 @@ int main(int argc, char* argv[]){
 		fprintf(stderr, "\r%lu / %lu (%p - %p)", written, packets, begin, end);
 		fflush(stderr);
 		stream_close(dst);
+		free(sort_buffer);
 	}
 
 	return 0;
