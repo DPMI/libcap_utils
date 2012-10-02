@@ -18,6 +18,30 @@
 #define STPBRIDGES 0x0026
 #define CDPVTP 0x016E
 
+struct simple_list {
+	char** value;
+	size_t size;        /* slots in use */
+	size_t capacity;    /* slots available */
+};
+
+static void slist_clear(struct simple_list* slist){
+	for ( int i = 0; i < slist->size; i++ ){
+		free(slist->value[i]);
+	}
+	slist->size = 0;
+}
+
+static void slist_alloc(struct simple_list* slist, size_t growth){
+	slist->capacity += growth;
+	slist->value = realloc(slist->value, sizeof(char*) * slist->capacity);
+}
+
+static void slist_free(struct simple_list* slist){
+	slist_clear(slist);
+	free(slist->value);
+	slist->capacity = 0;
+}
+
 static stream_t st = NULL;
 static long int packets = 0;
 static uint64_t bytes = 0;
@@ -31,8 +55,8 @@ static long other = 0;
 static long ieee8023 = 0;
 static long ipproto[UINT8_MAX] = {0,}; /* protocol is defined as 1 octet */
 static timepico first, last;
-static char** mpid;
-static size_t mpid_num = 0;
+static struct simple_list mpid = {NULL, 0, 0};
+static struct simple_list CI = {NULL, 0, 0};
 
 static struct option long_options[] = {
 	{"help",    no_argument, 0, 'h'},
@@ -110,21 +134,29 @@ static void format_seconds(char* dst, size_t size, timepico first, timepico last
 	snprintf(dst, size, "%02d:%02d:%04.1f", h, m, s > 0 ? (float)s/10 : 0);
 }
 
-static void print_overview(){
-	const char* comment = stream_get_comment(st);
-
-	printf("Overview\n"
-	       "--------\n");
-
-	/* show mampids */
-	printf("     mpid: ");
-	for ( int i = 0; i < mpid_num && mpid[i]; i++ ){
-		printf("%s%s", (i>0?", ":""), mpid[i]);
+static const char* array_join(char* const src[], size_t n, const char* delimiter){
+	static char buffer[2048];
+	char* cur = buffer;
+	for ( int i = 0; i < n; i++ ){
+		cur += sprintf(cur, "%s%s", (i>0?delimiter:""), src[i]);
 	}
-	printf("\n");
+	return buffer;
+}
 
-	printf("  comment: %s\n", comment ? comment : "(unset)");
+static const char* get_mampid_list(const char* delimiter){
+	return array_join(mpid.value, mpid.size, delimiter);
+}
 
+static const char* get_CI_list(const char* delimiter){
+	return array_join(CI.value, CI.size, delimiter);
+}
+
+static const char* get_comment(stream_t st){
+	const char* comment = stream_get_comment(st);
+	return comment ? comment : "(unset)";
+}
+
+static void print_overview(){
 	char byte_str[128];
 	char rate_str[128];
 	char first_str[128];
@@ -141,6 +173,12 @@ static void print_overview(){
 	format_bytes(byte_str, 128, bytes);
 	format_rate(rate_str, 128, bytes, hseconds/10);
 	format_seconds(sec_str, 128, first, last);
+
+	printf("Overview\n"
+	       "--------\n");
+	printf("       CI: %s\n", get_CI_list(", "));
+	printf("     mpid: %s\n", get_mampid_list(", "));
+	printf("  comment: %s\n", get_comment(st));
 	printf(" captured: %s to %s\n", first_str, last_str);
 	printf("  markers: %s\n", marker_str);
 	printf(" duration: %s (%.1f seconds)\n", sec_str, (float)hseconds/10);
@@ -196,24 +234,28 @@ static void print_distribution(){
 	}
 }
 
-static void store_mampid(struct cap_header* cp){
-	static char mampid[9] = {0,};
-	memcpy(mampid, cp->mampid, 8); /* last by is left as null-terminator */
-
-	int i;
-	for ( i = 0; i < mpid_num && mpid[i]; i++ ){
-		if ( strcmp(mpid[i], mampid) == 0 ){
-			return;
-		}
+static void store_unique(struct simple_list* slist, const char* value, size_t maxlen){
+	/* try to locate an existing string */
+	for ( int i = 0; i < slist->size; i++ ){
+		if ( strncmp(slist->value[i], value, maxlen) == 0 ) return;
 	}
 
 	/* allocate more memory if needed */
-	if ( i == mpid_num ){
-		mpid_num *= 2;
-		mpid = realloc(mpid, sizeof(char*) * mpid_num);
+	if ( slist->size == slist->capacity ){
+		slist_alloc(slist, /* growth = */ slist->capacity);
 	}
 
-	mpid[i] = strdup(mampid);
+	/* store value */
+	slist->value[slist->size] = strndup(value, maxlen);
+	slist->size++;
+}
+
+static void store_mampid(struct cap_header* cp){
+	store_unique(&mpid, cp->mampid, 8);
+}
+
+static void store_CI(struct cap_header* cp){
+	store_unique(&CI, cp->nic, 8);
 }
 
 static int show_info(const char* filename){
@@ -240,6 +282,7 @@ static int show_info(const char* filename){
 		}
 
 		store_mampid(cp);
+		store_CI(cp);
 
 		const struct ethhdr* eth = cp->ethhdr;
 		const uint16_t h_proto = ntohs(eth->h_proto);
@@ -327,10 +370,9 @@ int main(int argc, char* argv[]){
 		return 0;
 	}
 
-	/* initial mampid storage */
-	mpid_num = 8;
-	mpid = malloc(sizeof(char*) * mpid_num);
-	memset(mpid, 0, sizeof(char*) * mpid_num);
+	/* initial storage */
+	slist_alloc(&mpid, 8);
+	slist_alloc(&CI, 8);
 
 	/* visit all targets */
 	int status = 0;
@@ -342,13 +384,15 @@ int main(int argc, char* argv[]){
 			putchar('\n');
 		}
 
-		/* reset mampid storage (must be done for each iteration so the results is
+		/* reset storage (must be done for each iteration so the results is
 		 * only for the current file.) */
-		for ( int i = 0; i < mpid_num; i++ ){
-			free(mpid[i]);
-			mpid[i] = NULL;
-		}
+		slist_clear(&mpid);
+		slist_clear(&CI);
 	}
+
+	/* release resources */
+	slist_free(&mpid);
+	slist_free(&CI);
 
 	return status == 0 ? 0 : 1;
 }
