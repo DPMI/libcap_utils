@@ -1,6 +1,7 @@
 caputils-0.7.13
 ---------------
 
+	* fix: [pcap2cap] rewritten logic.
 	* add: Support for BPF filters (when using local tools)
 	* add: [capinfo] packet size min/avg/max.
 	* add: [capinfo] show present capture interfaces.

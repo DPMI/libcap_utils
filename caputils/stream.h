@@ -113,8 +113,16 @@ void stream_print_info(const stream_t st, FILE* dst);
 
 /**
  * Write a captured frame to a stream.
+ * @param size size of data (including caphead)
  */
 int stream_write(stream_t st, const void* data, size_t size);
+
+/**
+ * Similar to stream_write but with caphead and payload from separate buffers.
+ * Should only be used with capfiles.
+ * @param size size of payload in bytes
+ */
+int stream_write_separate(stream_t st, const caphead_t head, const void* data, size_t size);
 
 /**
  * Copy a capture packet into stream.

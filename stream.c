@@ -3,6 +3,7 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <caputils/caputils.h>
+#include <caputils/capture.h>
 #include <caputils/log.h>
 #include "caputils_int.h"
 #include "stream.h"
@@ -325,6 +326,21 @@ int stream_write(struct stream *outStream, const void* data, size_t size){
 	}
 
 	return outStream->write(outStream, data, size);
+}
+
+int stream_write_separate(stream_t st, const caphead_t head, const void* data, size_t size){
+	assert(outStream);
+	assert(outStream->write);
+
+	if ( size == 0 ){
+		logmsg(stderr, "stream", "stream_write called with invalid size 0\n");
+		return EINVAL;
+	}
+
+	int ret;
+	if ( (ret=st->write(st, head, sizeof(struct cap_header))) != 0 ) return ret;
+	if ( (ret=st->write(st, data, size)) != 0 ) return ret;
+	return 0;
 }
 
 int stream_copy(stream_t st, const caphead_t head){
