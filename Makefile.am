@@ -90,7 +90,7 @@ nobase_include_HEADERS =    \
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = libcap_stream-0.7.pc libcap_filter-0.7.pc libcap_utils-0.7.pc libcap_marc-0.7.pc
 
-libcap_stream_07_la_LDFLAGS = -version-info 1:0:1 ${PFRING_LIBS}
+libcap_stream_07_la_LDFLAGS = -version-info 2:0:2 ${PFRING_LIBS}
 libcap_stream_07_la_LIBADD = libcap_filter-07.la
 libcap_stream_07_la_SOURCES = stream.c stream.h stream_file.c
 
