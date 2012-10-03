@@ -57,6 +57,7 @@ static char errorBuffer[PCAP_ERRBUF_SIZE];
 static const char* program_name = NULL;
 
 static int run = 1;
+static int quiet = 0;
 
 void sighandler(int signum){
   fprintf(stderr, "Caught SIGINT, aborting...\n");
@@ -83,6 +84,7 @@ int main (int argc, char **argv){
     {"interface",1,0, 'i'},
     {"help", 0, 0, 'h'},
     {"caplen", 1, 0, 'l'},
+    {"quiet", no_argument, 0, 'q'},
     {0, 0, 0, 0}
   };
 
@@ -111,7 +113,7 @@ int main (int argc, char **argv){
   while (1) {
     option_index = 0;
 
-    op = getopt_long  (argc, argv, "m:c:o:i:h",
+    op = getopt_long  (argc, argv, "m:c:o:i:qh",
 		       long_options, &option_index);
     if (op == -1)
       break;
@@ -137,6 +139,10 @@ int main (int argc, char **argv){
       stream_addr_aton(&dst, optarg, STREAM_ADDR_GUESS, 0);
       break;
 
+    case 'q': /* --quiet */
+	    quiet = 1;
+	    break;
+
     case 'h':
 	    printf("%s (caputils-" CAPUTILS_VERSION ")\n", program_name);
       printf("(c) 2004-2011 Patrik Arlos, David Sveningsson\n\n");
@@ -152,6 +158,7 @@ int main (int argc, char **argv){
       printf("  -i, --interface=INTERFACE  Capture on live interface. (use \"any\" to capture\n"
              "                             on all interfaces) Default CONV.\n");
       printf("      --caplen=INT           Set caplen. Default %zd.\n", caplen);
+      printf("  -q, --quiet                Silent output, only errors is printed.\n");
       printf("  -h, --help                 Show this help.\n");
       return 0;
       break;
@@ -205,8 +212,10 @@ int main (int argc, char **argv){
     fprintf(stderr, "%s: %s\n", argv[0], errorBuffer);
   }
 
-	static const char* type[4] = {"file", "ethernet", "udp", "tcp"};
-	fprintf(stderr, "Opening %s stream: %s\n", type[stream_addr_type(&dst)], stream_addr_ntoa(&dst));
+  if ( !quiet ){
+	  static const char* type[4] = {"file", "ethernet", "udp", "tcp"};
+	  fprintf(stderr, "Opening %s stream: %s\n", type[stream_addr_type(&dst)], stream_addr_ntoa(&dst));
+  }
 
   long ret;
   if ( (ret=stream_create(&dst_stream, &dst, caphead->nic, caphead->mampid, comments)) != 0 ){
@@ -258,7 +267,9 @@ int main (int argc, char **argv){
   /* close caputils stream */
   stream_close(dst_stream);
 
-  fprintf(stderr, "\n%s: There was a total of %lld pkts that matched the filter.\n", program_name, pktCount);
+  if ( !quiet ){
+	  fprintf(stderr, "\n%s: There was a total of %lld pkts that matched the filter.\n", program_name, pktCount);
+  }
 
   return 0;
 }
