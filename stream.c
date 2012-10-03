@@ -39,6 +39,7 @@ int stream_alloc(struct stream** stptr, enum protocol_t protocol, size_t size, s
 	st->readPos=0;
 	st->flushed = 0;
 	st->num_addresses = 1;
+	st->stat.read = 0;
 	st->stat.recv = 0;
 	st->stat.matched = 0;
 	st->stat.buffer_size = buffer_size;
