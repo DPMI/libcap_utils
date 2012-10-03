@@ -46,7 +46,7 @@
 #include <sys/ioctl.h>
 
 /* pcap stores error descriptions in this buffer */
-static char errorBuffer[PCAP_ERRBUF_SIZE];
+static char errorBuffer[PCAP_ERRBUF_SIZE] = {0,};
 static const char* program_name = NULL;
 
 static int run = 1;
@@ -101,30 +101,18 @@ int main (int argc, char **argv){
 		program_name = argv[0];
 	}
 
-  extern int optind, opterr, optopt;
-  int op;
-
-  int option_index;
-
-  const u_char *packet; /* Packet read from PCAP */
-  struct pcap_pkthdr pcapHeader; /* PCAPS packet header */
-
-  stream_addr_t dst;
-  stream_t dst_stream = NULL;
-  stream_addr_reset(&dst);
-
-  char* comments = strdup("converted from pcap with pcap2cap-" CAPUTILS_VERSION);
-  unsigned long long pktCount = 0;
-
-  memset(errorBuffer, 0, PCAP_ERRBUF_SIZE);
-
-  /* setup pointers */
+  /* setup capture header */
   struct cap_header cp;
-
-  /* default interface */
   strncpy(cp.nic, "CONV", 8);
   gethostname(cp.mampid, 8);
 
+  /* defaults */
+  char* comments = strdup("converted from pcap with pcap2cap-" CAPUTILS_VERSION);
+  stream_addr_t dst;
+  stream_addr_reset(&dst);
+
+  int op;
+  int option_index;
   while ( (op = getopt_long  (argc, argv, shortopts, longopts, &option_index)) != -1 ){
     switch (op){
     case 'c':
@@ -172,22 +160,21 @@ int main (int argc, char **argv){
     stream_addr_str(&dst, "/dev/stdout", 0);
   }
 
-  pcap_t *pcapHandle;
-
   /* open input */
+  pcap_t* pcap;
   switch ( argc - optind ){ /* number of targets */
   case 0:
     if ( !isatty(STDIN_FILENO) ){ /* tcpdump piped */
-      pcapHandle = pcap_open_offline("/dev/stdin", errorBuffer);
+      pcap = pcap_open_offline("/dev/stdin", errorBuffer);
     } else if ( strcmp(cp.nic, "CONV") != 0 ){ /* live capture */
-      pcapHandle = pcap_open_live(cp.nic, BUFSIZ, 1, 1000, errorBuffer);
+      pcap = pcap_open_live(cp.nic, BUFSIZ, 1, 1000, errorBuffer);
     } else {
       fprintf(stderr, "Must specify either an interface (-i, --interface) for live capture or a pcap-file.\n");
       return 1;
     }
     break;
   case 1:
-    pcapHandle = pcap_open_offline(argv[optind], errorBuffer);
+    pcap = pcap_open_offline(argv[optind], errorBuffer);
     break;
   default:
     fprintf(stderr, "Must specify at most one pcap-file.\n");
@@ -195,7 +182,7 @@ int main (int argc, char **argv){
   }
 
   /* Ensure handle is valid */
-  if ( pcapHandle==NULL ){
+  if ( pcap == NULL ){
     fprintf(stderr, "%s: %s\n", argv[0], errorBuffer);
     return 1;
   }
@@ -206,13 +193,13 @@ int main (int argc, char **argv){
   }
 
   if ( !quiet ){
-	  static const char* type[4] = {"file", "ethernet", "udp", "tcp"};
-	  fprintf(stderr, "Opening %s stream: %s\n", type[stream_addr_type(&dst)], stream_addr_ntoa(&dst));
+	  fprintf(stderr, "Opening file stream: %s\n", stream_addr_ntoa(&dst));
   }
 
-  long ret;
-  if ( (ret=stream_create(&dst_stream, &dst, cp.nic, cp.mampid, comments)) != 0 ){
-    fprintf(stderr, "%s: stream_create failed with code %ld: %s.\n", argv[0], ret, caputils_error_string(ret));
+  int ret;
+  stream_t st = NULL;
+  if ( (ret=stream_create(&st, &dst, cp.nic, cp.mampid, comments)) != 0 ){
+    fprintf(stderr, "%s: stream_create failed with code %d: %s.\n", argv[0], ret, caputils_error_string(ret));
     return 1;
   }
 
@@ -223,35 +210,35 @@ int main (int argc, char **argv){
   /* setup signal handler so it can handle ctrl-c etc with proper closing of streams */
   signal(SIGINT, sighandler);
 
-  while ( (packet=pcap_next(pcapHandle, &pcapHeader)) && run ){
-    pktCount++;
-
+  const u_char* packet;
+  struct pcap_pkthdr pcapHeader;
+  unsigned long long pktCount = 0;
+  while ( (packet=pcap_next(pcap, &pcapHeader)) && run ){
     cp.ts.tv_sec  = pcapHeader.ts.tv_sec;  /* Copy and convert the timestamp provided by PCAP, assumes _usec. If nsec will be present adjust! */
     cp.ts.tv_psec = pcapHeader.ts.tv_usec * PICODIVIDER;
     cp.len = pcapHeader.len; /* The Wire-lenght of the frame */
     cp.caplen = min(pcapHeader.caplen, caplen);
 
     // Let the user know that we are alive, good when processing large files.
-    if( pktCount % 1000 == 0 ) {
+    if( pktCount++ % 1000 == 0 ) {
       fprintf(stderr, ".");
       fflush(stderr);
     }
 
     // Save a copy of the frame to the new file.
-    if ( (ret=stream_write_separate(dst_stream, &cp, packet, cp.caplen)) != 0 ) {
-	    fprintf(stderr, "stream_write(..) returned %ld: %s\n", ret, caputils_error_string(ret));
+    if ( (ret=stream_write_separate(st, &cp, packet, cp.caplen)) != 0 ) {
+	    fprintf(stderr, "stream_write(..) returned %d: %s\n", ret, caputils_error_string(ret));
     }
   }
-  //End Packet processing
 
-  /* Close pcap file */
-  pcap_close(pcapHandle);
-
-  /* close caputils stream */
-  stream_close(dst_stream);
+  /* Release resources */
+  stream_close(st);
+  pcap_close(pcap);
 
   if ( !quiet ){
 	  fprintf(stderr, "\n%s: There was a total of %lld pkts that matched the filter.\n", program_name, pktCount);
+  } else {
+	  fprintf(stderr, "\n");
   }
 
   return 0;
