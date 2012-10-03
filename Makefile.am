@@ -121,6 +121,7 @@ endif
 #
 
 libcap_filter_07_la_LDFLAGS = -version-info 0:1:0
+libcap_filter_07_la_LIBADD = ${PCAP_LIBS}
 libcap_filter_07_la_SOURCES = createfilter.c filter.c
 
 libcap_marc_07_la_LDFLAGS = -shared -version-info 0:1:0
@@ -131,7 +132,7 @@ pcap2cap_LDADD = libcap_utils-07.la libcap_filter-07.la libcap_stream-07.la ${PC
 cap2pcap_LDADD = libcap_utils-07.la libcap_filter-07.la libcap_stream-07.la ${PCAP_LIBS}
 capinfo_LDADD = libcap_utils-07.la libcap_filter-07.la libcap_stream-07.la
 capdump_LDADD = libcap_utils-07.la libcap_filter-07.la libcap_stream-07.la
-capfilter_LDADD = libcap_filter-07.la libcap_utils-07.la libcap_stream-07.la ${PCAP_LIBS}
+capfilter_LDADD = libcap_filter-07.la libcap_utils-07.la libcap_stream-07.la
 capmarker_LDADD = libcap_utils-07.la
 capmerge_LDADD = libcap_filter-07.la libcap_utils-07.la libcap_stream-07.la
 capshow_LDADD = libcap_filter-07.la libcap_utils-07.la libcap_stream-07.la

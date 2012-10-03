@@ -112,6 +112,10 @@ struct filter {
 	uint32_t caplen;                   /* Amount of data to capture. */
 
 	stream_addr_t dest;                /* Destination. */
+
+	/* BFP filter (if supported) */
+	struct bpf_insn* bpf_insn;
+	char* bpf_expr;
 };
 
 /**

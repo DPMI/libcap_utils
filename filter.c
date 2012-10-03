@@ -34,6 +34,10 @@
 #include <netinet/tcp.h>
 #include <netinet/ether.h>
 
+#ifdef HAVE_PCAP
+#include <pcap/pcap.h>
+#endif
+
 #define FILTER __attribute__ ((pure))
 
 /**
@@ -201,13 +205,18 @@ int filter_match(const struct filter* filter, const void* pkt, struct cap_header
   match |= filter_start_time(filter, &head->ts)    << OFFSET_START_TIME;  /* Start time vs packet timestamp */
   match |= filter_port(filter, src_port, dst_port) << OFFSET_PORT;        /* Transport source or dest port */
 
-  //printf("match=%d index=%d and=%d or=%d\n", match, filter->index, match == filter->index, match > 0);
 
   switch ( filter->mode ){
-  case FILTER_AND: return match == filter->index;
-  case FILTER_OR:  return match > 0;
+  case FILTER_AND: match = (match == filter->index); break;
+  case FILTER_OR:  match = (match > 0); break;
   default: fprintf(stderr, "invalid filter mode\n"); abort();
   }
+
+  if ( filter->bpf_insn ){
+	  match = match && bpf_filter(filter->bpf_insn, pkt, head->len, head->caplen);
+  }
+
+  return match;
 }
 
 static const char* inet_ntoa_r(const struct in_addr in, char* buf){
@@ -295,6 +304,12 @@ void filter_print(const struct filter* filter, FILE* fp, int verbose){
     fprintf(fp, "\tPORT_DST      : %d (MASK: 0x%04X)\n", filter->dst_port, filter->dst_port_mask);
   } else if ( verbose ) {
     fprintf(fp, "\tPORT_DST      : NULL\n");
+  }
+
+  if ( filter->bpf_expr ){
+	  fprintf(fp, "\tBPF           : \"%s\"\n", filter->bpf_expr);
+  } else if ( verbose ){
+	  fprintf(fp, "\tBPF           :\n");
   }
 }
 
