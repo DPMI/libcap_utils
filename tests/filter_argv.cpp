@@ -43,6 +43,13 @@ void check_eth_addr(const struct ether_addr& a, const struct ether_addr& b, CppU
   }
 }
 
+/**
+ * Succeeds if ret=0 and argc == expected.
+ *
+ * @param ret return code from filter_from_argv.
+ * @param expected arguments left after parsing.
+ * @param actual arguments left after parsing.
+ */
 void check_success(int ret, int expected, int actual, CppUnit::SourceLine sourceLine){
   if ( ret != 0 ){
     CppUnit::Asserter::failNotEqual("(no error)", strerror(ret), sourceLine, "function did not return successfully");
@@ -51,6 +58,9 @@ void check_success(int ret, int expected, int actual, CppUnit::SourceLine source
   CppUnit::assertEquals(expected, actual, sourceLine, "did not consume enough arguments");
 }
 
+/**
+ * Same as check_success but ret!=0
+ */
 void check_failure(int ret, int expected, int actual, CppUnit::SourceLine sourceLine){
   if ( ret == 0 ){
     CppUnit::Asserter::failNotEqual("(no error)", strerror(ret), sourceLine, "function unexpectedly returned successfully");
