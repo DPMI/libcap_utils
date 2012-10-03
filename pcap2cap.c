@@ -134,6 +134,33 @@ static struct pcap* open_src(int argc, char* argv[], struct cap_header* cp){
   return pcap;
 }
 
+static stream_t open_dst(stream_addr_t* addr, const caphead_t cp, const char* comment){
+	/* default to stdout */
+	if( !stream_addr_is_set(addr) ){
+		if ( isatty(STDOUT_FILENO) ){
+			fprintf(stderr, "%s: Cannot output to a terminal, either specify a file using `-o FILENAME' or\n"
+			        "redirect output.\n", program_name);
+			return NULL;
+		}
+
+		/* stdout is not a terminal so user probably want to use redirection */
+		stream_addr_str(addr, "/dev/stdout", 0);
+	}
+
+	if ( !quiet ){
+		fprintf(stderr, "%s: Opening file stream: %s\n", program_name, stream_addr_ntoa(addr));
+	}
+
+	int ret;
+	stream_t st = NULL;
+	if ( (ret=stream_create(&st, addr, cp->nic, cp->mampid, comment)) != 0 ){
+		fprintf(stderr, "%s: stream_create failed with code %d: %s.\n", program_name, ret, caputils_error_string(ret));
+		return NULL;
+	}
+
+	return st;
+}
+
 int main (int argc, char **argv){
 	/* extract program name from path. e.g. /path/to/MArCd -> MArCd */
 	const char* separator = strrchr(argv[0], '/');
@@ -190,33 +217,11 @@ int main (int argc, char **argv){
     }
   }
 
-  /* default to stdout */
-  if( !stream_addr_is_set(&dst) ){
-    if ( isatty(STDOUT_FILENO) ){
-      fprintf(stderr, "Cannot output to a terminal, either specify a file using `-o FILENAME' or\n"
-	              "redirect output.\n");
-      return 1;
-    }
-
-    /* stdout is not a terminal so user probably want to use redirection */
-    stream_addr_str(&dst, "/dev/stdout", 0);
-  }
-
-  /* open input */
+  /* open input/output */
   pcap_t* pcap = open_src(argc, argv, &cp);
-  if ( !pcap ){
+  stream_t st = open_dst(&dst, &cp, comments);
+  if ( !(pcap && st) ){
 	  return 1; /* error already shown */
-  }
-
-  if ( !quiet ){
-	  fprintf(stderr, "Opening file stream: %s\n", stream_addr_ntoa(&dst));
-  }
-
-  int ret;
-  stream_t st = NULL;
-  if ( (ret=stream_create(&st, &dst, cp.nic, cp.mampid, comments)) != 0 ){
-    fprintf(stderr, "%s: stream_create failed with code %d: %s.\n", argv[0], ret, caputils_error_string(ret));
-    return 1;
   }
 
   /* comment is no longer needed */
@@ -242,6 +247,7 @@ int main (int argc, char **argv){
     }
 
     // Save a copy of the frame to the new file.
+    int ret;
     if ( (ret=stream_write_separate(st, &cp, packet, cp.caplen)) != 0 ) {
 	    fprintf(stderr, "stream_write(..) returned %d: %s\n", ret, caputils_error_string(ret));
     }
