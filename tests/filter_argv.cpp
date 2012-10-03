@@ -370,11 +370,11 @@ CPPUNIT_TEST_SUITE_REGISTRATION(FilterCreate);
 
 int main(int argc, const char* argv[]){
   CppUnit::Test *suite = CppUnit::TestFactoryRegistry::getRegistry().makeTest();
-
   CppUnit::TextUi::TestRunner runner;
 
+  freopen("/dev/null", "w", stderr);
   runner.addTest( suite );
-  runner.setOutputter(new CppUnit::CompilerOutputter(&runner.result(), std::cerr ));
+  runner.setOutputter(new CppUnit::CompilerOutputter(&runner.result(), std::cerr));
 
   return runner.run() ? 0 : 1;
 }
