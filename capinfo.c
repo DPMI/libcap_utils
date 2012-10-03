@@ -86,6 +86,7 @@ static void reset(){
 	arp = 0;
 	stp = 0;
 	cdpvtp = 0;
+	ieee8023 = 0;
 	other = 0;
 	for ( int i = 0; i < UINT8_MAX; i++ ){
 		ipproto[i] = 0;
