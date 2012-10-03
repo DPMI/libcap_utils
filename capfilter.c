@@ -197,6 +197,9 @@ int main(int argc, char* argv[]){
 	}
 
 	filter_close(&filter);
+	stream_close(src);
+	stream_close(dst);
+	stream_close(rej);
 
 	if ( ret != 0 && ret != -1 ){
 		fprintf(stderr, "%s: stream_read() returned %d: %s\n", program_name, ret, caputils_error_string(ret));

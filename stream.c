@@ -285,6 +285,7 @@ int stream_create(stream_t* stptr, const stream_addr_t* dest, const char* nic, c
 }
 
 int stream_close(stream_t st){
+	if ( st == NULL ) return 0;
 	return st->destroy ? st->destroy(st) : 0;
 
 	/* ret */

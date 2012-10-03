@@ -74,6 +74,7 @@ int stream_from_getopt(stream_t* st,
 
 /**
  * Close stream.
+ * It is safe to call on a stream which hasn't been opened. You should set st to NULL after calling.
  */
 int stream_close(stream_t st);
 
