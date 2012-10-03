@@ -28,22 +28,18 @@
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
+
+#include <caputils/caputils.h>
+#include <caputils/capture.h>
 #include "caputils_int.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <signal.h>
-#include <time.h>
-#include <errno.h>
-#include <net/if_arp.h>
-#include <caputils/caputils.h>
-#include <caputils/capture.h>
 #include <unistd.h>
 #include <getopt.h>
 #include <pcap.h>
-#include <assert.h>
-#include <sys/ioctl.h>
 
 /* pcap stores error descriptions in this buffer */
 static char errorBuffer[PCAP_ERRBUF_SIZE] = {0,};
