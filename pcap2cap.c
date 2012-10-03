@@ -150,7 +150,7 @@ int main (int argc, char **argv){
       break;
 
     case 'o':
-      stream_addr_aton(&dst, optarg, STREAM_ADDR_GUESS, 0);
+      stream_addr_str(&dst, optarg, 0);
       break;
 
     case 'q': /* --quiet */
@@ -220,11 +220,6 @@ int main (int argc, char **argv){
   if ( (ret=stream_create(&dst_stream, &dst, cp.nic, cp.mampid, comments)) != 0 ){
     fprintf(stderr, "%s: stream_create failed with code %ld: %s.\n", argv[0], ret, caputils_error_string(ret));
     return 1;
-  }
-
-  if ( stream_addr_type(&dst) != STREAM_ADDR_CAPFILE ){
-	  fprintf(stderr, "%s: only capfiles are supported, you can use \"mp --local -i pcapIFACE\" if you want to stream over ethernet.\n", program_name);
-	  return 1;
   }
 
   /* comment is no longer needed */
