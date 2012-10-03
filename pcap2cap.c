@@ -60,16 +60,16 @@ static int run = 1;
 static int quiet = 0;
 static size_t caplen = dataLEN - sizeof(cap_head);
 
-static const char* shortopts = "m:c:o:i:qh";
+static const char* shortopts = "c:o:m:i:l:qh";
 static struct option longopts[] = {
-	{"comments",1, 0,'c'},
-	{"output",1,0, 'o'},
-	{"mpid", 1, 0, 'm'},
-	{"interface",1,0, 'i'},
-	{"help", 0, 0, 'h'},
-	{"caplen", 1, 0, 'l'},
-	{"quiet", no_argument, 0, 'q'},
-	{0, 0, 0, 0}
+	{"comments",  required_argument, 0, 'c'},
+	{"output",    required_argument, 0, 'o'},
+	{"mpid",      required_argument, 0, 'm'},
+	{"interface", required_argument, 0, 'i'},
+	{"caplen",    required_argument, 0, 'l'},
+	{"quiet",     no_argument,       0, 'q'},
+	{"help",      no_argument,       0, 'h'},
+	{0, 0, 0, 0} /* sentinel */
 };
 
 static void show_usage(){
@@ -80,12 +80,11 @@ static void show_usage(){
 	printf("Usage: pcap2cap [OPTION] -i INTERFACE [-o FILENAME]\n");
 	printf("  or   pcap2cap [OPTION] [-o FILENAME] FILENAME\n");
 	printf("\n");
-	printf("  -m, --mpid=STRING          Set MP id, max 199 char. Default hostname.\n");
-	printf("  -c, --comment=STRING       Add comment to header, dont forget \" \" around the\n"
-	       "                             text. Not set by default.\n");
+	printf("  -m, --mpid=STRING          Set MP id, max 199 char. [default: hostname]\n");
+	printf("  -c, --comment=STRING       Add comment to header [default: none]\n");
 	printf("  -o, --output=FILENAME      Destination filename.\n");
 	printf("  -i, --interface=INTERFACE  Capture on live interface. (use \"any\" to capture\n"
-	       "                             on all interfaces) Default CONV.\n");
+	       "                             on all interfaces)\n");
 	printf("      --caplen=INT           Set caplen. Default %zd.\n", caplen);
 	printf("  -q, --quiet                Silent output, only errors is printed.\n");
 	printf("  -h, --help                 Show this help.\n");
