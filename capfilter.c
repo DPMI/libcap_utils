@@ -23,7 +23,7 @@ static int keep_running = 1;
 static int invert = 0;
 static int quiet = 0;
 
-static const char* shortopts = "i:o:r:vqh";
+static const char* shortopts = "i:o:r:b:vqh";
 static struct option longopts[] = {
 	{"input",   required_argument, 0, 'i'},
 	{"output",  required_argument, 0, 'o'},
@@ -48,7 +48,7 @@ static void show_usage(){
 	filter_from_argv_usage();
 }
 
-void handle_sigint(int signum){
+static void handle_sigint(int signum){
 	if ( keep_running ){
 		fprintf(stderr, "\r%s: got SIGINT, terminating.\n", program_name);
 		keep_running = 0;

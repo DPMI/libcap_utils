@@ -121,6 +121,7 @@ endif
 #
 
 libcap_filter_07_la_LDFLAGS = -version-info 0:1:0
+libcap_filter_07_la_LIBADD = ${PCAP_LIBS}
 libcap_filter_07_la_SOURCES = createfilter.c filter.c
 
 libcap_marc_07_la_LDFLAGS = -shared -version-info 0:1:0

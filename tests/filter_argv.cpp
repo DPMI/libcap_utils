@@ -1,3 +1,7 @@
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <caputils/filter.h>
 #include <stdlib.h>
 #include <string.h>
@@ -108,6 +112,8 @@ class FilterCreate : public CppUnit::TestFixture {
 	CPPUNIT_TEST( test_mode_and      );
 	CPPUNIT_TEST( test_mode_or       );
 	CPPUNIT_TEST( test_mode_invalid  );
+	CPPUNIT_TEST( test_bpf_valid     );
+	CPPUNIT_TEST( test_bpf_invalid   );
   CPPUNIT_TEST_SUITE_END();
 
   struct filter filter;
@@ -364,6 +370,22 @@ public:
     CPPUNIT_ASSERT_SUCCESS(filter_from_argv(&argc, argv, &filter), 1);
 	}
 
+	void test_bpf_valid(){
+		const std::string expr = "icmp or net 1.2.3.0/24";
+		argc = generate_argv(argv, "test_bpf_valid", "--bpf", expr.c_str(), NULL);
+    CPPUNIT_ASSERT_SUCCESS(filter_from_argv(&argc, argv, &filter), 1);
+    CPPUNIT_ASSERT_EQUAL(std::string(filter.bpf_expr), expr);
+	}
+
+	void test_bpf_invalid(){
+		argc = generate_argv(argv, "test_bpf_invalid", "--bpf", "some invalid string", NULL);
+#ifdef HAVE_PCAP
+    CPPUNIT_ASSERT_FAILURE(filter_from_argv(&argc, argv, &filter), 1);
+#else
+    /* cannot test for validity unless pcap is enabled, this test reverts to the same as `test_bpf_valid`. */
+    CPPUNIT_ASSERT_SUCCESS(filter_from_argv(&argc, argv, &filter), 1);
+#endif
+	}
 };
 
 CPPUNIT_TEST_SUITE_REGISTRATION(FilterCreate);

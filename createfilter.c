@@ -38,6 +38,10 @@
 #include <netdb.h>
 #include <getopt.h>
 
+#ifdef HAVE_PCAP
+#include <pcap/pcap.h>
+#endif
+
 /* uint32_t MSB */
 #define PARAM_BIT (~((uint32_t)-1 >> 1))
 
@@ -47,6 +51,7 @@
 enum Parameters {
 	PARAM_CAPLEN = 1,
 	PARAM_MODE,
+	PARAM_BPF,
 };
 
 static struct option options[]= {
@@ -70,6 +75,7 @@ static struct option options[]= {
 	{"tp.dport",  1, 0,    1},
 	{"caplen",    1, 0,    PARAM_CAPLEN | PARAM_BIT},
 	{"filter-mode", required_argument, 0, PARAM_MODE | PARAM_BIT},
+	{"bpf",       required_argument, 0, PARAM_BPF | PARAM_BIT},
 	{0, 0, 0, 0}
 };
 
@@ -328,6 +334,36 @@ static int parse_eth_addr(const char* src, struct ether_addr* addr, struct ether
 	return 1;
 }
 
+static int bpf_set(struct filter* filter, const char* expr, const char* program_name){
+#ifdef HAVE_PCAP
+	char errbuf[PCAP_ERRBUF_SIZE];
+	pcap_t* handle = pcap_open_dead(DLT_EN10MB, 2040); /* 2040 because it is default DAG snapshot according to souces, e.g. see dagconvert */
+	if ( !handle ){
+		fprintf(stderr, "%s: BPF error: cannot open pcap device: %s\n", program_name, errbuf);
+		return EINVAL;
+	}
+
+	/* release previous filter */
+	struct bpf_program prg = {0, filter->bpf_insn};
+	pcap_freecode(&prg);
+	free(filter->bpf_expr);
+
+	/* compile new filter */
+	if ( pcap_compile(handle, &prg, expr, 1, PCAP_NETMASK_UNKNOWN) != 0 ){
+		fprintf(stderr, "%s: BPF error: %s\n", program_name, pcap_geterr(handle));
+		return EINVAL;
+	}
+	filter->bpf_insn = prg.bf_insns;
+
+	pcap_close(handle);
+#else
+	fprintf(stderr, "%s: warning: pcap support has been disabled, bpf filters cannot be used.\n", program_name);
+#endif
+
+	filter->bpf_expr = strdup(expr);
+	return 0;
+}
+
 void filter_from_argv_usage(){
 	printf("libcap_filter-" VERSION " options\n");
 	printf("      --starttime=DATETIME    Discard all packages before starttime described by\n");
@@ -353,6 +389,11 @@ void filter_from_argv_usage(){
 	       "                              either is a match the packet matches\n");
 	printf("      --caplen=BYTES          Store BYTES of the captured packet. [default=ALL]\n");
 	printf("      --filter-mode=MODE      Set filter mode to AND or OR [default=AND]\n");
+#ifdef HAVE_PCAP
+	printf("      --bpf=FILTER            In addition to regular DPMI filter also use the\n"
+	       "                              supplied BPF. Matching takes place after DPMI\n"
+	       "                              filter.\n");
+#endif
 }
 
 int filter_from_argv(int* argcptr, char** argv, struct filter* filter){
@@ -390,7 +431,7 @@ int filter_from_argv(int* argcptr, char** argv, struct filter* filter){
 	int ret = 0;
 	int index;
 	int op;
-	while ( (op=getopt_long(filter_argc, filter_argv, "", options, &index)) != -1 ){
+	while ( (op=getopt_long(filter_argc, filter_argv, "", options, &index)) != -1 && ret == 0 ){
 		if ( op == '?' ){ /* error occured, e.g. missing argument */
 			ret = 1;
 			break;
@@ -408,6 +449,10 @@ int filter_from_argv(int* argcptr, char** argv, struct filter* filter){
 				else {
 					fprintf(stderr, "%s: Invalid filter mode `%s'. Ignored.\n", argv[0], optarg);
 				}
+				break;
+
+			case PARAM_BPF:
+				ret = bpf_set(filter, optarg, argv[0]);
 				break;
 
 			}
@@ -527,6 +572,11 @@ int filter_from_argv(int* argcptr, char** argv, struct filter* filter){
 }
 
 int filter_close(struct filter* filter){
+#ifdef HAVE_PCAP
+	struct bpf_program prg = {0, filter->bpf_insn};
+	pcap_freecode(&prg);
+	free(filter->bpf_expr);
+#endif
 	return 0;
 }
 

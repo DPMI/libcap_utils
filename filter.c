@@ -34,6 +34,10 @@
 #include <netinet/tcp.h>
 #include <netinet/ether.h>
 
+#ifdef HAVE_PCAP
+#include <pcap/pcap.h>
+#endif
+
 #define FILTER __attribute__ ((pure))
 
 /**
@@ -161,53 +165,53 @@ static int FILTER filter_end_time(const struct filter* filter, const timepico* t
 	return (filter->index & FILTER_END_TIME) && (timecmp(&filter->endtime, time) >= 0);
 }
 
+static int filter_core(const struct filter* filter, const void* pkt, struct cap_header* head){
+	const struct ethhdr* ether = (const struct ethhdr*)pkt;
+	uint16_t h_proto = ntohs(ether->h_proto); /* may be overwritten by find_ether_vlan_header */
+	uint16_t src_port = 0; /* set by find_{tcp,udp}_header */
+	uint16_t dst_port = 0; /* set by find_{tcp,udp}_header */
+
+	const struct ether_vlan_header* vlan = find_ether_vlan_header(ether, &h_proto);
+	const struct ip* ip = find_ip_header(ether);
+	find_tcp_header(pkt, ether, ip, &src_port, &dst_port);
+	find_udp_header(pkt, ether, ip, &src_port, &dst_port);
+
+	int match = 0;
+
+	/* base tests */
+	match |= filter_dst_port(filter, dst_port)       << OFFSET_DST_PORT;    /* Transport dest port */
+	match |= filter_src_port(filter, src_port)       << OFFSET_SRC_PORT;    /* Transport source port */
+	match |= filter_ip_dst(filter, ip)               << OFFSET_IP_DST;      /* IP destination address */
+	match |= filter_ip_src(filter, ip)               << OFFSET_IP_SRC;      /* IP source address */
+	match |= filter_ip_proto(filter, ip)             << OFFSET_IP_PROTO;    /* IP protocol */
+	match |= filter_eth_dst(filter, ether)           << OFFSET_ETH_DST;     /* Ethernet destination */
+	match |= filter_eth_src(filter, ether)           << OFFSET_ETH_SRC;     /* Ethernet source */
+	match |= filter_h_proto(filter, h_proto)         << OFFSET_ETH_TYPE;    /* Ethernet type */
+	match |= filter_vlan_tci(filter, vlan)           << OFFSET_VLAN;        /* VLAN TCI (Tag Control Information) */
+	match |= filter_iface(filter, head->nic)         << OFFSET_IFACE;       /* Capture Interface (iface) */
+
+	/* 0.7 extensions */
+	match |= filter_mampid(filter, head->mampid)     << OFFSET_MAMPID;      /* MAMPid */
+	match |= filter_end_time(filter, &head->ts)      << OFFSET_END_TIME;    /* End time vs packet timestamp */
+	match |= filter_start_time(filter, &head->ts)    << OFFSET_START_TIME;  /* Start time vs packet timestamp */
+	match |= filter_port(filter, src_port, dst_port) << OFFSET_PORT;        /* Transport source or dest port */
+
+	switch ( filter->mode ){
+	case FILTER_AND: return match == filter->index;
+	case FILTER_OR:  return match > 0;
+	default: fprintf(stderr, "invalid filter mode\n"); abort();
+	}
+}
+
 int filter_match(const struct filter* filter, const void* pkt, struct cap_header* head){
   assert(filter);
   assert(pkt);
   assert(head);
 
-  /* fast path */
-  if ( filter->index == 0 ){
-    return 1;
-  }
+  const int core_match = filter->index == 0 || filter_core(filter, pkt, head);
+  const int bpf_match = filter->bpf_insn == NULL || bpf_filter(filter->bpf_insn, pkt, head->len, head->caplen);
 
-  const struct ethhdr* ether = (const struct ethhdr*)pkt;
-  uint16_t h_proto = ntohs(ether->h_proto); /* may be overwritten by find_ether_vlan_header */
-  uint16_t src_port = 0; /* set by find_{tcp,udp}_header */
-  uint16_t dst_port = 0; /* set by find_{tcp,udp}_header */
-
-  const struct ether_vlan_header* vlan = find_ether_vlan_header(ether, &h_proto);
-  const struct ip* ip = find_ip_header(ether);
-  find_tcp_header(pkt, ether, ip, &src_port, &dst_port);
-  find_udp_header(pkt, ether, ip, &src_port, &dst_port);
-
-  int match = 0;
-
-  /* base tests */
-  match |= filter_dst_port(filter, dst_port)       << OFFSET_DST_PORT;    /* Transport dest port */
-  match |= filter_src_port(filter, src_port)       << OFFSET_SRC_PORT;    /* Transport source port */
-  match |= filter_ip_dst(filter, ip)               << OFFSET_IP_DST;      /* IP destination address */
-  match |= filter_ip_src(filter, ip)               << OFFSET_IP_SRC;      /* IP source address */
-  match |= filter_ip_proto(filter, ip)             << OFFSET_IP_PROTO;    /* IP protocol */
-  match |= filter_eth_dst(filter, ether)           << OFFSET_ETH_DST;     /* Ethernet destination */
-  match |= filter_eth_src(filter, ether)           << OFFSET_ETH_SRC;     /* Ethernet source */
-  match |= filter_h_proto(filter, h_proto)         << OFFSET_ETH_TYPE;    /* Ethernet type */
-  match |= filter_vlan_tci(filter, vlan)           << OFFSET_VLAN;        /* VLAN TCI (Tag Control Information) */
-  match |= filter_iface(filter, head->nic)         << OFFSET_IFACE;       /* Capture Interface (iface) */
-
-  /* 0.7 extensions */
-  match |= filter_mampid(filter, head->mampid)     << OFFSET_MAMPID;      /* MAMPid */
-  match |= filter_end_time(filter, &head->ts)      << OFFSET_END_TIME;    /* End time vs packet timestamp */
-  match |= filter_start_time(filter, &head->ts)    << OFFSET_START_TIME;  /* Start time vs packet timestamp */
-  match |= filter_port(filter, src_port, dst_port) << OFFSET_PORT;        /* Transport source or dest port */
-
-  //printf("match=%d index=%d and=%d or=%d\n", match, filter->index, match == filter->index, match > 0);
-
-  switch ( filter->mode ){
-  case FILTER_AND: return match == filter->index;
-  case FILTER_OR:  return match > 0;
-  default: fprintf(stderr, "invalid filter mode\n"); abort();
-  }
+  return core_match && bpf_match;
 }
 
 static const char* inet_ntoa_r(const struct in_addr in, char* buf){
@@ -295,6 +299,12 @@ void filter_print(const struct filter* filter, FILE* fp, int verbose){
     fprintf(fp, "\tPORT_DST      : %d (MASK: 0x%04X)\n", filter->dst_port, filter->dst_port_mask);
   } else if ( verbose ) {
     fprintf(fp, "\tPORT_DST      : NULL\n");
+  }
+
+  if ( filter->bpf_expr ){
+	  fprintf(fp, "\tBPF           : \"%s\"\n", filter->bpf_expr);
+  } else if ( verbose ){
+	  fprintf(fp, "\tBPF           :\n");
   }
 }
 
