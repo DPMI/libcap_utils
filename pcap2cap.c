@@ -45,8 +45,6 @@
 #include <assert.h>
 #include <sys/ioctl.h>
 
-#define MIN(A,B) ((A) < (B) ? (A):(B))
-
 /* pcap stores error descriptions in this buffer */
 static char errorBuffer[PCAP_ERRBUF_SIZE];
 static const char* program_name = NULL;
@@ -83,6 +81,10 @@ static void show_usage(){
 	printf("      --caplen=INT           Set caplen. Default %zd bytes.\n", caplen);
 	printf("  -q, --quiet                Silent output, only errors is printed.\n");
 	printf("  -h, --help                 Show this help.\n");
+}
+
+static int inline min(int a, int b){
+	return (a < b) ? a : b;
 }
 
 void sighandler(int signum){
@@ -238,7 +240,7 @@ int main (int argc, char **argv){
     cp.ts.tv_sec  = pcapHeader.ts.tv_sec;  /* Copy and convert the timestamp provided by PCAP, assumes _usec. If nsec will be present adjust! */
     cp.ts.tv_psec = pcapHeader.ts.tv_usec * PICODIVIDER;
     cp.len = pcapHeader.len; /* The Wire-lenght of the frame */
-    cp.caplen = MIN(pcapHeader.caplen, caplen);
+    cp.caplen = min(pcapHeader.caplen, caplen);
 
     // Let the user know that we are alive, good when processing large files.
     if( pktCount % 1000 == 0 ) {
