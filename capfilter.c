@@ -17,6 +17,8 @@
 
 #ifdef HAVE_PCAP
 #include <pcap/pcap.h>
+#else
+struct bpf_program { };
 #endif
 
 static const char* program_name = NULL;
@@ -26,7 +28,7 @@ static const char* rej_filename = NULL;
 static int keep_running = 1;
 static int invert = 0;
 static int quiet = 0;
-static struct bpf_insn* bpf_ins = NULL;
+static struct bpf_program bpf_program = {0, NULL};
 
 static const char* shortopts = "i:o:r:b:vqh";
 static struct option longopts[] = {
@@ -67,7 +69,15 @@ static void handle_sigint(int signum){
 	}
 }
 
+static void bpf_close(struct bpf_program* program){
+#ifdef HAVE_PCAP
+	pcap_freecode(program);
+#endif
+}
+
 static void set_bpf_filter(const char* expr){
+	bpf_close(&bpf_program);
+
 #ifdef HAVE_PCAP
 	char errbuf[PCAP_ERRBUF_SIZE];
 	pcap_t* handle = pcap_open_dead(DLT_EN10MB, 2040); /* 2040 because it is default DAG snapshot according to souces, e.g. see dagconvert */
@@ -76,12 +86,10 @@ static void set_bpf_filter(const char* expr){
 		exit(1);
 	}
 
-	struct bpf_program fcode;
-	if ( pcap_compile(handle, &fcode, expr, 0, PCAP_NETMASK_UNKNOWN) != 0 ){
+	if ( pcap_compile(handle, &bpf_program, expr, 1, PCAP_NETMASK_UNKNOWN) != 0 ){
 		fprintf(stderr, "%s: BPF error: %s\n", program_name, pcap_geterr(handle));
 		exit(1);
 	}
-	bpf_ins = fcode.bf_insns;
 
 	pcap_close(handle);
 #else
@@ -89,9 +97,9 @@ static void set_bpf_filter(const char* expr){
 #endif
 }
 
-static int bpf_match(const struct bpf_insn* insns, caphead_t cp){
+static int bpf_match(const struct bpf_program* program, caphead_t cp){
 #ifdef HAVE_PCAP
-	return bpf_filter(insns, (const u_char*)cp->payload, cp->len, cp->caplen);
+	return bpf_filter(program->bf_insns, (const u_char*)cp->payload, cp->len, cp->caplen);
 #else
 	return 1;
 #endif
@@ -222,7 +230,7 @@ int main(int argc, char* argv[]){
 
 		/* decide what to do with the packet */
 		stream_t target = 0;
-		const int match = filter_match(&filter, cp->payload, cp) && bpf_match(bpf_ins, cp);
+		const int match = filter_match(&filter, cp->payload, cp) && bpf_match(&bpf_program, cp);
 		const int post_match = invert ? (1-match) : match;
 		if ( post_match ){
 			target = dst;
@@ -243,6 +251,7 @@ int main(int argc, char* argv[]){
 		fprintf(stderr, "%s: There was a total of %'"PRIu64" packets matched.\n", program_name, matched);
 	}
 
+	bpf_close(&bpf_program);
 	filter_close(&filter);
 	stream_close(src);
 	stream_close(dst);
