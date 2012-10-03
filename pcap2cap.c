@@ -135,7 +135,7 @@ static stream_t open_dst(stream_addr_t* addr, const caphead_t cp, const char* co
 	if( !stream_addr_is_set(addr) ){
 		if ( isatty(STDOUT_FILENO) ){
 			fprintf(stderr, "%s: Cannot output to a terminal, either specify a file using `-o FILENAME' or\n"
-			        "redirect output.\n", program_name);
+			        "          redirect output.\n", program_name);
 			return NULL;
 		}
 
@@ -237,7 +237,7 @@ int main (int argc, char **argv){
     cp.caplen = min(pcapHeader.caplen, caplen);
 
     // Let the user know that we are alive, good when processing large files.
-    if( pktCount++ % 1000 == 0 ) {
+    if ( !quiet && pktCount++ % 1000 == 0 ) {
       fprintf(stderr, ".");
       fflush(stderr);
     }
@@ -254,9 +254,7 @@ int main (int argc, char **argv){
   pcap_close(pcap);
 
   if ( !quiet ){
-	  fprintf(stderr, "\n%s: There was a total of %lld pkts that matched the filter.\n", program_name, pktCount);
-  } else {
-	  fprintf(stderr, "\n");
+	  fprintf(stderr, "\n%s: There was a total of %lld packets converted.\n", program_name, pktCount);
   }
 
   return 0;
