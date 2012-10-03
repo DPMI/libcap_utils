@@ -125,13 +125,7 @@ int main (int argc, char **argv){
   strncpy(cp.nic, "CONV", 8);
   gethostname(cp.mampid, 8);
 
-  while (1) {
-    option_index = 0;
-
-    op = getopt_long  (argc, argv, shortopts, longopts, &option_index);
-    if (op == -1)
-      break;
-
+  while ( (op = getopt_long  (argc, argv, shortopts, longopts, &option_index)) != -1 ){
     switch (op){
     case 'c':
       comments = strdup(optarg);
