@@ -87,9 +87,51 @@ static int inline min(int a, int b){
 	return (a < b) ? a : b;
 }
 
-void sighandler(int signum){
-  fprintf(stderr, "Caught SIGINT, aborting...\n");
+static void sighandler(int signum){
+	fprintf(stderr, "\r%s: Caught SIGINT, aborting...\n", program_name);
   run = 0;
+}
+
+static struct pcap* open_src_live(const char* iface){
+	return pcap_open_live(iface, BUFSIZ, 1, 1000, errorBuffer);
+}
+
+static struct pcap* open_src_filename(const char* filename){
+	return pcap_open_offline(filename, errorBuffer);
+}
+
+static struct pcap* open_src(int argc, char* argv[], struct cap_header* cp){
+	const int tty = isatty(STDIN_FILENO);
+	const int live = strcmp(cp->nic, "CONV") != 0;
+
+	struct pcap* pcap;
+	switch ( argc - optind ){ /* number of targets */
+	case 0:
+		if ( !tty ){ /* tcpdump piped */
+			pcap = open_src_filename("/dev/stdin");
+		} else if ( live ){ /* live capture */
+			pcap = open_src_live(cp->nic);
+		} else {
+			fprintf(stderr, "%s: Must specify either an interface (-i, --interface) for live capture or a pcap-file.\n", program_name);
+			return NULL;
+		}
+    break;
+
+  case 1:
+	  pcap = open_src_filename(argv[optind]);
+    break;
+
+  default:
+	  fprintf(stderr, "%s: Must specify at most one pcap-file.\n", program_name);
+    return NULL;
+  }
+
+  if ( errorBuffer[0] != 0 ){
+	  /* may include non-fatal warnings */
+    fprintf(stderr, "%s: %s\n", program_name, errorBuffer);
+  }
+
+  return pcap;
 }
 
 int main (int argc, char **argv){
@@ -161,35 +203,9 @@ int main (int argc, char **argv){
   }
 
   /* open input */
-  pcap_t* pcap;
-  switch ( argc - optind ){ /* number of targets */
-  case 0:
-    if ( !isatty(STDIN_FILENO) ){ /* tcpdump piped */
-      pcap = pcap_open_offline("/dev/stdin", errorBuffer);
-    } else if ( strcmp(cp.nic, "CONV") != 0 ){ /* live capture */
-      pcap = pcap_open_live(cp.nic, BUFSIZ, 1, 1000, errorBuffer);
-    } else {
-      fprintf(stderr, "Must specify either an interface (-i, --interface) for live capture or a pcap-file.\n");
-      return 1;
-    }
-    break;
-  case 1:
-    pcap = pcap_open_offline(argv[optind], errorBuffer);
-    break;
-  default:
-    fprintf(stderr, "Must specify at most one pcap-file.\n");
-    return 1;
-  }
-
-  /* Ensure handle is valid */
-  if ( pcap == NULL ){
-    fprintf(stderr, "%s: %s\n", argv[0], errorBuffer);
-    return 1;
-  }
-
-  /* warning from pcap */
-  if ( errorBuffer[0] != 0 ){
-    fprintf(stderr, "%s: %s\n", argv[0], errorBuffer);
+  pcap_t* pcap = open_src(argc, argv, &cp);
+  if ( !pcap ){
+	  return 1; /* error already shown */
   }
 
   if ( !quiet ){
