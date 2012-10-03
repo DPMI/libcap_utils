@@ -58,6 +58,38 @@ static const char* program_name = NULL;
 
 static int run = 1;
 static int quiet = 0;
+static size_t caplen = dataLEN - sizeof(cap_head);
+
+static const char* shortopts = "m:c:o:i:qh";
+static struct option longopts[] = {
+	{"comments",1, 0,'c'},
+	{"output",1,0, 'o'},
+	{"mpid", 1, 0, 'm'},
+	{"interface",1,0, 'i'},
+	{"help", 0, 0, 'h'},
+	{"caplen", 1, 0, 'l'},
+	{"quiet", no_argument, 0, 'q'},
+	{0, 0, 0, 0}
+};
+
+static void show_usage(){
+	printf("%s (caputils-" CAPUTILS_VERSION ")\n", program_name);
+	printf("(c) 2004-2011 Patrik Arlos, David Sveningsson\n\n");
+	printf("Capture packets using libpcap (or convert existing pcap-file) to a caputils stream.\n");
+	printf("Converted data can be piped or stored to a file.\n\n");
+	printf("Usage: pcap2cap [OPTION] -i INTERFACE [-o FILENAME]\n");
+	printf("  or   pcap2cap [OPTION] [-o FILENAME] FILENAME\n");
+	printf("\n");
+	printf("  -m, --mpid=STRING          Set MP id, max 199 char. Default hostname.\n");
+	printf("  -c, --comment=STRING       Add comment to header, dont forget \" \" around the\n"
+	       "                             text. Not set by default.\n");
+	printf("  -o, --output=FILENAME      Destination filename.\n");
+	printf("  -i, --interface=INTERFACE  Capture on live interface. (use \"any\" to capture\n"
+	       "                             on all interfaces) Default CONV.\n");
+	printf("      --caplen=INT           Set caplen. Default %zd.\n", caplen);
+	printf("  -q, --quiet                Silent output, only errors is printed.\n");
+	printf("  -h, --help                 Show this help.\n");
+}
 
 void sighandler(int signum){
   fprintf(stderr, "Caught SIGINT, aborting...\n");
@@ -77,16 +109,6 @@ int main (int argc, char **argv){
   int op;
 
   int option_index;
-  static struct option long_options[]= {
-    {"comments",1, 0,'c'},
-    {"output",1,0, 'o'},
-    {"mpid", 1, 0, 'm'},
-    {"interface",1,0, 'i'},
-    {"help", 0, 0, 'h'},
-    {"caplen", 1, 0, 'l'},
-    {"quiet", no_argument, 0, 'q'},
-    {0, 0, 0, 0}
-  };
 
   const u_char *packet; /* Packet read from PCAP */
   struct pcap_pkthdr pcapHeader; /* PCAPS packet header */
@@ -104,7 +126,6 @@ int main (int argc, char **argv){
   /* setup pointers */
   cap_head *caphead = (cap_head*)raw_buffer;
   unsigned char* pkt_buffer = (unsigned char*)raw_buffer + sizeof(cap_head);
-  size_t caplen = dataLEN - sizeof(cap_head);
 
   /* default interface */
   strncpy(caphead->nic, "CONV", 8);
@@ -113,8 +134,7 @@ int main (int argc, char **argv){
   while (1) {
     option_index = 0;
 
-    op = getopt_long  (argc, argv, "m:c:o:i:qh",
-		       long_options, &option_index);
+    op = getopt_long  (argc, argv, shortopts, longopts, &option_index);
     if (op == -1)
       break;
 
@@ -144,22 +164,7 @@ int main (int argc, char **argv){
 	    break;
 
     case 'h':
-	    printf("%s (caputils-" CAPUTILS_VERSION ")\n", program_name);
-      printf("(c) 2004-2011 Patrik Arlos, David Sveningsson\n\n");
-      printf("Capture packets using libpcap (or convert existing pcap-file) to a caputils stream.\n");
-      printf("Converted data can be piped or stored to a file.\n\n");
-      printf("Usage: pcap2cap [OPTION] -i INTERFACE [-o FILENAME]\n");
-      printf("  or   pcap2cap [OPTION] [-o FILENAME] FILENAME\n");
-      printf("\n");
-      printf("  -m, --mpid=STRING          Set MP id, max 199 char. Default hostname.\n");
-      printf("  -c, --comment=STRING       Add comment to header, dont forget \" \" around the\n"
-	     "                             text. Not set by default.\n");
-      printf("  -o, --output=FILENAME      Destination filename.\n");
-      printf("  -i, --interface=INTERFACE  Capture on live interface. (use \"any\" to capture\n"
-             "                             on all interfaces) Default CONV.\n");
-      printf("      --caplen=INT           Set caplen. Default %zd.\n", caplen);
-      printf("  -q, --quiet                Silent output, only errors is printed.\n");
-      printf("  -h, --help                 Show this help.\n");
+	    show_usage();
       return 0;
       break;
     default:
