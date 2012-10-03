@@ -38,6 +38,7 @@
 #include <errno.h>
 #include <net/if_arp.h>
 #include <caputils/caputils.h>
+#include <caputils/capture.h>
 #include <unistd.h>
 #include <getopt.h>
 #include <pcap.h>
@@ -46,19 +47,13 @@
 
 #define MIN(A,B) ((A) < (B) ? (A):(B))
 
-/* Enough space to store the cap_head + a maximum data block from PCAP (9200byte for a Gigabit Ethernet Jumbo frame. */
-#define dataLEN 10000
-
-/* If larger data will be read by PCAP, dataLEN needs to change accordingly. */
-static unsigned char raw_buffer[dataLEN]; /* Allocate the data space */
-
 /* pcap stores error descriptions in this buffer */
 static char errorBuffer[PCAP_ERRBUF_SIZE];
 static const char* program_name = NULL;
 
 static int run = 1;
 static int quiet = 0;
-static size_t caplen = dataLEN - sizeof(cap_head);
+static size_t caplen = UINT16_MAX - sizeof(cap_head);
 
 static const char* shortopts = "c:o:m:i:l:qh";
 static struct option longopts[] = {
@@ -85,7 +80,7 @@ static void show_usage(){
 	printf("  -o, --output=FILENAME      Destination filename.\n");
 	printf("  -i, --interface=INTERFACE  Capture on live interface. (use \"any\" to capture\n"
 	       "                             on all interfaces)\n");
-	printf("      --caplen=INT           Set caplen. Default %zd.\n", caplen);
+	printf("      --caplen=INT           Set caplen. Default %zd bytes.\n", caplen);
 	printf("  -q, --quiet                Silent output, only errors is printed.\n");
 	printf("  -h, --help                 Show this help.\n");
 }
@@ -116,19 +111,17 @@ int main (int argc, char **argv){
   stream_t dst_stream = NULL;
   stream_addr_reset(&dst);
 
-  char* comments = strdup("(nil)");
+  char* comments = strdup("converted from pcap with pcap2cap-" CAPUTILS_VERSION);
   unsigned long long pktCount = 0;
 
-  memset(raw_buffer, 0, dataLEN);
   memset(errorBuffer, 0, PCAP_ERRBUF_SIZE);
 
   /* setup pointers */
-  cap_head *caphead = (cap_head*)raw_buffer;
-  unsigned char* pkt_buffer = (unsigned char*)raw_buffer + sizeof(cap_head);
+  struct cap_header cp;
 
   /* default interface */
-  strncpy(caphead->nic, "CONV", 8);
-  gethostname(caphead->mampid, 8);
+  strncpy(cp.nic, "CONV", 8);
+  gethostname(cp.mampid, 8);
 
   while (1) {
     option_index = 0;
@@ -143,11 +136,11 @@ int main (int argc, char **argv){
       break;
 
     case 'm':
-      strncpy(caphead->mampid, optarg, 8);
+      strncpy(cp.mampid, optarg, 8);
       break;
 
     case 'i':
-      strncpy(caphead->nic, optarg, 8);
+      strncpy(cp.nic, optarg, 8);
       break;
 
     case 'l':
@@ -190,8 +183,8 @@ int main (int argc, char **argv){
   case 0:
     if ( !isatty(STDIN_FILENO) ){ /* tcpdump piped */
       pcapHandle = pcap_open_offline("/dev/stdin", errorBuffer);
-    } else if ( strcmp(caphead->nic, "CONV") != 0 ){ /* live capture */
-      pcapHandle = pcap_open_live(caphead->nic, BUFSIZ, 1, 1000, errorBuffer);
+    } else if ( strcmp(cp.nic, "CONV") != 0 ){ /* live capture */
+      pcapHandle = pcap_open_live(cp.nic, BUFSIZ, 1, 1000, errorBuffer);
     } else {
       fprintf(stderr, "Must specify either an interface (-i, --interface) for live capture or a pcap-file.\n");
       return 1;
@@ -222,7 +215,7 @@ int main (int argc, char **argv){
   }
 
   long ret;
-  if ( (ret=stream_create(&dst_stream, &dst, caphead->nic, caphead->mampid, comments)) != 0 ){
+  if ( (ret=stream_create(&dst_stream, &dst, cp.nic, cp.mampid, comments)) != 0 ){
     fprintf(stderr, "%s: stream_create failed with code %ld: %s.\n", argv[0], ret, caputils_error_string(ret));
     return 1;
   }
@@ -242,15 +235,10 @@ int main (int argc, char **argv){
   while ( (packet=pcap_next(pcapHandle, &pcapHeader)) && run ){
     pktCount++;
 
-    caphead->ts.tv_sec=pcapHeader.ts.tv_sec;  /* Copy and convert the timestamp provided by PCAP, assumes _usec. If nsec will be present adjust! */
-    caphead->ts.tv_psec=pcapHeader.ts.tv_usec;
-    caphead->ts.tv_psec*=1000;
-    caphead->ts.tv_psec*=1000;
-    caphead->len=pcapHeader.len; /* The Wire-lenght of the frame */
-
-    const size_t data_len = MIN(pcapHeader.caplen, caplen);
-    memcpy(pkt_buffer, packet, data_len);
-    caphead->caplen = data_len;
+    cp.ts.tv_sec  = pcapHeader.ts.tv_sec;  /* Copy and convert the timestamp provided by PCAP, assumes _usec. If nsec will be present adjust! */
+    cp.ts.tv_psec = pcapHeader.ts.tv_usec * PICODIVIDER;
+    cp.len = pcapHeader.len; /* The Wire-lenght of the frame */
+    cp.caplen = MIN(pcapHeader.caplen, caplen);
 
     // Let the user know that we are alive, good when processing large files.
     if( pktCount % 1000 == 0 ) {
@@ -259,8 +247,8 @@ int main (int argc, char **argv){
     }
 
     // Save a copy of the frame to the new file.
-    if ( (ret=stream_write(dst_stream, raw_buffer, caphead->caplen + sizeof(cap_head))) != 0 ) {
-	    fprintf(stderr, "stream_write returned %ld: %s\n", ret, caputils_error_string(ret));
+    if ( (ret=stream_write_separate(dst_stream, &cp, packet, cp.caplen)) != 0 ) {
+	    fprintf(stderr, "stream_write(..) returned %ld: %s\n", ret, caputils_error_string(ret));
     }
   }
   //End Packet processing
