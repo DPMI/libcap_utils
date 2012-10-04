@@ -1,3 +1,10 @@
+caputils-0.7.13
+---------------
+
+  * pcap2cap improved.
+  * Support for BPF filters.
+	* capinfo showing more data.
+
 caputils-0.7.12
 ---------------
 
