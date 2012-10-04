@@ -90,7 +90,7 @@ nobase_include_HEADERS =    \
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = libcap_stream-0.7.pc libcap_filter-0.7.pc libcap_utils-0.7.pc libcap_marc-0.7.pc
 
-libcap_stream_07_la_LDFLAGS = -version-info 2:0:2 ${PFRING_LIBS}
+libcap_stream_07_la_LDFLAGS = -version-info 2:1:2 ${PFRING_LIBS}
 libcap_stream_07_la_LIBADD = libcap_filter-07.la
 libcap_stream_07_la_SOURCES = stream.c stream.h stream_file.c
 
@@ -100,7 +100,7 @@ else
 libcap_stream_07_la_SOURCES += stream_ethernet.c
 endif
 
-libcap_utils_07_la_LDFLAGS = -version-info 0:1:0
+libcap_utils_07_la_LDFLAGS = -version-info 0:2:0
 libcap_utils_07_la_LIBADD = libcap_stream-07.la libcap_filter-07.la libcap_marc-07.la
 libcap_utils_07_la_SOURCES =   \
 	caputils_int.h      \
@@ -120,7 +120,7 @@ endif
 #	stream_tcp.c \
 #
 
-libcap_filter_07_la_LDFLAGS = -version-info 0:1:0
+libcap_filter_07_la_LDFLAGS = -version-info 0:2:0
 libcap_filter_07_la_LIBADD = ${PCAP_LIBS}
 libcap_filter_07_la_SOURCES = createfilter.c filter.c
 
