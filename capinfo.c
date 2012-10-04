@@ -197,7 +197,7 @@ static void print_overview(){
 	printf(" duration: %s (%.1f seconds)\n", sec_str, (float)hseconds/10);
 	printf("  packets: %ld\n", packets);
 	printf("    bytes: %s\n", byte_str);
-	printf(" pkt size: min/avg/max = %d/%ld/%d\n", byte_min, bytes / packets, byte_max);
+	printf(" pkt size: min/avg/max = %d/%"PRIu64"/%d\n", byte_min, bytes / packets, byte_max);
 	printf(" avg rate: %s\n", rate_str);
 	printf("\n");
 }
