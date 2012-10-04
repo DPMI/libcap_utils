@@ -232,7 +232,7 @@ int main (int argc, char **argv){
   unsigned long long pktCount = 0;
   while ( (packet=pcap_next(pcap, &pcapHeader)) && run ){
     cp.ts.tv_sec  = pcapHeader.ts.tv_sec;  /* Copy and convert the timestamp provided by PCAP, assumes _usec. If nsec will be present adjust! */
-    cp.ts.tv_psec = pcapHeader.ts.tv_usec * PICODIVIDER;
+    cp.ts.tv_psec = pcapHeader.ts.tv_usec * 1e6;
     cp.len = pcapHeader.len; /* The Wire-lenght of the frame */
     cp.caplen = min(pcapHeader.caplen, caplen);
 
