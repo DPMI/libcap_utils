@@ -349,7 +349,7 @@ static int bpf_set(struct filter* filter, const char* expr, const char* program_
 	free(filter->bpf_expr);
 
 	/* compile new filter */
-	if ( pcap_compile(handle, &prg, expr, 1, PCAP_NETMASK_UNKNOWN) != 0 ){
+	if ( pcap_compile(handle, &prg, expr, 1, 0xffffffff) != 0 ){
 		fprintf(stderr, "%s: BPF error: %s\n", program_name, pcap_geterr(handle));
 		return EINVAL;
 	}
