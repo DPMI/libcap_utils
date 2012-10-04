@@ -167,7 +167,7 @@ int main(int argc, char **argv){
 	/* handle C-c */
 	signal(SIGINT, handle_sigint);
 
-	unsigned long matched = 0;
+	uint64_t matched = 0;
 	while ( keep_running ) {
 		/* A short timeout is used to allow the application to "breathe", i.e
 		 * terminate if SIGINT was received. */
