@@ -21,7 +21,7 @@ int is_marker(const struct cap_header* cp, struct marker* ptr, int port){
 	if ( !(udp && src == MARKERPORT && (dst == port || port == 0)) ){ return 0; }
 
 	/* match magic */
-	struct marker* marker = (struct marker*)((char*)udp + sizeof(struct udphdr));
+	const struct marker* marker = (const struct marker*)((const char*)udp + sizeof(struct udphdr));
 	if ( ntohl(marker->magic) != MARKER_MAGIC ){ return 0; }
 
 	/* assume it is a marker */

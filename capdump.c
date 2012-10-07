@@ -98,7 +98,7 @@ static void marker_report(const struct marker* marker){
 	strftime(timestr, sizeof(timestr), "%a, %d %b %Y %H:%M:%S %z", &tm);
 
 	/* timestamp from marker */
-	tm = *localtime((time_t*)&marker->timestamp);
+	tm = *localtime((const time_t*)&marker->timestamp);
 	strftime(timestamp, 200, "%a, %d %b %Y %T %z", &tm);
 
 	fprintf(stderr, "%s: [%s] marker v%d found (flags: %d)\n", program_name, timestr, marker->version, marker->flags);

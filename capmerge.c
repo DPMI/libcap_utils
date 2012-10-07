@@ -199,17 +199,17 @@ int main(int argc, char* argv[]){
 		do {
 			/* recalculate begin pointer */
 			do {
-				caphead_t cp = (caphead_t)begin;
+				const struct cap_header* cp = (const struct cap_header*)begin;
 				if ( cp->len > 0 ) break;
 				begin += cp->caplen + sizeof(struct cap_header);
 			} while ( begin < end );
 
 			const char* ptr = begin;
-			caphead_t pkt = NULL;
+			const struct cap_header* pkt = NULL;
 			timepico cur = {-1, -1};
 
 			while ( ptr < end ){
-				caphead_t cp = (caphead_t)ptr;
+				const struct cap_header* cp = (const struct cap_header*)ptr;
 				if ( cp->len > 0 && timecmp(&cur, &cp->ts) > 0 ){
 					pkt = cp;
 					cur = cp->ts;
@@ -222,7 +222,6 @@ int main(int argc, char* argv[]){
 
 			written++;
 			stream_copy(dst, pkt);
-			pkt->len = 0;
 
 			if ( !quiet && (written % 250 == 0) ){
 				fprintf(stderr, "\r%lu / %lu (%p - %p)", written, packets, begin, end);
