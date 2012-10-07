@@ -128,7 +128,7 @@ int stream_write_separate(stream_t st, const caphead_t head, const void* data, s
  * Copy a capture packet into stream.
  * This a shorthand for `stream_write(st, head, sizeof(struct cap_header) + head->caplen)`.
  */
-int stream_copy(stream_t st, const caphead_t head);
+int stream_copy(stream_t st, const struct cap_header* head);
 
 /**
  * Read the next matching frame from a stream.

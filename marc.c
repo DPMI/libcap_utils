@@ -464,7 +464,7 @@ int marc_poll_event(marc_context_t ctx, MPMessage* event, size_t* size, struct s
 	event->type = ntohl(event->type);
 
 	/* fill in version field for old MArCd versions */
-	if ( event->type == MP_LEGACY_AUTH_EVENT && bytes < sizeof(struct MPauth) ){
+	if ( event->type == MP_LEGACY_AUTH_EVENT && (size_t)bytes < sizeof(struct MPauth) ){
 		event->type = MP_CONTROL_AUTHORIZE_EVENT;
 		event->auth.version.major = 0;
 		event->auth.version.major = 6;

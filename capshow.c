@@ -20,7 +20,7 @@
 
 static int keep_running = 1;
 static unsigned int flags = FORMAT_REL_TIMESTAMP;
-static int max_packets = 0;
+static unsigned int max_packets = 0;
 static const char* iface = NULL;
 static struct timeval timeout = {1,0};
 static const char* program_name = NULL;

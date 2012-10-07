@@ -176,7 +176,7 @@ static int filter_core(const struct filter* filter, const void* pkt, struct cap_
 	find_tcp_header(pkt, ether, ip, &src_port, &dst_port);
 	find_udp_header(pkt, ether, ip, &src_port, &dst_port);
 
-	int match = 0;
+	unsigned int match = 0;
 
 	/* base tests */
 	match |= filter_dst_port(filter, dst_port)       << OFFSET_DST_PORT;    /* Transport dest port */

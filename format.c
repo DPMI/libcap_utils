@@ -71,7 +71,7 @@ static void print_icmp(FILE* dst, const struct ip* ip, const struct icmphdr* icm
 	fprintf(dst, ": %s ",inet_ntoa(ip->ip_src));
 	fprintf(dst, "--> %s",inet_ntoa(ip->ip_dst));
 
-	if ( flags < FORMAT_LAYER_APPLICATION ){
+	if ( flags < (unsigned int)FORMAT_LAYER_APPLICATION ){
 		return;
 	}
 	fputs(": ", dst);
@@ -133,7 +133,7 @@ static void print_icmp(FILE* dst, const struct ip* ip, const struct icmphdr* icm
 }
 
 static void print_ipv4(FILE* dst, const struct ip* ip, unsigned int flags){
-	void* payload = ((char*)ip) + 4*ip->ip_hl;
+	const void* payload = ((const char*)ip) + 4*ip->ip_hl;
 
 	if ( flags & FORMAT_HEADER ){
 		fprintf(dst, "(HDR[%d])[", 4*ip->ip_hl);
@@ -226,7 +226,7 @@ static void print_arp(FILE* dst, const struct cap_header* cp, const struct ether
 }
 
 static void print_eth(FILE* dst, const struct cap_header* cp, const struct ethhdr* eth, unsigned int flags){
-	void* payload = ((char*)eth) + sizeof(struct ethhdr);
+	const void* payload = ((const char*)eth) + sizeof(struct ethhdr);
 	uint16_t h_proto = ntohs(eth->h_proto);
 	uint16_t vlan_tci;
 
@@ -234,16 +234,16 @@ static void print_eth(FILE* dst, const struct cap_header* cp, const struct ethhd
 
 	switch ( h_proto ){
 	case ETHERTYPE_VLAN:
-		vlan_tci = ((uint16_t*)payload)[0];
-		h_proto = ntohs(((uint16_t*)payload)[0]);
-		payload = ((char*)eth) + sizeof(struct ethhdr);
+		vlan_tci = ((const uint16_t*)payload)[0];
+		h_proto = ntohs(((const uint16_t*)payload)[0]);
+		payload = ((const char*)eth) + sizeof(struct ethhdr);
 		fprintf(dst, "802.1Q vlan# %d: ", 0x0FFF&ntohs(vlan_tci));
 		goto begin;
 
 	case ETHERTYPE_IP:
 		fputs(" IPv4", dst);
 		if ( flags >= FORMAT_LAYER_TRANSPORT ){
-			print_ipv4(dst, (struct ip*)payload, flags);
+			print_ipv4(dst, (const struct ip*)payload, flags);
 		}
 		break;
 
@@ -274,7 +274,7 @@ static void print_eth(FILE* dst, const struct cap_header* cp, const struct ethhd
 		fputs(hexdump_address((const struct ether_addr*)eth->h_dest), dst);
 		if(h_proto<0x05DC){
 			fputs(" ", dst);
-			print_ieee8023(dst,(struct llc_pdu_sn*)payload);
+			print_ieee8023(dst, (const struct llc_pdu_sn*)payload);
 		}
 		break;
 	}
