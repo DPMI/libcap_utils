@@ -17,8 +17,8 @@ class TimepicoTest: public CppUnit::TestFixture {
 public:
 
   void test_sub(){
-	  timepico a = { 3, 1e11 };
-	  timepico b = { 1, 9e11 };
+	  timepico a = { 3, (uint64_t)1e11 };
+	  timepico b = { 1, (uint64_t)9e11 };
 	  timepico diff = timepico_sub(a, b);
 
 	  CPPUNIT_ASSERT_EQUAL((uint32_t)1,    diff.tv_sec );
@@ -38,4 +38,3 @@ int main(int argc, const char* argv[]){
 
   return runner.run() ? 0 : 1;
 }
-
