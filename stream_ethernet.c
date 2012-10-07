@@ -23,7 +23,7 @@ struct stream_ethernet {
 	int socket;
 	int port;
 	int if_index;
-	int if_mtu;
+	unsigned int if_mtu;
 	struct sockaddr_ll sll;
 	struct ether_addr address[MAX_ADDRESS];
 	long unsigned int seqnum[MAX_ADDRESS];
@@ -48,7 +48,7 @@ static int match_ma_pkt(const struct stream_ethernet* st, const struct ethhdr* e
 		return -1;
 	}
 
-	int match;
+	unsigned int match;
 	for ( match = 0; match < st->num_address; match++ ){
 		if ( memcmp((const void*)ethhdr->h_dest, st->address[match].ether_addr_octet, ETH_ALEN) == 0 ) break;
 	}
@@ -99,7 +99,7 @@ static int read_packet(struct stream_ethernet* st, struct timeval* timeout){
 #endif
 
 		/* quick sanity check */
-		if ( bytes < ntohl(sh->nopkts) ){
+		if ( bytes < (int)ntohl(sh->nopkts) ){
 			fprintf(stderr, "invalid measurement frame received.\n"
 			                "  seqnum: 0x%04X [raw: 0x%08X]\n"
 			                "  nopkts: %d [raw: 0x%08X]\n"
@@ -295,7 +295,7 @@ static long stream_ethernet_init(struct stream** stptr, const struct ether_addr*
   if ( ioctl(fd, SIOCGIFMTU, &ifr) == -1 ){
     return errno;
   }
-  int if_mtu = ifr.ifr_mtu;
+  unsigned int if_mtu = ifr.ifr_mtu;
 
   /* default buffer_size of 25*MTU */
   if ( buffer_size == 0 ){

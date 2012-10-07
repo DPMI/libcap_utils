@@ -192,7 +192,7 @@ static const char* generate_filename(const char* fmt, const struct marker* marke
 	*dst = 0;
 
 	/* try if the file exists already and append a suffix if it does */
-	int suffix = 1;
+	unsigned int suffix = 1;
 	do {
 
 		/* if tried to many times, give up and randomize name */
@@ -242,7 +242,7 @@ int main(int argc, char **argv){
 	stream_addr_t output;
 	stream_addr_aton(&output, "/dev/stdout", STREAM_ADDR_CAPFILE, STREAM_ADDR_LOCAL);
 
-	long max_packets = -1;
+	unsigned int max_packets = 0;
 
 	while ( (op = getopt_long(argc, argv, shortopts, longopts, &option_index)) != -1 ){
 		switch (op){

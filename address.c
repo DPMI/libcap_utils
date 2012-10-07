@@ -91,7 +91,7 @@ static void homogenize_eth_addr(char* buf){
 	memcpy(buf, tmp, 17);
 
 	/* look for :: and fill in blanks */
-	for ( int i = 0; i < len-1; i++ ){
+	for ( unsigned int i = 0; i < len-1; i++ ){
 		if ( buf[i  ] != ':' ) continue;
 		if ( buf[i+1] != ':' ) continue;
 
@@ -102,16 +102,16 @@ static void homogenize_eth_addr(char* buf){
 		 * p3 ---------------------------+
 		 */
 
-		const int p1 = i+1;
-		int p2 = p1; for ( ; buf[p2] != 0; p2++ ){}
-		const int digits = p2-p1;
-		const int p3 = 17 - digits;
+		const unsigned int p1 = i+1;
+		unsigned int p2 = p1; for ( ; buf[p2] != 0; p2++ ){}
+		const unsigned int digits = p2-p1;
+		const unsigned int p3 = 17 - digits;
 
 		/* move right part to the end */
 		memcpy(&buf[p3], &buf[p1], digits);
 
 		/* fill blanks */
-		for ( int j = p1; j < p3; j += 3 ){
+		for ( unsigned int j = p1; j < p3; j += 3 ){
 			buf[j  ] = '0';
 			buf[j+1] = '0';
 			buf[j+2] = ':';

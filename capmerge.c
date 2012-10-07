@@ -110,7 +110,7 @@ int main(int argc, char* argv[]){
 	/* open input streams */
 	const size_t files = argc - optind;
 	stream_t st[files];
-	for ( unsigned int i = optind, n = 0; i < argc; i++, n++ ){
+	for ( int i = optind, n = 0; i < argc; i++, n++ ){
 		stream_addr_t addr;
 		stream_addr_str(&addr, argv[i], 0);
 
@@ -122,13 +122,13 @@ int main(int argc, char* argv[]){
 	}
 
 	/* read packets */
-	int streams = files;
+	unsigned int streams = files;
 	unsigned long packets = 0;
 	while ( streams > 0 ){
 		struct cap_header* pkt[streams];
 
 		/* take a peek at all open streams */
-		for ( int i = 0; i < streams; i++ ){
+		for ( unsigned int i = 0; i < streams; i++ ){
 			int ret;
 			switch ( (ret=stream_peek(st[i], &pkt[i], NULL)) ){
 			case 0:
@@ -152,7 +152,7 @@ int main(int argc, char* argv[]){
 		/* find newest packet */
 		int oldest = -1;
 		timepico cur = {-1, -1};
-		for ( int i = 0; i < streams; i++ ){
+		for ( unsigned int i = 0; i < streams; i++ ){
 			if ( pkt[i] && timecmp(&pkt[i]->ts, &cur) < 0 ){
 				oldest = i;
 				cur = pkt[i]->ts;

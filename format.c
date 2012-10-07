@@ -71,7 +71,7 @@ static void print_icmp(FILE* dst, const struct ip* ip, const struct icmphdr* icm
 	fprintf(dst, ": %s ",inet_ntoa(ip->ip_src));
 	fprintf(dst, "--> %s",inet_ntoa(ip->ip_dst));
 
-	if ( flags < FORMAT_LAYER_APPLICATION ){
+	if ( flags < (unsigned int)FORMAT_LAYER_APPLICATION ){
 		return;
 	}
 	fputs(": ", dst);

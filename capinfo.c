@@ -25,7 +25,7 @@ struct simple_list {
 };
 
 static void slist_clear(struct simple_list* slist){
-	for ( int i = 0; i < slist->size; i++ ){
+	for ( unsigned int i = 0; i < slist->size; i++ ){
 		free(slist->value[i]);
 	}
 	slist->size = 0;
@@ -150,7 +150,7 @@ static void format_seconds(char* dst, size_t size, timepico first, timepico last
 static const char* array_join(char* const src[], size_t n, const char* delimiter){
 	static char buffer[2048];
 	char* cur = buffer;
-	for ( int i = 0; i < n; i++ ){
+	for ( unsigned int i = 0; i < n; i++ ){
 		cur += sprintf(cur, "%s%s", (i>0?delimiter:""), src[i]);
 	}
 	return buffer;
@@ -250,7 +250,7 @@ static void print_distribution(){
 
 static void store_unique(struct simple_list* slist, const char* value, size_t maxlen){
 	/* try to locate an existing string */
-	for ( int i = 0; i < slist->size; i++ ){
+	for ( unsigned int i = 0; i < slist->size; i++ ){
 		if ( strncmp(slist->value[i], value, maxlen) == 0 ) return;
 	}
 
