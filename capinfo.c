@@ -186,6 +186,9 @@ static void print_overview(){
 	format_bytes(byte_str, 128, bytes);
 	format_rate(rate_str, 128, bytes, hseconds/10);
 	format_seconds(sec_str, 128, first, last);
+	const int local_byte_min = packets > 0 ? byte_min : 0;
+	const int local_byte_max = packets > 0 ? byte_max : 0;
+	const int local_byte_avg = packets > 0 ? bytes / packets : 0;
 
 	printf("Overview\n"
 	       "--------\n");
@@ -197,7 +200,7 @@ static void print_overview(){
 	printf(" duration: %s (%.1f seconds)\n", sec_str, (float)hseconds/10);
 	printf("  packets: %ld\n", packets);
 	printf("    bytes: %s\n", byte_str);
-	printf(" pkt size: min/avg/max = %d/%"PRIu64"/%d\n", byte_min, bytes / packets, byte_max);
+	printf(" pkt size: min/avg/max = %d/%d/%d\n", local_byte_min, local_byte_avg, local_byte_max);
 	printf(" avg rate: %s\n", rate_str);
 	printf("\n");
 }
