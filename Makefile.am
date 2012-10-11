@@ -65,11 +65,11 @@ man1_MANS += man/capshow.1
 notrans_dist_man_MANS += man/capshow.1
 endif
 
+TESTS =
 if BUILD_TESTS
-TESTS = tests/filter_argv tests/address tests/endian tests/stream tests/timepico
-else
-TESTS = tests/disabled
+TESTS += tests/filter_argv tests/address tests/endian tests/stream tests/timepico
 endif
+TESTS += tests/capinfo_zero tests/capmerge_zero
 check_PROGRAMS = ${TESTS}
 EXTRA_DIST += tests/empty.cap
 
@@ -165,8 +165,6 @@ tests_timepico_CXXFLAGS = ${AM_CFLAGS} $(CPPUNIT_CFLAGS)
 tests_timepico_LDFLAGS = $(CPPUNIT_LIBS)
 tests_timepico_LDADD = libcap_utils-07.la
 tests_timepico_SOURCES = tests/timepico.cpp
-
-tests_disabled_SOURCES = tests/disabled.cpp
 
 #
 # Hooks
