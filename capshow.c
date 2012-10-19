@@ -34,7 +34,7 @@ void handle_sigint(int signum){
 	keep_running = 0;
 }
 
-static const char* shortopts = "cp:i:t:cDarhx1234H";
+static const char* shortopts = "p:i:t:dDar1234xHh";
 static struct option longopts[]= {
 	{"packets",  required_argument, 0, 'p'},
 	{"iface",    required_argument, 0, 'i'},
@@ -43,6 +43,8 @@ static struct option longopts[]= {
 	{"localtime",no_argument,       0, 'D'},
 	{"absolute", no_argument,       0, 'a'},
 	{"relative", no_argument,       0, 'r'},
+	{"hexdump",  no_argument,       0, 'x'},
+	{"headers",  no_argument,       0, 'H'},
 	{"help",     no_argument,       0, 'h'},
 	{0, 0, 0, 0} /* sentinel */
 };
@@ -63,8 +65,8 @@ static void show_usage(void){
 	       "  -2                     .. include link layer.\n"
 	       "  -3                     .. include transport layer.\n"
 	       "  -4                     .. include application layer. [default]\n"
-	       "  -H                   Show layer headers.\n"
-	       "  -x                   Write full package content as hexdump.\n"
+	       "  -H, --headers        Show layer headers.\n"
+	       "  -x, --hexdump        Write full package content as hexdump.\n"
 	       "  -d, --calender       Show timestamps in human-readable format (UTC).\n"
 	       "  -D, --localtime      Show timestamps in human-readable format (local time).\n"
 	       "  -a, --absolute       Show absolute timestamps.\n"
@@ -105,31 +107,31 @@ int main(int argc, char **argv){
 			break;
 		}
 
-		case 'd':
+		case 'd': /* --calender */
 			flags |= FORMAT_DATE_STR | FORMAT_DATE_UTC;
 			break;
 
-		case 'D':
+		case 'D': /* --localtime */
 			flags |= FORMAT_DATE_STR | FORMAT_DATE_LOCALTIME;
 			break;
 
-		case 'a':
+		case 'a': /* --absolute */
 			flags &= ~FORMAT_REL_TIMESTAMP;
 			break;
 
-		case 'r':
+		case 'r': /* --relative */
 			flags |= FORMAT_REL_TIMESTAMP;
 			break;
 
-		case 'H':
+		case 'H': /* --headers */
 			flags |= FORMAT_HEADER;
 			break;
 
-		case 'p':
+		case 'p': /* --packets */
 			max_packets = atoi(optarg);
 			break;
 
-		case 't':
+		case 't': /* --timeout */
 			{
 				int tmp = atoi(optarg);
 				timeout.tv_sec  = tmp / 1000;
@@ -137,15 +139,15 @@ int main(int argc, char **argv){
 			}
 			break;
 
-		case 'x':
+		case 'x': /* --hexdump */
 			flags |= FORMAT_HEXDUMP;
 			break;
 
-		case 'i':
+		case 'i': /* --iface */
 			iface = optarg;
 			break;
 
-		case 'h':
+		case 'h': /* --help */
 			show_usage();
 			return 0;
 
