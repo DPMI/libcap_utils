@@ -1,12 +1,35 @@
+# autotools
+.deps
+.libs
+Makefile
 Makefile.in
 aclocal.m4
 autom4te.cache
-build
 build-aux
+config.h
 config.h.in
+config.log
+config.status
 configure
+libtool
+stamp-h1
 
 # emacs
 *~
 \#*\#
 .\#*
+
+# built files
+build
+cap2pcap
+capdump
+capfilter
+capinfo
+capmarker
+capmerge
+capshow
+pcap2cap
+*.o
+*.la
+*.lo
+*.pc
