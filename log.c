@@ -79,7 +79,7 @@ char* hexdump_str(const char* data, size_t size){
 	    dst += sprintf(dst, "   ");
     }
     if ( i % 4 == 3 ){
-      dst += sprintf(dst, "   ");
+      dst += sprintf(dst, "  ");
     }
     if ( i % 16 == 15 ){
       dst += sprintf(dst, "    |");
