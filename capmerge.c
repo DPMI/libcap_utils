@@ -197,17 +197,11 @@ int main(int argc, char* argv[]){
 
 		unsigned long int written = 0;
 		do {
-			/* recalculate begin pointer */
-			do {
-				const struct cap_header* cp = (const struct cap_header*)begin;
-				if ( cp->len > 0 ) break;
-				begin += cp->caplen + sizeof(struct cap_header);
-			} while ( begin < end );
-
-			const char* ptr = begin;
 			const struct cap_header* pkt = NULL;
 			timepico cur = {-1, -1};
 
+			/* find "smallest" packet, i.e. packet will smallest timestamp */
+			const char* ptr = begin;
 			while ( ptr < end ){
 				const struct cap_header* cp = (const struct cap_header*)ptr;
 				if ( cp->len > 0 && timecmp(&cur, &cp->ts) > 0 ){
@@ -218,10 +212,16 @@ int main(int argc, char* argv[]){
 				ptr += cp->caplen + sizeof(struct cap_header);
 			}
 
+			/* stop if there is no more packets */
 			if ( !pkt ) break;
 
+			/* copy */
 			written++;
 			stream_copy(dst, pkt);
+
+			/* move forward */
+			const struct cap_header* cp = (const struct cap_header*)begin;
+			begin += cp->caplen + sizeof(struct cap_header);
 
 			if ( !quiet && (written % 250 == 0) ){
 				fprintf(stderr, "\r%lu / %lu (%p - %p)", written, packets, begin, end);
