@@ -30,21 +30,30 @@
 
 static int min(int a, int b){ return a<b?a:b; }
 
+static const char* tcp_flags(const struct tcphdr* tcp){
+	static char buf[12];
+	size_t i = 0;
+
+	if (tcp->syn) buf[i++] = 'S';
+	if (tcp->fin) buf[i++] = 'F';
+	if (tcp->ack) buf[i++] = 'A';
+	if (tcp->psh) buf[i++] = 'P';
+	if (tcp->urg) buf[i++] = 'U';
+	if (tcp->rst) buf[i++] = 'R';
+	buf[i++] = 0;
+
+	return buf;
+}
+
 static void print_tcp(FILE* dst, const struct ip* ip, const struct tcphdr* tcp, unsigned int flags){
 	fputs("TCP", dst);
 
 	if ( flags & FORMAT_HEADER ){
-		fprintf(dst, "(HDR[%d]DATA[%0x]): [",4*tcp->doff, ntohs(ip->ip_len) - 4*tcp->doff - 4*ip->ip_hl);
-		if(tcp->syn) fputc('S', dst);
-		if(tcp->fin) fputc('F', dst);
-		if(tcp->ack) fputc('A', dst);
-		if(tcp->psh) fputc('P', dst);
-		if(tcp->urg) fputc('U', dst);
-		if(tcp->rst) fputc('R', dst);
-		fputc(']', dst);
+		fprintf(dst, "(HDR[%d]DATA[%0x])",4*tcp->doff, ntohs(ip->ip_len) - 4*tcp->doff - 4*ip->ip_hl);
 	}
 
-	fprintf(dst, ": %s:%d",inet_ntoa(ip->ip_src),(u_int16_t)ntohs(tcp->source));
+
+	fprintf(dst, ": [%s] %s:%d", tcp_flags(tcp), inet_ntoa(ip->ip_src), (u_int16_t)ntohs(tcp->source));
 	fprintf(dst, " --> %s:%d",inet_ntoa(ip->ip_dst),(u_int16_t)ntohs(tcp->dest));
 }
 

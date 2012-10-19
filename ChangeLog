@@ -1,6 +1,7 @@
 caputils-0.7.14
 ---------------
 
+	* fix: [capshow] always show TCP flags when printing transport layer.
 	* fix: [capinfo] crash when 0 packets.
 
 caputils-0.7.13
