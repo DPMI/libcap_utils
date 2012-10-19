@@ -365,35 +365,36 @@ static int bpf_set(struct filter* filter, const char* expr, const char* program_
 }
 
 void filter_from_argv_usage(){
-	printf("libcap_filter-" VERSION " options\n");
-	printf("      --starttime=DATETIME    Discard all packages before starttime described by\n");
-	printf("                              the unix timestamp. See capfilter(1) for\n");
-	printf("                              additional accepted formats.\n");
-	printf("      --endtime=DATETIME      Discard all packets after endtime.\n");
-	printf("      --begin                 Alias for --starttime\n");
-	printf("      --end                   Alias for --endtime\n");
-	printf("      --mampid=STRING         Filter on MAMPid\n");
-	printf("      --mpid=STRING           Alias for --mampid\n");
-	printf("      --iface=STRING          Filter on networkinterface on MP\n");
-	printf("      --if=STRING             Alias for --iface\n");
-	printf("      --eth.vlan=TCI[/MASK]   Filter on VLAN TCI and mask\n");
-	printf("      --eth.type=STRING[/MASK]Filter on carrier protocol (ip, arp,rarp)\n");
-	printf("      --eth.src=ADDR[/MASK]   Filter on ethernet source\n");
-	printf("      --eth.dst=ADDR[/MASK]   Filter on ethernet destination\n");
-	printf("      --ip.proto=STRING       Filter on ip protocol (tcp, udp, icmp,)\n");
-	printf("      --ip.src=ADDR[/MASK]    Filter on source ip address, dotted decimal\n");
-	printf("      --ip.dst=ADDR[/MASK]    Filter on destination ip address, dotted decimal\n");
-	printf("      --tp.sport=PORT[/MASK]  Filter on source portnumber\n");
-	printf("      --tp.dport=PORT[/MASK]  Filter on destination portnumber\n");
-	printf("      --tp.port=PORT[/MASK]   Filter or source or destination portnumber (if\n"
-	       "                              either is a match the packet matches\n");
-	printf("      --caplen=BYTES          Store BYTES of the captured packet. [default=ALL]\n");
-	printf("      --filter-mode=MODE      Set filter mode to AND or OR [default=AND]\n");
+	printf("libcap_filter-" VERSION " options\n"
+	       "      --starttime=DATETIME      Discard all packages before starttime described by\n"
+	       "                                the unix timestamp. See capfilter(1) for\n"
+	       "                                additional accepted formats.\n"
+	       "      --endtime=DATETIME        Discard all packets after endtime.\n"
+	       "      --begin                   Alias for --starttime\n"
+	       "      --end                     Alias for --endtime\n"
+	       "      --mampid=STRING           Filter on MAMPid.\n"
+	       "      --mpid=STRING             Alias for --mampid.\n"
+	       "      --iface=STRING            Filter on networkinterface on MP.\n"
+	       "      --if=STRING               Alias for --iface.\n"
+	       "      --eth.vlan=TCI[/MASK]     Filter on VLAN TCI and mask.\n"
+	       "      --eth.type=STRING[/MASK]  Filter on carrier protocol (IP, ARP, RARP).\n"
+	       "      --eth.src=ADDR[/MASK]     Filter on ethernet source.\n"
+	       "      --eth.dst=ADDR[/MASK]     Filter on ethernet destination.\n"
+	       "      --ip.proto=STRING         Filter on ip protocol (TCP, UDP, ICMP).\n"
+	       "      --ip.src=ADDR[/MASK]      Filter on source ip address, dotted decimal.\n"
+	       "      --ip.dst=ADDR[/MASK]      Filter on destination ip address, dotted decimal.\n"
+	       "      --tp.sport=PORT[/MASK]    Filter on source portnumber.\n"
+	       "      --tp.dport=PORT[/MASK]    Filter on destination portnumber.\n"
+	       "      --tp.port=PORT[/MASK]     Filter or source or destination portnumber (if\n"
+	       "                                either is a match the packet matches).\n"
+	       "      --caplen=BYTES            Store BYTES of the captured packet. [default=ALL]\n"
+	       "      --filter-mode=MODE        Set filter mode to AND or OR. [default=AND]\n"
 #ifdef HAVE_PCAP
-	printf("      --bpf=FILTER            In addition to regular DPMI filter also use the\n"
-	       "                              supplied BPF. Matching takes place after DPMI\n"
-	       "                              filter.\n");
+	       "      --bpf=FILTER              In addition to regular DPMI filter also use the\n"
+	       "                                supplied BPF. Matching takes place after DPMI\n"
+	       "                                filter.\n"
 #endif
+		);
 }
 
 int filter_from_argv(int* argcptr, char** argv, struct filter* filter){
