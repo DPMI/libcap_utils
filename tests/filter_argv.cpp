@@ -165,7 +165,7 @@ public:
 
     CPPUNIT_ASSERT_EQUAL((uint32_t)FILTER_START_TIME, filter.index);
     CPPUNIT_ASSERT_EQUAL((uint32_t)123, filter.starttime.tv_sec);
-    CPPUNIT_ASSERT_EQUAL((uint64_t)4007000000000, filter.starttime.tv_psec);
+    CPPUNIT_ASSERT_EQUAL((uint64_t)400700000000, filter.starttime.tv_psec);
   }
 
   void test_endtime(){
@@ -175,7 +175,7 @@ public:
 
     CPPUNIT_ASSERT_EQUAL((uint32_t)FILTER_END_TIME, filter.index);
     CPPUNIT_ASSERT_EQUAL((uint32_t)123, filter.endtime.tv_sec);
-    CPPUNIT_ASSERT_EQUAL((uint64_t)4007000000000, filter.endtime.tv_psec);
+    CPPUNIT_ASSERT_EQUAL((uint64_t)400700000000, filter.endtime.tv_psec);
   }
 
   void test_mampid(){
@@ -345,7 +345,7 @@ public:
     CPPUNIT_ASSERT_SUCCESS(filter_from_argv(&argc, argv, &filter), 1);
     CPPUNIT_ASSERT_EQUAL((uint32_t)FILTER_END_TIME, filter.index);
     CPPUNIT_ASSERT_EQUAL((uint32_t)123, filter.endtime.tv_sec);
-    CPPUNIT_ASSERT_EQUAL((uint64_t)4007000000000, filter.endtime.tv_psec);
+    CPPUNIT_ASSERT_EQUAL((uint64_t)400700000000, filter.endtime.tv_psec);
   }
 
 	void test_shortname(){
@@ -394,7 +394,6 @@ int main(int argc, const char* argv[]){
   CppUnit::Test *suite = CppUnit::TestFactoryRegistry::getRegistry().makeTest();
   CppUnit::TextUi::TestRunner runner;
 
-  freopen("/dev/null", "w", stderr);
   runner.addTest( suite );
   runner.setOutputter(new CppUnit::CompilerOutputter(&runner.result(), std::cerr));
 
