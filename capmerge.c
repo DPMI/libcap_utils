@@ -116,7 +116,8 @@ int main(int argc, char* argv[]){
 
 		int ret;
 		if ( (ret=stream_open(&st[n], &addr, NULL, 0)) != 0 ){
-			fprintf(stderr, "%s: stream_open(..) returned %d: %s\n", program_name, ret, caputils_error_string(ret));
+			fprintf(stderr, "%s: when opening `%s':\n", program_name, argv[i]);
+			fprintf(stderr, "%s:   stream_open(..) returned %d: %s\n", program_name, ret, caputils_error_string(ret));
 			exit(1);
 		}
 	}
