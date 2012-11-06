@@ -215,8 +215,11 @@ int filter_from_argv(int* argc, char** argv, struct filter*);
 void filter_from_argv_usage(void);
 extern int filter_from_argv_opterr;
 
+/* functions for pragmatically creating filter */
 void filter_src_port_set(struct filter* filter, uint16_t port, uint16_t mask);
 void filter_dst_port_set(struct filter* filter, uint16_t port, uint16_t mask);
+void filter_src_ip_set(struct filter* filter, struct in_addr ip, struct in_addr mask);
+void filter_dst_ip_set(struct filter* filter, struct in_addr ip, struct in_addr mask);
 
 /**
  * Display a representation of the filter.

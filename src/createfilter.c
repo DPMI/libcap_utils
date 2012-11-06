@@ -635,3 +635,15 @@ void filter_dst_port_set(struct filter* filter, uint16_t port, uint16_t mask){
 	filter->dst_port = port & mask;
 	filter->dst_port_mask = mask;
 }
+
+void filter_src_ip_set(struct filter* filter, struct in_addr ip, struct in_addr mask){
+	filter->index |= FILTER_IP_SRC;
+	filter->ip_src.s_addr = ip.s_addr & mask.s_addr;
+	filter->ip_src_mask = mask;
+}
+
+void filter_dst_ip_set(struct filter* filter, struct in_addr ip, struct in_addr mask){
+	filter->index |= FILTER_IP_DST;
+	filter->ip_dst.s_addr = ip.s_addr & mask.s_addr;
+	filter->ip_dst_mask = mask;
+}

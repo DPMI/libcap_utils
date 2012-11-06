@@ -70,7 +70,7 @@ endif
 COMPILED_TESTS = tests/capdump_argv tests/capinfo_zero tests/capmerge_zero
 if BUILD_TESTS
 # tests which requires cppunit
-COMPILED_TESTS += tests/filter_argv tests/address tests/endian tests/hexdump tests/packet tests/stream tests/timepico
+COMPILED_TESTS += tests/filter tests/filter_argv tests/address tests/endian tests/hexdump tests/packet tests/stream tests/timepico
 endif
 
 check_PROGRAMS = ${COMPILED_TESTS}
@@ -212,6 +212,12 @@ capwalk_LDADD = ${tools_LIBS}
 ifstat_SOURCES = tools/ifstat.c
 ifstat_CFLAGS = ${tools_CFLAGS}
 ifstat_LDADD = ${tools_LIBS}
+
+tests_filter_CFLAGS = ${AM_CFLAGS} -Dfulhack
+tests_filter_CXXFLAGS = ${AM_CFLAGS} $(CPPUNIT_CFLAGS)
+tests_filter_LDFLAGS = $(CPPUNIT_LIBS)
+tests_filter_LDADD = libcap_filter-07.la libcap_utils-07.la
+tests_filter_SOURCES = tests/filter.cpp tests/common.cpp src/filter.c
 
 tests_filter_argv_CXXFLAGS = ${AM_CFLAGS} $(CPPUNIT_CFLAGS)
 tests_filter_argv_LDFLAGS = $(CPPUNIT_LIBS)
