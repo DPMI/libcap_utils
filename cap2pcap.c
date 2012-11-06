@@ -141,16 +141,8 @@ int main (int argc, char **argv){
 		return 1;
 	}
 
-	//output fileheader, simply so that the user gets some info on the version of the file thats beeing created.
-	struct file_version version;
-	const char* mampid = stream_get_mampid(st);
-	const char* comment = stream_get_comment(st);
-	stream_get_version(st, &version);
-
 	if ( !quiet ){
-		fprintf(stderr, "%s: caputils %d.%d stream\n", stream_addr_ntoa(&src), version.major, version.minor);
-		fprintf(stderr, "     mpid: %s\n", mampid != 0 ? mampid : "(unset)");
-		fprintf(stderr, "  comment: %s\n", comment ? comment : "(unset)");
+		stream_print_info(st, stderr);
 	}
 
 	struct cap_header* cp;
