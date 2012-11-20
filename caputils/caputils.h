@@ -56,6 +56,9 @@ struct filter;
 #define ETHERTYPE_IPV6 0x86dd
 #endif /* ETHERTYPE_IPV6 */
 
+/* our ethernet format */
+#define ETHERTYPE_MP 0x0810
+
 #define STPBRIDGES 0x0026
 #define CDPVTP 0x016E
 
