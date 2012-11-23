@@ -55,6 +55,7 @@ static struct option longopts[] = {
 	{"output",    required_argument, 0, 'o'},
 	{"mpid",      required_argument, 0, 'm'},
 	{"interface", required_argument, 0, 'i'},
+	{"CI",        required_argument, 0, 'i'},
 	{"caplen",    required_argument, 0, 'l'},
 	{"quiet",     no_argument,       0, 'q'},
 	{"help",      no_argument,       0, 'h'},
@@ -72,8 +73,11 @@ static void show_usage(){
 	printf("  -m, --mpid=STRING          Set MP id, max 199 char. [default: hostname]\n");
 	printf("  -c, --comment=STRING       Add comment to header [default: none]\n");
 	printf("  -o, --output=FILENAME      Destination filename.\n");
-	printf("  -i, --interface=INTERFACE  Capture on live interface. (use \"any\" to capture\n"
-	       "                             on all interfaces)\n");
+	printf("  -i, --interface=INTERFACE  Capture Interface. If no input file is specified a\n"
+	       "                             pcap live capture will run on the specified\n"
+	       "                             interface. (use \"any\" to capture on all\n"
+	       "                             interfaces).\n"
+	       "      --CI=INTERFACE         Alias for --iface\n");
 	printf("      --caplen=INT           Set caplen. Default %zd bytes.\n", caplen);
 	printf("  -q, --quiet                Silent output, only errors is printed.\n");
 	printf("  -h, --help                 Show this help.\n");
@@ -188,7 +192,7 @@ int main (int argc, char **argv){
       strncpy(cp.mampid, optarg, 8);
       break;
 
-    case 'i':
+    case 'i': /* --iface */
       strncpy(cp.nic, optarg, 8);
       break;
 
