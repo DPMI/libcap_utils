@@ -15,27 +15,33 @@
 #include <netinet/ip.h>
 #include <netdb.h>
 
+struct stats {
+	timepico first, last;
+};
+
 struct simple_list {
-	char** value;
+	char** key;         /* group key */
+	struct stats value; /* statistics for this group */
+
 	size_t size;        /* slots in use */
 	size_t capacity;    /* slots available */
 };
 
 static void slist_clear(struct simple_list* slist){
 	for ( unsigned int i = 0; i < slist->size; i++ ){
-		free(slist->value[i]);
+		free(slist->key[i]);
 	}
 	slist->size = 0;
 }
 
 static void slist_alloc(struct simple_list* slist, size_t growth){
 	slist->capacity += growth;
-	slist->value = realloc(slist->value, sizeof(char*) * slist->capacity);
+	slist->key = realloc(slist->key, sizeof(char*) * slist->capacity);
 }
 
 static void slist_free(struct simple_list* slist){
 	slist_clear(slist);
-	free(slist->value);
+	free(slist->key);
 	slist->capacity = 0;
 }
 
@@ -59,8 +65,8 @@ static struct count other;
 static struct count  ieee8023;
 static struct count ipproto[UINT8_MAX]; /* protocol is defined as 1 octet */
 static timepico first, last;
-static struct simple_list mpid = {NULL, 0, 0};
-static struct simple_list CI = {NULL, 0, 0};
+static struct simple_list mpid = {NULL, {}, 0, 0};
+static struct simple_list CI = {NULL, {}, 0, 0};
 
 static const char* shortopts = "h";
 static struct option longopts[] = {
@@ -168,12 +174,12 @@ static const char* array_join(char* dst, char* const src[], size_t n, const char
 
 static const char* get_mampid_list(const char* delimiter){
 	static char buffer[2048];
-	return array_join(buffer, mpid.value, mpid.size, delimiter);
+	return array_join(buffer, mpid.key, mpid.size, delimiter);
 }
 
 static const char* get_CI_list(const char* delimiter){
 	static char buffer[2048];
-	return array_join(buffer, CI.value, CI.size, delimiter);
+	return array_join(buffer, CI.key, CI.size, delimiter);
 }
 
 static const char* get_comment(stream_t st){
@@ -269,10 +275,10 @@ static void print_distribution(){
 	}
 }
 
-static void store_unique(struct simple_list* slist, const char* value, size_t maxlen){
+static unsigned int store_unique(struct simple_list* slist, const char* key, size_t maxlen){
 	/* try to locate an existing string */
 	for ( unsigned int i = 0; i < slist->size; i++ ){
-		if ( strncmp(slist->value[i], value, maxlen) == 0 ) return;
+		if ( strncmp(slist->key[i], key, maxlen) == 0 ) return i;
 	}
 
 	/* allocate more memory if needed */
@@ -280,9 +286,11 @@ static void store_unique(struct simple_list* slist, const char* value, size_t ma
 		slist_alloc(slist, /* growth = */ slist->capacity);
 	}
 
-	/* store value */
-	slist->value[slist->size] = strndup(value, maxlen);
+	/* store key */
+	unsigned int index = slist->size;
+	slist->key[index] = strndup(key, maxlen);
 	slist->size++;
+	return index;
 }
 
 static void store_mampid(struct cap_header* cp){
