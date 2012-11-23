@@ -15,9 +15,6 @@
 #include <netinet/ip.h>
 #include <netdb.h>
 
-#define STPBRIDGES 0x0026
-#define CDPVTP 0x016E
-
 struct simple_list {
 	char** value;
 	size_t size;        /* slots in use */
