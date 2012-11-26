@@ -76,13 +76,13 @@ static void show_usage(void){
 }
 
 int main(int argc, char **argv){
-  /* extract program name from path. e.g. /path/to/MArCd -> MArCd */
-  const char* separator = strrchr(argv[0], '/');
-  if ( separator ){
-    program_name = separator + 1;
-  } else {
-    program_name = argv[0];
-  }
+	/* extract program name from path. e.g. /path/to/MArCd -> MArCd */
+	const char* separator = strrchr(argv[0], '/');
+	if ( separator ){
+		program_name = separator + 1;
+	} else {
+		program_name = argv[0];
+	}
 
 	struct filter filter;
 	if ( filter_from_argv(&argc, argv, &filter) != 0 ){
@@ -132,12 +132,12 @@ int main(int argc, char **argv){
 			break;
 
 		case 't': /* --timeout */
-			{
-				int tmp = atoi(optarg);
-				timeout.tv_sec  = tmp / 1000;
-				timeout.tv_usec = tmp % 1000 * 1000;
-			}
-			break;
+		{
+			int tmp = atoi(optarg);
+			timeout.tv_sec  = tmp / 1000;
+			timeout.tv_usec = tmp % 1000 * 1000;
+		}
+		break;
 
 		case 'x': /* --hexdump */
 			flags |= FORMAT_HEXDUMP;
