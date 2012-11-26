@@ -16,7 +16,10 @@
 #include <netdb.h>
 
 struct stats {
-	timepico first, last;
+	unsigned long int packets;             /* total number of packets */
+	unsigned long int bytes;               /* sum of all bytes */
+	unsigned long int byte_min, byte_max;  /* smallest/largest packet_size */
+	timepico first, last;                  /* timestamp of first/last packet */
 };
 
 struct simple_list {
@@ -50,11 +53,8 @@ struct count {
 	uint64_t bytes;
 };
 
+static struct stats total;
 static stream_t st = NULL;
-static uint64_t packets = 0;
-static uint64_t bytes = 0;
-static unsigned int byte_min;
-static unsigned int byte_max;
 static int marker_present = 0;
 static struct count ipv4;
 static struct count ipv6;
@@ -64,7 +64,6 @@ static struct count cdpvtp;
 static struct count other;
 static struct count  ieee8023;
 static struct count ipproto[UINT8_MAX]; /* protocol is defined as 1 octet */
-static timepico first, last;
 static struct simple_list mpid = {NULL, {}, 0, 0};
 static struct simple_list CI = {NULL, {}, 0, 0};
 
@@ -85,10 +84,10 @@ static void show_usage(void){
 }
 
 static void reset(){
-	packets = 0;
-	bytes = 0;
-	byte_min = UINT16_MAX;
-	byte_max = 0;
+	total.packets = 0;
+	total.bytes = 0;
+	total.byte_min = UINT16_MAX;
+	total.byte_max = 0;
 	marker_present = 0;
 	ipv4.packets = 0;
 	ipv4.bytes = 0;
@@ -197,16 +196,16 @@ static void print_overview(){
 	if ( marker_present ){
 		sprintf(marker_str, "present on port %d", marker_present);
 	}
-	const timepico time_diff = timepico_sub(last, first);
+	const timepico time_diff = timepico_sub(total.last, total.first);
 	uint64_t hseconds = time_diff.tv_sec * 10 + time_diff.tv_psec / (PICODIVIDER / 10);
-	timepico_to_string_r(&first, first_str, 128, "%F %T");
-	timepico_to_string_r(&last,  last_str,  128, "%F %T");
-	format_bytes(byte_str, 128, bytes);
-	format_rate(rate_str, 128, bytes, hseconds/10);
-	format_seconds(sec_str, 128, first, last);
-	const int local_byte_min = packets > 0 ? byte_min : 0;
-	const int local_byte_max = packets > 0 ? byte_max : 0;
-	const int local_byte_avg = packets > 0 ? bytes / packets : 0;
+	timepico_to_string_r(&total.first, first_str, 128, "%F %T");
+	timepico_to_string_r(&total.last,  last_str,  128, "%F %T");
+	format_bytes(byte_str, 128, total.bytes);
+	format_rate(rate_str, 128, total.bytes, hseconds/10);
+	format_seconds(sec_str, 128, total.first, total.last);
+	const int local_byte_min = total.packets > 0 ? total.byte_min : 0;
+	const int local_byte_max = total.packets > 0 ? total.byte_max : 0;
+	const int local_byte_avg = total.packets > 0 ? total.bytes / total.packets : 0;
 
 	printf("Overview\n"
 	       "--------\n");
@@ -216,7 +215,7 @@ static void print_overview(){
 	printf(" captured: %s to %s\n", first_str, last_str);
 	printf("  markers: %s\n", marker_str);
 	printf(" duration: %s (%.1f seconds)\n", sec_str, (float)hseconds/10);
-	printf("  packets: %"PRIu64"\n", packets);
+	printf("  packets: %"PRIu64"\n", total.packets);
 	printf("    bytes: %s\n", byte_str);
 	printf(" pkt size: min/avg/max = %d/%d/%d\n", local_byte_min, local_byte_avg, local_byte_max);
 	printf(" avg rate: %s\n", rate_str);
@@ -313,15 +312,15 @@ static int show_info(const char* filename){
 
 	struct cap_header* cp;
 	while ( (ret=stream_read(st, &cp, NULL, NULL)) == 0 ){
-		packets++;
+		total.packets++;
 
-		if ( packets == 1 ){
-			first = cp->ts;
+		if ( total.packets == 1 ){
+			total.first = cp->ts;
 		}
-		last = cp->ts; /* overwritten each time */
-		bytes += cp->len;
-		byte_min = min(byte_min, cp->len);
-		byte_max = max(byte_max, cp->len);
+		total.last = cp->ts; /* overwritten each time */
+		total.bytes += cp->len;
+		total.byte_min = min(total.byte_min, cp->len);
+		total.byte_max = max(total.byte_max, cp->len);
 		if ( !marker_present ){
 			marker_present = is_marker(cp, NULL, 0);
 		}
