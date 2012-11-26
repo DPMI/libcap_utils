@@ -119,6 +119,10 @@ const char* timepico_to_string(const timepico* src, const char* fmt){
 	return timepico_to_string_r(src, buffer, 128, fmt);
 }
 
+double timepico_to_double(timepico tp){
+	return (double)tp.tv_sec + (double)tp.tv_psec/PICODIVIDER;
+}
+
 timepico timepico_sub(timepico x, timepico y){
 	timepico result;
 
