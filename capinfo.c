@@ -329,6 +329,16 @@ static void print_distribution(){
 	}
 }
 
+/**
+ * Get location for this packet.
+ * Returns pointer to internal buffer that will be overwritten by successive calls.
+ */
+static const char* get_location(struct cap_header* cp){
+  static char buffer[17];
+  sprintf(buffer,"%.8s:%.8s", cp->mampid, cp->nic);
+  return buffer;
+}
+
 static unsigned int store_unique(struct simple_list* slist, const char* key, size_t maxlen){
 	/* try to locate an existing string */
 	for ( unsigned int i = 0; i < slist->size; i++ ){
@@ -381,9 +391,7 @@ static void store_CI(struct cap_header* cp){
 }
 
 static void store_duration(struct cap_header* cp){
-	char buffer[17];
-	sprintf(buffer,"%s:%s",cp->mampid,cp->nic);
-	store_cunique(&duration, buffer, cp->ts, 17);
+	store_cunique(&duration, get_location(cp), cp->ts, 17);
 }
 
 static void parse_ethernetII(const struct cap_header* cp){
