@@ -390,7 +390,7 @@ static void store_CI(struct cap_header* cp){
 	store_stats(&CI.value[i], cp);
 }
 
-static void store_duration(struct cap_header* cp){
+static void store_location(struct cap_header* cp){
 	store_cunique(&duration, get_location(cp), cp->ts, 17);
 }
 
@@ -445,7 +445,7 @@ static int show_info(const char* filename){
 		store_stats(&global, cp);
 		store_mampid(cp);
 		store_CI(cp);
-		store_duration(cp);
+		store_location(cp);
 
 		/* this is not a fool-proof test since ethertypes can be < 0x05dc and
 		 * jumboframes exist. 0x05dc refers to the MTU. */
