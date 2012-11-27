@@ -21,6 +21,7 @@
 static int keep_running = 1;
 static unsigned int flags = FORMAT_REL_TIMESTAMP;
 static unsigned int max_packets = 0;
+static unsigned int max_matched_packets = 0;
 static const char* iface = NULL;
 static struct timeval timeout = {1,0};
 static const char* program_name = NULL;
@@ -34,9 +35,10 @@ void handle_sigint(int signum){
 	keep_running = 0;
 }
 
-static const char* shortopts = "p:i:t:dDar1234xHh";
+static const char* shortopts = "p:c:i:t:dDar1234xHh";
 static struct option longopts[]= {
 	{"packets",  required_argument, 0, 'p'},
+	{"count",    required_argument, 0, 'c'},
 	{"iface",    required_argument, 0, 'i'},
 	{"timeout",  required_argument, 0, 't'},
 	{"calender", no_argument,       0, 'd'},
@@ -56,7 +58,9 @@ static void show_usage(void){
 	printf("Usage: %s [OPTIONS] STREAM\n", program_name);
 	printf("  -i, --iface          For ethernet-based streams, this is the interface to listen\n"
 	       "                       on. For other streams it is ignored.\n"
-	       "  -p, --packets=N      Stop after N packets.\n"
+	       "  -p, --packets=N      Stop after N read packets.\n"
+	       "  -c, --count=N        Stop after N matched packets.\n"
+	       "                       If both -p and -c is used, what ever happens first will stop.\n"
 	       "  -t, --timeout=N      Wait for N ms while buffer fills [default: 1000ms].\n"
 	       "  -h, --help           This text.\n"
 	       "\n"
@@ -131,6 +135,11 @@ int main(int argc, char **argv){
 			max_packets = atoi(optarg);
 			break;
 
+		case 'c': /* --packets */
+			max_matched_packets = atoi(optarg);
+			break;
+
+
 		case 't': /* --timeout */
 		{
 			int tmp = atoi(optarg);
@@ -194,6 +203,12 @@ int main(int argc, char **argv){
 			printf("read enought packages\n");
 			break;
 		}
+		if ( max_matched_packets > 0 && matched >= max_matched_packets) {
+			/* Read enough pkts lets break. */
+			printf("read enought packages\n");
+			break;
+		}
+
 	}
 
 	/* if ret == -1 the stream was closed properly (e.g EOF or TCP shutdown)
