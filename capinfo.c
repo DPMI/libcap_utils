@@ -117,6 +117,18 @@ static unsigned int max(unsigned int a, unsigned int b){
 	return (a>b) ? a : b;
 }
 
+void store_packet_stats(struct stats* stat, struct cap_header* cp){
+	stat->packets++;
+
+	if ( stat->packets == 1 ){
+		stat->first = cp->ts;
+	}
+	stat->last = cp->ts; /* overwritten each time */
+	stat->bytes += cp->len;
+	stat->byte_min = min(stat->byte_min, cp->len);
+	stat->byte_max = max(stat->byte_max, cp->len);
+}
+
 static void format_bytes(char* dst, size_t size, uint64_t bytes){
 	static const char* prefix[] = { "", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB" };
 	unsigned int n = 0;
@@ -312,19 +324,11 @@ static int show_info(const char* filename){
 
 	struct cap_header* cp;
 	while ( (ret=stream_read(st, &cp, NULL, NULL)) == 0 ){
-		total.packets++;
-
-		if ( total.packets == 1 ){
-			total.first = cp->ts;
-		}
-		total.last = cp->ts; /* overwritten each time */
-		total.bytes += cp->len;
-		total.byte_min = min(total.byte_min, cp->len);
-		total.byte_max = max(total.byte_max, cp->len);
 		if ( !marker_present ){
 			marker_present = is_marker(cp, NULL, 0);
 		}
 
+		store_packet_stats(&total, cp);
 		store_mampid(cp);
 		store_CI(cp);
 
