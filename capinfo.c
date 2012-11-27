@@ -23,11 +23,11 @@ struct stats {
 };
 
 struct simple_list {
-	char** key;         /* group key */
-	struct stats value; /* statistics for this group */
+	char** key;          /* group key */
+	struct stats* value; /* statistics for this group */
 
-	size_t size;        /* slots in use */
-	size_t capacity;    /* slots available */
+	size_t size;         /* slots in use */
+	size_t capacity;     /* slots available */
 };
 
 static void slist_clear(struct simple_list* slist){
@@ -39,12 +39,14 @@ static void slist_clear(struct simple_list* slist){
 
 static void slist_alloc(struct simple_list* slist, size_t growth){
 	slist->capacity += growth;
-	slist->key = realloc(slist->key, sizeof(char*) * slist->capacity);
+	slist->key   = realloc(slist->key,   sizeof(char*) * slist->capacity);
+	slist->value = realloc(slist->value, sizeof(struct stats) * slist->capacity);
 }
 
 static void slist_free(struct simple_list* slist){
 	slist_clear(slist);
 	free(slist->key);
+	free(slist->value);
 	slist->capacity = 0;
 }
 
@@ -64,8 +66,8 @@ static struct count cdpvtp;
 static struct count other;
 static struct count  ieee8023;
 static struct count ipproto[UINT8_MAX]; /* protocol is defined as 1 octet */
-static struct simple_list mpid = {NULL, {}, 0, 0};
-static struct simple_list CI = {NULL, {}, 0, 0};
+static struct simple_list mpid = {NULL, NULL, 0, 0};
+static struct simple_list CI = {NULL, NULL, 0, 0};
 
 static const char* shortopts = "h";
 static struct option longopts[] = {
@@ -83,11 +85,35 @@ static void show_usage(void){
 	printf("Hint: use `capfilter | capinfo` need to run capinfo on a filtered trace.\n");
 }
 
+static unsigned int min(unsigned int a, unsigned int b){
+	return (a<b) ? a : b;
+}
+
+static unsigned int max(unsigned int a, unsigned int b){
+	return (a>b) ? a : b;
+}
+
+static void reset_stats(struct stats* stat){
+	stat->packets = 0;
+	stat->bytes = 0;
+	stat->byte_min = UINT16_MAX;
+	stat->byte_max = 0;
+}
+
+static void store_stats(struct stats* stat, struct cap_header* cp){
+	stat->packets++;
+
+	if ( stat->packets == 1 ){
+		stat->first = cp->ts;
+	}
+	stat->last = cp->ts; /* overwritten each time */
+	stat->bytes += cp->len;
+	stat->byte_min = min(stat->byte_min, cp->len);
+	stat->byte_max = max(stat->byte_max, cp->len);
+}
+
 static void reset(){
-	total.packets = 0;
-	total.bytes = 0;
-	total.byte_min = UINT16_MAX;
-	total.byte_max = 0;
+	reset_stats(&total);
 	marker_present = 0;
 	ipv4.packets = 0;
 	ipv4.bytes = 0;
@@ -107,26 +133,6 @@ static void reset(){
 		ipproto[i].packets = 0;
 		ipproto[i].bytes = 0;
 	}
-}
-
-static unsigned int min(unsigned int a, unsigned int b){
-	return (a<b) ? a : b;
-}
-
-static unsigned int max(unsigned int a, unsigned int b){
-	return (a>b) ? a : b;
-}
-
-void store_packet_stats(struct stats* stat, struct cap_header* cp){
-	stat->packets++;
-
-	if ( stat->packets == 1 ){
-		stat->first = cp->ts;
-	}
-	stat->last = cp->ts; /* overwritten each time */
-	stat->bytes += cp->len;
-	stat->byte_min = min(stat->byte_min, cp->len);
-	stat->byte_max = max(stat->byte_max, cp->len);
 }
 
 static void format_bytes(char* dst, size_t size, uint64_t bytes){
@@ -301,15 +307,18 @@ static unsigned int store_unique(struct simple_list* slist, const char* key, siz
 	unsigned int index = slist->size;
 	slist->key[index] = strndup(key, maxlen);
 	slist->size++;
+	reset_stats(&slist->value[index]);
 	return index;
 }
 
 static void store_mampid(struct cap_header* cp){
-	store_unique(&mpid, cp->mampid, 8);
+	const int i = store_unique(&mpid, cp->mampid, 8);
+	store_stats(&mpid.value[i], cp);
 }
 
 static void store_CI(struct cap_header* cp){
-	store_unique(&CI, cp->nic, CAPHEAD_NICLEN);
+	const int i = store_unique(&CI, cp->nic, CAPHEAD_NICLEN);
+	store_stats(&CI.value[i], cp);
 }
 
 static int show_info(const char* filename){
@@ -328,7 +337,7 @@ static int show_info(const char* filename){
 			marker_present = is_marker(cp, NULL, 0);
 		}
 
-		store_packet_stats(&total, cp);
+		store_stats(&total, cp);
 		store_mampid(cp);
 		store_CI(cp);
 
