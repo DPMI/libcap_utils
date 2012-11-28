@@ -211,7 +211,7 @@ static void print_overview(){
 	printf(" captured: %s to %s\n", first_str, last_str);
 	printf("  markers: %s\n", marker_str);
 	printf(" duration: %s (%.1f seconds)\n", sec_str, (float)hseconds/10);
-	printf("  packets: %ld\n", packets);
+	printf("  packets: %"PRIu64"\n", packets);
 	printf("    bytes: %s\n", byte_str);
 	printf(" pkt size: min/avg/max = %d/%d/%d\n", local_byte_min, local_byte_avg, local_byte_max);
 	printf(" avg rate: %s\n", rate_str);
