@@ -158,7 +158,7 @@ tests_endian_SOURCES = tests/endian.cpp be64toh.c
 
 tests_stream_CXXFLAGS = ${AM_CFLAGS} $(CPPUNIT_CFLAGS)
 tests_stream_LDFLAGS = $(CPPUNIT_LIBS)
-tests_stream_LDADD = libcap_utils-07.la
+tests_stream_LDADD = libcap_utils-07.la libcap_stream-07.la
 tests_stream_SOURCES = tests/stream.cpp
 
 tests_timepico_CXXFLAGS = ${AM_CFLAGS} $(CPPUNIT_CFLAGS)
