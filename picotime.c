@@ -94,7 +94,7 @@ int timepico_from_string(timepico* dst , const char* input){
   if ( fraction[0] == '.' ){
     fraction++;
     size_t digits = strlen(fraction);
-    dst->tv_psec = atol(fraction);
+    dst->tv_psec = strtoll(fraction, NULL, 10);
 
     /* convert ".1" to (0.)1000000000000 */
     while( digits<12 ) {
