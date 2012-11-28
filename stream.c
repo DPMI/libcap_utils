@@ -40,6 +40,7 @@ int stream_alloc(struct stream** stptr, enum protocol_t protocol, size_t size, s
 	st->readPos=0;
 	st->flushed = 0;
 	st->num_addresses = 1;
+	st->if_loopback = 0;
 	st->stat.read = 0;
 	st->stat.recv = 0;
 	st->stat.matched = 0;
@@ -66,6 +67,18 @@ void match_inc_seqnr(const struct stream* st, long unsigned int* restrict seq, c
 	/* validate sequence number */
 	const int expected = *seq;
 	const int got = ntohl(sh->sequencenr);
+
+	/* detect loopback device with duplicate packets */
+	const int loopback_dup = st->if_loopback && expected == got + 1;
+	if ( __builtin_expect(loopback_dup, 0) ){
+		static int loopback_warning = 1;
+		if ( loopback_warning ){
+			fprintf(stderr, "warning: a loopback device receiving duplicate packets has been detected, duplicates will be ignored but it will incur degraded performance.\n");
+			loopback_warning = 0;
+		}
+		return;
+	}
+
 	if( __builtin_expect(expected != got, 0) ){
 		static char timestr[64];
 		time_t t = time(NULL);

@@ -45,6 +45,7 @@ struct stream {
   unsigned int readPos;                 // Read position
   int flushed;                          // Indicate that we got a flush signal.
 	int num_addresses;                    // Number of addresses associated with stream
+	int if_loopback;                      // Set to non-zero if the stream is a loopback interface.
 
 	/* stats */
 	struct stream_stat stat;
