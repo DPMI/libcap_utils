@@ -78,7 +78,6 @@ static const char* timestr(){
 }
 
 void match_inc_seqnr(const struct stream* st, long unsigned int* restrict seq, const struct sendhead* restrict sh){
-	/* validate sequence number */
 	const int expected = *seq;
 	const int got = ntohl(sh->sequencenr);
 
@@ -93,6 +92,7 @@ void match_inc_seqnr(const struct stream* st, long unsigned int* restrict seq, c
 		return;
 	}
 
+	/* validate sequence number */
 	if( __builtin_expect(expected != got, 0) ){
 		fprintf(stderr,"[%s] Mismatch of sequence numbers. Expected %d got %d (%d frame(s) missing, pkgcount: %"PRIu64")\n", timestr(), expected, got, (got-expected), st->stat.recv);
 		*seq = ntohl(sh->sequencenr); /* reset sequence number */
