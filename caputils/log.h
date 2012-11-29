@@ -43,6 +43,8 @@ enum FORMAT_FLAGS {
 	FORMAT_LAYER_TRANSPORT   = (3<<FORMAT_LAYER_BIT),
 	FORMAT_LAYER_LINK        = (2<<FORMAT_LAYER_BIT),
 	FORMAT_LAYER_DPMI        = (1<<FORMAT_LAYER_BIT),
+
+	/* layer bits must be last, don't out any extra fields here */
 };
 
 /**
