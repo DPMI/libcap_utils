@@ -47,11 +47,32 @@ enum FORMAT_FLAGS {
 	/* layer bits must be last, don't out any extra fields here */
 };
 
+
+struct format {
+	uint64_t pktcount;
+	timepico ref;
+	int first;
+	unsigned int flags;
+};
+
 /**
- * Write a description of the packet in cp to fp.
+ * Setup a formatter for printing packets.
+ *
+ * @param st Stream packets comes from.
  * @param flags Bitmask of FORMAT_FLAGS.
  */
-void format_pkg(FILE* fp, const stream_t st, const struct cap_header* cp, unsigned int flags);
+void format_setup(struct format* state, unsigned int flags);
+
+/**
+ * Write a description of the packet in cp to fp.
+ */
+void format_pkg(FILE* fp, struct format* state, const struct cap_header* cp);
+
+/**
+ * When writing stateful descriptions it is sometimes useful to ignore a packet
+ * but increment the packet counter and time reference.
+ */
+void format_ignore(FILE* fp, struct format* state, const struct cap_header* cp);
 
 #ifdef __cplusplus
 }
