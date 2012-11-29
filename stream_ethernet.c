@@ -297,6 +297,12 @@ static long stream_ethernet_init(struct stream** stptr, const struct ether_addr*
   }
   unsigned int if_mtu = ifr.ifr_mtu;
 
+  /* query if it is a loopback interface. (loopback captures packets twice, i.e. in both directions) */
+  if ( ioctl(fd, SIOCGIFFLAGS, &ifr) == -1 ){
+    return errno;
+  }
+  const int if_loopback = ifr.ifr_flags & IFF_LOOPBACK;
+
   /* default buffer_size of 25*MTU */
   if ( buffer_size == 0 ){
 	  buffer_size = 250 * if_mtu;
@@ -322,6 +328,7 @@ static long stream_ethernet_init(struct stream** stptr, const struct ether_addr*
   st->socket = fd;
   st->num_address = 0;
   st->if_mtu = if_mtu;
+  st->base.if_loopback = if_loopback;
   memset(st->seqnum, 0, sizeof(long unsigned int) * MAX_ADDRESS);
 
   /* get iface index */
