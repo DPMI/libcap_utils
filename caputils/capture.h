@@ -30,7 +30,7 @@ struct cap_header {
     struct ethhdr ethhdr[0];
     struct ether_vlan_header ethvlanhdr[0];
   };
-};
+} __attribute((packed));
 typedef struct cap_header cap_head;
 typedef struct cap_header* caphead_t;
 
