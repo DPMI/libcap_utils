@@ -21,6 +21,7 @@
 #include <unistd.h>
 
 #define MAX_ADDRESS 100
+#define LIBPFRING_PROMISC 1
 
 struct stream_pfring {
   struct stream base;
@@ -274,7 +275,7 @@ long stream_pfring_open(struct stream** stptr, const struct ether_addr* addr, co
 
   /* open pfring */
   char* derp = strdup(iface);
-  pfring* pd = pfring_open(derp, 1, 9000, 0);
+  pfring* pd = pfring_open(derp, LIBPFRING_PROMISC, 9000, 0);
   if ( !pd ){
 	  return errno;
   }
