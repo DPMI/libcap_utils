@@ -83,6 +83,7 @@ nobase_include_HEADERS =    \
 	caputils/filter.h   \
 	caputils/caputils.h \
 	caputils/log.h      \
+	caputils/packet.h   \
 	caputils/stream.h   \
 	caputils/marc.h     \
 	caputils/marker.h   \
@@ -112,6 +113,7 @@ libcap_utils_07_la_SOURCES =   \
 	log.c               \
 	marker.c            \
 	utils.c             \
+	packet.c            \
 	picotime.c
 
 if BUILD_BE64TOH
