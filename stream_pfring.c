@@ -275,7 +275,7 @@ long stream_pfring_open(struct stream** stptr, const struct ether_addr* addr, co
 
   /* open pfring */
   char* derp = strdup(iface);
-  pfring* pd = pfring_open(derp, LIBPFRING_PROMISC, 9000, 0);
+  pfring* pd = pfring_open(derp, LIBPFRING_PROMISC, if_mtu, 0);
   if ( !pd ){
 	  return errno;
   }
