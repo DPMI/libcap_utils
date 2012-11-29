@@ -63,6 +63,20 @@ int stream_alloc(struct stream** stptr, enum protocol_t protocol, size_t size, s
 	return 0;
 }
 
+/**
+ * Return current time as a string.
+ * @return pointer to internal memory, not threadsafe. Subsequent calls will overwrite data.
+ */
+static const char* timestr(){
+	static char timestr[64];
+
+	time_t t = time(NULL);
+	struct tm tm = *localtime(&t);
+	strftime(timestr, sizeof(timestr), "%a, %d %b %Y %H:%M:%S %z", &tm);
+
+	return timestr;
+}
+
 void match_inc_seqnr(const struct stream* st, long unsigned int* restrict seq, const struct sendhead* restrict sh){
 	/* validate sequence number */
 	const int expected = *seq;
@@ -73,19 +87,14 @@ void match_inc_seqnr(const struct stream* st, long unsigned int* restrict seq, c
 	if ( __builtin_expect(loopback_dup, 0) ){
 		static int loopback_warning = 1;
 		if ( loopback_warning ){
-			fprintf(stderr, "warning: a loopback device receiving duplicate packets has been detected, duplicates will be ignored but it will incur degraded performance.\n");
+			fprintf(stderr, "[%s] Warning: a loopback device receiving duplicate packets has been detected, duplicates will be ignored but it will incur degraded performance.\n", timestr());
 			loopback_warning = 0;
 		}
 		return;
 	}
 
 	if( __builtin_expect(expected != got, 0) ){
-		static char timestr[64];
-		time_t t = time(NULL);
-		struct tm tm = *gmtime(&t);
-		strftime(timestr, sizeof(timestr), "%a, %d %b %Y %H:%M:%S +0000", &tm);
-
-		fprintf(stderr,"[%s] Mismatch of sequence numbers. Expected %d got %d (%d frame(s) missing, pkgcount: %"PRIu64")\n", timestr, expected, got, (got-expected), st->stat.recv);
+		fprintf(stderr,"[%s] Mismatch of sequence numbers. Expected %d got %d (%d frame(s) missing, pkgcount: %"PRIu64")\n", timestr(), expected, got, (got-expected), st->stat.recv);
 		*seq = ntohl(sh->sequencenr); /* reset sequence number */
 		abort();
 	}
