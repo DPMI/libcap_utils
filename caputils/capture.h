@@ -16,11 +16,10 @@ struct ether_vlan_header{
 };
 
 // Capture Header. This header is attached to each packet that we keep, i.e. it matched a filter.
-//
-//
+#define CAPHEAD_NICLEN 8
 struct cap_header {
-  char nic[8];                          // Identifies the CI where the frame was caught
-  char mampid[8];                       // Identifies the MP where the frame was caught,
+  char nic[CAPHEAD_NICLEN];             // Identifies the CI where the frame was caught
+  char mampid[8];                       // Identifies the MP where the frame was caught
   timepico ts;                          // Identifies when the frame was caught
   uint32_t len;                         // Identifies the lenght of the frame
   uint32_t caplen;                      // Identifies how much of the frame that we find here

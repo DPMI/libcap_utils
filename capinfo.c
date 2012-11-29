@@ -288,7 +288,7 @@ static void store_mampid(struct cap_header* cp){
 }
 
 static void store_CI(struct cap_header* cp){
-	store_unique(&CI, cp->nic, 8);
+	store_unique(&CI, cp->nic, CAPHEAD_NICLEN);
 }
 
 static int show_info(const char* filename){

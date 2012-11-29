@@ -172,7 +172,7 @@ int main (int argc, char **argv){
 
   /* setup capture header */
   struct cap_header cp;
-  strncpy(cp.nic, "CONV", 8);
+  strncpy(cp.nic, "CONV", CAPHEAD_NICLEN);
   gethostname(cp.mampid, 8);
 
   /* defaults */
@@ -193,7 +193,7 @@ int main (int argc, char **argv){
       break;
 
     case 'i': /* --iface */
-      strncpy(cp.nic, optarg, 8);
+      strncpy(cp.nic, optarg, CAPHEAD_NICLEN);
       break;
 
     case 'l':
