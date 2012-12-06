@@ -3,6 +3,7 @@ AM_CFLAGS = -Wall ${PCAP_CFLAGS} ${PFRING_CFLAGS}
 
 lib_LTLIBRARIES = libcap_utils-07.la libcap_filter-07.la libcap_stream-07.la libcap_marc-07.la
 bin_PROGRAMS = 
+noinst_PROGRAMS = ifstat
 man1_MANS =
 man3_MANS =                 \
 	man/libcaputils_reading.3 \
@@ -100,13 +101,14 @@ else
 libcap_stream_07_la_SOURCES += stream_ethernet.c
 endif
 
-libcap_utils_07_la_LDFLAGS = -version-info 0:2:0
+libcap_utils_07_la_LDFLAGS = -version-info 1:0:1
 libcap_utils_07_la_LIBADD = libcap_stream-07.la libcap_filter-07.la libcap_marc-07.la
 libcap_utils_07_la_SOURCES =   \
 	caputils_int.h      \
 	address.c           \
 	error.c             \
 	format.c            \
+	interface.c         \
 	log.c               \
 	marker.c            \
 	utils.c             \
@@ -136,6 +138,7 @@ capfilter_LDADD = libcap_filter-07.la libcap_utils-07.la libcap_stream-07.la
 capmarker_LDADD = libcap_utils-07.la
 capmerge_LDADD = libcap_filter-07.la libcap_utils-07.la libcap_stream-07.la
 capshow_LDADD = libcap_filter-07.la libcap_utils-07.la libcap_stream-07.la
+ifstat_LDADD = libcap_filter-07.la libcap_utils-07.la libcap_stream-07.la
 
 tests_filter_argv_CXXFLAGS = ${AM_CFLAGS} $(CPPUNIT_CFLAGS)
 tests_filter_argv_LDFLAGS = $(CPPUNIT_LIBS)

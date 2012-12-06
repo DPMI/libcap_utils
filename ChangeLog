@@ -1,6 +1,7 @@
 caputils-0.7.14
 ---------------
 
+	* add: API to get properties for an interface.
 	* change: [stream] packet printing is now stateful. API change.
 	* fix: [stream] detect duplicate packets on loopback interfaces.
 	* fix: timepico_from_string requires long long on some platforms.
