@@ -53,7 +53,7 @@ static int match_ma_pkt(const struct stream_pfring* st, const struct ethhdr* eth
 	assert(ethhdr);
 
 	/* check protocol and destination */
-	if ( ntohs(ethhdr->h_proto) != LLPROTO ){
+	if ( ntohs(ethhdr->h_proto) != ETHERTYPE_MP ){
 		return -1;
 	}
 
@@ -239,7 +239,7 @@ static int iface_mtu(const char* iface){
 	strncpy(ifr.ifr_name, iface, IFNAMSIZ);
 
 	/* open raw socket */
-	int sd = socket(AF_PACKET, SOCK_RAW, htons(LLPROTO));
+	int sd = socket(AF_PACKET, SOCK_RAW, htons(ETHERTYPE_MP));
 	if ( sd < 0 ){
 		return -1;
 	}

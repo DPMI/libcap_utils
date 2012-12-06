@@ -44,7 +44,7 @@ static int match_ma_pkt(const struct stream_ethernet* st, const struct ethhdr* e
 	assert(ethhdr);
 
 	/* check protocol and destination */
-	if ( ntohs(ethhdr->h_proto) != LLPROTO ){
+	if ( ntohs(ethhdr->h_proto) != ETHERTYPE_MP ){
 		return -1;
 	}
 
@@ -254,7 +254,7 @@ long stream_ethernet_add(struct stream* stt, const struct ether_addr* addr){
           "\tEthernet.src=%s\n"
           "\tEthernet.dst=%s\n"
           "\tInterface=%s (%d)\n",
-          LLPROTO,
+          ETHERTYPE_MP,
           hexdump_address_r(&st->sll.sll_addr, eth_src),
           hexdump_address_r(&mcast.mr_address, eth_dst),
           if_indextoname(st->if_index, name), mcast.mr_ifindex);
@@ -380,7 +380,7 @@ static long destroy(struct stream_ethernet* st){
 long stream_ethernet_create(struct stream** stptr, const struct ether_addr* addr, const char* iface, const char* mpid, const char* comment, int flags){
   long ret = 0;
 
-  if ( (ret=stream_ethernet_init(stptr, addr, iface, LLPROTO, 0)) != 0 ){
+  if ( (ret=stream_ethernet_init(stptr, addr, iface, ETHERTYPE_MP, 0)) != 0 ){
     return ret;
   }
 
