@@ -83,24 +83,24 @@ static const void* find_ipproto_header(const void* pkt, const struct ethhdr* eth
   return pkt + sizeof(struct ethhdr) + vlan_offset + 4*(ip->ip_hl);
 }
 
-const struct tcphdr* find_tcp_header(const void* pkt, const struct ethhdr* ether, const struct ip* ip, uint16_t* src, uint16_t* dest){
+const struct tcphdr* find_tcp_header(const void* pkt, const struct ethhdr* ether, const struct ip* ip, uint16_t* src, uint16_t* dst){
   if ( !( ip && ip->ip_p == IPPROTO_TCP) ){
     return NULL;
   }
 
   const struct tcphdr* tcp = (const struct tcphdr*)find_ipproto_header(pkt, ether, ip);
-  *src = ntohs(tcp->source);
-  *dest = ntohs(tcp->dest);
+  if ( src ) *src = ntohs(tcp->source);
+  if ( dst ) *dst = ntohs(tcp->dest);
   return tcp;
 }
 
-const struct udphdr* find_udp_header(const void* pkt, const struct ethhdr* ether, const struct ip* ip, uint16_t* src, uint16_t* dest){
+const struct udphdr* find_udp_header(const void* pkt, const struct ethhdr* ether, const struct ip* ip, uint16_t* src, uint16_t* dst){
   if ( !( ip && ip->ip_p == IPPROTO_UDP) ){
     return NULL;
   }
   const struct udphdr* udp = (const struct udphdr*)find_ipproto_header(pkt, ether, ip);
-  *src = ntohs(udp->source);
-  *dest = ntohs(udp->dest);
+  if ( src ) *src = ntohs(udp->source);
+  if ( dst ) *dst = ntohs(udp->dest);
   return udp;
 }
 
