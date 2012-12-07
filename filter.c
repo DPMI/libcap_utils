@@ -87,7 +87,6 @@ const struct tcphdr* find_tcp_header(const void* pkt, const struct ethhdr* ether
   if ( !( ip && ip->ip_p == IPPROTO_TCP) ){
     return NULL;
   }
-
   const struct tcphdr* tcp = (const struct tcphdr*)find_ipproto_header(pkt, ether, ip);
   if ( src ) *src = ntohs(tcp->source);
   if ( dst ) *dst = ntohs(tcp->dest);
