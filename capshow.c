@@ -206,12 +206,10 @@ int main(int argc, char **argv){
 
 		if ( max_packets > 0 && stat->matched >= max_packets) {
 			/* Read enough pkts lets break. */
-			printf("read enought packages\n");
 			break;
 		}
 		if ( max_matched_packets > 0 && matched >= max_matched_packets) {
 			/* Read enough pkts lets break. */
-			printf("read enought packages\n");
 			break;
 		}
 	}
@@ -224,7 +222,7 @@ int main(int argc, char **argv){
 	}
 
 	/* Write stats */
-	fprintf(stderr, "%"PRIu64" packets received.\n", stat->read);
+	fprintf(stderr, "%"PRIu64" packets read.\n", stat->read);
 	fprintf(stderr, "%"PRIu64" packets matched filter.\n", matched);
 
 	/* Release resources */
