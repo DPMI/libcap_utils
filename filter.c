@@ -21,6 +21,7 @@
 #endif
 
 #include "caputils/filter.h"
+#include "caputils/packet.h"
 #include "caputils_int.h"
 #include <stdlib.h>
 #include <string.h>
@@ -59,21 +60,6 @@ static const struct ether_vlan_header* find_ether_vlan_header(const struct ethhd
     const struct ether_vlan_header* vlan = (const struct ether_vlan_header*)ether;
     *h_proto = ntohs(vlan->h_proto);
     return vlan;
-  }
-  return NULL;
-}
-
-const struct ip* find_ip_header(const struct ethhdr* ether){
-  const void* ptr = ether;
-  if( ntohs(ether->h_proto) != 0x8100 ){
-    if ( ntohs(ether->h_proto) == ETHERTYPE_IP ){
-      return (const struct ip*)(ptr + sizeof(struct ethhdr));
-    }
-  } else { /* have VLAN tag */
-    const struct ether_vlan_header* vlan = (const struct ether_vlan_header*)ether;
-    if( ntohs(vlan->h_proto) == ETHERTYPE_IP ){
-      return (const struct ip*)(ptr + sizeof(struct ether_vlan_header));
-    }
   }
   return NULL;
 }
@@ -171,7 +157,7 @@ static int filter_core(const struct filter* filter, const void* pkt, struct cap_
 	uint16_t dst_port = 0; /* set by find_{tcp,udp}_header */
 
 	const struct ether_vlan_header* vlan = find_ether_vlan_header(ether, &h_proto);
-	const struct ip* ip = find_ip_header(ether);
+	const struct ip* ip = find_ipv4_header(ether, NULL);
 	find_tcp_header(pkt, ether, ip, &src_port, &dst_port);
 	find_udp_header(pkt, ether, ip, &src_port, &dst_port);
 

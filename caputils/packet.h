@@ -26,6 +26,18 @@ enum Level level_from_string(const char* str);
  */
 size_t payload_size(enum Level level, const cap_head* caphead);
 
+/**
+ * Get IPv4 header from packet.
+ *
+ * @param ether Ethernet header
+ * @param payload If non-null returns a pointer to the IPv4 payload (not including optional header). Payload is undefined if packet is not IPv4.
+ * @return Pointer to IPv4 header or NULL if packet does not contain IPv4.
+ */
+const struct ip* find_ipv4_header(const struct ethhdr* ether, const char** payload);
+
+const struct tcphdr* find_tcp_header(const void* pkt, const struct ethhdr* ether, const struct ip* ip, uint16_t* src, uint16_t* dest);
+const struct udphdr* find_udp_header(const void* pkt, const struct ethhdr* ether, const struct ip* ip, uint16_t* src, uint16_t* dest);
+
 #ifdef __cplusplus
 }
 #endif
