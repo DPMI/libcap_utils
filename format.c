@@ -18,6 +18,7 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <netinet/ip.h>
+#include <netinet/ip6.h>
 #include <netinet/ip_icmp.h>
 #include <netinet/tcp.h>
 #include <netinet/udp.h>
@@ -179,6 +180,15 @@ static void print_ipv4(FILE* dst, const struct ip* ip, unsigned int flags){
 	}
 }
 
+static void print_ipv6(FILE* fp, const struct ip6_hdr* ip, unsigned int flags){
+	char src[INET6_ADDRSTRLEN];
+	char dst[INET6_ADDRSTRLEN];
+
+	fprintf(fp, ": %s --> %s",
+	        inet_ntop(AF_INET6, &ip->ip6_src, src, INET6_ADDRSTRLEN),
+	        inet_ntop(AF_INET6, &ip->ip6_dst, dst, INET6_ADDRSTRLEN));
+}
+
 static void print_ieee8023(FILE* dst, const struct llc_pdu_sn* llc){
 	fprintf(dst,"dsap=%02x ssap=%02x ctrl1 = %02x ctrl2 = %02x", llc->dsap, llc->ssap, llc->ctrl_1, llc->ctrl_2);
 }
@@ -254,6 +264,9 @@ static void print_eth(FILE* dst, const struct cap_header* cp, const struct ethhd
 
 	case ETHERTYPE_IPV6:
 		fputs(" IPv6", dst);
+		if ( flags >= FORMAT_LAYER_TRANSPORT ){
+			print_ipv6(dst, (const struct ip6_hdr*)payload, flags);
+		}
 		break;
 
 	case ETHERTYPE_ARP:
