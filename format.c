@@ -296,10 +296,21 @@ static void print_timestamp(FILE* fp, struct format* state, const struct cap_hea
 
 	if( !format_date ) {
 		timepico t = cp->ts;
+		int sign = 0; /* quick-and-dirty solution */
+
 		if ( relative ){
-			t = timepico_sub(t, state->ref);
+			/* need to test if timestamp is less than reference in case multiple
+			 * locations is present in trace in which case dt may be negative. */
+			if ( timecmp(&t, &state->ref) >= 0 ){
+				t = timepico_sub(t, state->ref);
+				sign = 0;
+			} else {
+				t = timepico_sub(state->ref, t);
+				sign = 1;
+			}
 		}
-		fprintf(fp, "%u.%012"PRIu64, t.tv_sec, t.tv_psec);
+
+		fprintf(fp, "%s%u.%012"PRIu64, sign ? "-" : "", t.tv_sec, t.tv_psec);
 		return;
 	}
 
