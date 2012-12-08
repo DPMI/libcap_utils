@@ -289,23 +289,28 @@ static void print_eth(FILE* dst, const struct cap_header* cp, const struct ethhd
 	}
 }
 
-static void print_timestamp(FILE* fp, const struct cap_header* cp, unsigned int flags){
-	const int format_date  = flags & FORMAT_DATE_BIT;
-	const int format_local = flags & FORMAT_LOCAL_BIT;
-	const int relative     = flags & FORMAT_REL_TIMESTAMP;
+static void print_timestamp(FILE* fp, struct format* state, const struct cap_header* cp){
+	const int format_date  = state->flags & FORMAT_DATE_BIT;
+	const int format_local = state->flags & FORMAT_LOCAL_BIT;
+	const int relative     = state->flags & FORMAT_REL_TIMESTAMP;
 
 	if( !format_date ) {
 		timepico t = cp->ts;
+		int sign = 0; /* quick-and-dirty solution */
+
 		if ( relative ){
-			static timepico ref;;
-			static int first = 1;
-			if ( first ){
-				ref = t;
-				first = 0;
+			/* need to test if timestamp is less than reference in case multiple
+			 * locations is present in trace in which case dt may be negative. */
+			if ( timecmp(&t, &state->ref) >= 0 ){
+				t = timepico_sub(t, state->ref);
+				sign = 0;
+			} else {
+				t = timepico_sub(state->ref, t);
+				sign = 1;
 			}
-			t = timepico_sub(t, ref);
 		}
-		fprintf(fp, "%u.%012"PRIu64, t.tv_sec, t.tv_psec);
+
+		fprintf(fp, "%s%u.%012"PRIu64, sign ? "-" : "", t.tv_sec, t.tv_psec);
 		return;
 	}
 
@@ -333,23 +338,44 @@ static void print_linklayer(FILE* fp, const struct cap_header* cp, unsigned int 
 	print_eth(fp, cp, cp->ethhdr, flags);
 }
 
-void format_pkg(FILE* fp, const stream_t st, const struct cap_header* cp, unsigned int flags){
-	fprintf(fp, "[%4"PRIu64"]:%.4s:%.8s:", st->stat.read, cp->nic, cp->mampid);
-
-	/* by default show all */
-	if ( flags >> FORMAT_LAYER_BIT == 0){
-		flags |= FORMAT_LAYER_APPLICATION;
-	}
-
-	print_timestamp(fp, cp, flags);
+static void print_pkt(FILE* fp, struct format* state, const struct cap_header* cp){
+	print_timestamp(fp, state, cp);
 	fprintf(fp, ":LINK(%4d):CAPLEN(%4d)", cp->len, cp->caplen);
 
-	if ( flags >= FORMAT_LAYER_LINK ){
-		print_linklayer(fp, cp, flags);
+	if ( state->flags >= FORMAT_LAYER_LINK ){
+		print_linklayer(fp, cp, state->flags);
 	}
 	fputc('\n', fp);
 
-	if ( flags & FORMAT_HEXDUMP ){
+	if ( state->flags & FORMAT_HEXDUMP ){
 		hexdump(fp, cp->payload, min(cp->caplen, cp->len));
+	}
+}
+
+void format_setup(struct format* state, unsigned int flags){
+	state->pktcount = 0;
+	state->first = 1;
+	state->flags = flags;
+
+	/* by default show all */
+	if ( state->flags >> FORMAT_LAYER_BIT == 0){
+		state->flags |= FORMAT_LAYER_APPLICATION;
+	}
+}
+
+void format_pkg(FILE* fp, struct format* state, const struct cap_header* cp){
+	fprintf(fp, "[%4"PRIu64"]:%.4s:%.8s:", state->pktcount++, cp->nic, cp->mampid);
+	if ( state->first ){
+		state->ref = cp->ts;
+		state->first = 0;
+	}
+	print_pkt(fp, state, cp);
+}
+
+void format_ignore(FILE* fp, struct format* state, const struct cap_header* cp){
+	state->pktcount++;
+	if ( state->first ){
+		state->ref = cp->ts;
+		state->first = 0;
 	}
 }

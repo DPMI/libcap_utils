@@ -178,6 +178,10 @@ int main(int argc, char **argv){
 	/* handle C-c */
 	signal(SIGINT, handle_sigint);
 
+	/* setup formatter */
+	struct format format;
+	format_setup(&format, flags);
+
 	uint64_t matched = 0;
 	while ( keep_running ) {
 		/* A short timeout is used to allow the application to "breathe", i.e
@@ -194,21 +198,20 @@ int main(int argc, char **argv){
 		}
 
 		if ( filter_match(&filter, cp->payload, cp) ){
-			format_pkg(stdout, stream, cp, flags);
+			format_pkg(stdout, &format, cp);
 			matched++;
+		} else {
+			format_ignore(stdout, &format, cp);
 		}
 
 		if ( max_packets > 0 && stat->matched >= max_packets) {
 			/* Read enough pkts lets break. */
-			printf("read enought packages\n");
 			break;
 		}
 		if ( max_matched_packets > 0 && matched >= max_matched_packets) {
 			/* Read enough pkts lets break. */
-			printf("read enought packages\n");
 			break;
 		}
-
 	}
 
 	/* if ret == -1 the stream was closed properly (e.g EOF or TCP shutdown)
@@ -219,7 +222,7 @@ int main(int argc, char **argv){
 	}
 
 	/* Write stats */
-	fprintf(stderr, "%"PRIu64" packets received.\n", stat->read);
+	fprintf(stderr, "%"PRIu64" packets read.\n", stat->read);
 	fprintf(stderr, "%"PRIu64" packets matched filter.\n", matched);
 
 	/* Release resources */
