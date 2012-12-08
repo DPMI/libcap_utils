@@ -68,7 +68,7 @@ endif
 
 TESTS =
 if BUILD_TESTS
-TESTS += tests/filter_argv tests/address tests/endian tests/stream tests/timepico
+TESTS += tests/filter_argv tests/address tests/endian tests/packet tests/stream tests/timepico
 endif
 TESTS += tests/capinfo_zero tests/capmerge_zero
 check_PROGRAMS = ${TESTS}
@@ -83,6 +83,7 @@ nobase_include_HEADERS =    \
 	caputils/filter.h   \
 	caputils/caputils.h \
 	caputils/log.h      \
+	caputils/packet.h   \
 	caputils/stream.h   \
 	caputils/marc.h     \
 	caputils/marker.h   \
@@ -112,6 +113,7 @@ libcap_utils_07_la_SOURCES =   \
 	log.c               \
 	marker.c            \
 	utils.c             \
+	packet.c            \
 	picotime.c
 
 if BUILD_BE64TOH
@@ -158,6 +160,11 @@ tests_endian_CXXFLAGS = ${AM_CFLAGS} $(CPPUNIT_CFLAGS)
 tests_endian_LDFLAGS = $(CPPUNIT_LIBS)
 tests_endian_LDADD = libcap_utils-07.la
 tests_endian_SOURCES = tests/endian.cpp be64toh.c
+
+tests_packet_CXXFLAGS = ${AM_CFLAGS} $(CPPUNIT_CFLAGS)
+tests_packet_LDFLAGS = $(CPPUNIT_LIBS)
+tests_packet_LDADD = libcap_utils-07.la
+tests_packet_SOURCES = tests/packet.cpp
 
 tests_stream_CXXFLAGS = ${AM_CFLAGS} $(CPPUNIT_CFLAGS)
 tests_stream_LDFLAGS = $(CPPUNIT_LIBS)

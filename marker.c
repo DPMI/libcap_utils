@@ -3,6 +3,7 @@
 #endif
 
 #include "caputils/marker.h"
+#include "caputils/packet.h"
 #include "caputils_int.h"
 #include <netinet/udp.h>
 
@@ -12,7 +13,7 @@
 
 int is_marker(const struct cap_header* cp, struct marker* ptr, int port){
 	/* match ip packet */
-	const struct ip* ip = find_ip_header(cp->ethhdr);
+	const struct ip* ip = find_ipv4_header(cp->ethhdr, NULL);
 	if ( !ip ){ return 0; }
 
 	/* match udp packet */

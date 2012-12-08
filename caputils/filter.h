@@ -190,10 +190,6 @@ int filter_close(struct filter* filter);
 void filter_pack(struct filter* src, struct filter_packed* dst);
 void filter_unpack(struct filter_packed* src, struct filter* dst);
 
-const struct ip* find_ip_header(const struct ethhdr* ether);
-const struct tcphdr* find_tcp_header(const void* pkt, const struct ethhdr* ether, const struct ip* ip, uint16_t* src, uint16_t* dest);
-const struct udphdr* find_udp_header(const void* pkt, const struct ethhdr* ether, const struct ip* ip, uint16_t* src, uint16_t* dest);
-
 #ifdef __cplusplus
 }
 #endif
