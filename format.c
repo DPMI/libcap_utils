@@ -180,14 +180,7 @@ static void print_ipv4(FILE* dst, const struct ip* ip, unsigned int flags){
 	}
 }
 
-static void print_ipv6(FILE* fp, const struct ip6_hdr* ip, unsigned int flags){
-	char src[INET6_ADDRSTRLEN];
-	char dst[INET6_ADDRSTRLEN];
-
-	fprintf(fp, ": %s --> %s",
-	        inet_ntop(AF_INET6, &ip->ip6_src, src, INET6_ADDRSTRLEN),
-	        inet_ntop(AF_INET6, &ip->ip6_dst, dst, INET6_ADDRSTRLEN));
-}
+void print_ipv6(FILE* fp, const struct ip6_hdr* ip, unsigned int flags);
 
 static void print_ieee8023(FILE* dst, const struct llc_pdu_sn* llc){
 	fprintf(dst,"dsap=%02x ssap=%02x ctrl1 = %02x ctrl2 = %02x", llc->dsap, llc->ssap, llc->ctrl_1, llc->ctrl_2);

@@ -109,6 +109,7 @@ libcap_utils_07_la_SOURCES =   \
 	caputils_int.h      \
 	address.c           \
 	error.c             \
+	format/ipv6.c       \
 	format.c            \
 	interface.c         \
 	log.c               \
