@@ -109,7 +109,14 @@ libcap_utils_07_la_SOURCES =   \
 	caputils_int.h      \
 	address.c           \
 	error.c             \
+	format/arp.c        \
+	format/ethernet.c   \
+	format/icmp.c       \
+	format/ip.c         \
+	format/ipv4.c       \
 	format/ipv6.c       \
+	format/tcp.c        \
+	format/udp.c        \
 	format.c            \
 	interface.c         \
 	log.c               \

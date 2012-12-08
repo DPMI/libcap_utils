@@ -2,6 +2,7 @@
 #include "config.h"
 #endif
 
+#include "format.h"
 #include "caputils/log.h"
 #include <stdio.h>
 #include <arpa/inet.h>
@@ -49,23 +50,15 @@ void print_ipv6(FILE* fp, const struct ip6_hdr* ip, unsigned int flags){
 	}
 	fputs(": ", fp);
 
-	switch ( proto ){
-	case IPPROTO_UDP:
-		fprintf(fp, "UDP");
-		break;
-
-	case IPPROTO_ICMPV6:
-		fprintf(fp, "ICMPv6");
-		break;
-
-	default:
-		fprintf(fp, "unknown transport %d", proto);
-	}
-
 	char src[INET6_ADDRSTRLEN];
 	char dst[INET6_ADDRSTRLEN];
+	inet_ntop(AF_INET6, &ip->ip6_src, src, sizeof(src));
+	inet_ntop(AF_INET6, &ip->ip6_dst, dst, sizeof(dst));
 
-	fprintf(fp, " %s --> %s",
-	        inet_ntop(AF_INET6, &ip->ip6_src, src, INET6_ADDRSTRLEN),
-	        inet_ntop(AF_INET6, &ip->ip6_dst, dst, INET6_ADDRSTRLEN));
+	struct network net = {
+		.net_src = src,
+		.net_dst = dst,
+		.plen = ip->ip6_plen + sizeof(struct ip6_hdr) - header_size,
+	};
+	print_ipproto(fp, &net, proto, payload, flags);
 }

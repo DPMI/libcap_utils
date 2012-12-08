@@ -66,6 +66,10 @@ struct filter;
 #define STPBRIDGES 0x0026
 #define CDPVTP 0x016E
 
+#ifndef IPPROTO_OSPF
+#define IPPROTO_OSPF 89
+#endif
+
 struct llc_pdu_sn {
   uint8_t dsap;
   uint8_t ssap;
