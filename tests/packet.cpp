@@ -15,10 +15,15 @@ static const cap_head* caphead = (const cap_head*)data;
 class Test: public CppUnit::TestFixture {
   CPPUNIT_TEST_SUITE(Test);
 	CPPUNIT_TEST(test_level_from_string);
-	CPPUNIT_TEST(test_physical);
-	CPPUNIT_TEST(test_link);
-	CPPUNIT_TEST(test_network);
-	CPPUNIT_TEST(test_transport);
+	CPPUNIT_TEST(test_layer_physical);
+	CPPUNIT_TEST(test_layer_link);
+	CPPUNIT_TEST(test_layer_network);
+	CPPUNIT_TEST(test_layer_transport);
+	CPPUNIT_TEST(test_layer_application);
+	CPPUNIT_TEST(test_payload_physical);
+	CPPUNIT_TEST(test_payload_link);
+	CPPUNIT_TEST(test_payload_network);
+	CPPUNIT_TEST(test_payload_transport);
   CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -33,19 +38,39 @@ public:
 	  CPPUNIT_ASSERT_EQUAL(LEVEL_INVALID,     level_from_string("anything"));
   }
 
-	void test_physical(){
+	void test_layer_physical(){
+		CPPUNIT_ASSERT_EQUAL((size_t)0, layer_size(LEVEL_PHYSICAL, caphead));
+	}
+
+	void test_layer_link(){
+		CPPUNIT_ASSERT_EQUAL((size_t)505, layer_size(LEVEL_LINK, caphead));
+	}
+
+	void test_layer_network(){
+		CPPUNIT_ASSERT_EQUAL((size_t)491, layer_size(LEVEL_NETWORK, caphead));
+	}
+
+	void test_layer_transport(){
+		CPPUNIT_ASSERT_EQUAL((size_t)471, layer_size(LEVEL_TRANSPORT, caphead));
+	}
+
+	void test_layer_application(){
+		CPPUNIT_ASSERT_EQUAL((size_t)439, layer_size(LEVEL_APPLICATION, caphead));
+	}
+
+	void test_payload_physical(){
 		CPPUNIT_ASSERT_EQUAL((size_t)505, payload_size(LEVEL_PHYSICAL, caphead));
 	}
 
-	void test_link(){
+	void test_payload_link(){
 		CPPUNIT_ASSERT_EQUAL((size_t)491, payload_size(LEVEL_LINK, caphead));
 	}
 
-	void test_network(){
+	void test_payload_network(){
 		CPPUNIT_ASSERT_EQUAL((size_t)471, payload_size(LEVEL_NETWORK, caphead));
 	}
 
-	void test_transport(){
+	void test_payload_transport(){
 		CPPUNIT_ASSERT_EQUAL((size_t)439, payload_size(LEVEL_TRANSPORT, caphead));
 	}
 

@@ -109,6 +109,16 @@ size_t payload_size(enum Level level, const cap_head* caphead){
 	}
 }
 
+size_t layer_size(enum Level level, const cap_head* caphead){
+	/* layer size at physical is not supported, traces does not include necessary data */
+	if ( level == LEVEL_INVALID || level == LEVEL_PHYSICAL ){
+		return 0;
+	}
+
+	const enum Level q = (enum Level)((int)level - 1);
+	return payload_size(q, caphead);
+}
+
 const struct ip* find_ipv4_header(const struct ethhdr* ether, const char** ptr){
 	const char* ref = (const char*)ether + sizeof(struct ethhdr);
   uint16_t proto = ntohs(ether->h_proto);

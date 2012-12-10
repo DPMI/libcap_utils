@@ -22,9 +22,14 @@ enum Level {
 enum Level level_from_string(const char* str);
 
 /**
- * Get payload sizes at the various levels.
+ * Get payload sizes at the various levels (same as layer_size but excludes header).
  */
 size_t payload_size(enum Level level, const cap_head* caphead);
+
+/**
+ * Get layer sizes at the various levels (same as payload_size but includes header).
+ */
+size_t layer_size(enum Level level, const cap_head* caphead);
 
 /**
  * Get IPv4 header from packet.
