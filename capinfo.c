@@ -39,27 +39,11 @@ struct simple_list {
 	size_t capacity;     /* slots available */
 };
 
-struct complex_list {
-	char** value;
-	timepico* start;
-	timepico* stop;
-	size_t size;        /* slots in use */
-	size_t capacity;    /* slots available */
-};
-
 static void slist_clear(struct simple_list* slist){
 	for ( unsigned int i = 0; i < slist->size; i++ ){
 		free(slist->key[i]);
 	}
 	slist->size = 0;
-}
-
-static void clist_clear(struct complex_list* clist){
-	for ( unsigned int i = 0; i < clist->size; i++ ){
-		free(clist->value[i]);
-
-	}
-	clist->size = 0;
 }
 
 static void slist_alloc(struct simple_list* slist, size_t growth){
@@ -68,25 +52,11 @@ static void slist_alloc(struct simple_list* slist, size_t growth){
 	slist->value = realloc(slist->value, sizeof(struct stats) * slist->capacity);
 }
 
-static void clist_alloc(struct complex_list* clist, size_t growth){
-	clist->capacity += growth;
-	clist->value = realloc(clist->value, sizeof(char*) * clist->capacity);
-	clist->start = realloc(clist->start, sizeof(timepico) * clist->capacity);
-	clist->stop = realloc(clist->stop, sizeof(timepico) * clist->capacity);
-}
-
 static void slist_free(struct simple_list* slist){
 	slist_clear(slist);
 	free(slist->key);
 	free(slist->value);
 	slist->capacity = 0;
-}
-static void clist_free(struct complex_list* clist){
-	clist_clear(clist);
-	free(clist->value);
-	free(clist->start);
-	free(clist->stop);
-	clist->capacity = 0;
 }
 
 static struct stats global;
@@ -94,7 +64,7 @@ static stream_t st = NULL;
 static struct count ipproto[UINT8_MAX]; /* protocol is defined as 1 octet */
 static struct simple_list mpid = {NULL, NULL, 0, 0};
 static struct simple_list CI = {NULL, NULL, 0, 0};
-static struct complex_list duration = {NULL, 0,0,0, 0};
+static struct simple_list location = {NULL, NULL, 0, 0};
 
 static const char* shortopts = "h";
 static struct option longopts[] = {
@@ -157,7 +127,7 @@ static void reset(){
 	 * only for the current file.) */
 	slist_clear(&mpid);
 	slist_clear(&CI);
-	clist_clear(&duration);
+	slist_clear(&location);
 }
 
 static void format_bytes(char* dst, size_t size, uint64_t bytes){
@@ -214,20 +184,6 @@ static const char* array_join(char* dst, char* const src[], size_t n, const char
 	return dst;
 }
 
-static const char* carray_join(char* const src[], timepico start[], timepico stop[],size_t n, const char* delimiter){
-	static char buffer[2048];
-	static char buffer2[2048];
-	char* cur = buffer;
-	char* dirtime = buffer2;
-	for ( unsigned int i = 0; i < n; i++ ){
-		format_seconds(dirtime,40,start[i],stop[i]);
-		const timepico time_diff = timepico_sub(stop[i], start[i]);
-		uint64_t hseconds = time_diff.tv_sec * 10 + time_diff.tv_psec / (PICODIVIDER / 10);
-		cur += sprintf(cur, "%s%s: %s (%.1f seconds)",(i>0?delimiter:""), src[i],dirtime, (float)hseconds/10);
-	}
-	return buffer;
-}
-
 static const char* get_mampid_list(const char* delimiter){
 	static char buffer[2048];
 	return array_join(buffer, mpid.key, mpid.size, delimiter);
@@ -236,10 +192,6 @@ static const char* get_mampid_list(const char* delimiter){
 static const char* get_CI_list(const char* delimiter){
 	static char buffer[2048];
 	return array_join(buffer, CI.key, CI.size, delimiter);
-}
-
-static const char* get_duration_list(const char* delimiter){
-	return carray_join(duration.value, duration.start, duration.stop, duration.size, delimiter);
 }
 
 static const char* get_comment(stream_t st){
@@ -284,7 +236,13 @@ static void print_overview(){
 
 	printf("Locations\n"
 	       "---------\n");
-	printf("#dirdur#%s\n", get_duration_list("\n#dirdur#"));
+	for ( size_t i = 0; i < location.size; i++ ){
+		const struct stats* s = &location.value[i];
+		const timepico time_diff = timepico_sub(s->last, s->first);
+		uint64_t hseconds = time_diff.tv_sec * 10 + time_diff.tv_psec / (PICODIVIDER / 10);
+		format_seconds(sec_str, 128, global.first, global.last);
+		printf("  %s %.1f seconds, %ld packets, %ld bytes\n", location.key[i], (float)hseconds/10, s->packets, s->bytes);
+	}
 	printf("\n");
 }
 
@@ -358,28 +316,6 @@ static unsigned int store_unique(struct simple_list* slist, const char* key, siz
 	return index;
 }
 
-
-static void store_cunique(struct complex_list* clist, const char* value, timepico ts, size_t maxlen){
-	/* try to locate an existing string */
-	for ( unsigned int i = 0; i < clist->size; i++ ){
-		if ( strncmp(clist->value[i], value, maxlen) == 0 ) {
-			clist->stop[i]=ts;
-			return;
-		}
-	}
-
-	/* allocate more memory if needed */
-	if ( clist->size == clist->capacity ){
-		clist_alloc(clist, /* growth = */ clist->capacity);
-	}
-
-	/* store value */
-	clist->value[clist->size] = strndup(value, maxlen);
-	clist->start[clist->size] = ts;
-	clist->stop[clist->size] = ts;
-	clist->size++;
-}
-
 static void store_mampid(struct cap_header* cp){
 	const int i = store_unique(&mpid, cp->mampid, 8);
 	store_stats(&mpid.value[i], cp);
@@ -391,7 +327,8 @@ static void store_CI(struct cap_header* cp){
 }
 
 static void store_location(struct cap_header* cp){
-	store_cunique(&duration, get_location(cp), cp->ts, 17);
+	const int i = store_unique(&location, get_location(cp), 17);
+	store_stats(&location.value[i], cp);
 }
 
 static void parse_ethernetII(const struct cap_header* cp){
@@ -498,7 +435,7 @@ int main(int argc, char* argv[]){
 	/* initial storage */
 	slist_alloc(&mpid, 8);
 	slist_alloc(&CI, 8);
-	clist_alloc(&duration, 8);
+	slist_alloc(&location, 8);
 
 	/* no positional arguments, try to process stdin */
 	if ( optind == argc ){
@@ -520,7 +457,7 @@ int main(int argc, char* argv[]){
 	/* release resources */
 	slist_free(&mpid);
 	slist_free(&CI);
-	clist_free(&duration);
+	slist_free(&location);
 
 	return status == 0 ? 0 : 1;
 }
