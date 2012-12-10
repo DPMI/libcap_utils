@@ -40,6 +40,9 @@ enum FilterOffset {
 	OFFSET_END_TIME,
 	OFFSET_START_TIME,
 	OFFSET_PORT,
+
+	/* Local filters (these is not used by MArCd, can be reordered) */
+	OFFSET_FRAME_MAX_DT,
 };
 
 enum FilterBitmask {
@@ -61,6 +64,9 @@ enum FilterBitmask {
 	FILTER_END_TIME = (1<<OFFSET_END_TIME),
 	FILTER_START_TIME=(1<<OFFSET_START_TIME),
 	FILTER_PORT     = (1<<OFFSET_PORT), /* either src or dst port */
+
+	/* local filters */
+	FILTER_FRAME_MAX_DT = (1<<OFFSET_FRAME_MAX_DT),
 };
 
 enum FilterMode {
@@ -108,14 +114,21 @@ struct filter {
 	uint16_t port;                     /* 8192: src or dst port */
 	uint16_t port_mask;
 
-	uint32_t consumer;                 /* Destination Consumer */
-	uint32_t caplen;                   /* Amount of data to capture. */
-
-	stream_addr_t dest;                /* Destination. */
+	/* local filters */
+	timepico frame_max_dt;             /* reject all packets after a interarrival-time is higher than specified, no more packets will be matched */
 
 	/* BFP filter (if supported) */
 	struct bpf_insn* bpf_insn;
 	char* bpf_expr;
+
+	/* state */
+	int first;                         /* 1 if this is the first packet */
+	timepico frame_last_ts;            /* timestamp of the previous packet */
+
+	/* destination */
+	uint32_t consumer;                 /* Destination Consumer */
+	uint32_t caplen;                   /* Amount of data to capture. */
+	stream_addr_t dest;                /* Destination. */
 };
 
 /**
@@ -182,10 +195,9 @@ void filter_print(const struct filter* filter, FILE* fp, int verbose);
  * @param head Capture header.
  * @return Return non-zero if packet matches.
  */
-int filter_match(const struct filter* filter, const void* pkt, struct cap_header* head);
+int filter_match(struct filter* filter, const void* pkt, struct cap_header* head);
 
 int filter_close(struct filter* filter);
-
 
 void filter_pack(struct filter* src, struct filter_packed* dst);
 void filter_unpack(struct filter_packed* src, struct filter* dst);

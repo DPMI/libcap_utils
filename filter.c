@@ -150,6 +150,20 @@ static int FILTER filter_end_time(const struct filter* filter, const timepico* t
 	return (filter->index & FILTER_END_TIME) && (timecmp(&filter->endtime, time) >= 0);
 }
 
+static int FILTER filter_frame_dt(const struct filter* filter, const timepico time){
+	if ( !(filter->index & FILTER_FRAME_MAX_DT) ){
+		return 0;
+	}
+
+	/* assume match when packets are out-of-order */
+	if ( timecmp(&time, &filter->frame_last_ts) < 0 ){
+		return 1;
+	}
+
+	const timepico iat = timepico_sub(time, filter->frame_last_ts);
+	return timecmp(&iat, &filter->frame_max_dt) == -1;
+}
+
 static int filter_core(const struct filter* filter, const void* pkt, struct cap_header* head){
 	const struct ethhdr* ether = (const struct ethhdr*)pkt;
 	uint16_t h_proto = ntohs(ether->h_proto); /* may be overwritten by find_ether_vlan_header */
@@ -181,6 +195,9 @@ static int filter_core(const struct filter* filter, const void* pkt, struct cap_
 	match |= filter_start_time(filter, &head->ts)    << OFFSET_START_TIME;  /* Start time vs packet timestamp */
 	match |= filter_port(filter, src_port, dst_port) << OFFSET_PORT;        /* Transport source or dest port */
 
+	/* local tests */
+	match |= filter_frame_dt(filter, head->ts)       << OFFSET_FRAME_MAX_DT;
+
 	switch ( filter->mode ){
 	case FILTER_AND: return match == filter->index;
 	case FILTER_OR:  return match > 0;
@@ -188,15 +205,27 @@ static int filter_core(const struct filter* filter, const void* pkt, struct cap_
 	}
 }
 
-int filter_match(const struct filter* filter, const void* pkt, struct cap_header* head){
+int filter_match(struct filter* filter, const void* pkt, struct cap_header* head){
 	assert(filter);
 	assert(pkt);
 	assert(head);
 
+	/* exceptions for first packet */
+	if ( filter->first ){
+		filter->frame_last_ts = head->ts;
+		filter->first = 0;
+	}
+
 	const int core_match = filter->index == 0 || filter_core(filter, pkt, head);
 	const int bpf_match = filter->bpf_insn == NULL || bpf_filter(filter->bpf_insn, pkt, head->len, head->caplen);
+	const int match = core_match && bpf_match;
 
-	return core_match && bpf_match;
+	/* store filter state */
+	if ( match ){
+		filter->frame_last_ts = head->ts;
+	}
+
+	return match;
 }
 
 static const char* inet_ntoa_r(const struct in_addr in, char* buf){

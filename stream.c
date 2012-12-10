@@ -399,7 +399,7 @@ static int fill_buffer(stream_t st, struct timeval* timeout){
 	return 0;
 }
 
-int stream_read(struct stream *myStream, cap_head** data, const struct filter *my_Filter, struct timeval* timeout){
+int stream_read(struct stream *myStream, cap_head** data, struct filter *my_Filter, struct timeval* timeout){
 	if ( myStream->read ){
 		return myStream->read(myStream, data, my_Filter, timeout);
 	}
@@ -492,7 +492,7 @@ int stream_read(struct stream *myStream, cap_head** data, const struct filter *m
 	return 0;
 }
 
-int stream_peek(stream_t st, cap_head** header, const struct filter* filter){
+int stream_peek(stream_t st, cap_head** header, struct filter* filter){
 	if ( st->read ){
 		fprintf(stderr, "stream_peek not implemented for this stream type\n");
 		abort();

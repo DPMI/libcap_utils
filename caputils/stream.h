@@ -138,7 +138,7 @@ int stream_copy(stream_t st, const struct cap_header* head);
  * @param timeout See select(2) for description of timeout.
  * @return Zero if successful, -1 when finished, positive int on error. header is undefined on errors.
  */
-int stream_read(stream_t st, cap_head** header, const struct filter* filter, struct timeval* timeout);
+int stream_read(stream_t st, cap_head** header, struct filter* filter, struct timeval* timeout);
 
 /**
  * Similar to stream_read but does not pop packet from stream.
@@ -147,7 +147,7 @@ int stream_read(stream_t st, cap_head** header, const struct filter* filter, str
  *       lost the non-matches already.
  * @return same as stream_read. EAGAIN if there is no packet to read, there is no blocking version of this call.
  */
-int stream_peek(stream_t st, cap_head** header, const struct filter* filter);
+int stream_peek(stream_t st, cap_head** header, struct filter* filter);
 
 #ifdef __cplusplus
 }
