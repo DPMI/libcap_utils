@@ -147,7 +147,7 @@ static int read_packet(struct stream_ethernet* st, struct timeval* timeout){
 	return 0;
 }
 
-int stream_ethernet_read(struct stream_ethernet* st, cap_head** header, const struct filter* filter, struct timeval* timeout){
+int stream_ethernet_read(struct stream_ethernet* st, cap_head** header, struct filter* filter, struct timeval* timeout){
 	/* I heard ext is a pretty cool guy, uses goto and doesn't afraid of anything */
   retry:
 

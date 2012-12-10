@@ -75,6 +75,10 @@ static struct option options[]= {
 	{"tp.dport",  1, 0,    1},
 	{"caplen",    1, 0,    PARAM_CAPLEN | PARAM_BIT},
 	{"filter-mode", required_argument, 0, PARAM_MODE | PARAM_BIT},
+
+	/* local-only filters */
+	{"frame-max-dt", required_argument, 0, FILTER_FRAME_MAX_DT},
+
 	{"bpf",       required_argument, 0, PARAM_BPF | PARAM_BIT},
 	{0, 0, 0, 0}
 };
@@ -387,6 +391,8 @@ void filter_from_argv_usage(){
 	       "      --tp.dport=PORT[/MASK]    Filter on destination portnumber.\n"
 	       "      --tp.port=PORT[/MASK]     Filter or source or destination portnumber (if\n"
 	       "                                either is a match the packet matches).\n"
+	       "      --frame-max-dt=TIME       Starts to reject packets after the interarrival-\n"
+	       "                                time is greater than TIME (WRT matched packets).\n"
 	       "      --caplen=BYTES            Store BYTES of the captured packet. [default=ALL]\n"
 	       "      --filter-mode=MODE        Set filter mode to AND or OR. [default=AND]\n"
 #ifdef HAVE_PCAP
@@ -408,6 +414,7 @@ int filter_from_argv(int* argcptr, char** argv, struct filter* filter){
 	memset(filter, 0, sizeof(struct filter));
 	filter->caplen = -1; /* capture everything (-1 overflows to a very large int) */
 	filter->mode = FILTER_AND;
+	filter->first = 1;
 
 	/* fast path */
 	if ( argc == 0 ){
@@ -551,6 +558,13 @@ int filter_from_argv(int* argcptr, char** argv, struct filter* filter){
 
 		case FILTER_DST_PORT:
 			if ( !parse_port(optarg, &filter->dst_port, &filter->dst_port_mask, "tp.dport") ){
+				continue;
+			}
+			break;
+
+		case FILTER_FRAME_MAX_DT:
+			if ( timepico_from_string(&filter->frame_max_dt, optarg) != 0 ){
+				fprintf(stderr, "Invalid time passed to --%s: %s. Ignoring.", options[index].name, optarg);
 				continue;
 			}
 			break;
