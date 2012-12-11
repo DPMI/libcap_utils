@@ -1,6 +1,7 @@
 #ifndef CAPUTILS_UTILS_H
 #define CAPUTILS_UTILS_H
 
+#include <stdint.h>
 #include <net/if.h>
 #include <netinet/ether.h>
 
@@ -40,6 +41,14 @@ const char* hexdump_address_r(const struct ether_addr* address, char buf[IFHWADD
  * Like ether_ntoa but does not omit leading zeros. Returns a string to static memory.
  */
 const char* hexdump_address(const struct ether_addr* addr);
+
+struct ethertype {
+	const char* name;
+	uint16_t value;
+};
+
+const struct ethertype* ethertype_by_name(const char* name);
+const struct ethertype* ethertype_by_number(int number);
 
 #ifdef __cplusplus
 }

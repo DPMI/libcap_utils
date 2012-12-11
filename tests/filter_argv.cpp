@@ -3,10 +3,12 @@
 #endif
 
 #include <caputils/filter.h>
+#include <caputils/utils.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
 #include <errno.h>
+#include <algorithm>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -98,7 +100,9 @@ class FilterCreate : public CppUnit::TestFixture {
   CPPUNIT_TEST( test_mampid        );
   CPPUNIT_TEST( test_iface         );
   CPPUNIT_TEST( test_eth_vlan      );
-  CPPUNIT_TEST( test_eth_type      );
+  CPPUNIT_TEST( test_eth_type1     );
+  CPPUNIT_TEST( test_eth_type2     );
+  CPPUNIT_TEST( test_eth_type3     );
   CPPUNIT_TEST( test_eth_src       );
   CPPUNIT_TEST( test_eth_dst       );
   CPPUNIT_TEST( test_ip_proto      );
@@ -114,6 +118,10 @@ class FilterCreate : public CppUnit::TestFixture {
 	CPPUNIT_TEST( test_mode_invalid  );
 	CPPUNIT_TEST( test_bpf_valid     );
 	CPPUNIT_TEST( test_bpf_invalid   );
+	CPPUNIT_TEST( test_ethertype1   );
+	CPPUNIT_TEST( test_ethertype2   );
+	CPPUNIT_TEST( test_ethertype3   );
+	CPPUNIT_TEST( test_ethertype4   );
   CPPUNIT_TEST_SUITE_END();
 
   struct filter filter;
@@ -203,20 +211,31 @@ public:
     CPPUNIT_ASSERT_EQUAL((uint16_t)4321, filter.vlan_tci_mask);
   }
 
-  void test_eth_type(){
-    argc = generate_argv(argv, "programname", "--eth.type", "ip/1234", NULL);
+  void test_eth_type1(){
+    argc = generate_argv(argv, "programname", "--eth.type", "ip", NULL);
     CPPUNIT_ASSERT_SUCCESS(filter_from_argv(&argc, argv, &filter), 1);
 
-    CPPUNIT_ASSERT_EQUAL((uint32_t)FILTER_ETH_TYPE, filter.index);
-    CPPUNIT_ASSERT_EQUAL((uint16_t)ETH_P_IP, filter.eth_type);
-    CPPUNIT_ASSERT_EQUAL((uint16_t)1234, filter.eth_type_mask);
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("filter.index", (uint32_t)FILTER_ETH_TYPE, filter.index);
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("filter.eth_type", (uint16_t)ETH_P_IP, filter.eth_type);
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("filter.eth_type_mask", (uint16_t)0xffff, filter.eth_type_mask);
+  }
 
+  void test_eth_type2(){
+    argc = generate_argv(argv, "programname", "--eth.type", "arp/0xff00", NULL);
+    CPPUNIT_ASSERT_SUCCESS(filter_from_argv(&argc, argv, &filter), 1);
+
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("filter.index", (uint32_t)FILTER_ETH_TYPE, filter.index);
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("filter.eth_type", (uint16_t)0x0800, filter.eth_type);
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("filter.eth_type_mask", (uint16_t)0xff00, filter.eth_type_mask);
+  }
+
+  void test_eth_type3(){
     argc = generate_argv(argv, "programname", "--eth.type", "2048/0xffff", NULL);
     CPPUNIT_ASSERT_SUCCESS(filter_from_argv(&argc, argv, &filter), 1);
 
-    CPPUNIT_ASSERT_EQUAL((uint32_t)FILTER_ETH_TYPE, filter.index);
-    CPPUNIT_ASSERT_EQUAL((uint16_t)ETH_P_IP, filter.eth_type);
-    CPPUNIT_ASSERT_EQUAL((uint16_t)0xffff, filter.eth_type_mask);
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("filter.index", (uint32_t)FILTER_ETH_TYPE, filter.index);
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("filter.eth_type", (uint16_t)ETH_P_IP, filter.eth_type);
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("filter.eth_type_mask", (uint16_t)0xffff, filter.eth_type_mask);
   }
 
   void test_eth_src(){
@@ -385,6 +404,28 @@ public:
     /* cannot test for validity unless pcap is enabled, this test reverts to the same as `test_bpf_valid`. */
     CPPUNIT_ASSERT_SUCCESS(filter_from_argv(&argc, argv, &filter), 1);
 #endif
+	}
+
+	void test_ethertype1(){
+		const struct ethertype* ethertype = ethertype_by_name("ip");
+		CPPUNIT_ASSERT_EQUAL(0x0800, ethertype ? ethertype->value : 0);
+	}
+
+	void test_ethertype2(){
+		const struct ethertype* ethertype = ethertype_by_name("IP");
+		CPPUNIT_ASSERT_EQUAL(0x0800, ethertype ? ethertype->value : 0);
+	}
+
+	void test_ethertype3(){
+		const struct ethertype* ethertype = ethertype_by_name("invalid");
+		CPPUNIT_ASSERT_EQUAL(0, ethertype ? ethertype->value : 0);
+	}
+
+	void test_ethertype4(){
+		const struct ethertype* ethertype = ethertype_by_number(0x0800);
+		std::string name = ethertype ? ethertype->name : "invalid";
+		std::transform(name.begin(), name.end(), name.begin(), ::tolower);
+		CPPUNIT_ASSERT_EQUAL(std::string("ip"), name);
 	}
 };
 

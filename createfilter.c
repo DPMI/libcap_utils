@@ -225,54 +225,6 @@ static int parse_port(const char* src, uint16_t* port, uint16_t* mask, const cha
 }
 
 static int parse_eth_type(const char* src, uint16_t* type, uint16_t* mask, const char* flag){
-	/* generated from linux/if_ether.h at 2011-06-20 */
-	static struct ethproto_t {const char* name; uint16_t value;} lut[] = {
-		{"LOOP",      0x0060},          /* Ethernet Loopback packet     */
-		{"PUP",       0x0200},          /* Xerox PUP packet             */
-		{"PUPAT",     0x0201},          /* Xerox PUP Addr Trans packet  */
-		{"IP",        0x0800},          /* Internet Protocol packet     */
-		{"X25",       0x0805},          /* CCITT X.25                   */
-		{"ARP",       0x0806},          /* Address Resolution packet    */
-		{"BPQ",       0x08FF},          /* G8BPQ AX.25 Ethernet Packet  [ NOT AN OFFICIALLY REGISTERED ID ] */
-		{"IEEEPUP",   0x0a00},          /* Xerox IEEE802.3 PUP packet */
-		{"IEEEPUPAT", 0x0a01},          /* Xerox IEEE802.3 PUP Addr Trans packet */
-		{"DEC",       0x6000},          /* DEC Assigned proto           */
-		{"DNA_DL",    0x6001},          /* DEC DNA Dump/Load            */
-		{"DNA_RC",    0x6002},          /* DEC DNA Remote Console       */
-		{"DNA_RT",    0x6003},          /* DEC DNA Routing              */
-		{"LAT",       0x6004},          /* DEC LAT                      */
-		{"DIAG",      0x6005},          /* DEC Diagnostics              */
-		{"CUST",      0x6006},          /* DEC Customer use             */
-		{"SCA",       0x6007},          /* DEC Systems Comms Arch       */
-		{"TEB",       0x6558},          /* Trans Ether Bridging         */
-		{"RARP",      0x8035},          /* Reverse Addr Res packet      */
-		{"ATALK",     0x809B},          /* Appletalk DDP                */
-		{"AARP",      0x80F3},          /* Appletalk AARP               */
-		{"8021Q",     0x8100},          /* 802.1Q VLAN Extended Header  */
-		{"IPX",       0x8137},          /* IPX over DIX                 */
-		{"IPV6",      0x86DD},          /* IPv6 over bluebook           */
-		{"PAUSE",     0x8808},          /* IEEE Pause frames. See 802.3 31B */
-		{"SLOW",      0x8809},          /* Slow Protocol. See 802.3ad 43B */
-		{"WCCP",      0x883E},          /* Web-cache coordination protocol
-		                                 * defined in draft-wilson-wrec-wccp-v2-00.txt */
-		{"PPP_DISC",  0x8863},          /* PPPoE discovery messages     */
-		{"PPP_SES",   0x8864},          /* PPPoE session messages       */
-		{"MPLS_UC",   0x8847},          /* MPLS Unicast traffic         */
-		{"MPLS_MC",   0x8848},          /* MPLS Multicast traffic       */
-		{"ATMMPOA",   0x884c},          /* MultiProtocol Over ATM       */
-		{"LINK_CTL",  0x886c},          /* HPNA, wlan link local tunnel */
-		{"ATMFATE",   0x8884},          /* Frame-based ATM Transport
-		                                 * over Ethernet                */
-		{"PAE",       0x888E},          /* Port Access Entity (IEEE 802.1X) */
-		{"AOE",       0x88A2},          /* ATA over Ethernet            */
-		{"TIPC",      0x88CA},          /* TIPC                         */
-		{"1588",      0x88F7},          /* IEEE 1588 Timesync */
-		{"FCOE",      0x8906},          /* Fibre Channel over Ethernet  */
-		{"FIP",       0x8914},          /* FCoE Initialization Protocol */
-		{"EDSA",      0xDADA},          /* Ethertype DSA [ NOT AN OFFICIALLY REGISTERED ID ] */
-		{0, 0},                         /* SENTINEL */
-	};
-
 	*mask = 0xFFFF;
 
 	/* test if mask was passed */
@@ -289,23 +241,18 @@ static int parse_eth_type(const char* src, uint16_t* type, uint16_t* mask, const
 	}
 
 	/* search for protocol name */
-	struct ethproto_t* cur = lut;
-	while ( cur->name ){
-		if ( strcasecmp(src, cur->name) == 0 ){
-			*type = cur->value;
-			return 1;
+	const struct ethertype* ethertype = ethertype_by_name(src);
+	if ( ethertype ){
+		*type = ethertype->value;
+	} else {
+		/* try to match a number */
+		if ( sscanf(src, "%hd", type) == 0 ){
+			fprintf(stderr, "Invalid ethernet protocol given to --%s: %s. Ignoring.\n", flag, src);
+			return 0;
 		}
-		cur++;
-	}
-
-	/* try to match a number */
-	if ( sscanf(src, "%hd", type) == 0 ){
-		fprintf(stderr, "Invalid ethernet protocol given to --%s: %s. Ignoring.\n", flag, src);
-		return 0;
 	}
 
 	*type &= *mask;
-
 	return 1;
 }
 
