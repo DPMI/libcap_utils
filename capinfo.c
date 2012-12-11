@@ -56,7 +56,7 @@ static void slist_free(struct simple_list* slist){
 	slist->capacity = 0;
 }
 
-static struct stats total;
+static struct stats global;
 static stream_t st = NULL;
 static struct count ipv4;
 static struct count ipv6;
@@ -114,7 +114,7 @@ static void store_stats(struct stats* stat, struct cap_header* cp){
 }
 
 static void reset(){
-	reset_stats(&total);
+	reset_stats(&global);
 	ipv4.packets = 0;
 	ipv4.bytes = 0;
 	ipv6.packets = 0;
@@ -211,19 +211,19 @@ static void print_overview(){
 	char last_str[128];
 	char sec_str[128];
 	char marker_str[128] = "no";
-	if ( total.marker_present ){
-		sprintf(marker_str, "present on port %d", total.marker_present);
+	if ( global.marker_present ){
+		sprintf(marker_str, "present on port %d", global.marker_present);
 	}
-	const timepico time_diff = timepico_sub(total.last, total.first);
+	const timepico time_diff = timepico_sub(global.last, global.first);
 	uint64_t hseconds = time_diff.tv_sec * 10 + time_diff.tv_psec / (PICODIVIDER / 10);
-	timepico_to_string_r(&total.first, first_str, 128, "%F %T");
-	timepico_to_string_r(&total.last,  last_str,  128, "%F %T");
-	format_bytes(byte_str, 128, total.bytes);
-	format_rate(rate_str, 128, total.bytes, hseconds/10);
-	format_seconds(sec_str, 128, total.first, total.last);
-	const int local_byte_min = total.packets > 0 ? total.byte_min : 0;
-	const int local_byte_max = total.packets > 0 ? total.byte_max : 0;
-	const int local_byte_avg = total.packets > 0 ? total.bytes / total.packets : 0;
+	timepico_to_string_r(&global.first, first_str, 128, "%F %T");
+	timepico_to_string_r(&global.last,  last_str,  128, "%F %T");
+	format_bytes(byte_str, 128, global.bytes);
+	format_rate(rate_str, 128, global.bytes, hseconds/10);
+	format_seconds(sec_str, 128, global.first, global.last);
+	const int local_byte_min = global.packets > 0 ? global.byte_min : 0;
+	const int local_byte_max = global.packets > 0 ? global.byte_max : 0;
+	const int local_byte_avg = global.packets > 0 ? global.bytes / global.packets : 0;
 
 	printf("Overview\n"
 	       "--------\n");
@@ -233,7 +233,7 @@ static void print_overview(){
 	printf(" captured: %s to %s\n", first_str, last_str);
 	printf("  markers: %s\n", marker_str);
 	printf(" duration: %s (%.1f seconds)\n", sec_str, (float)hseconds/10);
-	printf("  packets: %"PRIu64"\n", total.packets);
+	printf("  packets: %"PRIu64"\n", global.packets);
 	printf("    bytes: %s\n", byte_str);
 	printf(" pkt size: min/avg/max = %d/%d/%d\n", local_byte_min, local_byte_avg, local_byte_max);
 	printf(" avg rate: %s\n", rate_str);
@@ -333,11 +333,11 @@ static int show_info(const char* filename){
 
 	struct cap_header* cp;
 	while ( (ret=stream_read(st, &cp, NULL, NULL)) == 0 ){
-		if ( !total.marker_present ){
-			total.marker_present = is_marker(cp, NULL, 0);
+		if ( !global.marker_present ){
+			global.marker_present = is_marker(cp, NULL, 0);
 		}
 
-		store_stats(&total, cp);
+		store_stats(&global, cp);
 		store_mampid(cp);
 		store_CI(cp);
 
