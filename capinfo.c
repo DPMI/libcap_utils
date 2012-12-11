@@ -157,21 +157,22 @@ static void format_seconds(char* dst, size_t size, timepico first, timepico last
 	snprintf(dst, size, "%02d:%02d:%04.1f", h, m, s > 0 ? (float)s/10 : 0);
 }
 
-static const char* array_join(char* const src[], size_t n, const char* delimiter){
-	static char buffer[2048];
-	char* cur = buffer;
+static const char* array_join(char* dst, char* const src[], size_t n, const char* delimiter){
+	char* cur = dst;
 	for ( unsigned int i = 0; i < n; i++ ){
 		cur += sprintf(cur, "%s%s", (i>0?delimiter:""), src[i]);
 	}
-	return buffer;
+	return dst;
 }
 
 static const char* get_mampid_list(const char* delimiter){
-	return array_join(mpid.value, mpid.size, delimiter);
+	static char buffer[2048];
+	return array_join(buffer, mpid.value, mpid.size, delimiter);
 }
 
 static const char* get_CI_list(const char* delimiter){
-	return array_join(CI.value, CI.size, delimiter);
+	static char buffer[2048];
+	return array_join(buffer, CI.value, CI.size, delimiter);
 }
 
 static const char* get_comment(stream_t st){
