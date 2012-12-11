@@ -15,11 +15,17 @@
 #include <netinet/ip.h>
 #include <netdb.h>
 
+struct count {
+	uint64_t packets;
+	uint64_t bytes;
+};
+
 struct stats {
 	unsigned long int packets;             /* total number of packets */
 	unsigned long int bytes;               /* sum of all bytes */
 	unsigned long int byte_min, byte_max;  /* smallest/largest packet_size */
 	timepico first, last;                  /* timestamp of first/last packet */
+	int marker_present;                    /* zero if no marker was detected or port number it was found at */
 };
 
 struct simple_list {
@@ -50,21 +56,15 @@ static void slist_free(struct simple_list* slist){
 	slist->capacity = 0;
 }
 
-struct count {
-	uint64_t packets;
-	uint64_t bytes;
-};
-
 static struct stats total;
 static stream_t st = NULL;
-static int marker_present = 0;
 static struct count ipv4;
 static struct count ipv6;
 static struct count arp;
 static struct count stp;
 static struct count cdpvtp;
 static struct count other;
-static struct count  ieee8023;
+static struct count ieee8023;
 static struct count ipproto[UINT8_MAX]; /* protocol is defined as 1 octet */
 static struct simple_list mpid = {NULL, NULL, 0, 0};
 static struct simple_list CI = {NULL, NULL, 0, 0};
@@ -98,6 +98,7 @@ static void reset_stats(struct stats* stat){
 	stat->bytes = 0;
 	stat->byte_min = UINT16_MAX;
 	stat->byte_max = 0;
+	stat->marker_present = 0;
 }
 
 static void store_stats(struct stats* stat, struct cap_header* cp){
@@ -114,7 +115,6 @@ static void store_stats(struct stats* stat, struct cap_header* cp){
 
 static void reset(){
 	reset_stats(&total);
-	marker_present = 0;
 	ipv4.packets = 0;
 	ipv4.bytes = 0;
 	ipv6.packets = 0;
@@ -211,8 +211,8 @@ static void print_overview(){
 	char last_str[128];
 	char sec_str[128];
 	char marker_str[128] = "no";
-	if ( marker_present ){
-		sprintf(marker_str, "present on port %d", marker_present);
+	if ( total.marker_present ){
+		sprintf(marker_str, "present on port %d", total.marker_present);
 	}
 	const timepico time_diff = timepico_sub(total.last, total.first);
 	uint64_t hseconds = time_diff.tv_sec * 10 + time_diff.tv_psec / (PICODIVIDER / 10);
@@ -333,8 +333,8 @@ static int show_info(const char* filename){
 
 	struct cap_header* cp;
 	while ( (ret=stream_read(st, &cp, NULL, NULL)) == 0 ){
-		if ( !marker_present ){
-			marker_present = is_marker(cp, NULL, 0);
+		if ( !total.marker_present ){
+			total.marker_present = is_marker(cp, NULL, 0);
 		}
 
 		store_stats(&total, cp);
