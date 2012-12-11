@@ -287,7 +287,7 @@ static void print_distribution(){
 			printf("%9s: %"PRIu64" packets, %"PRIu64" bytes\n", protoent->p_name, ipproto[i].packets, ipproto[i].bytes);
 		}
 		if ( ipother.packets > 0 ){
-			printf("    other: %"PRIu64" packets, %"PRIu64" bytes\n", other.packets, other.bytes);
+			printf("    other: %"PRIu64" packets, %"PRIu64" bytes\n", ipother.packets, ipother.bytes);
 		}
 	}
 }
