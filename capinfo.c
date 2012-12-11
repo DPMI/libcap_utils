@@ -26,6 +26,8 @@ struct stats {
 	unsigned long int byte_min, byte_max;  /* smallest/largest packet_size */
 	timepico first, last;                  /* timestamp of first/last packet */
 	int marker_present;                    /* zero if no marker was detected or port number it was found at */
+
+	struct count transport[UINT16_MAX];    /* packet summary for transport layer */
 };
 
 struct simple_list {
@@ -58,13 +60,6 @@ static void slist_free(struct simple_list* slist){
 
 static struct stats global;
 static stream_t st = NULL;
-static struct count ipv4;
-static struct count ipv6;
-static struct count arp;
-static struct count stp;
-static struct count cdpvtp;
-static struct count other;
-static struct count ieee8023;
 static struct count ipproto[UINT8_MAX]; /* protocol is defined as 1 octet */
 static struct simple_list mpid = {NULL, NULL, 0, 0};
 static struct simple_list CI = {NULL, NULL, 0, 0};
@@ -99,6 +94,12 @@ static void reset_stats(struct stats* stat){
 	stat->byte_min = UINT16_MAX;
 	stat->byte_max = 0;
 	stat->marker_present = 0;
+
+	/* reset transport protocols */
+	for ( unsigned int i = 0; i < UINT16_MAX; i++ ){
+		stat->transport[i].packets = 0;
+		stat->transport[i].bytes = 0;
+	}
 }
 
 static void store_stats(struct stats* stat, struct cap_header* cp){
@@ -115,20 +116,6 @@ static void store_stats(struct stats* stat, struct cap_header* cp){
 
 static void reset(){
 	reset_stats(&global);
-	ipv4.packets = 0;
-	ipv4.bytes = 0;
-	ipv6.packets = 0;
-	ipv6.bytes = 0;
-	arp.packets = 0;
-	arp.bytes = 0;
-	stp.packets = 0;
-	stp.bytes = 0;
-	cdpvtp.packets = 0;
-	cdpvtp.bytes = 0;
-	ieee8023.packets = 0;
-	ieee8023.bytes = 0;
-	other.packets = 0;
-	other.bytes = 0;
 	for ( int i = 0; i < UINT8_MAX; i++ ){
 		ipproto[i].packets = 0;
 		ipproto[i].bytes = 0;
@@ -244,32 +231,21 @@ static void print_distribution(){
 	printf("Network protocols\n"
 	       "-----------------\n");
 
-	if ( ipv4.packets > 0 ){
-		printf("     IPv4: %"PRIu64" packets, %"PRIu64" bytes\n", ipv4.packets, ipv4.bytes);
-	}
-	if ( ipv6.packets > 0 ){
-		printf("     IPv6: %"PRIu64" packets, %"PRIu64" bytes\n", ipv6.packets, ipv6.bytes);
-	}
-	if ( arp.packets > 0 ){
-		printf("      ARP: %"PRIu64" packets, %"PRIu64" bytes\n", arp.packets, arp.bytes);
-	}
-	if ( stp.packets > 0 ){
-		printf("      STP: %"PRIu64" packets, %"PRIu64" bytes\n", stp.packets, stp.bytes);
-	}
-	if ( cdpvtp.packets > 0 ){
-		printf("   cdpvtp: %"PRIu64" packets, %"PRIu64" bytes\n", cdpvtp.packets, cdpvtp.bytes);
-	}
-	if ( ieee8023.packets > 0 ){
-		printf("IEEE802.3: %"PRIu64" packets, %"PRIu64" bytes\n", ieee8023.packets, ieee8023.bytes);
-	}
-	if ( other.packets > 0 ){
-		printf("    Other: %"PRIu64" packets, %"PRIu64" bytes\n", other.packets, other.bytes);
+	for ( unsigned int i = 0; i < UINT16_MAX; i++ ){
+		if ( global.transport[i].packets == 0 ) continue;
+		const struct ethertype* ethertype = ethertype_by_number(i);
+		if ( ethertype ){
+			printf("%9s: ", ethertype->name);
+		} else {
+			printf("   0x%04X: ", i);
+		}
+		printf("%"PRIu64" packets, %"PRIu64" bytes\n", global.transport[i].packets, global.transport[i].bytes);
 	}
 
 	printf("\nTransport protocols\n"
 	       "-------------------\n");
 
-	if ( ipv4.packets > 0 || ipv4.packets > 0 ){
+	if ( global.transport[ETHERTYPE_IP].packets > 0 || global.transport[ETHERTYPE_IPV6].packets > 0 ){
 		struct count ipother = {0, 0};
 		for ( int i = 0; i < UINT8_MAX; i++ ){
 			if ( ipproto[i].packets == 0 ){
@@ -324,8 +300,10 @@ static void store_CI(struct cap_header* cp){
 static void parse_ethernetII(const struct cap_header* cp){
 	const struct ethhdr* eth = cp->ethhdr;
 	const uint16_t h_proto = ntohs(eth->h_proto);
-	const struct iphdr* ip = NULL;
+	global.transport[h_proto].packets++;
+	global.transport[h_proto].bytes += cp->len;
 
+	const struct iphdr* ip = NULL;
 	switch ( h_proto ){
 	case ETHERTYPE_VLAN:
 		ip = (const struct iphdr*)(cp->payload + sizeof(struct ether_vlan_header));
@@ -337,43 +315,18 @@ static void parse_ethernetII(const struct cap_header* cp){
 			ip = (const struct iphdr*)(cp->payload + sizeof(struct ethhdr));
 		}
 
-		ipv4.packets++;
-		ipv4.bytes += cp->len;
 		ipproto[ip->protocol].packets++;
 		ipproto[ip->protocol].bytes += cp->len;
 		break;
 
 	case ETHERTYPE_IPV6:
 		/** @todo handle ipproto */
-		ipv6.packets++;
-		ipv6.bytes += cp->len;
-		break;
-
-	case ETHERTYPE_ARP:
-		arp.packets++;
-		arp.bytes += cp->len;
-		break;
-
-	case STPBRIDGES:
-		stp.packets++;
-		stp.bytes += cp->len;
-		break;
-
-	case CDPVTP:
-		cdpvtp.packets++;
-		cdpvtp.bytes += cp->len;
-		break;
-
-	default:
-		other.packets++;
-		other.bytes += cp->len;
 		break;
 	}
 }
 
 static void parse_llc(const struct cap_header* cp){
-	ieee8023.packets++;
-	ieee8023.bytes += cp->len;
+
 }
 
 static int show_info(const char* filename){
