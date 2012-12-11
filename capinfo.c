@@ -321,6 +321,61 @@ static void store_CI(struct cap_header* cp){
 	store_stats(&CI.value[i], cp);
 }
 
+static void parse_ethernetII(const struct cap_header* cp){
+	const struct ethhdr* eth = cp->ethhdr;
+	const uint16_t h_proto = ntohs(eth->h_proto);
+	const struct iphdr* ip = NULL;
+
+	switch ( h_proto ){
+	case ETHERTYPE_VLAN:
+		ip = (const struct iphdr*)(cp->payload + sizeof(struct ether_vlan_header));
+		/** @todo handle h_proto */
+		/* fallthrough */
+
+	case ETHERTYPE_IP:
+		if ( !ip ){
+			ip = (const struct iphdr*)(cp->payload + sizeof(struct ethhdr));
+		}
+
+		ipv4.packets++;
+		ipv4.bytes += cp->len;
+		ipproto[ip->protocol].packets++;
+		ipproto[ip->protocol].bytes += cp->len;
+		break;
+
+	case ETHERTYPE_IPV6:
+		/** @todo handle ipproto */
+		ipv6.packets++;
+		ipv6.bytes += cp->len;
+		break;
+
+	case ETHERTYPE_ARP:
+		arp.packets++;
+		arp.bytes += cp->len;
+		break;
+
+	case STPBRIDGES:
+		stp.packets++;
+		stp.bytes += cp->len;
+		break;
+
+	case CDPVTP:
+		cdpvtp.packets++;
+		cdpvtp.bytes += cp->len;
+		break;
+
+	default:
+		other.packets++;
+		other.bytes += cp->len;
+		break;
+	}
+}
+
+static void parse_llc(const struct cap_header* cp){
+	ieee8023.packets++;
+	ieee8023.bytes += cp->len;
+}
+
 static int show_info(const char* filename){
 	stream_addr_t addr;
 	stream_addr_str(&addr, filename, 0);
@@ -343,57 +398,13 @@ static int show_info(const char* filename){
 
 		const struct ethhdr* eth = cp->ethhdr;
 		const uint16_t h_proto = ntohs(eth->h_proto);
-		struct iphdr* ip = NULL;
 
 		if ( h_proto < 0x0600 ){
-			ieee8023.packets++;
-			ieee8023.bytes += cp->len;
+			parse_llc(cp);
 			continue;
 		}
 
-		switch ( h_proto ){
-		case ETHERTYPE_VLAN:
-			ip = (struct iphdr*)(cp->payload + sizeof(struct ether_vlan_header));
-			/** @todo handle h_proto */
-			/* fallthrough */
-
-		case ETHERTYPE_IP:
-			if ( !ip ){
-				ip = (struct iphdr*)(cp->payload + sizeof(struct ethhdr));
-			}
-
-			ipv4.packets++;
-			ipv4.bytes += cp->len;
-			ipproto[ip->protocol].packets++;
-			ipproto[ip->protocol].bytes += cp->len;
-			break;
-
-		case ETHERTYPE_IPV6:
-			/** @todo handle ipproto */
-			ipv6.packets++;
-			ipv6.bytes += cp->len;
-			break;
-
-		case ETHERTYPE_ARP:
-			arp.packets++;
-			arp.bytes += cp->len;
-			break;
-
-		case STPBRIDGES:
-			stp.packets++;
-			stp.bytes += cp->len;
-			break;
-
-		case CDPVTP:
-			cdpvtp.packets++;
-			cdpvtp.bytes += cp->len;
-			break;
-
-		default:
-			other.packets++;
-			other.bytes += cp->len;
-			break;
-		}
+		parse_ethernetII(cp);
 	}
 
 	if ( ret > 0 ){
