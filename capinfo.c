@@ -396,10 +396,10 @@ static int show_info(const char* filename){
 		store_mampid(cp);
 		store_CI(cp);
 
-		const struct ethhdr* eth = cp->ethhdr;
-		const uint16_t h_proto = ntohs(eth->h_proto);
-
-		if ( h_proto < 0x0600 ){
+		/* this is not a fool-proof test since ethertypes can be < 0x05dc and
+		 * jumboframes exist. 0x05dc refers to the MTU. */
+		const int have_llc = ntohs(cp->ethhdr->h_proto) <= 0x05DC;
+		if ( have_llc ){
 			parse_llc(cp);
 			continue;
 		}
