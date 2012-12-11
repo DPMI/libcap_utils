@@ -74,8 +74,12 @@ const char* caputils_version(caputils_version_t* version){
 /* generated from linux/if_ether.h at 2011-06-20 */
 static struct ethertype ethertype[] = {
 	{"LOOP",      0x0060},          /* Ethernet Loopback packet     */
+	{"STP",       0x0026},          /* Spanning-Tree Protocol       */
+	{"CDPVTP",    0x016e},
 	{"PUP",       0x0200},          /* Xerox PUP packet             */
 	{"PUPAT",     0x0201},          /* Xerox PUP Addr Trans packet  */
+	{"SPRITE",    0x0500},          /* Sprite */
+	{"IPv4",      0x0800},          /* Internet Protocol packet     */
 	{"IP",        0x0800},          /* Internet Protocol packet     */
 	{"X25",       0x0805},          /* CCITT X.25                   */
 	{"ARP",       0x0806},          /* Address Resolution packet    */
@@ -91,12 +95,14 @@ static struct ethertype ethertype[] = {
 	{"CUST",      0x6006},          /* DEC Customer use             */
 	{"SCA",       0x6007},          /* DEC Systems Comms Arch       */
 	{"TEB",       0x6558},          /* Trans Ether Bridging         */
+	{"MP",        0x8010},          /* Measurement Frame (DPMI)     */
 	{"RARP",      0x8035},          /* Reverse Addr Res packet      */
 	{"ATALK",     0x809B},          /* Appletalk DDP                */
 	{"AARP",      0x80F3},          /* Appletalk AARP               */
+	{"VLAN",      0x8100},          /* 802.1Q VLAN Extended Header  */
 	{"8021Q",     0x8100},          /* 802.1Q VLAN Extended Header  */
 	{"IPX",       0x8137},          /* IPX over DIX                 */
-	{"IPV6",      0x86DD},          /* IPv6 over bluebook           */
+	{"IPv6",      0x86DD},          /* IPv6 over bluebook           */
 	{"PAUSE",     0x8808},          /* IEEE Pause frames. See 802.3 31B */
 	{"SLOW",      0x8809},          /* Slow Protocol. See 802.3ad 43B */
 	{"WCCP",      0x883E},          /* Web-cache coordination protocol
@@ -115,6 +121,7 @@ static struct ethertype ethertype[] = {
 	{"1588",      0x88F7},          /* IEEE 1588 Timesync */
 	{"FCOE",      0x8906},          /* Fibre Channel over Ethernet  */
 	{"FIP",       0x8914},          /* FCoE Initialization Protocol */
+	{"LOOPBACK",  0x9000},          /* used to test interfaces */
 	{"EDSA",      0xDADA},          /* Ethertype DSA [ NOT AN OFFICIALLY REGISTERED ID ] */
 	{0, 0},                         /* SENTINEL */
 };
