@@ -19,7 +19,7 @@ static const char* tcp_flags(const struct tcphdr* tcp){
 	return buf;
 }
 
-void print_tcp(FILE* fp, net_t net, const struct tcphdr* tcp, unsigned int flags){
+void print_tcp(FILE* fp, const struct cap_header* cp, net_t net, const struct tcphdr* tcp, unsigned int flags){
 	fputs("TCP", fp);
 
 	if ( flags & FORMAT_HEADER ){

@@ -145,23 +145,35 @@ static void print_query(FILE* fp, const struct dns_header* h, const char* ptr, u
 	}
 }
 
-void print_dns(FILE* fp, const char* payload, size_t size, unsigned int flags){
+void print_dns(FILE* fp, const struct cap_header* cp, const char* payload, size_t size, unsigned int flags){
 	if ( !initialized ){
 		dns_initialize();
+	}
+
+	const size_t bytes = cp->caplen - (payload - cp->payload);
+	if ( bytes < sizeof(struct dns_header) ){
+		fputs(" DNS [Packet size limited during capture]", fp);
+		return;
 	}
 
 	struct dns_header h = *(const struct dns_header*)payload;
 	h.flags = ntohs(h.flags);
 
 	fputs(" DNS", fp);
-
 	if ( flags & FORMAT_HEADER ){
-		fprintf(fp, "[id=0x%x:qr=%d:opcode=%d,aa=%d,tc=%d,rd=%d,ra=%d,z=%d,rcode=%d]",
+		fprintf(fp, "(HDR[%zd]DATA[%zd])[id=0x%x:qr=%d:opcode=%d,aa=%d,tc=%d,rd=%d,ra=%d,z=%d,rcode=%d]",
+		        sizeof(struct dns_header), size - sizeof(struct dns_header),
 		        ntohs(h.id), h.qr, h.opcode, h.aa, h.tc, h.rd, h.ra, h.z, h.rcode);
 	}
 
 	if ( h.tc ){
 		fprintf(fp, " message truncated");
+		return;
+	}
+
+
+	if ( bytes <= size - sizeof(struct dns_header) ){
+		fputs(" [Packet size limited during capture]", fp);
 		return;
 	}
 

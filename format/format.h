@@ -23,15 +23,15 @@ typedef const struct network* net_t;
 void print_eth(FILE* dst, const struct cap_header* cp, const struct ethhdr* eth, unsigned int flags);
 
 /* layer 3 */
-void print_ipproto(FILE* fp, net_t net, uint8_t proto, const char* payload, unsigned int flags);
-void print_ipv4(FILE* fp, const struct ip* ip, unsigned int flags);
-void print_ipv6(FILE* fp, const struct ip6_hdr* ip, unsigned int flags);
+void print_ipproto(FILE* fp, const struct cap_header* cp, net_t net, uint8_t proto, const char* payload, unsigned int flags);
+void print_ipv4(FILE* fp, const struct cap_header* cp, const struct ip* ip, unsigned int flags);
+void print_ipv6(FILE* fp, const struct cap_header* cp, const struct ip6_hdr* ip, unsigned int flags);
 void print_arp(FILE* dst, const struct cap_header* cp, const struct ether_arp* arp);
 
 /* layer 4 */
-void print_tcp(FILE* fp, net_t net, const struct tcphdr* tcp, unsigned int flags);
-void print_udp(FILE* fp, net_t net, const struct udphdr* udp, unsigned int flags);
-void print_icmp(FILE* fp, net_t net, const struct icmphdr* icmp, unsigned int flags);
+void print_tcp(FILE* fp, const struct cap_header* cp, net_t net, const struct tcphdr* tcp, unsigned int flags);
+void print_udp(FILE* fp, const struct cap_header* cp, net_t net, const struct udphdr* udp, unsigned int flags);
+void print_icmp(FILE* fp, const struct cap_header* cp, net_t net, const struct icmphdr* icmp, unsigned int flags);
 
 /* application layer */
-void print_dns(FILE* fp, const char* payload, size_t size, unsigned int flags);
+void print_dns(FILE* fp, const struct cap_header* cp, const char* payload, size_t size, unsigned int flags);

@@ -8,18 +8,18 @@
 #include <stdio.h>
 #include <arpa/inet.h>
 
-void print_ipproto(FILE* fp, net_t net, uint8_t proto, const char* payload, unsigned int flags){
+void print_ipproto(FILE* fp, const struct cap_header* cp, net_t net, uint8_t proto, const char* payload, unsigned int flags){
 	switch( proto ) {
 	case IPPROTO_TCP:
-		print_tcp(fp, net, (const struct tcphdr*)payload, flags);
+		print_tcp(fp, cp, net, (const struct tcphdr*)payload, flags);
 		break;
 
 	case IPPROTO_UDP:
-		print_udp(fp, net, (const struct udphdr*)payload, flags);
+		print_udp(fp, cp, net, (const struct udphdr*)payload, flags);
 		break;
 
 	case IPPROTO_ICMP:
-		print_icmp(fp, net, (const struct icmphdr*)payload, flags);
+		print_icmp(fp, cp, net, (const struct icmphdr*)payload, flags);
 		break;
 
 	case IPPROTO_ICMPV6:

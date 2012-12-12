@@ -4,7 +4,7 @@
 
 #include "format.h"
 
-void print_ipv4(FILE* fp, const struct ip* ip, unsigned int flags){
+void print_ipv4(FILE* fp, const struct cap_header* cp, const struct ip* ip, unsigned int flags){
 	const void* payload = ((const char*)ip) + 4*ip->ip_hl;
 
 	if ( flags & FORMAT_HEADER ){
@@ -29,5 +29,5 @@ void print_ipv4(FILE* fp, const struct ip* ip, unsigned int flags){
 		.net_dst = dst,
 		.plen = ntohs(ip->ip_len) - 4*ip->ip_hl,
 	};
-	print_ipproto(fp, &net, ip->ip_p, payload, flags);
+	print_ipproto(fp, cp, &net, ip->ip_p, payload, flags);
 }

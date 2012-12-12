@@ -6,7 +6,7 @@
 
 #define PORT_DNS 53
 
-void print_udp(FILE* fp, net_t net, const struct udphdr* udp, unsigned int flags){
+void print_udp(FILE* fp, const struct cap_header* cp, net_t net, const struct udphdr* udp, unsigned int flags){
 	fputs("UDP", fp);
 
 	const size_t header_size = sizeof(struct udphdr);
@@ -25,6 +25,6 @@ void print_udp(FILE* fp, net_t net, const struct udphdr* udp, unsigned int flags
 
 	const char* payload = (const char*)udp + header_size;
 	if ( sport == PORT_DNS || dport == PORT_DNS ){
-		print_dns(fp, payload, payload_size, flags);
+		print_dns(fp, cp, payload, payload_size, flags);
 	}
 }

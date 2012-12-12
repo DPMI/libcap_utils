@@ -39,7 +39,7 @@ static size_t ipv6_total_header_size(const struct ip6_hdr* ip, const char** ptr,
 	return header_size;
 }
 
-void print_ipv6(FILE* fp, const struct ip6_hdr* ip, unsigned int flags){
+void print_ipv6(FILE* fp, const struct cap_header* cp, const struct ip6_hdr* ip, unsigned int flags){
 	const char* payload;
 	uint8_t proto;
 	const size_t header_size = ipv6_total_header_size(ip, &payload, &proto);
@@ -60,5 +60,5 @@ void print_ipv6(FILE* fp, const struct ip6_hdr* ip, unsigned int flags){
 		.net_dst = dst,
 		.plen = ip->ip6_plen + sizeof(struct ip6_hdr) - header_size,
 	};
-	print_ipproto(fp, &net, proto, payload, flags);
+	print_ipproto(fp, cp, &net, proto, payload, flags);
 }
