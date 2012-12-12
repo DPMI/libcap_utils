@@ -145,6 +145,10 @@ static void print_query(FILE* fp, const struct dns_header* h, const char* ptr, u
 	}
 }
 
+static void print_response(FILE* fp, const struct dns_header* h, const char* ptr, unsigned int flags){
+	fprintf(fp, " Standard query response 0x%04x ", ntohs(h->id));
+}
+
 void print_dns(FILE* fp, const struct cap_header* cp, const char* payload, size_t size, unsigned int flags){
 	if ( !initialized ){
 		dns_initialize();
@@ -183,7 +187,7 @@ void print_dns(FILE* fp, const struct cap_header* cp, const char* payload, size_
 		if ( h.qr == 0 ){
 			print_query(fp, &h, ptr, flags);
 		} else {
-			fprintf(fp, " Standard query response 0x%04x ", ntohs(h.id));
+			print_response(fp, &h, ptr, flags);
 		}
 		break;
 
