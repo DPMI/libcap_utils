@@ -24,10 +24,6 @@
 #include <sys/socket.h>
 #include <sys/time.h>
 
-#ifndef IPPROTO_OSPF
-#define IPPROTO_OSPF 89
-#endif
-
 static int min(int a, int b){ return a<b?a:b; }
 
 static const char* tcp_flags(const struct tcphdr* tcp){
