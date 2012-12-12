@@ -34,4 +34,10 @@ void print_tcp(FILE* fp, const struct cap_header* cp, net_t net, const struct tc
 	fprintf(fp, ": [%s] %s:%d --> %s:%d", tcp_flags(tcp),
 	        net->net_src, sport,
 	        net->net_dst, dport);
+
+	const char* payload = (const char*)tcp + 4*tcp->doff;
+	if ( payload_size > 0 && (sport == PORT_DNS || dport == PORT_DNS) ){
+		/* offset the length field */
+		print_dns(fp, cp, payload + 2, payload_size - 2, flags);
+	}
 }

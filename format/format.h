@@ -12,6 +12,8 @@
 #include <netinet/udp.h>
 #include <netinet/ip_icmp.h>
 
+#define PORT_DNS 53
+
 struct network {
 	const char* net_src; /* human-readable representation of src address */
 	const char* net_dst; /* human-readable representation of dst address */

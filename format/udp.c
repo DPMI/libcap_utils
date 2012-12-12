@@ -4,8 +4,6 @@
 
 #include "format.h"
 
-#define PORT_DNS 53
-
 void print_udp(FILE* fp, const struct cap_header* cp, net_t net, const struct udphdr* udp, unsigned int flags){
 	fputs("UDP", fp);
 
