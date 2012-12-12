@@ -32,3 +32,6 @@ void print_arp(FILE* dst, const struct cap_header* cp, const struct ether_arp* a
 void print_tcp(FILE* fp, net_t net, const struct tcphdr* tcp, unsigned int flags);
 void print_udp(FILE* fp, net_t net, const struct udphdr* udp, unsigned int flags);
 void print_icmp(FILE* fp, net_t net, const struct icmphdr* icmp, unsigned int flags);
+
+/* application layer */
+void print_dns(FILE* fp, const char* payload, size_t size, unsigned int flags);

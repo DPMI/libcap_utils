@@ -110,6 +110,7 @@ libcap_utils_07_la_SOURCES =   \
 	address.c           \
 	error.c             \
 	format/arp.c        \
+	format/dns.c        \
 	format/ethernet.c   \
 	format/icmp.c       \
 	format/ip.c         \
