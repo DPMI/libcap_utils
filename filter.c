@@ -127,11 +127,11 @@ static int FILTER filter_ip_dst(const struct filter* filter, const struct ip* ip
 }
 
 static int FILTER filter_src_port(const struct filter* filter, uint16_t port){
-	return (filter->index & FILTER_SRC_PORT) && (filter->src_port == port);
+	return (filter->index & FILTER_SRC_PORT) && (filter->src_port == (port & filter->src_port_mask));
 }
 
 static int FILTER filter_dst_port(const struct filter* filter, uint16_t port){
-	return (filter->index & FILTER_DST_PORT) && (filter->dst_port == port);
+	return (filter->index & FILTER_DST_PORT) && (filter->dst_port == (port & filter->dst_port_mask));
 }
 
 static int FILTER filter_port(const struct filter* filter, uint16_t src, uint16_t dst){

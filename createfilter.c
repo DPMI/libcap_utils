@@ -544,12 +544,12 @@ int filter_close(struct filter* filter){
 
 void filter_src_port_set(struct filter* filter, uint16_t port, uint16_t mask){
 	filter->index |= FILTER_SRC_PORT;
-	filter->src_port = port;
+	filter->src_port = port & mask;
 	filter->src_port_mask = mask;
 }
 
 void filter_dst_port_set(struct filter* filter, uint16_t port, uint16_t mask){
 	filter->index |= FILTER_DST_PORT;
-	filter->dst_port = port;
+	filter->dst_port = port & mask;
 	filter->dst_port_mask = mask;
 }
