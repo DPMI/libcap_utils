@@ -273,6 +273,50 @@ static int open_next(stream_addr_t* addr, stream_t st, const struct marker* mark
 	return 0;
 }
 
+static int handle_marker(const struct cap_header* cp, stream_addr_t* addr, stream_t* st){
+	struct marker mark;
+	if ( !(marker && is_marker(cp, &mark, marker)) ){
+		return 0;
+	}
+
+	/* show marker */
+	marker_report(&mark);
+
+	/* abort if output is pipe */
+	if ( strcmp("/dev/stdout", addr->local_filename) == 0 ){
+		return 1;
+	}
+
+	/* termination marker */
+	if ( mark.flags & MARKER_TERMINATE ){
+		if ( *st ){
+			stream_addr_str(addr, "", STREAM_ADDR_LOCAL);
+			stream_close(*st);
+			*st = NULL;
+		}
+		return 0;
+	}
+
+	if ( open_next(addr, *st, &mark) != 0 ){
+		return 1; /* error already shown */
+	}
+
+	return 0;
+}
+
+static int write_packet(struct cap_header* cp, stream_t st){
+	if ( !st ) return 0;
+
+	int ret;
+	cp->caplen = cp->caplen < cp->len ? cp->caplen : cp->len; /* truncate */
+	if ( (ret=stream_copy(st, cp)) != 0 ) {
+		fprintf(stderr, "%s: stream_copy() failed with code 0x%08X: %s\n", program_name, ret, caputils_error_string(ret) );
+		return ret;
+	}
+
+	return 0;
+}
+
 static void set_destination(stream_addr_t* addr, const char* str){
 	stream_addr_aton(addr, str, STREAM_ADDR_GUESS, 0);
 	free(fmt_basename);
@@ -438,41 +482,15 @@ int main(int argc, char **argv){
 			abort();
 		}
 
-		/* Detect marker in stream */
-		struct marker mark;
-		if ( marker && is_marker(cp, &mark, marker) ){
-			/* show marker */
-			marker_report(&mark);
-
-			/* abort if output is pipe */
-			if ( strcmp("/dev/stdout", output.local_filename) == 0 ){
-				break;
-			}
-
-			/* termination marker */
-			if ( mark.flags & MARKER_TERMINATE ){
-				if ( dst ){
-					stream_addr_str(&output, "", STREAM_ADDR_LOCAL);
-					stream_close(dst);
-					dst = NULL;
-				}
-				continue;
-			}
-
-			if ( open_next(&output, dst, &mark) != 0 ){
-				break; /* error already shown */
-			}
+		if ( handle_marker(cp, &output, &dst) != 0 ){
+			break; /* error already shown */
 		}
 
-		if ( dst ){
-			cp->caplen = cp->caplen < cp->len ? cp->caplen : cp->len; /* truncate */
-			if ( (ret=stream_copy(dst, cp)) != 0 ) {
-				fprintf(stderr, "%s: stream_copy() failed with code 0x%08lX: %s\n", program_name, ret, caputils_error_string(ret) );
-				break;
-			}
-			written_packets++;
+		if ( write_packet(cp, dst) != 0 ){
+			break; /* error already shown */
 		}
 
+		written_packets++;
 		if ( max_packets > 0 && stream_stat->read >= max_packets ){
 				break;
 		}
