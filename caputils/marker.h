@@ -9,6 +9,8 @@ extern "C" {
 #endif
 
 enum MarkerFlags {
+	/* If termination flag is set capdump will close the current file and stop saving
+	 * packets until it receives another marker. */
 	MARKER_TERMINATE = (1<<0),
 };
 

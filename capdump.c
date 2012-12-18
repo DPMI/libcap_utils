@@ -448,19 +448,31 @@ int main(int argc, char **argv){
 				break;
 			}
 
+			/* termination marker */
+			if ( mark.flags & MARKER_TERMINATE ){
+				if ( dst ){
+					stream_addr_str(&output, "", STREAM_ADDR_LOCAL);
+					stream_close(dst);
+					dst = NULL;
+				}
+				continue;
+			}
+
 			if ( open_next(&output, dst, &mark) != 0 ){
 				break; /* error already shown */
 			}
 		}
 
-		cp->caplen = cp->caplen < cp->len ? cp->caplen : cp->len; /* truncate */
-		if ( (ret=stream_copy(dst, cp)) != 0 ) {
-			fprintf(stderr, "%s: stream_copy() failed with code 0x%08lX: %s\n", program_name, ret, caputils_error_string(ret) );
-			break;
+		if ( dst ){
+			cp->caplen = cp->caplen < cp->len ? cp->caplen : cp->len; /* truncate */
+			if ( (ret=stream_copy(dst, cp)) != 0 ) {
+				fprintf(stderr, "%s: stream_copy() failed with code 0x%08lX: %s\n", program_name, ret, caputils_error_string(ret) );
+				break;
+			}
 		}
 
 		if ( max_packets > 0 && stream_stat->read >= max_packets ){
-			break;
+				break;
 		}
 	}
 
