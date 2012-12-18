@@ -61,15 +61,15 @@ static int send_udp(const struct in_addr dst, in_port_t port){
 	}
 
 	/* setup source address */
-  static struct sockaddr_in src_addr;
-  memset(&src_addr, 0, sizeof(struct sockaddr_in));
+	static struct sockaddr_in src_addr;
+	memset(&src_addr, 0, sizeof(struct sockaddr_in));
 	src_addr.sin_family = AF_INET;
 	src_addr.sin_port = (in_port_t)htons(MARKERPORT);
 	src_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 
 	/* setup destination address */
 	static struct sockaddr_in dst_addr;
-  memset(&dst_addr, 0, sizeof(struct sockaddr_in));
+	memset(&dst_addr, 0, sizeof(struct sockaddr_in));
 	dst_addr.sin_family = AF_INET;
 	dst_addr.sin_port = port;
 	dst_addr.sin_addr.s_addr = dst.s_addr;
@@ -103,17 +103,17 @@ static void show_usage(void){
 }
 
 int main(int argc, char **argv){
-  /* extract program name from path. e.g. /path/to/MArCd -> MArCd */
-  const char* separator = strrchr(argv[0], '/');
-  if ( separator ){
-    program_name = separator + 1;
-  } else {
-    program_name = argv[0];
-  }
+	/* extract program name from path. e.g. /path/to/MArCd -> MArCd */
+	const char* separator = strrchr(argv[0], '/');
+	if ( separator ){
+		program_name = separator + 1;
+	} else {
+		program_name = argv[0];
+	}
 
-  /* reset marker */
-  marker.timestamp = htobe64(time(NULL));
-  memset(marker.comment, 0, 64);
+	/* reset marker */
+	marker.timestamp = htobe64(time(NULL));
+	memset(marker.comment, 0, 64);
 
 	int op, option_index = -1;
 	while ( (op = getopt_long(argc, argv, "e:r:k:s:c:utxh", long_options, &option_index)) != -1 ){

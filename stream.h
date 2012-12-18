@@ -30,30 +30,30 @@ typedef int (*read_callback)(struct stream* st, cap_head** header, const struct 
 
 // Stream structure, used to manage different types of streams
 struct stream {
-  enum protocol_t type;                 // What type of stream do we have?
+	enum protocol_t type;                 // What type of stream do we have?
 	stream_addr_t addr;                   // The address used to open stream.
 
-  /* header related */
-  struct file_header_t FH;
-  char *comment;
+	/* header related */
+	struct file_header_t FH;
+	char *comment;
 
-  /* common fields */
-  char* buffer;
-  size_t buffer_size;                   // Total size of the buffer
-  unsigned long expSeqnr;               // Expected sequence number
-  unsigned int writePos;                // Write position
-  unsigned int readPos;                 // Read position
-  int flushed;                          // Indicate that we got a flush signal.
+	/* common fields */
+	char* buffer;
+	size_t buffer_size;                   // Total size of the buffer
+	unsigned long expSeqnr;               // Expected sequence number
+	unsigned int writePos;                // Write position
+	unsigned int readPos;                 // Read position
+	int flushed;                          // Indicate that we got a flush signal.
 	int num_addresses;                    // Number of addresses associated with stream
 	int if_loopback;                      // Set to non-zero if the stream is a loopback interface.
 
 	/* stats */
 	struct stream_stat stat;
 
-  /* Callback functions */
-  fill_buffer_callback fill_buffer;
-  destroy_callback destroy;
-  write_callback write;
+	/* Callback functions */
+	fill_buffer_callback fill_buffer;
+	destroy_callback destroy;
+	write_callback write;
 	read_callback read;
 };
 
