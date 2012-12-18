@@ -1,6 +1,7 @@
 caputils-0.7.14
 ---------------
 
+	* fix: capmerge previously sorted packets wrong under certain conditions
 	* add: API to get payload sizes at various layers.
 	* add: API to get properties for an interface.
 	* change: [stream] packet printing is now stateful. API change.

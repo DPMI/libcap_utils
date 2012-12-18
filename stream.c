@@ -501,11 +501,11 @@ int stream_peek(stream_t st, cap_head** header, struct filter* filter){
 	struct timeval timeout = {0,0};
 
 	int ret;
-	int match;
+	int match = 0;
 	do {
 		if( st->writePos - st->readPos < sizeof(struct cap_header) ){
 			switch ( (ret=fill_buffer(st, &timeout)) ){
-			case 0: return EAGAIN;
+			case 0: continue;
 			default: return ret;
 			}
 		}
@@ -521,7 +521,7 @@ int stream_peek(stream_t st, cap_head** header, struct filter* filter){
 
 		if( end_pos > st->writePos ) {
 			switch ( (ret=fill_buffer(st, &timeout)) ){
-			case 0: return EAGAIN;
+			case 0: continue;
 			default: return ret;
 			}
 		}
