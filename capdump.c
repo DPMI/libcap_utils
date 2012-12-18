@@ -23,17 +23,26 @@
 #include "be64toh.h" /* for compability */
 #include <time.h>
 
+enum MarkerMode {
+	MARKER_INCREMENT,
+	MARKER_OVERWRITE,
+	MARKER_APPEND,
+};
+
 static const size_t FILENAME_SUFFIX_MAX = 1000; /* maximum number of filename suffixes */
 static const size_t PROGRESS_REPORT_DELAY = 60;  /* seconds between progress reports */
 static int keep_running = 1;
 static int marker = 0;
+static const char* marker_format = "%f-%x-%03s.%e";
+static enum MarkerMode marker_mode = MARKER_INCREMENT;
 static char* fmt_basename = NULL;  /* used by generate_filename */
 static char* fmt_extension = NULL; /* used by generate_filename */
 static const char* program_name = NULL;
+static const char* comment = "capdump-" VERSION " stream";
 static const struct stream_stat* stream_stat = NULL;
 static int progress = -1;          /* if >0 progress reports is written to this file descriptor */
 
-static const char* shortopts = "o:p:i:c:b:m:f:s::h";
+static const char* shortopts = "o:p:i:c:b:m:f:M:s::h";
 static struct option longopts[]= {
 	{"output",  required_argument, 0, 'o'},
 	{"packets", required_argument, 0, 'p'},
@@ -42,6 +51,7 @@ static struct option longopts[]= {
 	{"bufsize", required_argument, 0, 'b'},
 	{"marker",  required_argument, 0, 'm'},
 	{"marker-format", required_argument, 0, 'f'},
+	{"marker-mode",   required_argument, 0, 'M'},
 	{"progress", optional_argument, 0, 's'},
 	{"help",    no_argument,       0, 'h'},
 	{0, 0, 0, 0} /* sentinel */
@@ -60,6 +70,8 @@ static void show_usage(void){
 	       "      --marker=PORT    Split streams based on marker packet. See capdump(1) for\n"
 	       "                       further description of this feature.\n"
 	       "      --marker-format  Renaming format for marker.\n"
+	       "      --marker-mode    What to do when identical filename is generated. Valid\n"
+	       "                       modes are [I]crement (default), [O]verwrite and [A]ppend.\n"
 	       "      --progress[=FD]  Write progress report to FD every 60 seconds.\n"
 	       "  -h, --help           This text.\n");
 	printf("\n");
@@ -131,6 +143,16 @@ static void marker_report(const struct marker* marker){
 	fprintf(stderr, "\ttimestamp: %s\n", timestamp);
 }
 
+static enum MarkerMode parse_marker_mode(const char* str){
+	const char ch = tolower(str[0]);
+	switch ( ch ){
+	case 'i': return MARKER_INCREMENT;
+	case 'o': return MARKER_OVERWRITE;
+	case 'a': return MARKER_APPEND;
+	default: 	return MARKER_INCREMENT;
+	}
+}
+
 static const char* generate_filename(const char* fmt, const struct marker* marker){
 	static char buffer[1024];
 	char* dst = buffer;
@@ -192,36 +214,63 @@ static const char* generate_filename(const char* fmt, const struct marker* marke
 	}
 	*dst = 0;
 
-	/* try if the file exists already and append a suffix if it does */
-	unsigned int suffix = 1;
-	do {
+	if ( marker_mode == MARKER_INCREMENT ){
+		/* try if the file exists already and append a suffix if it does */
+		unsigned int suffix = 1;
+		do {
 
-		/* if tried to many times, give up and randomize name */
-		if ( suffix > FILENAME_SUFFIX_MAX ){
-			*dst = 0;
-			char* tmp = tempnam("./", NULL);
-			fprintf(stderr, "%s: more than %zd filename collisions detected for `%s', giving up and using `%s.%s'.\n", program_name, FILENAME_SUFFIX_MAX, buffer, buffer, tmp+2);
-			sprintf(dst, ".%s", tmp+2); /* +2 to to ignore ./ */ /** @todo potential overflow */
-			free(tmp);
-			break;
-		}
-
-		/* test if filename already exists */
-		struct stat st;
-		if ( stat(buffer, &st) == -1  ){
-			if ( errno == ENOENT ){
-				break; /* exit loop and return filename */
-			} else {
-				fprintf(stderr, "%s: stat() returned %d: %s\n", program_name, errno, strerror(errno));
+			/* if tried to many times, give up and randomize name */
+			if ( suffix > FILENAME_SUFFIX_MAX ){
+				*dst = 0;
+				char* tmp = tempnam("./", NULL);
+				fprintf(stderr, "%s: more than %zd filename collisions detected for `%s', giving up and using `%s.%s'.\n", program_name, FILENAME_SUFFIX_MAX, buffer, buffer, tmp+2);
+				sprintf(dst, ".%s", tmp+2); /* +2 to to ignore ./ */ /** @todo potential overflow */
+				free(tmp);
+				break;
 			}
-			break;
-		}
 
-		/* append suffix */
-		sprintf(dst, ".%d", suffix++); /** @todo potential buffer overflow */
-	} while (1);
+			/* test if filename already exists */
+			struct stat st;
+			if ( stat(buffer, &st) == -1  ){
+				if ( errno == ENOENT ){
+					break; /* exit loop and return filename */
+				} else {
+					fprintf(stderr, "%s: stat() returned %d: %s\n", program_name, errno, strerror(errno));
+				}
+				break;
+			}
+
+			/* append suffix */
+			sprintf(dst, ".%d", suffix++); /** @todo potential buffer overflow */
+		} while (1);
+	}
 
 	return buffer;
+}
+
+static int open_next(stream_addr_t* addr, stream_t st, const struct marker* marker){
+	/* generate next filename */
+	const char* filename = generate_filename(marker_format, marker);
+	fprintf(stderr, "\tfilename: `%s'\n", filename);
+
+	/* test if user want to append to existing stream */
+	if ( marker_mode == MARKER_APPEND && strcmp(filename, addr->local_filename) == 0){
+		return 0;
+	}
+
+	/* close current stream */
+	stream_close(st);
+	st = NULL;
+
+	/* open new stream */
+	int ret;
+	stream_addr_str(addr, filename, 0);
+	if ( (ret=stream_create(&st, addr, NULL, stream_get_mampid(st), comment)) != 0 ){
+		fprintf(stderr, "%s: stream_create() failed with code 0x%08X: %s\n", program_name, ret, caputils_error_string(ret));
+		return 1;
+	}
+
+	return 0;
 }
 
 static void set_destination(stream_addr_t* addr, const char* str){
@@ -249,8 +298,6 @@ int main(int argc, char **argv){
 		program_name = argv[0];
 	}
 
-	const char* marker_format = "%f-%x-%03s.%e";
-	const char* comment = "capdump-" VERSION " stream";
 	char* iface = NULL;
 	size_t buffer_size = 0;
 	stream_addr_t output = STREAM_ADDR_INITIALIZER;
@@ -288,6 +335,10 @@ int main(int argc, char **argv){
 
 		case 'f': /* --marker-format */
 			marker_format = optarg;
+			break;
+
+		case 'M': /* --marker-mode */
+			marker_mode = parse_marker_mode(optarg);
 			break;
 
 		case 's': /* --progress */
@@ -397,18 +448,8 @@ int main(int argc, char **argv){
 				break;
 			}
 
-			/* close current stream */
-			stream_close(dst);
-
-			/* generate next filename */
-			const char* filename = generate_filename(marker_format, &mark);
-			fprintf(stderr, "\tfilename: `%s'\n", filename);
-
-			/* open new stream */
-			stream_addr_str(&output, filename, 0);
-			if ( (ret=stream_create(&dst, &output, NULL, stream_get_mampid(src), comment)) != 0 ){
-				fprintf(stderr, "%s: stream_create() failed with code 0x%08lX: %s\n", program_name, ret, caputils_error_string(ret));
-				return 1;
+			if ( open_next(&output, dst, &mark) != 0 ){
+				break; /* error already shown */
 			}
 		}
 
