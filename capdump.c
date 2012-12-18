@@ -302,6 +302,7 @@ int main(int argc, char **argv){
 	size_t buffer_size = 0;
 	stream_addr_t output = STREAM_ADDR_INITIALIZER;
 	unsigned int max_packets = 0;
+	unsigned long written_packets = 0;
 
 	while ( (op = getopt_long(argc, argv, shortopts, longopts, &option_index)) != -1 ){
 		switch (op){
@@ -469,6 +470,7 @@ int main(int argc, char **argv){
 				fprintf(stderr, "%s: stream_copy() failed with code 0x%08lX: %s\n", program_name, ret, caputils_error_string(ret) );
 				break;
 			}
+			written_packets++;
 		}
 
 		if ( max_packets > 0 && stream_stat->read >= max_packets ){
@@ -478,6 +480,7 @@ int main(int argc, char **argv){
 
 	fprintf(stderr, "%s: There was a total of %'"PRIu64" packets recv.\n", program_name, stream_stat->recv);
 	fprintf(stderr, "%s: There was a total of %'"PRIu64" packets read.\n", program_name, stream_stat->read);
+	fprintf(stderr, "%s: There was a total of %'ld packets writen.\n", program_name, written_packets);
 
 	stream_close(src);
 	stream_close(dst);
