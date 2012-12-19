@@ -33,6 +33,7 @@ static const size_t FILENAME_SUFFIX_MAX = 1000; /* maximum number of filename su
 static const size_t PROGRESS_REPORT_DELAY = 60;  /* seconds between progress reports */
 static int keep_running = 1;
 static int marker = 0;
+static int marker_comment = 0;
 static const char* marker_format = "%f-%x-%03s.%e";
 static enum MarkerMode marker_mode = MARKER_INCREMENT;
 static char* fmt_basename = NULL;  /* used by generate_filename */
@@ -42,7 +43,7 @@ static const char* comment = "capdump-" VERSION " stream";
 static const struct stream_stat* stream_stat = NULL;
 static int progress = -1;          /* if >0 progress reports is written to this file descriptor */
 
-static const char* shortopts = "o:p:i:c:b:m:f:M:s::h";
+static const char* shortopts = "o:p:i:c:b:m:f:M:C:s::h";
 static struct option longopts[]= {
 	{"output",  required_argument, 0, 'o'},
 	{"packets", required_argument, 0, 'p'},
@@ -52,6 +53,7 @@ static struct option longopts[]= {
 	{"marker",  required_argument, 0, 'm'},
 	{"marker-format", required_argument, 0, 'f'},
 	{"marker-mode",   required_argument, 0, 'M'},
+	{"marker-comment", required_argument, 0, 'C'},
 	{"progress", optional_argument, 0, 's'},
 	{"help",    no_argument,       0, 'h'},
 	{0, 0, 0, 0} /* sentinel */
@@ -72,6 +74,7 @@ static void show_usage(void){
 	       "  -f, --marker-format  Renaming format for marker.\n"
 	       "      --marker-mode    What to do when identical filename is generated. Valid\n"
 	       "                       modes are [I]crement (default), [O]verwrite and [A]ppend.\n"
+	       "      --marker-comment Use marker comment as the stream comment.\n"
 	       "      --progress[=FD]  Write progress report to FD every 60 seconds.\n"
 	       "  -h, --help           This text.\n");
 	printf("\n");
@@ -265,7 +268,7 @@ static int open_next(stream_addr_t* addr, stream_t st, const struct marker* mark
 	/* open new stream */
 	int ret;
 	stream_addr_str(addr, filename, 0);
-	if ( (ret=stream_create(&st, addr, NULL, stream_get_mampid(st), comment)) != 0 ){
+	if ( (ret=stream_create(&st, addr, NULL, stream_get_mampid(st), marker_comment ? marker->comment : comment)) != 0 ){
 		fprintf(stderr, "%s: stream_create() failed with code 0x%08X: %s\n", program_name, ret, caputils_error_string(ret));
 		return 1;
 	}
@@ -384,6 +387,10 @@ int main(int argc, char **argv){
 
 		case 'M': /* --marker-mode */
 			marker_mode = parse_marker_mode(optarg);
+			break;
+
+		case 'C': /* --marker-comment */
+			marker_comment = 1;
 			break;
 
 		case 's': /* --progress */
