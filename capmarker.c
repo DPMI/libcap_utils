@@ -43,6 +43,7 @@ static struct option longopts[]= {
 	{"key",        required_argument, 0, 'l'},
 	{"sequence",   required_argument, 0, 's'},
 	{"comment",    required_argument, 0, 'c'},
+	{"terminate",  no_argument,       0, 'T'},
 	{"help",       no_argument,       0, 'h'},
 	{0, 0, 0, 0} /* sentinel */
 };
@@ -59,6 +60,7 @@ static void show_usage(void){
 	       "  -u                   UDP packet [default]\n"
 	       "  -t                   TCP packet\n"
 	       "  -x                   Ethernet packet\n"
+	       "  -T, --terminate      Set termination flag\n"
 	       "  -h, --help           This text.\n");
 }
 
@@ -114,6 +116,7 @@ int main(int argc, char **argv){
 
 	/* reset marker */
 	marker.timestamp = htobe64(time(NULL));
+	marker.flags = 0;
 	memset(marker.comment, 0, 64);
 
 	int op, option_index = -1;
@@ -161,6 +164,10 @@ int main(int argc, char **argv){
 
 		case 'x':
 			mode = MODE_ETH;
+			break;
+
+		case 'T': /* --terminate */
+			marker.flags |= MARKER_TERMINATE;
 			break;
 
 		case 'h':
