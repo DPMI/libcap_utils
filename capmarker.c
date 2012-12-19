@@ -36,7 +36,8 @@ static struct marker marker = {
 };
 
 static const char* program_name = NULL;
-static struct option long_options[]= {
+static const char* shortopts = "e:r:k:s:c:utxh";
+static struct option longopts[]= {
 	{"experiment", required_argument, 0, 'e'},
 	{"run",        required_argument, 0, 'r'},
 	{"key",        required_argument, 0, 'l'},
@@ -45,6 +46,21 @@ static struct option long_options[]= {
 	{"help",       no_argument,       0, 'h'},
 	{0, 0, 0, 0} /* sentinel */
 };
+
+static void show_usage(void){
+	printf("capmarker-%s\n", caputils_version(NULL));
+	printf("(C) 2012 David Sveningsson <david.sveningsson@bth.se>\n");
+	printf("Usage: %s [OPTIONS] IP:PORT..\n", program_name);
+	printf("  -e, --experiment=ID  Current experiment ID.\n"
+	       "  -r, --run=ID         Current run ID.\n"
+	       "  -k, --key=INT        Domain information. [default: 0]\n"
+	       "  -s, --sequence       Sequence start number. [default: 0].\n"
+	       "  -c, --comment        Comment\n"
+	       "  -u                   UDP packet [default]\n"
+	       "  -t                   TCP packet\n"
+	       "  -x                   Ethernet packet\n"
+	       "  -h, --help           This text.\n");
+}
 
 static int send_udp(const struct in_addr dst, in_port_t port){
 	/* open socket */
@@ -87,21 +103,6 @@ static int send_udp(const struct in_addr dst, in_port_t port){
 	return 0;
 }
 
-static void show_usage(void){
-	printf("capmarker-%s\n", caputils_version(NULL));
-	printf("(C) 2012 David Sveningsson <david.sveningsson@bth.se>\n");
-	printf("Usage: %s [OPTIONS] IP:PORT..\n", program_name);
-	printf("  -e, --experiment=ID  Current experiment ID.\n"
-	       "  -r, --run=ID         Current run ID.\n"
-	       "  -k, --key=INT        Domain information. [default: 0]\n"
-	       "  -s, --sequence       Sequence start number. [default: 0].\n"
-	       "  -c, --comment        Comment\n"
-	       "  -u                   UDP packet [default]\n"
-	       "  -t                   TCP packet\n"
-	       "  -x                   Ethernet packet\n"
-	       "  -h, --help           This text.\n");
-}
-
 int main(int argc, char **argv){
 	/* extract program name from path. e.g. /path/to/MArCd -> MArCd */
 	const char* separator = strrchr(argv[0], '/');
@@ -116,7 +117,7 @@ int main(int argc, char **argv){
 	memset(marker.comment, 0, 64);
 
 	int op, option_index = -1;
-	while ( (op = getopt_long(argc, argv, "e:r:k:s:c:utxh", long_options, &option_index)) != -1 ){
+	while ( (op = getopt_long(argc, argv, shortopts, longopts, &option_index)) != -1 ){
 		switch (op){
 		case 0:   /* long opt */
 		case '?': /* unknown opt */
@@ -169,7 +170,7 @@ int main(int argc, char **argv){
 
 		default:
 			if ( option_index >= 0 ){
-				fprintf(stderr, "flag --%s declared but not handled\n", long_options[option_index].name);
+				fprintf(stderr, "flag --%s declared but not handled\n", longopts[option_index].name);
 			} else {
 				fprintf(stderr, "flag -%c declared but not handled\n", op);
 			}
