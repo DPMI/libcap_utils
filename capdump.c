@@ -126,6 +126,24 @@ static void progress_report(int signum){
 	}
 }
 
+static const char* marker_flags(const struct marker* marker){
+	static char buf[12];
+	static char flag[8] = {'T', 0, };
+	if ( marker->flags == 0 ){
+		return "(not set)";
+	}
+
+	char* dst = buf;
+	*dst++ = '[';
+	for ( int i = 0; i < 8; i++ ){
+		if ( marker->flags & (1<<i) ){
+			*dst++ = flag[i];
+		}
+	}
+	*dst++ = ']';
+	return buf;
+}
+
 static void marker_report(const struct marker* marker){
 	static char timestr[64];
 	static char timestamp[200];
@@ -143,6 +161,7 @@ static void marker_report(const struct marker* marker){
 	fprintf(stderr, "%s: [%s] marker v%d found (flags: %d)\n", program_name, timestr, marker->version, marker->flags);
 	fprintf(stderr, "\texp / run / key id: %d / %d / %d\n", marker->exp_id, marker->run_id, marker->key_id);
 	fprintf(stderr, "\tseq num: %d\n", marker->seq_num);
+	fprintf(stderr, "\tflags: %s\n", marker_flags(marker));
 	fprintf(stderr, "\ttimestamp: %s\n", timestamp);
 }
 
