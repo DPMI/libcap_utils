@@ -297,6 +297,7 @@ static int handle_marker(const struct cap_header* cp, stream_addr_t* addr, strea
 			stream_close(*st);
 			*st = NULL;
 		}
+		fprintf(stderr, "\ttermination flag set, stopping capture until next marker arrives\n");
 		return 0;
 	}
 
