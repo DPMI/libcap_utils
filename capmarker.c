@@ -36,7 +36,7 @@ static struct marker marker = {
 };
 
 static const char* program_name = NULL;
-static const char* shortopts = "e:r:k:s:c:utxh";
+static const char* shortopts = "e:r:k:s:c:utxTh";
 static struct option longopts[]= {
 	{"experiment", required_argument, 0, 'e'},
 	{"run",        required_argument, 0, 'r'},
