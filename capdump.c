@@ -41,6 +41,7 @@ static char* fmt_extension = NULL; /* used by generate_filename */
 static const char* program_name = NULL;
 static const char* comment = "capdump-" VERSION " stream";
 static const struct stream_stat* stream_stat = NULL;
+static char mpid[8];
 static int progress = -1;          /* if >0 progress reports is written to this file descriptor */
 
 static const char* shortopts = "o:p:i:c:b:m:f:M:C:s::h";
@@ -287,7 +288,7 @@ static int open_next(stream_addr_t* addr, stream_t st, const struct marker* mark
 	/* open new stream */
 	int ret;
 	stream_addr_str(addr, filename, 0);
-	if ( (ret=stream_create(&st, addr, NULL, stream_get_mampid(st), marker_comment ? marker->comment : comment)) != 0 ){
+	if ( (ret=stream_create(&st, addr, NULL, mpid, marker_comment ? marker->comment : comment)) != 0 ){
 		fprintf(stderr, "%s: stream_create() failed with code 0x%08X: %s\n", program_name, ret, caputils_error_string(ret));
 		return 1;
 	}
@@ -475,8 +476,11 @@ int main(int argc, char **argv){
 		return 1;
 	}
 
+	/* set hostname as mpid */
+	gethostname(mpid, 8);
+
 	/* open output stream */
-	if ( (ret=stream_create(&dst, &output, NULL, stream_get_mampid(src), comment)) != 0 ){
+	if ( (ret=stream_create(&dst, &output, NULL, mpid, comment)) != 0 ){
 		fprintf(stderr, "stream_create() failed with code 0x%08lX: %s\n", ret, caputils_error_string(ret));
 		return 1;
 	}
