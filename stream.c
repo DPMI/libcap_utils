@@ -209,7 +209,8 @@ int stream_create(stream_t* stptr, const stream_addr_t* dest, const char* nic, c
 	int flags = stream_addr_flags(dest);
 	int ret = ERROR_NOT_IMPLEMENTED; /* initialized to silence certain versions of gcc */
 
-	switch ( stream_addr_type(dest) ){
+	enum AddressType type = stream_addr_type(dest);
+	switch ( type ){
 	case STREAM_ADDR_ETHERNET:
 #ifdef HAVE_PFRING
 		ret = stream_pfring_create(stptr, &dest->ether_addr, nic, mpid, comment, flags);
