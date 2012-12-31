@@ -279,6 +279,7 @@ static int open_next(stream_addr_t* addr, stream_t st, const struct marker* mark
 		char* abs = realpath(filename, NULL);
 		fprintf(stderr, "\tfilename: `%s' (appending)\n", abs ? abs : filename);
 		free(abs);
+		stream_flush(st);
 		return 0;
 	}
 
