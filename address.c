@@ -123,7 +123,7 @@ int stream_addr_aton(stream_addr_t* dst, const char* src, enum AddressType type,
 	char buf[48] = {0,};   /* larger than max, just in case user provides large */
 	strncpy(buf, src, 48); /* input, will bail out later on bad data. */
 
-	memset(dst->buffer, 0, 26);
+	stream_addr_reset(dst);
 	dst->_type = htons(type);
 	dst->_flags = htons(flags);
 
@@ -197,6 +197,9 @@ int stream_addr_aton(stream_addr_t* dst, const char* src, enum AddressType type,
 	case STREAM_ADDR_FIFO:
 		if ( flags & STREAM_ADDR_LOCAL ){
 			dst->local_filename = src;
+			if ( flags &  STREAM_ADDR_DUPLICATE ){
+				dst->int_filename = strdup(dst->local_filename);
+			}
 		} else {
 			strncpy(dst->filename, src, 22);
 			dst->filename[21] = 0; /* force null-terminator */
@@ -212,9 +215,15 @@ int stream_addr_aton(stream_addr_t* dst, const char* src, enum AddressType type,
 }
 
 int stream_addr_str(stream_addr_t* dst, const char* src, int flags){
+	stream_addr_reset(dst);
+
 	dst->_type = htons(STREAM_ADDR_CAPFILE);
 	dst->_flags = htons(STREAM_ADDR_LOCAL|flags);
 	dst->local_filename = src;
+
+	if ( flags & STREAM_ADDR_DUPLICATE ){
+		dst->int_filename = strdup(dst->local_filename);
+	}
 	return 0;
 }
 
@@ -278,6 +287,11 @@ int stream_addr_have_flag(const stream_addr_t* addr, enum AddressFlags flag){
 }
 
 void stream_addr_reset(stream_addr_t* addr){
+	if ( stream_addr_type(addr) == STREAM_ADDR_CAPFILE &&
+	     stream_addr_have_flag(addr, STREAM_ADDR_DUPLICATE) ){
+		free(addr->int_filename);
+	}
+
 	memset(addr, 0, sizeof(stream_addr_t));
 }
 

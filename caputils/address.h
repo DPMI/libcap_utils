@@ -55,6 +55,9 @@ extern "C" {
       /* these cannot be sent across network */
       const char* local_filename;
 
+	    /* used together with STREAM_ADDR_DUPLICATE */
+	    char* int_filename;
+
 	    /* Using existing FILE pointer. By default the user has to close this
 	     * stream after stream_close. To automatically close it use
 	     * STREAM_ADDR_FCLOSE flag. */
@@ -115,6 +118,9 @@ extern "C" {
      * that is not the case. Using this flag the FILE pointer will be closed
      * automatically. */
     STREAM_ADDR_FCLOSE = (1<<3),
+
+    /* The local filename is duplicated and automatically freed. */
+    STREAM_ADDR_DUPLICATE = (1<<4),
   };
 
   /**
@@ -158,6 +164,7 @@ extern "C" {
 
   /**
    * Initialize address to zero.
+   * Some address whose types allocates resources will be free'd.
    */
   void stream_addr_reset(stream_addr_t* addr);
 
