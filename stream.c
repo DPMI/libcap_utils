@@ -52,6 +52,7 @@ int stream_alloc(struct stream** stptr, enum protocol_t protocol, size_t size, s
 	st->destroy = NULL;
 	st->write = NULL;
 	st->read = NULL;
+	st->flush = NULL;
 
 	/* reset memory */
 	memset(st->buffer, 0, buffer_size);
@@ -647,4 +648,11 @@ int stream_add(struct stream* st, const stream_addr_t* addr){
 
 unsigned int stream_num_address(const stream_t st){
 	return st->num_addresses;
+}
+
+int stream_flush(stream_t st){
+	if ( st->flush ){
+		return st->flush(st);
+	}
+	return 0;
 }

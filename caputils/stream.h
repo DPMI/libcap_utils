@@ -149,6 +149,11 @@ int stream_read(stream_t st, cap_head** header, struct filter* filter, struct ti
  */
 int stream_peek(stream_t st, cap_head** header, struct filter* filter);
 
+/**
+ * Force flushing of output stream. Most usable with capfiles.
+ */
+int stream_flush(stream_t st);
+
 #ifdef __cplusplus
 }
 #endif

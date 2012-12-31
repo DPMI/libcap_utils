@@ -28,6 +28,8 @@ typedef int (*write_callback)(struct stream* st, const void* data, size_t size);
 
 typedef int (*read_callback)(struct stream* st, cap_head** header, const struct filter* filter, struct timeval* timeout);
 
+typedef int (*flush_callback)(struct stream* st);
+
 // Stream structure, used to manage different types of streams
 struct stream {
 	enum protocol_t type;                 // What type of stream do we have?
@@ -55,6 +57,7 @@ struct stream {
 	destroy_callback destroy;
 	write_callback write;
 	read_callback read;
+	flush_callback flush;
 };
 
 int is_valid_version(struct file_header_t* fhptr);
