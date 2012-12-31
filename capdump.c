@@ -274,7 +274,9 @@ static const char* generate_filename(const char* fmt, const struct marker* marke
 static int open_next(stream_addr_t* addr, stream_t st, const struct marker* marker){
 	/* generate next filename */
 	const char* filename = generate_filename(marker_format, marker);
-	fprintf(stderr, "\tfilename: `%s'\n", filename);
+	char* abs = realpath(filename, NULL);
+	fprintf(stderr, "\tfilename: `%s'\n", abs);
+	free(abs);
 
 	/* test if user want to append to existing stream */
 	if ( marker_mode == MARKER_APPEND && strcmp(filename, addr->local_filename) == 0){
