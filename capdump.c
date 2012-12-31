@@ -275,13 +275,16 @@ static int open_next(stream_addr_t* addr, stream_t st, const struct marker* mark
 	/* generate next filename */
 	const char* filename = generate_filename(marker_format, marker);
 	char* abs = realpath(filename, NULL);
-	fprintf(stderr, "\tfilename: `%s'\n", abs);
-	free(abs);
 
 	/* test if user want to append to existing stream */
 	if ( marker_mode == MARKER_APPEND && strcmp(filename, addr->local_filename) == 0){
+		fprintf(stderr, "\tfilename: `%s' (appending)\n", abs);
+		free(abs);
 		return 0;
 	}
+
+	fprintf(stderr, "\tfilename: `%s'\n", abs);
+	free(abs);
 
 	/* close current stream */
 	stream_close(st);
