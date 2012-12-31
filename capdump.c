@@ -282,7 +282,7 @@ static int open_next(stream_addr_t* addr, stream_t st, const struct marker* mark
 		return 0;
 	}
 
-	fprintf(stderr, "\tfilename: `%s'\n", abs);
+	fprintf(stderr, "\tfilename: `%s'\n", abs ? abs : filename);
 	free(abs);
 
 	/* close current stream */
