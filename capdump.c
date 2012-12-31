@@ -289,7 +289,8 @@ static int open_next(stream_addr_t* addr, stream_t st, const struct marker* mark
 
 	/* open new stream */
 	int ret;
-	stream_addr_str(addr, filename, 0);
+	stream_addr_reset(addr);
+	stream_addr_str(addr, filename, STREAM_ADDR_DUPLICATE);
 	if ( (ret=stream_create(&st, addr, NULL, mpid, marker_comment ? marker->comment : comment)) != 0 ){
 		fprintf(stderr, "%s: stream_create() failed with code 0x%08X: %s\n", program_name, ret, caputils_error_string(ret));
 		return 1;
@@ -348,6 +349,7 @@ static int write_packet(struct cap_header* cp, stream_t st){
 }
 
 static void set_destination(stream_addr_t* addr, const char* str){
+	stream_addr_reset(addr);
 	stream_addr_aton(addr, str, STREAM_ADDR_GUESS, 0);
 	free(fmt_basename);
 	fmt_basename = strdup(str);
