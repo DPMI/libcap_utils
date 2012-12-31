@@ -241,6 +241,7 @@ int main(int argc, char **argv){
 	char* iface = NULL;
 	size_t buffer_size = 0;
 	stream_addr_t output;
+	memset(&output, 0, sizeof(stream_addr_t));
 	stream_addr_aton(&output, "/dev/stdout", STREAM_ADDR_CAPFILE, STREAM_ADDR_LOCAL);
 
 	unsigned int max_packets = 0;
