@@ -159,10 +159,9 @@ static void marker_report(const struct marker* marker){
 	tm = *localtime((const time_t*)&marker->timestamp);
 	strftime(timestamp, 200, "%a, %d %b %Y %T %z", &tm);
 
-	fprintf(stderr, "%s: [%s] marker v%d found (flags: %d)\n", program_name, timestr, marker->version, marker->flags);
-	fprintf(stderr, "\texp / run / key id: %d / %d / %d\n", marker->exp_id, marker->run_id, marker->key_id);
-	fprintf(stderr, "\tseq num: %d\n", marker->seq_num);
-	fprintf(stderr, "\tflags: %s\n", marker_flags(marker));
+	fprintf(stderr, "%s: [%s] marker v%d found\n", program_name, timestr, marker->version);
+	fprintf(stderr, "\tdata: exp=%d run=%d key=%d seq=%d\n", marker->exp_id, marker->run_id, marker->key_id, marker->seq_num);
+	fprintf(stderr, "\tflags: %s [0x%02x]\n", marker_flags(marker), marker->flags);
 	fprintf(stderr, "\ttimestamp: %s\n", timestamp);
 }
 
