@@ -270,7 +270,7 @@ static const char* generate_filename(const char* fmt, const struct marker* marke
 	return buffer;
 }
 
-static int open_next(stream_addr_t* addr, stream_t st, const struct marker* marker){
+static int open_next(stream_addr_t* addr, stream_t* st, const struct marker* marker){
 	/* generate next filename */
 	const char* filename = generate_filename(marker_format, marker);
 
@@ -279,19 +279,19 @@ static int open_next(stream_addr_t* addr, stream_t st, const struct marker* mark
 		char* abs = realpath(filename, NULL);
 		fprintf(stderr, "\tfilename: `%s' (appending)\n", abs ? abs : filename);
 		free(abs);
-		stream_flush(st);
+		stream_flush(*st);
 		return 0;
 	}
 
 	/* close current stream */
-	stream_close(st);
-	st = NULL;
+	stream_close(*st);
+	*st = NULL;
 
 	/* open new stream */
 	int ret;
 	stream_addr_reset(addr);
 	stream_addr_str(addr, filename, STREAM_ADDR_DUPLICATE);
-	if ( (ret=stream_create(&st, addr, NULL, mpid, marker_comment ? marker->comment : comment)) != 0 ){
+	if ( (ret=stream_create(st, addr, NULL, mpid, marker_comment ? marker->comment : comment)) != 0 ){
 		fprintf(stderr, "%s: stream_create() failed with code 0x%08X: %s\n", program_name, ret, caputils_error_string(ret));
 		return 1;
 	}
@@ -328,7 +328,7 @@ static int handle_marker(const struct cap_header* cp, stream_addr_t* addr, strea
 		return 0;
 	}
 
-	if ( open_next(addr, *st, &mark) != 0 ){
+	if ( open_next(addr, st, &mark) != 0 ){
 		return 1; /* error already shown */
 	}
 
