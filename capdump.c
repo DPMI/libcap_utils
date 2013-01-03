@@ -32,6 +32,7 @@ static char* fmt_extension = NULL; /* used by generate_filename */
 static const char* program_name = NULL;
 static const struct stream_stat* stream_stat = NULL;
 static int progress = -1;          /* if >0 progress reports is written to this file descriptor */
+
 static const char* shortopts = "o:p:i:c:b:m:f:s::g";
 static struct option longopts[]= {
 	{"output",  required_argument, 0, 'o'},
@@ -45,6 +46,29 @@ static struct option longopts[]= {
 	{"help",    no_argument,       0, 'h'},
 	{0, 0, 0, 0} /* sentinel */
 };
+
+static void show_usage(void){
+	printf("(C) 2011 David Sveningsson <david.sveningsson@bth.se>\n");
+	printf("Usage: %s [OPTIONS] STREAM\n", program_name);
+	printf("  -o, --output=FILE    Save output in capfile. [default=stdout]\n"
+	       "  -i, --iface          For ethernet-based streams, this is the interface to listen\n"
+	       "                       on. For other streams it is ignored.\n"
+	       "  -p, --packets=INT    Stop capture after INT packages.\n"
+	       "  -c, --comment        Set stream comment.\n"
+	       "  -t, --timeout=N      Wait for N ms while buffer fills [default: 1000ms].\n"
+	       "  -b, --bufsize=BYTES  Use BYTES buffer size [default depends on driver].\n"
+	       "      --marker=PORT    Split streams based on marker packet. See capdump(1) for\n"
+	       "                       further description of this feature.\n"
+	       "      --marker-format  Renaming format for marker.\n"
+	       "      --progress[=FD]  Write progress report to FD every 60 seconds.\n"
+	       "  -h, --help           This text.\n");
+	printf("\n");
+	printf("Streams can be specified in the following formats:\n");
+	printf("  - NN:NN:NN:NN:NN:NN  Listen to ethernet multicast stream.\n"
+	       "  - tcp://IP[:PORT]    Listen to TCP unicast.\n"
+	       "  - udp://IP[:PORT]    Listen to UDP broadcast.\n"
+	       "  - FILENAME           Open capfile for reading.\n");
+}
 
 static void sig_handler(int signum){
 	static const char* names[] = {"SIGINT", "SIGTERM", "unknown signal"};
@@ -105,29 +129,6 @@ static void marker_report(const struct marker* marker){
 	fprintf(stderr, "\texp / run / key id: %d / %d / %d\n", marker->exp_id, marker->run_id, marker->key_id);
 	fprintf(stderr, "\tseq num: %d\n", marker->seq_num);
 	fprintf(stderr, "\ttimestamp: %s\n", timestamp);
-}
-
-static void show_usage(void){
-	printf("(C) 2011 David Sveningsson <david.sveningsson@bth.se>\n");
-	printf("Usage: %s [OPTIONS] STREAM\n", program_name);
-	printf("  -o, --output=FILE    Save output in capfile. [default=stdout]\n"
-	       "  -i, --iface          For ethernet-based streams, this is the interface to listen\n"
-	       "                       on. For other streams it is ignored.\n"
-	       "  -p, --packets=INT    Stop capture after INT packages.\n"
-	       "  -c, --comment        Set stream comment.\n"
-	       "  -t, --timeout=N      Wait for N ms while buffer fills [default: 1000ms].\n"
-	       "  -b, --bufsize=BYTES  Use BYTES buffer size [default depends on driver].\n"
-	       "      --marker=PORT    Split streams based on marker packet. See capdump(1) for\n"
-	       "                       further description of this feature.\n"
-	       "      --marker-format  Renaming format for marker.\n"
-	       "      --progress[=FD]  Write progress report to FD every 60 seconds.\n"
-	       "  -h, --help           This text.\n");
-	printf("\n");
-	printf("Streams can be specified in the following formats:\n");
-	printf("  - NN:NN:NN:NN:NN:NN  Listen to ethernet multicast stream.\n"
-	       "  - tcp://IP[:PORT]    Listen to TCP unicast.\n"
-	       "  - udp://IP[:PORT]    Listen to UDP broadcast.\n"
-	       "  - FILENAME           Open capfile for reading.\n");
 }
 
 static const char* generate_filename(const char* fmt, const struct marker* marker){
