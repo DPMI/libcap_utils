@@ -33,7 +33,7 @@ static const char* program_name = NULL;
 static const struct stream_stat* stream_stat = NULL;
 static int progress = -1;          /* if >0 progress reports is written to this file descriptor */
 
-static const char* shortopts = "o:p:i:c:b:m:f:s::g";
+static const char* shortopts = "o:p:i:c:b:m:f:s::h";
 static struct option longopts[]= {
 	{"output",  required_argument, 0, 'o'},
 	{"packets", required_argument, 0, 'p'},
