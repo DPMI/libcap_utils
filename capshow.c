@@ -52,7 +52,7 @@ static struct option longopts[]= {
 };
 
 static void show_usage(void){
-	printf("%s-" VERSION_FULL "\n", program_name);
+	printf("%s-%s\n", program_name, caputils_version(NULL));
 	printf("(C) 2004 Patrik Arlos <patrik.arlos@bth.se>\n");
 	printf("(C) 2012 David Sveningsson <david.sveningsson@bth.se>\n");
 	printf("Usage: %s [OPTIONS] STREAM\n", program_name);

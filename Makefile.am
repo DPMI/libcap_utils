@@ -102,6 +102,7 @@ else
 libcap_stream_07_la_SOURCES += stream_ethernet.c
 endif
 
+libcap_utils_07_la_CFLAGS = ${AM_CFLAGS}
 libcap_utils_07_la_LDFLAGS = -version-info 1:0:1
 libcap_utils_07_la_LIBADD = libcap_stream-07.la libcap_filter-07.la libcap_marc-07.la
 libcap_utils_07_la_SOURCES =   \
@@ -115,14 +116,29 @@ libcap_utils_07_la_SOURCES =   \
 	utils.c             \
 	packet.c            \
 	picotime.c
+#	stream_udp.c \
+#	stream_tcp.c
 
 if BUILD_BE64TOH
 libcap_utils_07_la_SOURCES += be64toh.c be64toh.h
 endif
 
-#	stream_udp.c \
-#	stream_tcp.c \
-#
+if HAVE_VCS
+.PHONY: .vcs
+BUILT_SOURCES = .vcs vcs.h
+CLEANFILES = .vcs vcs.h
+.vcs: Makefile
+	@git rev-parse --short HEAD | sed 's/\(.*\)/#define VCS_REV "\1"/' > .vcs
+	@git rev-parse --abbrev-ref HEAD | sed 's/\(.*\)/#define VCS_BRANCH "\1"/' >> .vcs
+	@cmp -s vcs.h .vcs || touch stamp-vcs
+stamp-vcs: .vcs
+vcs.h: stamp-vcs
+	$(AM_V_GEN)cp .vcs vcs.h
+else
+vcs.h: Makefile
+	@echo -n > vcs.h
+endif
+libcap_utils_07_la_SOURCES += vcs.h
 
 libcap_filter_07_la_LDFLAGS = -version-info 0:2:0
 libcap_filter_07_la_LIBADD = ${PCAP_LIBS}

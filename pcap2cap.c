@@ -63,7 +63,7 @@ static struct option longopts[] = {
 };
 
 static void show_usage(){
-	printf("%s (caputils-" CAPUTILS_VERSION ")\n", program_name);
+	printf("%s (caputils-%s)\n", program_name, caputils_version(NULL));
 	printf("(c) 2004-2011 Patrik Arlos, David Sveningsson\n\n");
 	printf("Capture packets using libpcap (or convert existing pcap-file) to a caputils stream.\n");
 	printf("Converted data can be piped or stored to a file.\n\n");

@@ -225,7 +225,7 @@ static const char* generate_filename(const char* fmt, const struct marker* marke
 }
 
 int main(int argc, char **argv){
-	fprintf(stderr, "capdump-" VERSION_FULL "\n");
+	fprintf(stderr, "capdump-%s\n", caputils_version(NULL));
 	int op, option_index = -1;
 
 	/* extract program name from path. e.g. /path/to/MArCd -> MArCd */
