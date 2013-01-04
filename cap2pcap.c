@@ -73,7 +73,7 @@ int main (int argc, char **argv){
 		case 'l':
 			linktype = atoi(optarg);
 			fprintf(stderr, "Linktype = %d ==> %s(%s)\n", linktype, pcap_datalink_val_to_name(linktype),
-			       pcap_datalink_val_to_description(linktype));
+			        pcap_datalink_val_to_description(linktype));
 			break;
 
 		case 'q': /* --quiet */
@@ -81,8 +81,8 @@ int main (int argc, char **argv){
 			break;
 
 		case 'h':
-      printf("%s (caputils-%s)\n", program_name, caputils_version(NULL));
-      printf("(c) 2004-2011 Patrik Arlos, David Sveningsson\n\n");
+			printf("%s (caputils-%s)\n", program_name, caputils_version(NULL));
+			printf("(c) 2004-2011 Patrik Arlos, David Sveningsson\n\n");
 			printf("Converts CAP files to PCAP files.\n");
 			printf("Converted data is stored to a file(-o).\n\n");
 			printf("Usage: %s [OPTION] -o FILENAME [INPUT]\n", program_name);
