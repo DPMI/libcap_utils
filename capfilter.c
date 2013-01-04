@@ -35,7 +35,7 @@ static struct option longopts[] = {
 };
 
 static void show_usage(){
-	printf("%s-"VERSION_FULL"\n", program_name);
+	printf("%s-%s\n", program_name, caputils_version(NULL));
 	printf("(C) 2011 david.sveningsson@bth.se\n"
 	       "Usage: %s [-i FILE] [-o FILE] [OPTIONS...]\n"
 	       "  -i, --input=FILE            read from FILE [default stdin].\n"

@@ -68,7 +68,7 @@ static struct option long_options[] = {
 };
 
 static void show_usage(void){
-	printf("capinfo-" VERSION_FULL "\n");
+	printf("capinfo-%s\n", caputils_version(NULL));
 	printf("(c) 2011 David Sveningsson\n\n");
 	printf("Open a capstream and show information about it.\n");
 	printf("Usage: capinfo [OPTIONS] FILENAME..\n\n");

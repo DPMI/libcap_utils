@@ -36,6 +36,7 @@ AC_SUBST([VERSION_MICRO])
 AC_SUBST([VERSION_SUFFIX])
 AC_DEFINE_UNQUOTED([TOP_SRCDIR], ["${srcdir}"], [top source directory])
 
+AC_PROG_SED
 AM_PROG_CC_C_O
 AC_PROG_CC_C99
 AC_PROG_CXX
@@ -106,6 +107,8 @@ AM_CONDITIONAL([BUILD_CAPMARKER], [test "x$enable_capmarker" = "xyes" -o "x$enab
 AM_CONDITIONAL([BUILD_CAPMERGE],  [test "x$enable_capmerge"  = "xyes" -o "x$enable_capmerge"  = "$utils_unset"])
 AM_CONDITIONAL([BUILD_CAPSHOW],   [test "x$enable_capshow"   = "xyes" -o "x$enable_capshow"   = "$utils_unset"])
 AM_CONDITIONAL([BUILD_PCAP],      [test "x$with_pcap" != "xno"])
+AM_CONDITIONAL([HAVE_VCS],        [test "x$VERSION_SUFFIX" = "x-git"])
+AS_IF([test "x$VERSION_SUFFIX" = "x-git"], [AC_DEFINE([HAVE_VCS], [1], [Define to 1 if VCS is present])])
 AX_PCAP($with_pcap)
 
 AM_PATH_CPPUNIT(1.9.6,,[AC_MSG_NOTICE([cppunit not found, tests disabled])])

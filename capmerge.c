@@ -24,7 +24,7 @@ static struct option longopts[] = {
 };
 
 static void show_usage(){
-	printf("capmerge-" VERSION_FULL "\n");
+	printf("capmerge-%s\n", caputils_version(NULL));
 	printf("usage: %s [OPTIONS..] -o OUTPUT FILES..\n"
 	       "\n"
 	       "  -o, --output=FILE    Write merged file to FILE.\n"

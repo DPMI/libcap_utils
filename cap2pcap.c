@@ -81,7 +81,7 @@ int main (int argc, char **argv){
 			break;
 
 		case 'h':
-	    printf("%s (caputils-" CAPUTILS_VERSION ")\n", program_name);
+      printf("%s (caputils-%s)\n", program_name, caputils_version(NULL));
       printf("(c) 2004-2011 Patrik Arlos, David Sveningsson\n\n");
 			printf("Converts CAP files to PCAP files.\n");
 			printf("Converted data is stored to a file(-o).\n\n");

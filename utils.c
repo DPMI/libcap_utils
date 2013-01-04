@@ -21,6 +21,7 @@
 
 #include "caputils/caputils.h"
 #include "caputils_int.h"
+#include "vcs.h"
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
@@ -63,7 +64,11 @@ const char* caputils_version(caputils_version_t* version){
 		version->micro = VERSION_MICRO;
 		version->features = 0;
 	}
-	return VERSION;
+	return VERSION
+#ifdef VCS_REV
+		"[" VCS_REV "/" VCS_BRANCH "]"
+#endif
+		;
 }
 
 /* generated from linux/if_ether.h at 2011-06-20 */
