@@ -15,52 +15,54 @@
 #include <netinet/ip.h>
 #include <netdb.h>
 
+struct count {
+	uint64_t packets;
+	uint64_t bytes;
+};
+
+struct stats {
+	unsigned long int packets;             /* total number of packets */
+	unsigned long int bytes;               /* sum of all bytes */
+	unsigned long int byte_min, byte_max;  /* smallest/largest packet_size */
+	timepico first, last;                  /* timestamp of first/last packet */
+	int marker_present;                    /* zero if no marker was detected or port number it was found at */
+
+	struct count transport[UINT16_MAX];    /* packet summary for transport layer */
+};
+
 struct simple_list {
-	char** value;
-	size_t size;        /* slots in use */
-	size_t capacity;    /* slots available */
+	char** key;          /* group key */
+	struct stats* value; /* statistics for this group */
+
+	size_t size;         /* slots in use */
+	size_t capacity;     /* slots available */
 };
 
 static void slist_clear(struct simple_list* slist){
 	for ( unsigned int i = 0; i < slist->size; i++ ){
-		free(slist->value[i]);
+		free(slist->key[i]);
 	}
 	slist->size = 0;
 }
 
 static void slist_alloc(struct simple_list* slist, size_t growth){
 	slist->capacity += growth;
-	slist->value = realloc(slist->value, sizeof(char*) * slist->capacity);
+	slist->key   = realloc(slist->key,   sizeof(char*) * slist->capacity);
+	slist->value = realloc(slist->value, sizeof(struct stats) * slist->capacity);
 }
 
 static void slist_free(struct simple_list* slist){
 	slist_clear(slist);
+	free(slist->key);
 	free(slist->value);
 	slist->capacity = 0;
 }
 
-struct count {
-	uint64_t packets;
-	uint64_t bytes;
-};
-
+static struct stats global;
 static stream_t st = NULL;
-static uint64_t packets = 0;
-static uint64_t bytes = 0;
-static unsigned int byte_min;
-static unsigned int byte_max;
-static int marker_present = 0;
-static struct count ipv4;
-static struct count ipv6;
-static struct count arp;
-static struct count stp;
-static struct count cdpvtp;
-static struct count other;
-static struct count  ieee8023;
 static struct count ipproto[UINT8_MAX]; /* protocol is defined as 1 octet */
-static timepico first, last;
-static struct simple_list mpid = {NULL, 0, 0};
-static struct simple_list CI = {NULL, 0, 0};
+static struct simple_list mpid = {NULL, NULL, 0, 0};
+static struct simple_list CI = {NULL, NULL, 0, 0};
 
 static const char* shortopts = "h";
 static struct option longopts[] = {
@@ -78,38 +80,46 @@ static void show_usage(void){
 	printf("Hint: use `capfilter | capinfo` need to run capinfo on a filtered trace.\n");
 }
 
-static void reset(){
-	packets = 0;
-	bytes = 0;
-	byte_min = UINT16_MAX;
-	byte_max = 0;
-	marker_present = 0;
-	ipv4.packets = 0;
-	ipv4.bytes = 0;
-	ipv6.packets = 0;
-	ipv6.bytes = 0;
-	arp.packets = 0;
-	arp.bytes = 0;
-	stp.packets = 0;
-	stp.bytes = 0;
-	cdpvtp.packets = 0;
-	cdpvtp.bytes = 0;
-	ieee8023.packets = 0;
-	ieee8023.bytes = 0;
-	other.packets = 0;
-	other.bytes = 0;
-	for ( int i = 0; i < UINT8_MAX; i++ ){
-		ipproto[i].packets = 0;
-		ipproto[i].bytes = 0;
-	}
-}
-
 static unsigned int min(unsigned int a, unsigned int b){
 	return (a<b) ? a : b;
 }
 
 static unsigned int max(unsigned int a, unsigned int b){
 	return (a>b) ? a : b;
+}
+
+static void reset_stats(struct stats* stat){
+	stat->packets = 0;
+	stat->bytes = 0;
+	stat->byte_min = UINT16_MAX;
+	stat->byte_max = 0;
+	stat->marker_present = 0;
+
+	/* reset transport protocols */
+	for ( unsigned int i = 0; i < UINT16_MAX; i++ ){
+		stat->transport[i].packets = 0;
+		stat->transport[i].bytes = 0;
+	}
+}
+
+static void store_stats(struct stats* stat, struct cap_header* cp){
+	stat->packets++;
+
+	if ( stat->packets == 1 ){
+		stat->first = cp->ts;
+	}
+	stat->last = cp->ts; /* overwritten each time */
+	stat->bytes += cp->len;
+	stat->byte_min = min(stat->byte_min, cp->len);
+	stat->byte_max = max(stat->byte_max, cp->len);
+}
+
+static void reset(){
+	reset_stats(&global);
+	for ( int i = 0; i < UINT8_MAX; i++ ){
+		ipproto[i].packets = 0;
+		ipproto[i].bytes = 0;
+	}
 }
 
 static void format_bytes(char* dst, size_t size, uint64_t bytes){
@@ -168,12 +178,12 @@ static const char* array_join(char* dst, char* const src[], size_t n, const char
 
 static const char* get_mampid_list(const char* delimiter){
 	static char buffer[2048];
-	return array_join(buffer, mpid.value, mpid.size, delimiter);
+	return array_join(buffer, mpid.key, mpid.size, delimiter);
 }
 
 static const char* get_CI_list(const char* delimiter){
 	static char buffer[2048];
-	return array_join(buffer, CI.value, CI.size, delimiter);
+	return array_join(buffer, CI.key, CI.size, delimiter);
 }
 
 static const char* get_comment(stream_t st){
@@ -188,19 +198,19 @@ static void print_overview(){
 	char last_str[128];
 	char sec_str[128];
 	char marker_str[128] = "no";
-	if ( marker_present ){
-		sprintf(marker_str, "present on port %d", marker_present);
+	if ( global.marker_present ){
+		sprintf(marker_str, "present on port %d", global.marker_present);
 	}
-	const timepico time_diff = timepico_sub(last, first);
+	const timepico time_diff = timepico_sub(global.last, global.first);
 	uint64_t hseconds = time_diff.tv_sec * 10 + time_diff.tv_psec / (PICODIVIDER / 10);
-	timepico_to_string_r(&first, first_str, 128, "%F %T");
-	timepico_to_string_r(&last,  last_str,  128, "%F %T");
-	format_bytes(byte_str, 128, bytes);
-	format_rate(rate_str, 128, bytes, hseconds/10);
-	format_seconds(sec_str, 128, first, last);
-	const int local_byte_min = packets > 0 ? byte_min : 0;
-	const int local_byte_max = packets > 0 ? byte_max : 0;
-	const int local_byte_avg = packets > 0 ? bytes / packets : 0;
+	timepico_to_string_r(&global.first, first_str, 128, "%F %T");
+	timepico_to_string_r(&global.last,  last_str,  128, "%F %T");
+	format_bytes(byte_str, 128, global.bytes);
+	format_rate(rate_str, 128, global.bytes, hseconds/10);
+	format_seconds(sec_str, 128, global.first, global.last);
+	const int local_byte_min = global.packets > 0 ? global.byte_min : 0;
+	const int local_byte_max = global.packets > 0 ? global.byte_max : 0;
+	const int local_byte_avg = global.packets > 0 ? global.bytes / global.packets : 0;
 
 	printf("Overview\n"
 	       "--------\n");
@@ -210,7 +220,7 @@ static void print_overview(){
 	printf(" captured: %s to %s\n", first_str, last_str);
 	printf("  markers: %s\n", marker_str);
 	printf(" duration: %s (%.1f seconds)\n", sec_str, (float)hseconds/10);
-	printf("  packets: %"PRIu64"\n", packets);
+	printf("  packets: %"PRIu64"\n", global.packets);
 	printf("    bytes: %s\n", byte_str);
 	printf(" pkt size: min/avg/max = %d/%d/%d\n", local_byte_min, local_byte_avg, local_byte_max);
 	printf(" avg rate: %s\n", rate_str);
@@ -221,32 +231,21 @@ static void print_distribution(){
 	printf("Network protocols\n"
 	       "-----------------\n");
 
-	if ( ipv4.packets > 0 ){
-		printf("     IPv4: %"PRIu64" packets, %"PRIu64" bytes\n", ipv4.packets, ipv4.bytes);
-	}
-	if ( ipv6.packets > 0 ){
-		printf("     IPv6: %"PRIu64" packets, %"PRIu64" bytes\n", ipv6.packets, ipv6.bytes);
-	}
-	if ( arp.packets > 0 ){
-		printf("      ARP: %"PRIu64" packets, %"PRIu64" bytes\n", arp.packets, arp.bytes);
-	}
-	if ( stp.packets > 0 ){
-		printf("      STP: %"PRIu64" packets, %"PRIu64" bytes\n", stp.packets, stp.bytes);
-	}
-	if ( cdpvtp.packets > 0 ){
-		printf("   cdpvtp: %"PRIu64" packets, %"PRIu64" bytes\n", cdpvtp.packets, cdpvtp.bytes);
-	}
-	if ( ieee8023.packets > 0 ){
-		printf("IEEE802.3: %"PRIu64" packets, %"PRIu64" bytes\n", ieee8023.packets, ieee8023.bytes);
-	}
-	if ( other.packets > 0 ){
-		printf("    Other: %"PRIu64" packets, %"PRIu64" bytes\n", other.packets, other.bytes);
+	for ( unsigned int i = 0; i < UINT16_MAX; i++ ){
+		if ( global.transport[i].packets == 0 ) continue;
+		const struct ethertype* ethertype = ethertype_by_number(i);
+		if ( ethertype ){
+			printf("%9s: ", ethertype->name);
+		} else {
+			printf("   0x%04X: ", i);
+		}
+		printf("%"PRIu64" packets, %"PRIu64" bytes\n", global.transport[i].packets, global.transport[i].bytes);
 	}
 
 	printf("\nTransport protocols\n"
 	       "-------------------\n");
 
-	if ( ipv4.packets > 0 || ipv4.packets > 0 ){
+	if ( global.transport[ETHERTYPE_IP].packets > 0 || global.transport[ETHERTYPE_IPV6].packets > 0 ){
 		struct count ipother = {0, 0};
 		for ( int i = 0; i < UINT8_MAX; i++ ){
 			if ( ipproto[i].packets == 0 ){
@@ -264,15 +263,15 @@ static void print_distribution(){
 			printf("%9s: %"PRIu64" packets, %"PRIu64" bytes\n", protoent->p_name, ipproto[i].packets, ipproto[i].bytes);
 		}
 		if ( ipother.packets > 0 ){
-			printf("    other: %"PRIu64" packets, %"PRIu64" bytes\n", other.packets, other.bytes);
+			printf("    other: %"PRIu64" packets, %"PRIu64" bytes\n", ipother.packets, ipother.bytes);
 		}
 	}
 }
 
-static void store_unique(struct simple_list* slist, const char* value, size_t maxlen){
+static unsigned int store_unique(struct simple_list* slist, const char* key, size_t maxlen){
 	/* try to locate an existing string */
 	for ( unsigned int i = 0; i < slist->size; i++ ){
-		if ( strncmp(slist->value[i], value, maxlen) == 0 ) return;
+		if ( strncmp(slist->key[i], key, maxlen) == 0 ) return i;
 	}
 
 	/* allocate more memory if needed */
@@ -280,17 +279,54 @@ static void store_unique(struct simple_list* slist, const char* value, size_t ma
 		slist_alloc(slist, /* growth = */ slist->capacity);
 	}
 
-	/* store value */
-	slist->value[slist->size] = strndup(value, maxlen);
+	/* store key */
+	unsigned int index = slist->size;
+	slist->key[index] = strndup(key, maxlen);
 	slist->size++;
+	reset_stats(&slist->value[index]);
+	return index;
 }
 
 static void store_mampid(struct cap_header* cp){
-	store_unique(&mpid, cp->mampid, 8);
+	const int i = store_unique(&mpid, cp->mampid, 8);
+	store_stats(&mpid.value[i], cp);
 }
 
 static void store_CI(struct cap_header* cp){
-	store_unique(&CI, cp->nic, CAPHEAD_NICLEN);
+	const int i = store_unique(&CI, cp->nic, CAPHEAD_NICLEN);
+	store_stats(&CI.value[i], cp);
+}
+
+static void parse_ethernetII(const struct cap_header* cp){
+	const struct ethhdr* eth = cp->ethhdr;
+	const uint16_t h_proto = ntohs(eth->h_proto);
+	global.transport[h_proto].packets++;
+	global.transport[h_proto].bytes += cp->len;
+
+	const struct iphdr* ip = NULL;
+	switch ( h_proto ){
+	case ETHERTYPE_VLAN:
+		ip = (const struct iphdr*)(cp->payload + sizeof(struct ether_vlan_header));
+		/** @todo handle h_proto */
+		/* fallthrough */
+
+	case ETHERTYPE_IP:
+		if ( !ip ){
+			ip = (const struct iphdr*)(cp->payload + sizeof(struct ethhdr));
+		}
+
+		ipproto[ip->protocol].packets++;
+		ipproto[ip->protocol].bytes += cp->len;
+		break;
+
+	case ETHERTYPE_IPV6:
+		/** @todo handle ipproto */
+		break;
+	}
+}
+
+static void parse_llc(const struct cap_header* cp){
+
 }
 
 static int show_info(const char* filename){
@@ -305,75 +341,23 @@ static int show_info(const char* filename){
 
 	struct cap_header* cp;
 	while ( (ret=stream_read(st, &cp, NULL, NULL)) == 0 ){
-		packets++;
-
-		if ( packets == 1 ){
-			first = cp->ts;
-		}
-		last = cp->ts; /* overwritten each time */
-		bytes += cp->len;
-		byte_min = min(byte_min, cp->len);
-		byte_max = max(byte_max, cp->len);
-		if ( !marker_present ){
-			marker_present = is_marker(cp, NULL, 0);
+		if ( !global.marker_present ){
+			global.marker_present = is_marker(cp, NULL, 0);
 		}
 
+		store_stats(&global, cp);
 		store_mampid(cp);
 		store_CI(cp);
 
-		const struct ethhdr* eth = cp->ethhdr;
-		const uint16_t h_proto = ntohs(eth->h_proto);
-		struct iphdr* ip = NULL;
-
-		if ( h_proto < 0x0600 ){
-			ieee8023.packets++;
-			ieee8023.bytes += cp->len;
+		/* this is not a fool-proof test since ethertypes can be < 0x05dc and
+		 * jumboframes exist. 0x05dc refers to the MTU. */
+		const int have_llc = ntohs(cp->ethhdr->h_proto) <= 0x05DC;
+		if ( have_llc ){
+			parse_llc(cp);
 			continue;
 		}
 
-		switch ( h_proto ){
-		case ETHERTYPE_VLAN:
-			ip = (struct iphdr*)(cp->payload + sizeof(struct ether_vlan_header));
-			/** @todo handle h_proto */
-			/* fallthrough */
-
-		case ETHERTYPE_IP:
-			if ( !ip ){
-				ip = (struct iphdr*)(cp->payload + sizeof(struct ethhdr));
-			}
-
-			ipv4.packets++;
-			ipv4.bytes += cp->len;
-			ipproto[ip->protocol].packets++;
-			ipproto[ip->protocol].bytes += cp->len;
-			break;
-
-		case ETHERTYPE_IPV6:
-			/** @todo handle ipproto */
-			ipv6.packets++;
-			ipv6.bytes += cp->len;
-			break;
-
-		case ETHERTYPE_ARP:
-			arp.packets++;
-			arp.bytes += cp->len;
-			break;
-
-		case STPBRIDGES:
-			stp.packets++;
-			stp.bytes += cp->len;
-			break;
-
-		case CDPVTP:
-			cdpvtp.packets++;
-			cdpvtp.bytes += cp->len;
-			break;
-
-		default:
-			other.packets++;
-			other.bytes += cp->len;
-			break;
-		}
+		parse_ethernetII(cp);
 	}
 
 	if ( ret > 0 ){
