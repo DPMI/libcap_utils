@@ -62,7 +62,8 @@ static timepico first, last;
 static struct simple_list mpid = {NULL, 0, 0};
 static struct simple_list CI = {NULL, 0, 0};
 
-static struct option long_options[] = {
+static const char* shortopts = "h";
+static struct option longopts[] = {
 	{"help",    no_argument, 0, 'h'},
 	{0, 0, 0, 0}, /* sentinel */
 };
@@ -402,7 +403,7 @@ int main(int argc, char* argv[]){
 	/* parse arguments */
 	int option_index = 0;
 	int op;
-	while ( (op=getopt_long(argc, argv, "h", long_options, &option_index)) != -1 ){
+	while ( (op=getopt_long(argc, argv, shortopts, longopts, &option_index)) != -1 ){
 		switch ( op ){
 		case 'h':
 			show_usage();
