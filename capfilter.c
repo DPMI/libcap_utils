@@ -69,7 +69,7 @@ int main(int argc, char* argv[]){
 
 	struct filter filter;
 	if ( filter_from_argv(&argc, argv, &filter) != 0 ){
-		fprintf(stderr, "Failed to create filter, aborting.\n");
+		fprintf(stderr, "%s: Failed to create filter, aborting.\n", program_name);
 		exit(1); /* errors already displayed (on stderr) */
 	}
 
@@ -111,13 +111,13 @@ int main(int argc, char* argv[]){
 
 	/* ensure not reading/writing capfiles from terminal */
 	if ( src_filename == NULL && isatty(STDIN_FILENO) ){
-		fprintf(stderr, "Cannot read input from stdin when it is connected to a terminal.\n");
-		fprintf(stderr, "Either specify another destination with --input, use redirection or pipe from another process.\n");
+		fprintf(stderr, "%s: Cannot read input from stdin when it is connected to a terminal.\n", program_name);
+		fprintf(stderr, "%s: Either specify another destination with --input, use redirection or pipe from another process.\n", program_name);
 		exit(1);
 	}
 	if ( dst_filename == NULL && isatty(STDOUT_FILENO) ){
-		fprintf(stderr, "Cannot output to stdout when it is connected to a terminal.\n");
-		fprintf(stderr, "Either specify another destination with --output, use redirection or pipe to another process.\n");
+		fprintf(stderr, "%s: Cannot output to stdout when it is connected to a terminal.\n", program_name);
+		fprintf(stderr, "%s: Either specify another destination with --output, use redirection or pipe to another process.\n", program_name);
 		exit(1);
 	}
 
