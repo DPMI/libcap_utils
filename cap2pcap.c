@@ -172,6 +172,7 @@ int main (int argc, char **argv){
 
 	/* close cap file */
 	stream_close(st);
+	stream_addr_reset(&src);
 
 	if ( !quiet ){
 		fprintf(stderr, "\nThere was a total of %ld pkts that matched the filter.\n", packets);

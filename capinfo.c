@@ -375,6 +375,7 @@ static int show_info(const char* filename){
 	print_distribution();
 
 	stream_close(st);
+	stream_addr_reset(&addr);
 	return 0;
 }
 

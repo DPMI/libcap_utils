@@ -575,41 +575,46 @@ int stream_from_getopt(stream_t* st, char* argv[], int optind, int argc, const c
 	/* ensure an interface was specified for ethernet streams */
 	if ( stream_addr_type(&addr) == STREAM_ADDR_ETHERNET && !iface ){
 		fprintf(stderr, "%s: ethernet stream requested but no interface was specified.\n", program_name);
-		return EINVAL;
+		goto out;
 	}
 
 	/* open first stream */
 	fprintf(stderr, "Opening %s stream: %s\n", type[stream_addr_type(&addr)], stream_addr_ntoa(&addr));
 	if ( (ret=stream_open(st, &addr, iface, buffer_size)) != 0 ) {
 		fprintf(stderr, "%s: stream_open(..) returned with code %d: %s\n", program_name, ret, caputils_error_string(ret));
-		return ret;
+		goto out;
 	}
 
 	/* no secondary present */
 	if ( ++optind >= argc ){
-		return 0;
+		stream_addr_reset(&addr);
+		ret = 0;
+		goto out;
 	}
 
 	if ( stream_addr_type(&addr) != STREAM_ADDR_ETHERNET ){
 		fprintf(stderr, "%s: only ethernet streams support multiple addresses.\n", program_name);
-		return EINVAL;
+		ret = EINVAL;
+		goto out;
 	}
 
 	/* try secondary addresses */
 	for ( int i = optind++; i < argc; i++ ){
 		if ( (ret=stream_addr_aton(&addr, argv[i], STREAM_ADDR_ETHERNET, 0)) != 0 ){
 			fprintf(stderr, "%s: Failed to parse stream address: %s\n", program_name, caputils_error_string(ret));
-			return ret;
+			goto out;
 		}
 
 		fprintf(stderr, "Adding %s stream: %s\n", type[stream_addr_type(&addr)], stream_addr_ntoa(&addr));
 		if( (ret=stream_add(*st, &addr)) != 0 ) {
 			fprintf(stderr, "%s: stream_add() failed with code 0x%08X: %s\n", program_name, ret, caputils_error_string(ret));
-			return ret;
+			goto out;
 		}
 	}
 
-	return 0;
+  out:
+	stream_addr_reset(&addr);
+	return ret;
 }
 
 void stream_print_info(const stream_t st, FILE* dst){

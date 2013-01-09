@@ -44,7 +44,7 @@ int main(int argc, char* argv[]){
 	char* sort_buffer = NULL;
 	size_t sort_size = 0;
 	stream_addr_t output;
-	stream_addr_aton(&output, "/dev/stdout", STREAM_ADDR_CAPFILE, STREAM_ADDR_LOCAL);
+	stream_addr_str(&output, "/dev/stdout", 0);
 
 	/* extract program name from path. e.g. /path/to/MArCd -> MArCd */
 	const char* separator = strrchr(argv[0], '/');
@@ -62,7 +62,7 @@ int main(int argc, char* argv[]){
 			break;
 
 		case 'o': /* --output */
-			stream_addr_aton(&output, optarg, STREAM_ADDR_CAPFILE, STREAM_ADDR_LOCAL);
+			stream_addr_str(&output, optarg, 0);
 			break;
 
 		case 'c': /* --comment */

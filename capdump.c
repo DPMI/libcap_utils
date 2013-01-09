@@ -242,7 +242,7 @@ int main(int argc, char **argv){
 	size_t buffer_size = 0;
 	stream_addr_t output;
 	memset(&output, 0, sizeof(stream_addr_t));
-	stream_addr_aton(&output, "/dev/stdout", STREAM_ADDR_CAPFILE, STREAM_ADDR_LOCAL);
+	stream_addr_str(&output, "/dev/stdout", 0);
 
 	unsigned int max_packets = 0;
 
@@ -402,7 +402,7 @@ int main(int argc, char **argv){
 			fprintf(stderr, "\tfilename: `%s'\n", filename);
 
 			/* open new stream */
-			stream_addr_str(&output, filename, STREAM_ADDR_LOCAL);
+			stream_addr_str(&output, filename, 0);
 			if ( (ret=stream_create(&dst, &output, NULL, stream_get_mampid(src), comment)) != 0 ){
 				fprintf(stderr, "%s: stream_create() failed with code 0x%08lX: %s\n", program_name, ret, caputils_error_string(ret));
 				return 1;
@@ -425,6 +425,7 @@ int main(int argc, char **argv){
 
 	stream_close(src);
 	stream_close(dst);
+	stream_addr_reset(&output);
 	free(fmt_basename);
 
 	return 0;

@@ -255,6 +255,7 @@ int main (int argc, char **argv){
 
   /* Release resources */
   stream_close(st);
+  stream_addr_reset(&dst);
   pcap_close(pcap);
 
   if ( !quiet ){
