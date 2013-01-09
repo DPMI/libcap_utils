@@ -37,7 +37,7 @@ static struct option longopts[] = {
 static void show_usage(){
 	printf("%s-%s\n", program_name, caputils_version(NULL));
 	printf("(C) 2011 david.sveningsson@bth.se\n"
-	       "Usage: %s [-i FILE] [-o FILE] [OPTIONS...]\n"
+	       "Usage: %s [OPTIONS...] [SRC] [DST] \n"
 	       "  -i, --input=FILE            read from FILE [default stdin].\n"
 	       "  -o, --output=FILE           write to FILE [default stdout].\n"
 	       "  -r, --rejects=FILE          write packets not matching to FILE.\n"
@@ -100,6 +100,20 @@ int main(int argc, char* argv[]){
 		case 'h': /* --help */
 			show_usage();
 			exit(0);
+		}
+	}
+
+	/* use positional arguments unless -i or -o has been specified (for
+	 * compatibility with older versions) */
+	if ( !(src_filename && dst_filename) ){
+		const int nargs = argc-optind;
+		switch ( nargs ){
+		case 2:
+			dst_filename = argv[optind+1];
+		case 1:
+			src_filename = argv[optind];
+		case 0:
+			break;
 		}
 	}
 
