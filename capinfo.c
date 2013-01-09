@@ -7,6 +7,7 @@
 #include "caputils/caputils.h"
 #include "caputils/marker.h"
 #include "caputils_int.h"
+#include <unistd.h>
 #include <getopt.h>
 #include <string.h>
 #include <inttypes.h>
@@ -377,16 +378,25 @@ static int show_info(const char* filename){
 	return 0;
 }
 
-int main(int argc, char* argv[]){
-	/* no arguments */
-	if ( argc == 1 ){
-		show_usage();
-		return 0;
-	}
+static int process(const char* filename){
+	reset();
 
-	/* parse arguments */
+	int status = show_info(filename);
+
+	/* reset storage (must be done for each iteration so the results is
+	 * only for the current file.) */
+	slist_clear(&mpid);
+	slist_clear(&CI);
+
+	return status;
+}
+
+int main(int argc, char* argv[]){
+	int status = 0;
 	int option_index = 0;
 	int op;
+
+	/* parse arguments */
 	while ( (op=getopt_long(argc, argv, shortopts, longopts, &option_index)) != -1 ){
 		switch ( op ){
 		case 'h':
@@ -395,30 +405,25 @@ int main(int argc, char* argv[]){
 		}
 	}
 
-	/* no targets */
-	if ( optind == argc ){
-		show_usage();
-		return 0;
-	}
-
 	/* initial storage */
 	slist_alloc(&mpid, 8);
 	slist_alloc(&CI, 8);
 
-	/* visit all targets */
-	int status = 0;
-	while ( optind < argc ){
-		reset();
-		status |= show_info(argv[optind++]);
+	/* no positional arguments, try to process stdin */
+	if ( optind == argc ){
+		if ( isatty(STDIN_FILENO) ){
+			show_usage();
+		} else {
+			status = process("/dev/stdin");
+		}
+	}
 
+	/* visit all targets */
+	while ( optind < argc ){
+		status |= process(argv[optind++]);
 		if ( optind < argc ){
 			putchar('\n');
 		}
-
-		/* reset storage (must be done for each iteration so the results is
-		 * only for the current file.) */
-		slist_clear(&mpid);
-		slist_clear(&CI);
 	}
 
 	/* release resources */
