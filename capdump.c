@@ -49,7 +49,7 @@ static struct option longopts[]= {
 
 static void show_usage(void){
 	printf("(C) 2011 David Sveningsson <david.sveningsson@bth.se>\n");
-	printf("Usage: %s [OPTIONS] STREAM\n", program_name);
+	printf("Usage: %s [OPTIONS] [INPUT..] [OUTPUT]\n", program_name);
 	printf("  -o, --output=FILE    Save output in capfile. [default=stdout]\n"
 	       "  -i, --iface          For ethernet-based streams, this is the interface to listen\n"
 	       "                       on. For other streams it is ignored.\n"
@@ -224,6 +224,19 @@ static const char* generate_filename(const char* fmt, const struct marker* marke
 	return buffer;
 }
 
+static void set_destination(stream_addr_t* addr, const char* str){
+	stream_addr_aton(addr, str, STREAM_ADDR_GUESS, 0);
+	free(fmt_basename);
+	fmt_basename = strdup(str);
+	fmt_extension = fmt_basename;
+	while ( *fmt_extension && *fmt_extension != '.' ){
+		fmt_extension++;
+	}
+	if ( *fmt_extension ){
+		*fmt_extension++ = 0;
+	}
+}
+
 int main(int argc, char **argv){
 	fprintf(stderr, "capdump-%s\n", caputils_version(NULL));
 	int op, option_index = -1;
@@ -240,10 +253,7 @@ int main(int argc, char **argv){
 	const char* comment = "capdump-" VERSION " stream";
 	char* iface = NULL;
 	size_t buffer_size = 0;
-	stream_addr_t output;
-	memset(&output, 0, sizeof(stream_addr_t));
-	stream_addr_str(&output, "/dev/stdout", 0);
-
+	stream_addr_t output = STREAM_ADDR_INITIALIZER;
 	unsigned int max_packets = 0;
 
 	while ( (op = getopt_long(argc, argv, shortopts, longopts, &option_index)) != -1 ){
@@ -253,16 +263,7 @@ int main(int argc, char **argv){
 			break;
 
 		case 'o':
-			stream_addr_aton(&output, optarg, STREAM_ADDR_GUESS, 0);
-			free(fmt_basename);
-			fmt_basename = strdup(optarg);
-			fmt_extension = fmt_basename;
-			while ( *fmt_extension && *fmt_extension != '.' ){
-				fmt_extension++;
-			}
-			if ( *fmt_extension ){
-				*fmt_extension++ = 0;
-			}
+			set_destination(&output, optarg);
 			break;
 
 		case 'p':
@@ -320,22 +321,24 @@ int main(int argc, char **argv){
 		option_index = -1;
 	}
 
-	if ( optind == argc ){
-		show_usage();
-		exit(0);
-	}
-
 	stream_t src;
 	stream_t dst;
 	long ret;
 
-	/* cannot output to stdout if it is a terminal */
-	if ( stream_addr_type(&output) == STREAM_ADDR_CAPFILE &&
-	     strcmp("/dev/stdout", output.local_filename) == 0 &&
-	     isatty(STDOUT_FILENO) ){
-		fprintf(stderr, "Cannot output to stdout when it is connected to a terminal.\n");
-		fprintf(stderr, "Either specify another destination with --output, use redirection or pipe to another process.\n");
-		return 1;
+	/* use stdout as default output if connected stdout is redirected */
+	if ( !(stream_addr_is_set(&output) || isatty(STDOUT_FILENO)) ){
+		stream_addr_str(&output, "/dev/stdout", 0);
+	}
+
+	/* if no output was given using -o or redirection grab the last positional argument */
+	if ( !stream_addr_is_set(&output) ){
+		if ( optind < argc ){
+			set_destination(&output, argv[argc-1]);
+			argc--;
+		} else {
+			show_usage();
+			exit(0);
+		}
 	}
 
 	/* Install signal handler so loop can be aborted. Handlers are installed

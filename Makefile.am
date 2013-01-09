@@ -70,7 +70,7 @@ TESTS =
 if BUILD_TESTS
 TESTS += tests/filter_argv tests/address tests/endian tests/packet tests/stream tests/timepico
 endif
-TESTS += tests/capinfo_zero tests/capmerge_zero
+TESTS += tests/capdump_argv tests/capinfo_zero tests/capmerge_zero
 check_PROGRAMS = ${TESTS}
 EXTRA_DIST += tests/empty.cap
 
@@ -191,6 +191,8 @@ tests_timepico_CXXFLAGS = ${AM_CFLAGS} $(CPPUNIT_CFLAGS)
 tests_timepico_LDFLAGS = $(CPPUNIT_LIBS)
 tests_timepico_LDADD = libcap_utils-07.la
 tests_timepico_SOURCES = tests/timepico.cpp
+
+tests_capdump_argv_LDADD = libcap_utils-07.la
 
 #
 # Hooks
