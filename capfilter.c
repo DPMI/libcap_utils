@@ -165,11 +165,6 @@ int main(int argc, char* argv[]){
 	/* handle signals */
 	signal(SIGINT, handle_sigint);
 
-	/* show filter */
-	if ( !quiet ){
-		filter_print(&filter, stderr, 0);
-	}
-
 	uint64_t matched = 0;
 	const struct stream_stat* stats = stream_get_stat(src);
 	while ( keep_running ){
