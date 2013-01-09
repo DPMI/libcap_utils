@@ -540,8 +540,7 @@ int stream_peek(stream_t st, cap_head** header, struct filter* filter){
 static const char* type[6] = {"file", "ethernet", "udp", "tcp", "file", "fifo"};
 int stream_from_getopt(stream_t* st, char* argv[], int optind, int argc, const char* iface, const char* defaddr, const char* program_name, size_t buffer_size){
 	int ret;
-	stream_addr_t addr;
-	memset(&addr, 0, sizeof(stream_addr_t));
+	stream_addr_t addr = STREAM_ADDR_INITIALIZER;
 
 	/* force it to be null so finding bugs may be easier */
 	*st = NULL;

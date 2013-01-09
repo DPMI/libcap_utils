@@ -331,7 +331,7 @@ static void parse_llc(const struct cap_header* cp){
 }
 
 static int show_info(const char* filename){
-	stream_addr_t addr;
+	stream_addr_t addr = STREAM_ADDR_INITIALIZER;
 	stream_addr_str(&addr, filename, 0);
 	long ret = 0;
 

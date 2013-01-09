@@ -118,7 +118,7 @@ int main(int argc, char* argv[]){
 	}
 
 	int ret;
-	stream_addr_t addr;
+	stream_addr_t addr = STREAM_ADDR_INITIALIZER;
 	stream_t src = NULL;
 	stream_t dst = NULL;
 	stream_t rej = NULL;

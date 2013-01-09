@@ -55,7 +55,7 @@ public:
 		}
 		struct ether_addr addr = *tmp;
 
-		stream_addr_t dest;
+		stream_addr_t dest = STREAM_ADDR_INITIALIZER;
 		int ret;
 		if ( (ret=stream_addr_aton(&dest, test, STREAM_ADDR_ETHERNET, 0)) != 0 ){
 			sprintf(msg, "stream_addr_aton() returned %d: %s", ret, strerror(ret));
@@ -91,7 +91,7 @@ public:
 	void test_guess_eth(){
 		const char* sample = "cb:a9:87:65:43:21";
 		struct ether_addr* expected = ether_aton(sample);
-		stream_addr_t addr;
+		stream_addr_t addr = STREAM_ADDR_INITIALIZER;
 		int ret;
 
 		if ( (ret=stream_addr_aton(&addr, sample, STREAM_ADDR_GUESS, 0)) != 0 ){
@@ -104,7 +104,7 @@ public:
 
 	void test_guess_filename(){
 		std::string sample = "/path/to/file";
-		stream_addr_t addr;
+		stream_addr_t addr = STREAM_ADDR_INITIALIZER;
 		int ret;
 
 		if ( (ret=stream_addr_aton(&addr, sample.c_str(), STREAM_ADDR_GUESS, 0)) != 0 ){
@@ -118,7 +118,7 @@ public:
 	void test_prefix_eth(){
 		const char* sample = "eth://cb:a9:87:65:43:21";
 		struct ether_addr* expected = ether_aton(sample+6);
-		stream_addr_t addr;
+		stream_addr_t addr = STREAM_ADDR_INITIALIZER;
 		int ret;
 
 		if ( (ret=stream_addr_aton(&addr, sample, STREAM_ADDR_GUESS, 0)) != 0 ){
@@ -132,7 +132,7 @@ public:
 
 	void test_prefix_filename(){
 		const char* sample = "file://cb:a9:87:65:43:21";
-		stream_addr_t addr;
+		stream_addr_t addr = STREAM_ADDR_INITIALIZER;
 		int ret;
 
 		if ( (ret=stream_addr_aton(&addr, sample, STREAM_ADDR_GUESS, 0)) != 0 ){
@@ -146,7 +146,7 @@ public:
 
 	void test_prefix_fifo(){
 		const char* sample = "fifo:///var/tmp/fifo_test";
-		stream_addr_t addr;
+		stream_addr_t addr = STREAM_ADDR_INITIALIZER;
 		int ret;
 
 		if ( (ret=stream_addr_aton(&addr, sample, STREAM_ADDR_GUESS, 0)) != 0 ){
@@ -159,7 +159,7 @@ public:
 	}
 
 	void test_prefix_invalid(){
-		stream_addr_t addr;
+		stream_addr_t addr = STREAM_ADDR_INITIALIZER;
 		if ( stream_addr_aton(&addr, "nonsense://foobar", STREAM_ADDR_GUESS, 0) == 0 ){
 			CppUnit::Asserter::fail("invalid prefix was accepted");
 		}
@@ -167,7 +167,7 @@ public:
 
 	void test_ntoa_fifo(){
 		const char* sample = "fifo:///var/tmp/fifo_test";
-		stream_addr_t addr;
+		stream_addr_t addr = STREAM_ADDR_INITIALIZER;
 		int ret;
 
 		if ( (ret=stream_addr_aton(&addr, sample, STREAM_ADDR_GUESS, 0)) != 0 ){

@@ -21,7 +21,7 @@ class Test: public CppUnit::TestFixture {
 public:
   void test_num_stream_single(){
 	  stream_t st;
-	  stream_addr_t addr;
+	  stream_addr_t addr = STREAM_ADDR_INITIALIZER;
 
 	  stream_addr_str(&addr, TOP_SRCDIR "/tests/empty.cap", 0);
 	  int ret = stream_open(&st, &addr, NULL, 0);

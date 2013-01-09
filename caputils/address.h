@@ -75,6 +75,8 @@ extern "C" {
   } __attribute__((packed));
   typedef struct stream_addr stream_addr_t;
 
+#define STREAM_ADDR_INITIALIZER {{{0,}},}
+
   enum AddressType {
     /**
      * If the format of the address isn't know, this flag can be set to have it

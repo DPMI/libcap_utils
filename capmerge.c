@@ -43,7 +43,7 @@ int main(int argc, char* argv[]){
 	const char* comment = "capmerge-" VERSION " stream";
 	char* sort_buffer = NULL;
 	size_t sort_size = 0;
-	stream_addr_t output;
+	stream_addr_t output = STREAM_ADDR_INITIALIZER;
 	stream_addr_str(&output, "/dev/stdout", 0);
 
 	/* extract program name from path. e.g. /path/to/MArCd -> MArCd */
@@ -111,7 +111,7 @@ int main(int argc, char* argv[]){
 	const size_t files = argc - optind;
 	stream_t st[files];
 	for ( int i = optind, n = 0; i < argc; i++, n++ ){
-		stream_addr_t addr;
+		stream_addr_t addr = STREAM_ADDR_INITIALIZER;
 		stream_addr_str(&addr, argv[i], 0);
 
 		int ret;

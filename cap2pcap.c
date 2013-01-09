@@ -98,7 +98,7 @@ int main (int argc, char **argv){
 		}
 	}
 
-	stream_addr_t src;
+	stream_addr_t src = STREAM_ADDR_INITIALIZER;
 	if ( argc-optind > 0 ){
 		ret = stream_addr_aton(&src, argv[optind], STREAM_ADDR_GUESS, 0);
 	} else if ( !isatty(STDIN_FILENO) ){

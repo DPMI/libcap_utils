@@ -177,8 +177,7 @@ int main (int argc, char **argv){
 
   /* defaults */
   char* comments = strdup("converted from pcap with pcap2cap-" CAPUTILS_VERSION);
-  stream_addr_t dst;
-  stream_addr_reset(&dst);
+  stream_addr_t dst = STREAM_ADDR_INITIALIZER;
 
   int op;
   int option_index;
