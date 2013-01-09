@@ -425,7 +425,7 @@ public:
 		const struct ethertype* ethertype = ethertype_by_number(0x0800);
 		std::string name = ethertype ? ethertype->name : "invalid";
 		std::transform(name.begin(), name.end(), name.begin(), ::tolower);
-		CPPUNIT_ASSERT_EQUAL(std::string("ip"), name);
+		CPPUNIT_ASSERT_EQUAL(std::string("ipv4"), name);
 	}
 };
 
