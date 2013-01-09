@@ -119,6 +119,10 @@ static long stream_file_destroy(struct stream_file* st){
 	return 0;
 }
 
+static int stream_file_flush(struct stream_file* st){
+	return fflush(st->file);
+}
+
 /**
  * Initialize file stream.
  * @return Non-zero on error (see errno(3) for descriptions).
@@ -207,6 +211,7 @@ int stream_file_open(struct stream** stptr, FILE* fp, const char* filename, size
   st->base.fill_buffer = (fill_buffer_callback)stream_file_fillbuffer;
   st->base.destroy = (destroy_callback)stream_file_destroy;
   st->base.write = (write_callback)stream_file_write;
+  st->base.flush = (flush_callback)stream_file_flush;
 
   return 0;
 }
@@ -264,6 +269,7 @@ int stream_file_create(struct stream** stptr, FILE* fp, const char* filename, co
   st->base.fill_buffer = (fill_buffer_callback)stream_file_fillbuffer;
   st->base.destroy = (destroy_callback)stream_file_destroy;
   st->base.write = (write_callback)stream_file_write;
+  st->base.flush = (flush_callback)stream_file_flush;
 
   return 0;
 }
