@@ -1,6 +1,7 @@
 caputils-0.7.14
 ---------------
 
+	* add: [capdump] support for different operations when using markers
 	* fix: [capdump] better support for positional arguments
 	* fix: [capinfo] read from stdin by default
 	* fix: [capfilter] support for positional arguments
