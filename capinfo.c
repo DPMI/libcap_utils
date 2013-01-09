@@ -101,6 +101,11 @@ static void reset_stats(struct stats* stat){
 		stat->transport[i].packets = 0;
 		stat->transport[i].bytes = 0;
 	}
+
+	/* reset storage (must be done for each iteration so the results is
+	 * only for the current file.) */
+	slist_clear(&mpid);
+	slist_clear(&CI);
 }
 
 static void store_stats(struct stats* stat, struct cap_header* cp){
@@ -381,15 +386,7 @@ static int show_info(const char* filename){
 
 static int process(const char* filename){
 	reset();
-
-	int status = show_info(filename);
-
-	/* reset storage (must be done for each iteration so the results is
-	 * only for the current file.) */
-	slist_clear(&mpid);
-	slist_clear(&CI);
-
-	return status;
+	return show_info(filename);
 }
 
 int main(int argc, char* argv[]){
