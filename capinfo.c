@@ -241,7 +241,7 @@ static void print_overview(){
 		const timepico time_diff = timepico_sub(s->last, s->first);
 		uint64_t hseconds = time_diff.tv_sec * 10 + time_diff.tv_psec / (PICODIVIDER / 10);
 		format_seconds(sec_str, 128, global.first, global.last);
-		printf("  %s %.1f seconds, %ld packets, %ld bytes\n", location.key[i], (float)hseconds/10, s->packets, s->bytes);
+		printf("  location:%s %.1f seconds, %ld packets, %ld bytes\n", location.key[i], (float)hseconds/10, s->packets, s->bytes);
 	}
 	printf("\n");
 }
