@@ -101,11 +101,6 @@ static void reset_stats(struct stats* stat){
 		stat->transport[i].packets = 0;
 		stat->transport[i].bytes = 0;
 	}
-
-	/* reset storage (must be done for each iteration so the results is
-	 * only for the current file.) */
-	slist_clear(&mpid);
-	slist_clear(&CI);
 }
 
 static void store_stats(struct stats* stat, struct cap_header* cp){
@@ -126,6 +121,11 @@ static void reset(){
 		ipproto[i].packets = 0;
 		ipproto[i].bytes = 0;
 	}
+
+	/* reset storage (must be done for each iteration so the results is
+	 * only for the current file.) */
+	slist_clear(&mpid);
+	slist_clear(&CI);
 }
 
 static void format_bytes(char* dst, size_t size, uint64_t bytes){
