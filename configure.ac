@@ -36,6 +36,16 @@ AC_SUBST([VERSION_MICRO])
 AC_SUBST([VERSION_SUFFIX])
 AC_DEFINE_UNQUOTED([TOP_SRCDIR], ["${srcdir}"], [top source directory])
 
+# use -O2 by default
+AC_MSG_CHECKING([if CFLAGS is set])
+AS_IF([test -z "$CFLAGS"], [
+  AC_MSG_RESULT([no, defaulting to -O2])
+	CFLAGS="-O2"
+  CXXFLAGS="-O2"
+], [
+  AC_MSG_RESULT([yes ($CFLAGS)])
+])
+
 AC_PROG_SED
 AM_PROG_CC_C_O
 AC_PROG_CC_C99
