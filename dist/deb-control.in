@@ -6,4 +6,4 @@ Architecture: @ARCH@
 Maintainer: David Sveningsson <dsv@bth.se>
 Description: DPMI capture utilities
 Homepage: https://194.47.151.119/trac/
-Depends: libpcap0.8, ${shlibs:Depends}
+Depends: libpcap0.8, libc6
