@@ -1,0 +1,88 @@
+#! /bin/sh
+
+### BEGIN INIT INFO
+# Provides:          dumper
+# Required-Start:    $remote_fs $syslog $network
+# Required-Stop:     $remote_fs $syslog $network
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Keeps capdump running
+# Description:
+### END INIT INFO
+
+DUMPER_BIN=@prefix@/bin/dumper
+DUMPER_CONFIG=/etc/default/dumper
+DUMPER_LOG=/var/log/dumper.log
+NAME="dumper.sh"
+
+if [ `id -u` != 0 ]; then
+	echo "not executing as root"
+fi
+
+if [ ! -e $DUMPER_CONFIG ]; then
+	echo "config file $DUMPER_CONFIG does not exist"
+	exit 1
+fi
+
+if ! touch $DUMPER_LOG || [ ! -w $DUMPER_LOG ]; then
+	echo "need write permission to $DUMPER_LOG"
+	exit 1
+fi
+
+. /lib/lsb/init-functions
+. $DUMPER_CONFIG
+
+start_dumper(){
+	log_daemon_msg "Starting MA consumer" "$NAME"
+	if killall -s0 $NAME 2> /dev/null; then
+		echo "dumper is already running"
+		return 1
+	fi
+	start-stop-daemon --start --quiet -b --exec $DUMPER_BIN -- $dumper_IFACE $dumper_DST $dumper_STREAM
+	RET="$?"
+	log_end_msg $RET
+	return $RET
+}
+
+stop_dumper(){
+	local signal=${1-TERM}
+	log_daemon_msg "Stopping MA consumer" "$NAME"
+	if ! killall -s0 $NAME 2> /dev/null; then
+		echo "dumper isn't running"
+		return 1
+	fi
+	killall -s$signal dumper.sh 2> /dev/null
+	killall -s$signal capdump 2> /dev/null
+	log_end_msg 0
+}
+
+case "$1" in
+	start)
+		start_dumper || exit 1
+		;;
+
+    stop)
+		stop_dumper || exit 1
+		;;
+
+	restart)
+		stop_dumper
+		sleep 2
+		start_dumper || exit 1
+		;;
+
+	force-reload)
+		stop_dumper KILL
+		sleep 2
+		start_dumper || exit 1
+		;;
+
+	status)
+		status_of_proc "$NAME" "MA consumer"
+		;;
+
+    *)
+		echo "Usage: $0 start|stop|restart|force-reload|status" >&2
+		exit 1
+		;;
+esac

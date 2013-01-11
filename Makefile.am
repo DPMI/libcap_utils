@@ -192,7 +192,7 @@ tests_timepico_LDFLAGS = $(CPPUNIT_LIBS)
 tests_timepico_LDADD = libcap_utils-07.la
 tests_timepico_SOURCES = tests/timepico.cpp
 
-tests_capdump_argv_LDADD = libcap_utils-07.la
+tests_capdump_argv_LDADD = libcap_utils-07.la libcap_stream-07.la
 
 #
 # Hooks
@@ -219,14 +219,27 @@ endif
 
 version=@VERSION@
 debversion=`echo $(version) | sed 's/_//'`
-debpkgname=libcap-utils_$(debversion)_@ARCH@
+debpkgname=libcap-utils_${debversion}_@ARCH@
 releasedir=/var/marc/releases
 
-deb: all
+deb: all check
 	@test "x${prefix}" = "x/usr" || (echo "Error: --prefix must be /usr when creating debian release (currently ${prefix})"; exit 1)
+	@test `id -u` = "0" || (echo "Error: must run as root to set proper permissions"; exit 1)
+	@test -e $(debpkgname) && rm -rf $(debpkgname)
 	mkdir -p $(debpkgname)/DEBIAN
 	sed 's/_git/git/g'  < dist/deb-control > $(debpkgname)/DEBIAN/control
+	cp ${top_srcdir}/dist/deb-postinst ${debpkgname}/DEBIAN/postinst
+	install -D -m 0755 dist/dumper_init $(debpkgname)/etc/init.d/dumper
+	install -D -m 0644 ${top_srcdir}/dist/dumper_conf.sh $(debpkgname)/etc/default/dumper
+	install -D -m 0755 ${top_srcdir}/dist/dumper.sh $(debpkgname)/usr/bin/dumper
+	echo "/etc/default/dumper" >  $(debpkgname)/DEBIAN/conffiles
+	echo "/etc/init.d/dumper"  >> $(debpkgname)/DEBIAN/conffiles
 	$(MAKE) install DESTDIR=`pwd`/$(debpkgname)
+	gzip -9 `pwd`/$(debpkgname)/usr/share/man/*/*
+	find `pwd`/$(debpkgname) -name '*.la' -delete
+	chmod 0755 `pwd`/$(debpkgname)/usr/bin/*
+	strip `pwd`/$(debpkgname)/usr/bin/* `pwd`/$(debpkgname)/usr/lib/*.so
+	(cd $(debpkgname); find . -type f ! -regex '.*.hg.*' ! -regex '.*?debian-binary.*' ! -regex '.*?DEBIAN.*' -printf '%P ' | xargs md5sum > DEBIAN/md5sums)
 	dpkg-deb --build $(debpkgname)
 
 # special target for dsvmarc releases

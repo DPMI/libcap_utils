@@ -23,6 +23,7 @@ AC_CONFIG_FILES([
 	caputils/version.h
 	Makefile
   dist/deb-control
+  dist/dumper_init
 ])
 
 AC_DEFINE_UNQUOTED([VERSION_MAJOR],  [${VERSION_MAJOR}], [Major version number of package])
