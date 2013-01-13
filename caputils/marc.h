@@ -77,6 +77,7 @@ enum MPEvent {
 	MP_CONTROL_TERMINATE_EVENT,        /* terminate MP */
 	MP_CONTROL_FLUSH_EVENT,            /* flush all CI buffers */
 	MP_CONTROL_FLUSH_ALL_EVENT,        /* flush single CI buffer */
+	MP_CONTROL_PING_EVENT,             /* ping request, client should return message ASAP */
 
 	/* other */
 	MP_CONTROL_DISTRESS = 256,         /* MP is distress, probably crashing [mampid_t] */

@@ -391,6 +391,7 @@ static size_t event_size(MPMessage* event){
 	case MP_CONTROL_STOP_EVENT:
 	case MP_CONTROL_START_EVENT:
 	case MP_CONTROL_DISTRESS:
+	case MP_CONTROL_PING_EVENT:
 		return sizeof(uint32_t) + sizeof(mampid_t); /* only type and MAMPid is sent */
 
 	default:
@@ -506,6 +507,16 @@ int marc_poll_event(marc_context_t ctx, MPMessage* event, size_t* size, struct s
 	/* intercept auth event to store version */
 	if ( event->type == MP_CONTROL_AUTHORIZE_EVENT ){
 		client->server_version = event->init.version.protocol;
+	}
+
+	/* intercept ping events, no need to bother client with this */
+	int ret;
+	if ( event->type == MP_CONTROL_PING_EVENT ){
+		out_func(dst_verbose, "Got ping requst from %s:%d, sending pong.\n", inet_ntoa(from.sin_addr), ntohs(from.sin_port));
+		if ( (ret=marc_push_event(ctx, event, (struct sockaddr*)&from)) != 0 ){
+			out_func(dst_error, "marc_push_event() returned %d: %s\n", ret, strerror(ret));
+		}
+		return EAGAIN; /* slight abuse of EAGAIN but easiest way to have client retry */
 	}
 
 	/* legacy hack. php-gui sends a events without full payload */
