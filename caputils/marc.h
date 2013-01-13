@@ -256,6 +256,7 @@ int marc_push_event(marc_context_t ctx, MPMessage* event, struct sockaddr* dst);
  * @param event [IN] Stores event information in this memory.
  * @param bytes [OUT] How many bytes the message is.
  * @param from [OUT] If not NULL, stores the address of the sender.
+ * @param addrlen [IN/OUT] If from is set this is the size of it.
  * @param timeout [IN/OUT] How long to wait, or NULL to block indefinitely.
  * @return Zero if a message arrived and was sucessfully read, or errno is
  *         returned on errors. EAGAIN if timeout is reached and EINTR if an
@@ -263,7 +264,7 @@ int marc_push_event(marc_context_t ctx, MPMessage* event, struct sockaddr* dst);
  *         The content of event, bytes, from, timeout is undefined if an
  *         error occurs.
  */
-int marc_poll_event(marc_context_t ctx, MPMessage* event, size_t* bytes, struct sockaddr* from, struct timeval* timeout);
+int marc_poll_event(marc_context_t ctx, MPMessage* event, size_t* bytes, struct sockaddr* from, socklen_t* addrlen, struct timeval* timeout);
 
 /* helper functions */
 int marc_filter_request(marc_context_t ctx, const char* MAMPid, uint32_t filter_id);

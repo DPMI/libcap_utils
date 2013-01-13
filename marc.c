@@ -441,7 +441,7 @@ int marc_push_event(marc_context_t ctx, MPMessage* event, struct sockaddr* dst){
 	return 0;
 }
 
-int marc_poll_event(marc_context_t ctx, MPMessage* event, size_t* size, struct sockaddr* from, struct timeval* timeout){
+int marc_poll_event(marc_context_t ctx, MPMessage* event, size_t* size, struct sockaddr* cfrom, socklen_t* addrlen, struct timeval* timeout){
 	assert(ctx);
 	assert(event);
 
@@ -464,9 +464,16 @@ int marc_poll_event(marc_context_t ctx, MPMessage* event, size_t* size, struct s
 	}
 
 	ssize_t bytes;
-	socklen_t socklen = sizeof(struct sockaddr);
-	if ( (bytes=recvfrom(ctx->sd, event, sizeof(MPMessage), 0, from, &socklen)) <= 0 ){
+	struct sockaddr_in from;
+	socklen_t socklen = sizeof(struct sockaddr_in);
+	if ( (bytes=recvfrom(ctx->sd, event, sizeof(MPMessage), 0, (struct sockaddr*)&from, &socklen)) <= 0 ){
 		return errno;
+	}
+
+	/* copy address to caller */
+	if ( cfrom ){
+		memcpy(cfrom, &from, *addrlen);
+		*addrlen = socklen;
 	}
 
 	event->type = ntohl(event->type);
