@@ -32,6 +32,8 @@ enum context_type {
 };
 
 struct marc_context {
+	char ip[INET_ADDRSTRLEN];
+	int port;
 	const char* iface;
 	struct ether_addr hwaddr;
 	enum context_type type;
@@ -162,13 +164,13 @@ int marc_init_client(marc_context_t* ctxptr, const char* iface, struct marc_clie
 	memset(&server_addr, 0, sizeof(struct sockaddr_in));
 
 	/* setup client addr */
-	const int client_port = info->client_port == 0 ? DEFAULT_CLIENT_PORT : info->client_port;
+	info->client_port = info->client_port == 0 ? DEFAULT_CLIENT_PORT : info->client_port;
 	memcpy(&client_addr, &ifreq.ifr_addr, sizeof(struct sockaddr_in));
 	if ( info->client_ip && inet_aton(info->client_ip, (struct in_addr*)&client_addr) == 0){
 		return perror2("inet_aton");
 	}
 	client_addr.sin_family = AF_INET;
-	client_addr.sin_port = htons(client_port);
+	client_addr.sin_port = htons(info->client_port);
 
 	/* setup relay addr */
 	relay_addr.sin_family = AF_INET;
@@ -259,6 +261,8 @@ int marc_init_client(marc_context_t* ctxptr, const char* iface, struct marc_clie
 	marc_context_t ctx = &client->context;
 
 	/* fill context */
+	info->client_ip = inet_ntop(AF_INET, &client_addr.sin_addr, ctx->ip, INET_ADDRSTRLEN);
+	ctx->port = info->client_port;
 	ctx->iface = strdup(iface);
 	ctx->type = CONTEXT_CLIENT;
 	ctx->sd = sd;
