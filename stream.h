@@ -73,7 +73,7 @@ int is_valid_version(struct file_header_t* fhptr);
  */
 void match_inc_seqnr(const struct stream* st, long unsigned int* restrict seq, const struct sendhead* restrict sh);
 
-int stream_udp_init(struct stream* st, const char* address, int port);
+int stream_udp_create(stream_t* st, const struct sockaddr_in* addr, int flags);
 int stream_tcp_init(struct stream* st, const char* address, int port);
 
 #ifdef HAVE_PFRING
