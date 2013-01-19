@@ -32,7 +32,8 @@ extern "C" {
  *  - Include "struct stream_frame_buffer" in your structure.
  *  - At the bottom add "char* frame[0]" which refers to the pointers at the
  *    beginning of the layout.
- *  - stream_frame_buffer_init(..)
+ *  - `stream_frame_buffer_init(..)`.
+ *  - Use a custom `read_callback` which calls `stream_frame_buffer_read`.
  */
 
 typedef int (*read_frame_callback)(stream_t st, char* dst, struct timeval* timeout);
