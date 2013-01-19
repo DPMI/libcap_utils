@@ -23,7 +23,6 @@ struct stream_ethernet {
 	int socket;
 	int port;
 	int if_index;
-	unsigned int if_mtu;
 	struct sockaddr_ll sll;
 	struct ether_addr address[MAX_ADDRESS];
 	long unsigned int seqnum[MAX_ADDRESS];
@@ -74,7 +73,7 @@ static int read_packet(struct stream_ethernet* st, struct timeval* timeout){
 
 		/* Read data into framebuffer. */
 		char* dst = st->frame[st->base.writePos];
-		int bytes = recvfrom(st->socket, dst, st->if_mtu, 0, NULL, NULL);
+		int bytes = recvfrom(st->socket, dst, st->base.if_mtu, 0, NULL, NULL);
 		if ( bytes < 0 ){ /* error occurred */
 			perror("Cannot receive Ethernet data.");
 			break;
@@ -213,8 +212,8 @@ int stream_ethernet_read(struct stream_ethernet* st, cap_head** header, struct f
 }
 
 static long stream_ethernet_write(struct stream_ethernet* st, const void* data, size_t size){
-	if ( size > st->if_mtu ){
-		fprintf(stderr, "packet is larger (%zd) than MTU (%d), ignoring\n", size, st->if_mtu);
+	if ( size > st->base.if_mtu ){
+		fprintf(stderr, "packet is larger (%zd) than MTU (%zd), ignoring\n", size, st->base.if_mtu);
 		return EINVAL;
 	}
   if ( sendto(st->socket, data, size, 0, (struct sockaddr*)&st->sll, sizeof(st->sll)) < 0 ){
@@ -321,13 +320,12 @@ static long stream_ethernet_init(struct stream** stptr, const struct ether_addr*
   buffer_size += frame_offset;
 
   /* Initialize the structure */
-  if ( (ret = stream_alloc(stptr, PROTOCOL_ETHERNET_MULTICAST, sizeof(struct stream_ethernet), buffer_size) != 0) ){
+  if ( (ret = stream_alloc(stptr, PROTOCOL_ETHERNET_MULTICAST, sizeof(struct stream_ethernet), buffer_size, if_mtu) != 0) ){
     return ret;
   }
   struct stream_ethernet* st = (struct stream_ethernet*)*stptr;
   st->socket = fd;
   st->num_address = 0;
-  st->if_mtu = if_mtu;
   st->base.if_loopback = if_loopback;
   memset(st->seqnum, 0, sizeof(long unsigned int) * MAX_ADDRESS);
 

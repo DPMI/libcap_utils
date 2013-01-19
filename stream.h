@@ -4,13 +4,14 @@
 #include <caputils/stream.h>
 
 /**
- * Initialize variables for a stream.
- * @bug To retain compability with code, some variables which weren't
- *      initialized are left that way, at least until I proved and tested it
- *      does not break.
+ * Allocate and initialize a stream.
+ *
+ * @param size Size of concrete struct in bytes.
+ * @param buffer_size Size of buffer in bytes. For write-only streams set to 0.
+ * @param mtu Size of largest possible measurement frame we may receive.
  * @return Non-zero on failure.
  */
-int stream_alloc(struct stream** st, enum protocol_t protocol, size_t size, size_t buffer_size);
+int stream_alloc(struct stream** st, enum protocol_t protocol, size_t size, size_t buffer_size, size_t mtu);
 
 /**
  * Fill the stream buffer.
@@ -47,6 +48,7 @@ struct stream {
 	unsigned int readPos;                 // Read position
 	int flushed;                          // Indicate that we got a flush signal.
 	int num_addresses;                    // Number of addresses associated with stream
+	size_t if_mtu;                        // Interface MTU (size of the largest measurement frame we may receive on this interface)
 	int if_loopback;                      // Set to non-zero if the stream is a loopback interface.
 
 	/* stats */
