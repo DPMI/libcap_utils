@@ -15,7 +15,7 @@ static const char* errstr[ERROR_LAST - ERROR_FIRST] = {
 
   /* ERROR_INVALID_PROTOCOL */  "unsupported protocol",
   /* ERROR_INVALID_HWADDR */    "failed to parse hwaddr",
-  /* ERROR_INVALID_HWADDR_MULTICAST */ "invalid hwaddr: not multicast",
+  /* ERROR_INVALID_MULTICAST */ "invalid address, expected multicast",
   /* ERROR_INVALID_IFACE */     "invalid interface",
   /* ERROR_BUFFER_LENGTH */     "read buffer must be greater than MTU",
   /* ERROR_BUFFER_MULTIPLE */   "buffer size must be a multiple of MTU",

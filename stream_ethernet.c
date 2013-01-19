@@ -232,7 +232,7 @@ long stream_ethernet_add(struct stream* stt, const struct ether_addr* addr){
 
   /* parse hwaddr from user */
   if ( (addr->ether_addr_octet[0] & 0x01) == 0 ){
-    return ERROR_INVALID_HWADDR_MULTICAST;
+    return ERROR_INVALID_MULTICAST;
   }
 
   /* store parsed address */
