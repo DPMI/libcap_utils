@@ -16,10 +16,12 @@ int stream_alloc(struct stream** st, enum protocol_t protocol, size_t size, size
 
 /**
  * Fill the stream buffer.
+ * @param dst Destination buffer
+ * @param max May write at most max bytes.
  * @return Number of bytes actually read, zero if there is nothing more to read
  *         and negative on errors.
  */
-typedef int (*fill_buffer_callback)(struct stream* st, struct timeval* timeout);
+typedef int (*fill_buffer_callback)(struct stream* st, struct timeval* timeout, char* dst, size_t max);
 
 /**
  * Stream destructor.

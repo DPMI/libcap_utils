@@ -17,39 +17,18 @@ struct stream_file {
   int force_flush; /* force stream to be flushed on every write */
 };
 
-static int stream_file_fillbuffer(struct stream_file* st){
+static int stream_file_fillbuffer(struct stream_file* st, struct timeval* timeout, char* dst, size_t max){
   assert(st);
   assert(st->file);
   assert(st->base.buffer_size);
 
-  size_t available = st->base.buffer_size - st->base.writePos;
-  size_t left = st->base.buffer_size - st->base.readPos;
-
-  /* don't need to fill file buffer unless drained */
-  struct cap_header* cp = (struct cap_header*)(st->base.buffer + st->base.readPos);
-  if ( available == 0 && left > sizeof(struct cap_header) && left > (sizeof(struct cap_header)+cp->caplen) ){
-	  /* fulhack so it won't signal an error */
-	  return 1;
-  }
-
-  /* copy old content */
-  if ( st->base.readPos > 0 ){
-    size_t bytes = st->base.writePos - st->base.readPos;
-    memmove(st->base.buffer, st->base.buffer + st->base.readPos, bytes); /* move content */
-    st->base.writePos = bytes;
-    st->base.readPos = 0;
-    available = st->base.buffer_size - bytes;
-  }
-
-  char* dst = st->base.buffer + st->base.writePos;
-  size_t readBytes = fread(dst, 1, available, st->file);
+  size_t readBytes = fread(dst, 1, max, st->file);
 
   /* check if an error occured, EOF is not considered an error. */
-  if ( readBytes < available && ferror(st->file) > 0 ){
+  if ( readBytes < max && ferror(st->file) > 0 ){
     return -1;
   }
 
-  st->base.writePos += readBytes;
   return readBytes;
 }
 
