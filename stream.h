@@ -1,23 +1,27 @@
 #ifndef CAPUTILS_INT_STREAM_H
 #define CAPUTILS_INT_STREAM_H
 
+#include <caputils/caputils.h>
 #include <caputils/stream.h>
 
 /**
- * Initialize variables for a stream.
- * @bug To retain compability with code, some variables which weren't
- *      initialized are left that way, at least until I proved and tested it
- *      does not break.
+ * Allocate and initialize a stream.
+ *
+ * @param size Size of concrete struct in bytes.
+ * @param buffer_size Size of buffer in bytes. For write-only streams set to 0.
+ * @param mtu Size of largest possible measurement frame we may receive.
  * @return Non-zero on failure.
  */
-int stream_alloc(struct stream** st, enum protocol_t protocol, size_t size, size_t buffer_size);
+int stream_alloc(struct stream** st, enum protocol_t protocol, size_t size, size_t buffer_size, size_t mtu);
 
 /**
  * Fill the stream buffer.
+ * @param dst Destination buffer
+ * @param max May write at most max bytes.
  * @return Number of bytes actually read, zero if there is nothing more to read
  *         and negative on errors.
  */
-typedef int (*fill_buffer_callback)(struct stream* st, struct timeval* timeout);
+typedef int (*fill_buffer_callback)(struct stream* st, struct timeval* timeout, char* dst, size_t max);
 
 /**
  * Stream destructor.
@@ -46,7 +50,8 @@ struct stream {
 	unsigned int writePos;                // Write position
 	unsigned int readPos;                 // Read position
 	int flushed;                          // Indicate that we got a flush signal.
-	int num_addresses;                    // Number of addresses associated with stream
+	unsigned int num_addresses;           // Number of addresses associated with stream
+	size_t if_mtu;                        // Interface MTU (size of the largest measurement frame we may receive on this interface)
 	int if_loopback;                      // Set to non-zero if the stream is a loopback interface.
 
 	/* stats */

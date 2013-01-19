@@ -19,7 +19,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-int stream_alloc(struct stream** stptr, enum protocol_t protocol, size_t size, size_t buffer_size){
+int stream_alloc(struct stream** stptr, enum protocol_t protocol, size_t size, size_t buffer_size, size_t mtu){
 	assert(stptr);
 
 	if ( buffer_size == 0 ){
@@ -36,10 +36,11 @@ int stream_alloc(struct stream** stptr, enum protocol_t protocol, size_t size, s
 	st->buffer_size = buffer_size;
 
 	st->expSeqnr = 0;
-	st->writePos=0;
-	st->readPos=0;
+	st->readPos = 0;
+	st->writePos = 0;
 	st->flushed = 0;
-	st->num_addresses = 1;
+	st->num_addresses = 0;
+	st->if_mtu = mtu;
 	st->if_loopback = 0;
 	st->stat.read = 0;
 	st->stat.recv = 0;
@@ -372,33 +373,53 @@ int stream_copy(stream_t st, const struct cap_header* head){
 }
 
 static int fill_buffer(stream_t st, struct timeval* timeout){
-	if( st->flushed==1 ){
+	if ( st->flushed==1 ){
 		return -1;
 	}
 
-	int ret;
+	/**
+	 *                                  available
+	 *                                 +-----+
+	 *                                 |     |
+	 *  +------------ buffer size -----)-----+
+	 *  v                              v     v
+	 *  +====================================+
+	 *  |  |            BUFFER         |     |
+	 *  +====================================+
+	 *     ^                           ^     ^
+	 *     +--- read pos   write pos --+     |
+	 *     |                                 |
+	 *     +------------- left --------------+
+	 */
 
-	switch(st->type){
-	case PROTOCOL_TCP_UNICAST://TCP
-	case PROTOCOL_UDP_MULTICAST://UDP
-		fprintf(stderr, "Not reimplemented\n");
-		abort();
-		break;
-	case PROTOCOL_ETHERNET_MULTICAST://ETHERNET
-	case PROTOCOL_LOCAL_FILE:
-		ret = st->fill_buffer(st, timeout);
-		if ( ret > 0 ){ /* common case */
-			return 0;
-		} else if ( ret < 0 ){ /* failed to read */
-			return errno;
-		} else if ( ret == 0 ){ /* EOF, TCP shutdown etc */
-			return -1;
-		}
-		break;
+	size_t available = st->buffer_size - st->writePos;
+	size_t left = st->buffer_size - st->readPos;
+
+	/* don't need to fill file buffer unless drained */
+	struct cap_header* cp = (struct cap_header*)(st->buffer + st->readPos);
+	if ( available == 0 && left > sizeof(struct cap_header) && left > (sizeof(struct cap_header)+cp->caplen) ){
+		return 0;
 	}
 
-	/* not reached */
-	return 0;
+	/* copy old content */
+	if ( st->readPos > 0 ){
+		size_t bytes = st->writePos - st->readPos;
+		memmove(st->buffer, st->buffer + st->readPos, bytes); /* move content */
+		st->writePos = bytes;
+		st->readPos = 0;
+		available = st->buffer_size - bytes;
+	}
+
+	char* dst = st->buffer + st->writePos;
+	int ret = st->fill_buffer(st, timeout, dst, available);
+	if ( ret > 0 ){ /* common case (ret is number of bytes) */
+		st->writePos += ret;
+		return 0;
+	} else if ( ret < 0 ){ /* failed to read */
+		return errno;
+	} else { /* EOF, TCP shutdown etc */
+		return -1;
+	}
 }
 
 int stream_read(struct stream *myStream, cap_head** data, struct filter *my_Filter, struct timeval* timeout){
@@ -636,8 +657,6 @@ int stream_add(struct stream* st, const stream_addr_t* addr){
 	if ( st->type != PROTOCOL_ETHERNET_MULTICAST ){
 		return ERROR_INVALID_PROTOCOL;
 	}
-
-	st->num_addresses++;
 
 #ifdef HAVE_PFRING
 	return stream_pfring_add(st, &addr->ether_addr);

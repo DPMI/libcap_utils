@@ -17,39 +17,18 @@ struct stream_file {
   int force_flush; /* force stream to be flushed on every write */
 };
 
-static int stream_file_fillbuffer(struct stream_file* st){
+static int stream_file_fillbuffer(struct stream_file* st, struct timeval* timeout, char* dst, size_t max){
   assert(st);
   assert(st->file);
   assert(st->base.buffer_size);
 
-  size_t available = st->base.buffer_size - st->base.writePos;
-  size_t left = st->base.buffer_size - st->base.readPos;
-
-  /* don't need to fill file buffer unless drained */
-  struct cap_header* cp = (struct cap_header*)(st->base.buffer + st->base.readPos);
-  if ( available == 0 && left > sizeof(struct cap_header) && left > (sizeof(struct cap_header)+cp->caplen) ){
-	  /* fulhack so it won't signal an error */
-	  return 1;
-  }
-
-  /* copy old content */
-  if ( st->base.readPos > 0 ){
-    size_t bytes = st->base.writePos - st->base.readPos;
-    memmove(st->base.buffer, st->base.buffer + st->base.readPos, bytes); /* move content */
-    st->base.writePos = bytes;
-    st->base.readPos = 0;
-    available = st->base.buffer_size - bytes;
-  }
-
-  char* dst = st->base.buffer + st->base.writePos;
-  size_t readBytes = fread(dst, 1, available, st->file);
+  size_t readBytes = fread(dst, 1, max, st->file);
 
   /* check if an error occured, EOF is not considered an error. */
-  if ( readBytes < available && ferror(st->file) > 0 ){
+  if ( readBytes < max && ferror(st->file) > 0 ){
     return -1;
   }
 
-  st->base.writePos += readBytes;
   return readBytes;
 }
 
@@ -146,13 +125,13 @@ int stream_file_open(struct stream** stptr, FILE* fp, const char* filename, size
   }
 
   /* Use a relative smaller buffer-size by default as it will yield faster
-   * response-times when using pipes  */
+   * response-times when using pipes. */
   if ( buffer_size == 0 ){
-	  buffer_size = 4096;
+	  buffer_size = BUFSIZ; /* BUFSIZ is set to optimal size for this platform */
   }
 
   /* Initialize the structure */
-  if ( (ret = stream_alloc(stptr, PROTOCOL_LOCAL_FILE, sizeof(struct stream_file), buffer_size) != 0) ){
+  if ( (ret = stream_alloc(stptr, PROTOCOL_LOCAL_FILE, sizeof(struct stream_file), buffer_size, BUFSIZ) != 0) ){
     return ret;
   }
 
@@ -160,6 +139,7 @@ int stream_file_open(struct stream** stptr, FILE* fp, const char* filename, size
   struct file_header_t* fhptr = &(st->base.FH);
   int i;
 
+  st->base.num_addresses = 1;
   st->file = fp;
   st->force_flush = 0;
 
@@ -240,7 +220,7 @@ int stream_file_create(struct stream** stptr, FILE* fp, const char* filename, co
   }
 
   /* Initialize the structure */
-  if ( (ret = stream_alloc(stptr, PROTOCOL_LOCAL_FILE, sizeof(struct stream_file), 0) != 0) ){
+  if ( (ret = stream_alloc(stptr, PROTOCOL_LOCAL_FILE, sizeof(struct stream_file), 0, BUFSIZ) != 0) ){
     return ret;
   }
 
@@ -249,6 +229,7 @@ int stream_file_create(struct stream** stptr, FILE* fp, const char* filename, co
   st->file = fp;
   st->force_flush = flags & STREAM_ADDR_FLUSH;
 
+  st->base.num_addresses = 1;
   st->base.comment = strdup(comment);
   st->base.FH.magic = CAPUTILS_FILE_MAGIC;
   st->base.FH.version.major = VERSION_MAJOR;
