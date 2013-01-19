@@ -59,8 +59,9 @@ static int match_ma_pkt(const struct stream_ethernet* st, const struct ethhdr* e
 	return match;
 }
 
-static int read_packet(struct stream_ethernet* st, struct timeval* timeout){
+static int stream_ethernet_read_frame(struct stream_ethernet* st, char* dst, struct timeval* timeout){
 	assert(st);
+	assert(dst);
 
 	do {
 		fd_set fds;
@@ -72,7 +73,6 @@ static int read_packet(struct stream_ethernet* st, struct timeval* timeout){
 		}
 
 		/* Read data into framebuffer. */
-		char* dst = st->frame[st->base.writePos];
 		int bytes = recvfrom(st->socket, dst, st->base.if_mtu, 0, NULL, NULL);
 		if ( bytes < 0 ){ /* error occurred */
 			perror("Cannot receive Ethernet data.");
@@ -131,9 +131,6 @@ static int read_packet(struct stream_ethernet* st, struct timeval* timeout){
     }
     match_inc_seqnr(&st->base, &st->seqnum[match], sh);
 
-    /* increment write position */
-    st->base.writePos = (st->base.writePos+1) % st->fb.num_frames;
-
     /* This indicates a flush from the sender.. */
     if( ntohs(sh->flush) == 1 ){
 	    fprintf(stderr, "Sender terminated.\n");
@@ -147,54 +144,8 @@ static int read_packet(struct stream_ethernet* st, struct timeval* timeout){
 	return 0;
 }
 
-int stream_ethernet_read(struct stream_ethernet* st, cap_head** header, struct filter* filter, struct timeval* timeout){
-	/* I heard ext is a pretty cool guy, uses goto and doesn't afraid of anything */
-  retry:
-
-	/* empty buffer */
-	if ( !st->fb.read_ptr ){
-		if ( !read_packet(st, timeout) ){
-			return EAGAIN;
-		}
-
-		char* frame = st->frame[st->base.readPos];
-		struct sendhead* sh = (struct sendhead*)(frame + sizeof(struct ethhdr));
-		st->fb.read_ptr = frame + sizeof(struct ethhdr) + sizeof(struct sendhead);
-		st->fb.num_packets = ntohl(sh->nopkts);
-	}
-
-	/* always read if there is space available */
-	if ( st->base.writePos != st->base.readPos ){
-		struct timeval tv = {0,0}; /* dont read with a timeout as we don't want to introduce delays here */
-		read_packet(st, &tv);
-	}
-
-	/* no packets available */
-	if ( st->fb.num_packets == 0 ){
-		fprintf(stderr, "stream_ethernet: st->num_packets is 0 but st->read_ptr is set\n");
-		abort();
-	}
-
-	/* fetch next matching packet */
-	struct cap_header* cp = stream_frame_buffer_read(&st->base, &st->fb);
-
-	if ( cp->caplen == 0 ){
-		return ERROR_CAPFILE_INVALID;
-	}
-
-	assert(packet_size > 0);
-
-	/* set next packet and advance the read pointer */
-	*header = cp;
-	st->base.stat.read++;
-	st->base.stat.buffer_usage = 0;
-
-	if ( filter && !filter_match(filter, cp->payload, cp) ){
-		goto retry;
-	}
-
-	st->base.stat.matched++;
-	return 0;
+int stream_ethernet_read(struct stream_ethernet* st, cap_head** cp, struct filter* filter, struct timeval* timeout){
+	return stream_frame_buffer_read(&st->base, &st->fb, cp, filter, timeout);
 }
 
 static long stream_ethernet_write(struct stream_ethernet* st, const void* data, size_t size){
@@ -293,7 +244,7 @@ static int stream_ethernet_init(struct stream** stptr, const struct ether_addr* 
     return ret;
   }
   struct stream_ethernet* st = (struct stream_ethernet*)*stptr;
-  stream_frame_init(&st->fb, (char*)st->frame, num_frames, if_mtu);
+  stream_frame_init(&st->fb, (read_frame_callback)stream_ethernet_read_frame, (char*)st->frame, num_frames, if_mtu);
 
   /* open raw socket */
   if ( (st->socket=socket(AF_PACKET, SOCK_RAW, htons(proto))) < 0 ){

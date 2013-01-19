@@ -35,12 +35,15 @@ extern "C" {
  *  - stream_frame_buffer_init(..)
  */
 
+typedef int (*read_frame_callback)(stream_t st, char* dst, struct timeval* timeout);
+
 struct stream_frame_buffer {
-	size_t num_frames;    /* How many frames that buffer can hold */
-	size_t num_packets;   /* How many packets is left in current frame */
-	size_t header_offset; /* How many bytes of headers to skip to get to sendheader */
-	char* read_ptr;       /* Where inside a frame it currently is or NULL if a frame hasn't been processed yet */
-	char** frame;         /* Pointer to first frame */
+	read_frame_callback read_frame;  /* Read next frame */
+	size_t num_frames;               /* How many frames that buffer can hold */
+	size_t num_packets;              /* How many packets is left in current frame */
+	size_t header_offset;            /* How many bytes of headers to skip to get to sendheader */
+	char* read_ptr;                  /* Where inside a frame it currently is or NULL if a frame hasn't been processed yet */
+	char** frame;                    /* Pointer to first frame */
 };
 
 /**
@@ -53,13 +56,12 @@ size_t stream_frame_buffer_size(size_t num_frames, size_t mtu);
  * Initialize buffer frame structure.
  * @param src Pointer to the start of the stream buffer.
  */
-void stream_frame_init(struct stream_frame_buffer* buf, char* src, size_t num_frames, size_t mtu);
+void stream_frame_init(struct stream_frame_buffer* buf, read_frame_callback cb, char* src, size_t num_frames, size_t mtu);
 
 /**
  * Read the next packet from the buffer.
- * @return capture header or NULL if no packet is available.
  */
-struct cap_header* stream_frame_buffer_read(stream_t st, struct stream_frame_buffer* fb);
+int stream_frame_buffer_read(stream_t st, struct stream_frame_buffer* fb, struct cap_header** cp, struct filter* filter, struct timeval* timeout);
 
 #ifdef __cplusplus
 }
