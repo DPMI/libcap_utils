@@ -36,8 +36,8 @@ int stream_alloc(struct stream** stptr, enum protocol_t protocol, size_t size, s
 	st->buffer_size = buffer_size;
 
 	st->expSeqnr = 0;
-	st->writePos=0;
-	st->readPos=0;
+	st->readPos = 0;
+	st->writePos = 0;
 	st->flushed = 0;
 	st->num_addresses = 1;
 	st->if_mtu = mtu;

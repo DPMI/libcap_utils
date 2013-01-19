@@ -5,6 +5,7 @@
 #include "caputils/caputils.h"
 #include "caputils_int.h"
 #include "stream.h"
+#include "stream_buffer.h"
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
@@ -28,9 +29,7 @@ struct stream_ethernet {
 	long unsigned int seqnum[MAX_ADDRESS];
 	unsigned int num_address;
 
-	size_t num_frames;  /* how many frames that buffer can hold */
-	size_t num_packets; /* how many packets is left in current frame */
-	char* read_ptr;     /* where inside a frame it currently is */
+	struct stream_frame_buffer fb;
 	char* frame[0];
 };
 
@@ -131,7 +130,8 @@ static int read_packet(struct stream_ethernet* st, struct timeval* timeout){
     }
     match_inc_seqnr(&st->base, &st->seqnum[match], sh);
 
-    st->base.writePos = (st->base.writePos+1) % st->num_frames;
+    /* increment write position */
+    st->base.writePos = (st->base.writePos+1) % st->fb.num_frames;
 
     /* This indicates a flush from the sender.. */
     if( ntohs(sh->flush) == 1 ){
@@ -151,15 +151,15 @@ int stream_ethernet_read(struct stream_ethernet* st, cap_head** header, struct f
   retry:
 
 	/* empty buffer */
-	if ( !st->read_ptr ){
+	if ( !st->fb.read_ptr ){
 		if ( !read_packet(st, timeout) ){
 			return EAGAIN;
 		}
 
 		char* frame = st->frame[st->base.readPos];
 		struct sendhead* sh = (struct sendhead*)(frame + sizeof(struct ethhdr));
-		st->read_ptr = frame + sizeof(struct ethhdr) + sizeof(struct sendhead);
-		st->num_packets = ntohl(sh->nopkts);
+		st->fb.read_ptr = frame + sizeof(struct ethhdr) + sizeof(struct sendhead);
+		st->fb.num_packets = ntohl(sh->nopkts);
 	}
 
 	/* always read if there is space available */
@@ -169,28 +169,13 @@ int stream_ethernet_read(struct stream_ethernet* st, cap_head** header, struct f
 	}
 
 	/* no packets available */
-	if ( st->num_packets == 0 ){
+	if ( st->fb.num_packets == 0 ){
 		fprintf(stderr, "stream_ethernet: st->num_packets is 0 but st->read_ptr is set\n");
 		abort();
 	}
 
 	/* fetch next matching packet */
-	struct cap_header* cp = (struct cap_header*)(st->read_ptr);
-	const size_t packet_size = sizeof(struct cap_header) + cp->caplen;
-	st->num_packets--;
-	st->read_ptr += packet_size;
-
-	if ( st->num_packets == 0 ){
-		st->base.readPos = (st->base.readPos+1) % st->num_frames;
-		if ( st->base.readPos == st->base.writePos ){
-			st->read_ptr = NULL;
-		} else {
-			char* frame = st->frame[st->base.readPos];
-			struct sendhead* sh = (struct sendhead*)(frame + sizeof(struct ethhdr));
-			st->read_ptr = frame + sizeof(struct ethhdr) + sizeof(struct sendhead);
-			st->num_packets = ntohl(sh->nopkts);
-		}
-	}
+	struct cap_header* cp = stream_frame_buffer_read(&st->base, &st->fb);
 
 	if ( cp->caplen == 0 ){
 		return ERROR_CAPFILE_INVALID;
@@ -302,7 +287,7 @@ static long stream_ethernet_init(struct stream** stptr, const struct ether_addr*
   }
   const int if_loopback = ifr.ifr_flags & IFF_LOOPBACK;
 
-  /* default buffer_size of 25*MTU */
+  /* default buffer_size of 250*MTU */
   if ( buffer_size == 0 ){
 	  buffer_size = 250 * if_mtu;
   }
@@ -314,16 +299,17 @@ static long stream_ethernet_init(struct stream** stptr, const struct ether_addr*
 	  return ERROR_BUFFER_MULTIPLE;
   }
 
-  /* additional memory for the frame pointers */
-  size_t frames = buffer_size / if_mtu;
-  size_t frame_offset = sizeof(char*) * frames;
-  buffer_size += frame_offset;
+  /* slightly backwards calculation, but user want to enter buffer size in bytes (and it maintains compatibility) */
+  const size_t num_frames = buffer_size / if_mtu;
+  buffer_size = stream_frame_buffer_size(num_frames, if_mtu);
 
   /* Initialize the structure */
   if ( (ret = stream_alloc(stptr, PROTOCOL_ETHERNET_MULTICAST, sizeof(struct stream_ethernet), buffer_size, if_mtu) != 0) ){
     return ret;
   }
   struct stream_ethernet* st = (struct stream_ethernet*)*stptr;
+  stream_frame_init(&st->fb, (char*)st->frame, num_frames, if_mtu);
+  st->fb.header_offset = sizeof(struct ethhdr);
   st->socket = fd;
   st->num_address = 0;
   st->base.if_loopback = if_loopback;
@@ -334,16 +320,6 @@ static long stream_ethernet_init(struct stream** stptr, const struct ether_addr*
     return errno;
   }
   st->if_index = ifr.ifr_ifindex;
-
-  /* setup buffer pointers (see brief overview at struct declaration) */
-  st->num_frames = frames;
-  st->num_packets = 0;
-  st->read_ptr = NULL;
-  st->base.readPos = 0;
-  st->base.writePos = 0;
-  for ( unsigned int i = 0; i < frames; i++ ){
-	  st->frame[i] = st->base.buffer + frame_offset + i * if_mtu;
-  }
 
   /* bind MA MAC */
   if ( ioctl(fd, SIOCGIFHWADDR, &ifr) == -1) {

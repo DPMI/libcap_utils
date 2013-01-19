@@ -1,6 +1,7 @@
 #ifndef CAPUTILS_INT_STREAM_H
 #define CAPUTILS_INT_STREAM_H
 
+#include <caputils/caputils.h>
 #include <caputils/stream.h>
 
 /**
