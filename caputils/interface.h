@@ -12,7 +12,7 @@ struct iface {
 	char if_name[IFNAMSIZ];             /* interface name (e.g. "eth0") */
 	struct ether_addr if_hwaddr;        /* interface hardware adress */
 	unsigned int if_index;              /* interface index */
-	int if_mtu;                         /* interface MTU */
+	unsigned int if_mtu;                /* interface MTU */
 	int if_up;                          /* non-zero if interface is up */
 	int if_loopback;                    /* non-zero if interface is a loopback device */
 	int if_multicast;                   /* non-zero if interface supports multicasting */

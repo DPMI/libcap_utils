@@ -3,6 +3,7 @@
 #endif /* HAVE_CONFIG_H */
 
 #include "caputils/caputils.h"
+#include "caputils/interface.h"
 #include "caputils_int.h"
 #include "stream.h"
 #include "stream_buffer.h"
@@ -254,38 +255,22 @@ long stream_ethernet_add(struct stream* stt, const struct ether_addr* addr){
   return 0;
 }
 
-static long stream_ethernet_init(struct stream** stptr, const struct ether_addr* addr, const char* iface, uint16_t proto, size_t buffer_size){
-  struct ifreq ifr;
-
-  long ret = 0;
-
-  assert(stptr);
+static int stream_ethernet_init(struct stream** stptr, const struct ether_addr* addr, const char* iface, uint16_t proto, size_t buffer_size){
+  struct iface ifstat;
+  int ret = 0;
 
   /* validate arguments */
+  assert(stptr);
   if ( !(addr && iface) ){
     return EINVAL;
   }
 
-  /* store the iface name */
-  strncpy(ifr.ifr_name, iface, IFNAMSIZ);
+  /* query interface properties */
+  if ( (ret=iface_get(iface, &ifstat)) != 0 ){
+		return ret;
+	}
 
-  /* open raw socket */
-  int fd = socket(AF_PACKET, SOCK_RAW, htons(proto));
-  if ( fd < 0 ){
-    return errno;
-  }
-
-  /* get iface MTU */
-  if ( ioctl(fd, SIOCGIFMTU, &ifr) == -1 ){
-    return errno;
-  }
-  unsigned int if_mtu = ifr.ifr_mtu;
-
-  /* query if it is a loopback interface. (loopback captures packets twice, i.e. in both directions) */
-  if ( ioctl(fd, SIOCGIFFLAGS, &ifr) == -1 ){
-    return errno;
-  }
-  const int if_loopback = ifr.ifr_flags & IFF_LOOPBACK;
+  const unsigned int if_mtu = ifstat.if_mtu;
 
   /* default buffer_size of 250*MTU */
   if ( buffer_size == 0 ){
@@ -303,36 +288,32 @@ static long stream_ethernet_init(struct stream** stptr, const struct ether_addr*
   const size_t num_frames = buffer_size / if_mtu;
   buffer_size = stream_frame_buffer_size(num_frames, if_mtu);
 
-  /* Initialize the structure */
+  /* Initialize stream */
   if ( (ret = stream_alloc(stptr, PROTOCOL_ETHERNET_MULTICAST, sizeof(struct stream_ethernet), buffer_size, if_mtu) != 0) ){
     return ret;
   }
   struct stream_ethernet* st = (struct stream_ethernet*)*stptr;
   stream_frame_init(&st->fb, (char*)st->frame, num_frames, if_mtu);
-  st->fb.header_offset = sizeof(struct ethhdr);
-  st->socket = fd;
-  st->num_address = 0;
-  st->base.if_loopback = if_loopback;
-  memset(st->seqnum, 0, sizeof(long unsigned int) * MAX_ADDRESS);
 
-  /* get iface index */
-  if ( ioctl(fd, SIOCGIFINDEX, &ifr) == -1 ){
+  /* open raw socket */
+  if ( (st->socket=socket(AF_PACKET, SOCK_RAW, htons(proto))) < 0 ){
     return errno;
   }
-  st->if_index = ifr.ifr_ifindex;
+
+  st->fb.header_offset = sizeof(struct ethhdr);
+  st->num_address = 0;
+  st->if_index = ifstat.if_index;
+  st->base.if_loopback = ifstat.if_loopback;
+  memset(st->seqnum, 0, sizeof(long unsigned int) * MAX_ADDRESS);
 
   /* bind MA MAC */
-  if ( ioctl(fd, SIOCGIFHWADDR, &ifr) == -1) {
-	  perror("SIOCGIFHWADDR");
-	  return errno;
-  }
   memset(&st->sll, 0, sizeof(st->sll));
   st->sll.sll_family=AF_PACKET;
   st->sll.sll_ifindex=st->if_index;
   st->sll.sll_protocol=htons(proto);
   st->sll.sll_pkttype=PACKET_MULTICAST;
-  memcpy(st->sll.sll_addr, ifr.ifr_hwaddr.sa_data, ETH_ALEN);
-  if ( bind(fd, (struct sockaddr *) &st->sll, sizeof(st->sll)) == -1 ) {
+  memcpy(st->sll.sll_addr, &ifstat.if_hwaddr, ETH_ALEN);
+  if ( bind(st->socket, (struct sockaddr *) &st->sll, sizeof(st->sll)) == -1 ) {
     perror("Binding to interface.");
     return errno;
   }
