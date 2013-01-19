@@ -39,7 +39,7 @@ int stream_alloc(struct stream** stptr, enum protocol_t protocol, size_t size, s
 	st->readPos = 0;
 	st->writePos = 0;
 	st->flushed = 0;
-	st->num_addresses = 1;
+	st->num_addresses = 0;
 	st->if_mtu = mtu;
 	st->if_loopback = 0;
 	st->stat.read = 0;
@@ -637,8 +637,6 @@ int stream_add(struct stream* st, const stream_addr_t* addr){
 	if ( st->type != PROTOCOL_ETHERNET_MULTICAST ){
 		return ERROR_INVALID_PROTOCOL;
 	}
-
-	st->num_addresses++;
 
 #ifdef HAVE_PFRING
 	return stream_pfring_add(st, &addr->ether_addr);

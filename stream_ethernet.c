@@ -28,7 +28,6 @@ struct stream_ethernet {
 	struct sockaddr_ll sll;
 	struct ether_addr address[MAX_ADDRESS];
 	long unsigned int seqnum[MAX_ADDRESS];
-	unsigned int num_address;
 
 	struct stream_frame_buffer fb;
 	char* frame[0];
@@ -48,11 +47,11 @@ static int match_ma_pkt(const struct stream_ethernet* st, const struct ethhdr* e
 	}
 
 	unsigned int match;
-	for ( match = 0; match < st->num_address; match++ ){
+	for ( match = 0; match < st->base.num_addresses; match++ ){
 		if ( memcmp((const void*)ethhdr->h_dest, st->address[match].ether_addr_octet, ETH_ALEN) == 0 ) break;
 	}
 
-	if ( match == st->num_address ){
+	if ( match == st->base.num_addresses ){
 		return -1; /* ethernet stream did not match any of our expected */
 	}
 
@@ -162,7 +161,7 @@ static long stream_ethernet_write(struct stream_ethernet* st, const void* data, 
 long stream_ethernet_add(struct stream* stt, const struct ether_addr* addr){
 	struct stream_ethernet* st= (struct stream_ethernet*)stt;
 
-	if ( st->num_address == MAX_ADDRESS ){
+	if ( st->base.num_addresses == MAX_ADDRESS ){
 		return EBUSY;
 	}
 
@@ -172,14 +171,14 @@ long stream_ethernet_add(struct stream* stt, const struct ether_addr* addr){
   }
 
   /* store parsed address */
-  memcpy(&st->address[st->num_address], addr, ETH_ALEN);
+  memcpy(&st->address[st->base.num_addresses], addr, ETH_ALEN);
 
   /* setup multicast address */
 	struct packet_mreq mcast = {0,};
   mcast.mr_ifindex = st->if_index;
   mcast.mr_type = PACKET_MR_MULTICAST;
   mcast.mr_alen = ETH_ALEN;
-  memcpy(mcast.mr_address, &st->address[st->num_address], ETH_ALEN);
+  memcpy(mcast.mr_address, &st->address[st->base.num_addresses], ETH_ALEN);
 
 #ifdef DEBUG
   char name[IF_NAMESIZE+1];
@@ -202,7 +201,7 @@ long stream_ethernet_add(struct stream* stt, const struct ether_addr* addr){
     return errno;
   }
 
-  st->num_address++;
+  st->base.num_addresses++;
   return 0;
 }
 
@@ -252,7 +251,6 @@ static int stream_ethernet_init(struct stream** stptr, const struct ether_addr* 
   }
 
   st->fb.header_offset = sizeof(struct ethhdr);
-  st->num_address = 0;
   st->if_index = ifstat.if_index;
   st->base.if_loopback = ifstat.if_loopback;
   memset(st->seqnum, 0, sizeof(long unsigned int) * MAX_ADDRESS);

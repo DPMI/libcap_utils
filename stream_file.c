@@ -160,6 +160,7 @@ int stream_file_open(struct stream** stptr, FILE* fp, const char* filename, size
   struct file_header_t* fhptr = &(st->base.FH);
   int i;
 
+  st->base.num_addresses = 1;
   st->file = fp;
   st->force_flush = 0;
 
@@ -249,6 +250,7 @@ int stream_file_create(struct stream** stptr, FILE* fp, const char* filename, co
   st->file = fp;
   st->force_flush = flags & STREAM_ADDR_FLUSH;
 
+  st->base.num_addresses = 1;
   st->base.comment = strdup(comment);
   st->base.FH.magic = CAPUTILS_FILE_MAGIC;
   st->base.FH.version.major = VERSION_MAJOR;

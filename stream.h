@@ -48,7 +48,7 @@ struct stream {
 	unsigned int writePos;                // Write position
 	unsigned int readPos;                 // Read position
 	int flushed;                          // Indicate that we got a flush signal.
-	int num_addresses;                    // Number of addresses associated with stream
+	unsigned int num_addresses;           // Number of addresses associated with stream
 	size_t if_mtu;                        // Interface MTU (size of the largest measurement frame we may receive on this interface)
 	int if_loopback;                      // Set to non-zero if the stream is a loopback interface.
 
