@@ -9,6 +9,10 @@
 #define IFHWADDRLEN 6
 #endif
 
+#ifdef CAPUTILS_EXPORT
+#pragma GCC visibility push(default)
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -42,6 +46,12 @@ const char* hexdump_address_r(const struct ether_addr* address, char buf[IFHWADD
  */
 const char* hexdump_address(const struct ether_addr* addr);
 
+/**
+ * Wraps ether_aton and puts result in dst.
+ * @return Zero if address is invalid and leaves dst is undefined.
+ */
+int eth_aton(struct ether_addr* dst, const char* addr);
+
 struct ethertype {
 	const char* name;
 	uint16_t value;
@@ -49,6 +59,10 @@ struct ethertype {
 
 const struct ethertype* ethertype_by_name(const char* name);
 const struct ethertype* ethertype_by_number(int number);
+
+#ifdef CAPUTILS_EXPORT
+#pragma GCC visibility pop
+#endif
 
 #ifdef __cplusplus
 }

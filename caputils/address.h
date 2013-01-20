@@ -37,6 +37,10 @@
  *
  */
 
+#ifdef CAPUTILS_EXPORT
+#pragma GCC visibility push(default)
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -175,6 +179,10 @@ extern "C" {
 
 #ifdef __cplusplus
 }
+#endif
+
+#ifdef CAPUTILS_EXPORT
+#pragma GCC visibility pop
 #endif
 
 #endif /* CAPUTILS_ADDRESS_H */

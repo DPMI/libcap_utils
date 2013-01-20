@@ -53,6 +53,12 @@ AC_SEARCH_LIBS([clock_gettime], [rt])
 AX_BE64
 AX_IP_MTU
 
+dnl Hide all symbols by default, if supported.
+AX_VISIBILITY([
+	AC_DEFINE([CAPUTILS_EXPORT], [1], [Export symbols from library])
+	CFLAGS="$CFLAGS -fvisibility=hidden"
+])
+
 AC_ARG_ENABLE([debug], [AS_HELP_STRING([--enable-debug], [will print debugging information during runtime @<:@default=disabled@:>@])])
 AS_IF([test "x$enable_debug" = "xyes"],
 	[AC_DEFINE([DEBUG],  [1], [Define to enable extra debug prints])],

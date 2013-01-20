@@ -5,12 +5,6 @@
 #include <netinet/ether.h>
 #include <net/if.h>
 
-/**
- * Wraps ether_aton and puts result in dst.
- * @return Zero if address is invalid and leaves dst is undefined.
- */
-int eth_aton(struct ether_addr* dst, const char* addr);
-
 #define CAPUTILS_FILE_MAGIC 0x8f1ae247c53d9b6e
 #define LISTENPORT 0x0810
 

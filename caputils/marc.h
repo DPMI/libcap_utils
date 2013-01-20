@@ -10,6 +10,10 @@
 #include <net/if.h>
 #include <arpa/inet.h>
 
+#ifdef CAPUTILS_EXPORT
+#pragma GCC visibility push(default)
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -277,6 +281,10 @@ int marc_set_output_handler(marc_output_handler_t, marc_output_handlerv_t, FILE*
 
 #ifdef __cplusplus
 }
+#endif
+
+#ifdef CAPUTILS_EXPORT
+#pragma GCC visibility pop
 #endif
 
 #endif /* LIBMARC_H */

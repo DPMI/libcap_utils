@@ -7,6 +7,10 @@
 
 #define PICODIVIDER 1e12
 
+#ifdef CAPUTILS_EXPORT
+#pragma GCC visibility push(default)
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -69,6 +73,10 @@ timepico timepico_add(timepico a, timepico b);
 
 #ifdef __cplusplus
 }
+#endif
+
+#ifdef CAPUTILS_EXPORT
+#pragma GCC visibility pop
 #endif
 
 #endif /* CAPUTILS_PICOTIME_H */

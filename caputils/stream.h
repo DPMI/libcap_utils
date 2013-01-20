@@ -7,6 +7,10 @@
 #include <stdint.h>
 #include <netinet/ether.h>
 
+#ifdef CAPUTILS_EXPORT
+#pragma GCC visibility push(default)
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -156,6 +160,10 @@ int stream_flush(stream_t st);
 
 #ifdef __cplusplus
 }
+#endif
+
+#ifdef CAPUTILS_EXPORT
+#pragma GCC visibility pop
 #endif
 
 #endif /* CAPUTILS__STREAM_H */

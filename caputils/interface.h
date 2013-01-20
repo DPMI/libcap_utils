@@ -1,6 +1,10 @@
 #ifndef INTERFACE_H
 #define INTERFACE_H
 
+#ifdef CAPUTILS_EXPORT
+#pragma GCC visibility push(default)
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -28,6 +32,10 @@ int iface_get(const char* name, struct iface* iface);
 
 #ifdef __cplusplus
 }
+#endif
+
+#ifdef CAPUTILS_EXPORT
+#pragma GCC visibility pop
 #endif
 
 #endif /* INTERFACE_H */

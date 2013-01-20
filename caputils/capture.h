@@ -7,6 +7,14 @@
 #include <stdint.h>
 #include <netinet/if_ether.h>
 
+#ifdef CAPUTILS_EXPORT
+#pragma GCC visibility push(default)
+#endif
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct ether_vlan_header{
 	uint8_t  ether_dhost[ETH_ALEN];       /* destination eth addr */
 	uint8_t  ether_shost[ETH_ALEN];       /* source ether addr    */
@@ -42,5 +50,13 @@ struct sendhead {
 	uint32_t flush;                       // Indicate that this is the last packet.
 	struct file_version version;          // What version of the file format is used for storing mp_pkts.
 };
+
+#ifdef CAPUTILS_EXPORT
+#pragma GCC visibility pop
+#endif
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* CAPUTILS_CAPTURE_H */

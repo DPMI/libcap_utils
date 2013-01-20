@@ -19,6 +19,10 @@
  * Version 2 adds mode flag which toggles between AND and OR.
  */
 
+#ifdef CAPUTILS_EXPORT
+#pragma GCC visibility push(default)
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -204,6 +208,10 @@ void filter_unpack(struct filter_packed* src, struct filter* dst);
 
 #ifdef __cplusplus
 }
+#endif
+
+#ifdef CAPUTILS_EXPORT
+#pragma GCC visibility pop
 #endif
 
 #endif /* LIBMARC_FILTER_H */

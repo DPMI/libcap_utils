@@ -4,6 +4,10 @@
 #include "caputils/capture.h"
 #include "caputils/stream.h"
 
+#ifdef CAPUTILS_EXPORT
+#pragma GCC visibility push(default)
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -76,6 +80,10 @@ void format_ignore(FILE* fp, struct format* state, const struct cap_header* cp);
 
 #ifdef __cplusplus
 }
+#endif
+
+#ifdef CAPUTILS_EXPORT
+#pragma GCC visibility pop
 #endif
 
 #endif /* CAPUTILS_LOG_H */

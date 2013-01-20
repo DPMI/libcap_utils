@@ -1,17 +1,25 @@
 #ifndef CAPUTILS_FILE_H
 #define CAPUTILS_FILE_H
 
+#ifdef CAPUTILS_EXPORT
+#pragma GCC visibility push(default)
+#endif
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // Struct with the version of this libraryfile
-// A simple structure used to store a version number. 
-// The number is divided into a major and minor number. 
+// A simple structure used to store a version number.
+// The number is divided into a major and minor number.
 struct file_version{
   uint16_t major;
   uint16_t minor;
 };
 
-// File header, when a cap file is stored to disk. This header is placed first. 
-// The header has two parts, header and comment. After the comment the frames 
-// are stored. 
+// File header, when a cap file is stored to disk. This header is placed first.
+// The header has two parts, header and comment. After the comment the frames
+// are stored.
 struct file_header_t {
   /* Magic number to identify capfiles. (nowadays 8 bytes are recommended due to
    * the large number of formats available). */
@@ -19,7 +27,7 @@ struct file_header_t {
 
   /*  What version was used to store this file */
   struct file_version version;
-  
+
   /* sizeof(header) so future revisions of this header can be made without
    * breaking older files too much. E.g fill in missing fields based on version
    * and seek to the right location. */
@@ -49,5 +57,13 @@ struct file_header_05 {
   } version;
   char mpid[200];
 };
+
+#ifdef CAPUTILS_EXPORT
+#pragma GCC visibility pop
+#endif
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* CAPUTILS_FILE_H */

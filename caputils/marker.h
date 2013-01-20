@@ -4,6 +4,10 @@
 #include <stdint.h>
 #include <caputils/capture.h>
 
+#ifdef CAPUTILS_EXPORT
+#pragma GCC visibility push(default)
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -48,6 +52,10 @@ int is_marker(const struct cap_header* cp, struct marker* ptr, int port);
 
 #ifdef __cplusplus
 }
+#endif
+
+#ifdef CAPUTILS_EXPORT
+#pragma GCC visibility pop
 #endif
 
 #endif /* CAPUTILS__MARKER_H */

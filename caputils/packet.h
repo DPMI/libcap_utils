@@ -1,7 +1,11 @@
 #ifndef PACKET_H
 #define PACKET_H
 
-#include "capture.h"
+#include <caputils/capture.h>
+
+#ifdef CAPUTILS_EXPORT
+#pragma GCC visibility push(default)
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -45,6 +49,10 @@ const struct udphdr* find_udp_header(const void* pkt, const struct ethhdr* ether
 
 #ifdef __cplusplus
 }
+#endif
+
+#ifdef CAPUTILS_EXPORT
+#pragma GCC visibility pop
 #endif
 
 #endif /* PACKET_H */
