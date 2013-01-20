@@ -73,8 +73,8 @@ int is_valid_version(struct file_header_t* fhptr);
  */
 void match_inc_seqnr(const struct stream* st, long unsigned int* restrict seq, const struct sendhead* restrict sh);
 
-int stream_udp_create(stream_t* st, const struct sockaddr_in* addr, int flags);
-int stream_udp_open(stream_t* st, const struct sockaddr_in* addr);
+int stream_udp_create(stream_t* st, const struct sockaddr_in* addr, const char* iface, int flags);
+int stream_udp_open(stream_t* st, const struct sockaddr_in* addr, const char* iface);
 int stream_udp_add(stream_t stt, const struct in_addr addr);
 int stream_tcp_init(struct stream* st, const char* address, int port);
 

@@ -3,6 +3,7 @@
 #endif /* HAVE_CONFIG_H */
 
 #include "caputils/caputils.h"
+#include "caputils/interface.h"
 #include "caputils_int.h"
 #include "stream.h"
 #include "stream_buffer.h"
@@ -21,6 +22,7 @@
 struct stream_udp {
 	struct stream base;
 	int socket;
+	int if_index;
 	struct in_addr address[MAX_ADDRESS];
 	unsigned int seqnum[MAX_ADDRESS];
 
@@ -116,11 +118,11 @@ int stream_udp_add(stream_t stt, const struct in_addr addr){
 	struct ip_mreqn mcast;
 	mcast.imr_multiaddr = addr;
 	mcast.imr_address.s_addr = htonl(INADDR_ANY);
-  mcast.imr_ifindex = 0;
+  mcast.imr_ifindex = st->if_index;
 
-//#ifdef DEBUG
+#ifdef DEBUG
   fprintf(stderr, "Adding membership to IP multicast group %s.\n", inet_ntoa(addr));
-//#endif
+#endif
 
   if ( setsockopt(st->socket, IPPROTO_IP, IP_ADD_MEMBERSHIP, &mcast, sizeof(struct ip_mreqn)) == -1 ){
 	  printf("asdf\n");
@@ -132,7 +134,7 @@ int stream_udp_add(stream_t stt, const struct in_addr addr){
 
 }
 
-static int stream_udp_init(stream_t* stptr){
+static int stream_udp_init(stream_t* stptr, size_t mtu){
   int ret;
   assert(st);
   assert(addr);
@@ -145,13 +147,8 @@ static int stream_udp_init(stream_t* stptr){
 
   int on = 1;
   setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(int));
-  //setsockopt(fd, SOL_SOCKET, SO_BROADCAST, &on, sizeof(int));
+  setsockopt(fd, SOL_SOCKET, SO_BROADCAST, &on, sizeof(int));
 
-  /* query default MTU */
-  /* if(ioctl(fd, SIOCGIFMTU, &ifr) == -1 ) { */
-  /*   return errno; */
-  /* } */
-  const size_t mtu = 1500; //ifr.ifr_mtu;
   const size_t num_frames = 250;
   const size_t buffer_size = stream_frame_buffer_size(num_frames, mtu);
 
@@ -163,6 +160,7 @@ static int stream_udp_init(stream_t* stptr){
   stream_frame_init(&st->fb, (read_frame_callback)stream_udp_read_frame, (char*)st->frame, num_frames, mtu);
 
   st->socket = fd;
+  st->if_index = 0;
   st->base.if_mtu = mtu;
   memset(st->seqnum, 0, sizeof(unsigned int) * MAX_ADDRESS);
 
@@ -176,10 +174,34 @@ static int stream_udp_destroy(struct stream_udp* st){
 	return 0;
 }
 
-int stream_udp_create(struct stream** stptr, const struct sockaddr_in* addr, int flags){
-  int ret = 0;
+static size_t estimate_mtu(struct sockaddr_in addr, const char* iface){
+	if ( iface ){
+		struct iface ifstat;
+		int ret;
+		if ( (ret=iface_get(iface, &ifstat)) != 0 ){
+			errno = ret;
+			goto error;
+		}
+		return ifstat.if_mtu;
+	} else {
+		int mtu;
+		socklen_t optlen = sizeof(int);
+		int fd = socket(AF_INET, SOCK_DGRAM, 0);
+		if ( !fd ) goto error;
+		if ( connect(fd, &addr, sizeof(struct sockaddr_in)) == -1 ) goto error;
+		if ( getsockopt(fd, IPPROTO_IP, IP_MTU, &mtu, &optlen) == -1 ) goto error;
+		close(fd);
+		return mtu;
+	}
+  error:
+	fprintf(stderr, "failed to estimate MTU, defaulting to 1500: %s\n", strerror(errno));
+	return 1500;
+}
 
-  if ( (ret=stream_udp_init(stptr)) != 0 ){
+int stream_udp_create(struct stream** stptr, const struct sockaddr_in* addr, const char* iface, int flags){
+  int ret = 0;
+  size_t mtu = estimate_mtu(*addr, iface);
+  if ( (ret=stream_udp_init(stptr, mtu)) != 0 ){
     return ret;
   }
 
@@ -199,14 +221,24 @@ int stream_udp_create(struct stream** stptr, const struct sockaddr_in* addr, int
   return 0;
 }
 
-int stream_udp_open(stream_t* stptr, const struct sockaddr_in* addr){
+int stream_udp_open(stream_t* stptr, const struct sockaddr_in* addr, const char* iface){
   int ret = 0;
 
-  if ( (ret=stream_udp_init(stptr)) != 0 ){
+  /* multicasting requires a known interface to get properties */
+  if ( is_multicast(addr->sin_addr) && !iface ){
+	  fprintf(stderr, "Multicasting requires to set an interface with -i\n");
+	  return EINVAL;
+  }
+
+  const size_t mtu = estimate_mtu(*addr, iface);
+
+  if ( (ret=stream_udp_init(stptr, mtu)) != 0 ){
     return ret;
   }
 
   struct stream_udp* st = (struct stream_udp*)*stptr;
+  st->if_index = 0;
+  st->base.if_mtu = mtu;
 
   struct sockaddr_in src;
   src.sin_family = AF_INET;
