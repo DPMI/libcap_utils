@@ -147,12 +147,6 @@ int stream_open(stream_t* stptr, const stream_addr_t* dest, const char* iface, s
 	int ret = EINVAL;
 
 	switch(stream_addr_type(dest)){
-		/* case PROTOCOL_TCP_UNICAST: */
-		/*   return stream_tcp_init(myStream, address, port); */
-
-		/* case PROTOCOL_UDP_MULTICAST: */
-		/*   return stream_udp_init(myStream, address, port); */
-
 	case STREAM_ADDR_ETHERNET:
 #ifdef HAVE_PFRING
 		ret = stream_pfring_open(stptr, &dest->ether_addr, iface, buffer_size);
@@ -184,8 +178,11 @@ int stream_open(stream_t* stptr, const stream_addr_t* dest, const char* iface, s
 	case STREAM_ADDR_GUESS:
 		return EINVAL;
 
-	case STREAM_ADDR_TCP:
 	case STREAM_ADDR_UDP:
+		ret = stream_udp_open(stptr, &dest->ipv4, iface);
+		break;
+
+	case STREAM_ADDR_TCP:
 		fprintf(stderr, "Unhandled protocol %d\n", stream_addr_type(dest));
 		return ERROR_NOT_IMPLEMENTED;
 	}
@@ -201,12 +198,6 @@ int stream_open(stream_t* stptr, const stream_addr_t* dest, const char* iface, s
 }
 
 int stream_create(stream_t* stptr, const stream_addr_t* dest, const char* nic, const char* mpid, const char* comment){
-	/* struct ifreq ifr; */
-	/* int ifindex=0; */
-	/* int socket_descriptor=0; */
-	/* int ret; */
-	/* struct sockaddr_in destination; */
-	/* struct ether_addr ethernet_address; */
 	const char* filename;
 	int flags = stream_addr_flags(dest);
 	int ret = ERROR_NOT_IMPLEMENTED; /* initialized to silence certain versions of gcc */
@@ -245,8 +236,11 @@ int stream_create(stream_t* stptr, const stream_addr_t* dest, const char* nic, c
 	case STREAM_ADDR_GUESS:
 		return EINVAL;
 
-	case STREAM_ADDR_TCP:
 	case STREAM_ADDR_UDP:
+		ret = stream_udp_create(stptr, &dest->ipv4, nic, flags);
+		break;
+
+	case STREAM_ADDR_TCP:
 		return ERROR_NOT_IMPLEMENTED;
 	}
 
@@ -277,37 +271,7 @@ int stream_create(stream_t* stptr, const stream_addr_t* dest, const char* nic, c
 	/*     printf("Connected."); */
 	/*     address=(char*)calloc(strlen(address)+1,1); */
 	/*     strcpy(st->address,address);  */
-
 	/*     break; */
-
-	/*   case 2: // UDP multi/unicast */
-	/*     socket_descriptor=socket(AF_INET,SOCK_DGRAM,IPPROTO_UDP); */
-	/*     if(socket_descriptor<0) { */
-	/* 	perror("Cannot open socket. "); */
-	/* 	return(0); */
-	/*     }      */
-	/*     setsockopt(socket_descriptor,SOL_SOCKET,SO_REUSEADDR,(void*)1,sizeof(int)); */
-	/*     setsockopt(socket_descriptor,SOL_SOCKET,SO_BROADCAST,(void*)1,sizeof(int)); */
-	/*     destination.sin_family = AF_INET; */
-	/*     inet_aton(address,&destination.sin_addr); */
-	/*     destination.sin_port = htons(LISTENPORT); */
-	/*     if(connect(socket_descriptor,(struct sockaddr*)&destination,sizeof(destination))!=0){ */
-	/* 	perror("Cannot connect UDP socket."); */
-	/* 	return(0); */
-	/*     } */
-	/*     address=(char*)calloc(strlen(address)+1,1); */
-	/*     strcpy(st->address,address); */
-	/*     break; */
-
-	/*   case 1: // Ethernet multicast */
-	/*   case 0: */
-	/*   default: */
-	/* }  */
-
-	/* //  st->mySocket=socket_descriptor; */
-	/* //  st->ifindex=ifindex; */
-
-	/* return(1);   */
 }
 
 int stream_close(stream_t st){
@@ -614,15 +578,15 @@ int stream_from_getopt(stream_t* st, char* argv[], int optind, int argc, const c
 		goto out;
 	}
 
-	if ( stream_addr_type(&addr) != STREAM_ADDR_ETHERNET ){
-		fprintf(stderr, "%s: only ethernet streams support multiple addresses.\n", program_name);
+	if ( !(stream_addr_type(&addr) == STREAM_ADDR_ETHERNET || stream_addr_type(&addr) == STREAM_ADDR_UDP) ){
+		fprintf(stderr, "%s: only ethernet and udp streams support multiple addresses (multicasting).\n", program_name);
 		ret = EINVAL;
 		goto out;
 	}
 
 	/* try secondary addresses */
 	for ( int i = optind++; i < argc; i++ ){
-		if ( (ret=stream_addr_aton(&addr, argv[i], STREAM_ADDR_ETHERNET, 0)) != 0 ){
+		if ( (ret=stream_addr_aton(&addr, argv[i], STREAM_ADDR_GUESS, 0)) != 0 ){
 			fprintf(stderr, "%s: Failed to parse stream address: %s\n", program_name, caputils_error_string(ret));
 			goto out;
 		}
@@ -650,19 +614,22 @@ void stream_print_info(const stream_t st, FILE* dst){
 }
 
 int stream_add(struct stream* st, const stream_addr_t* addr){
-	if ( !st || stream_addr_type(addr) != STREAM_ADDR_ETHERNET ){
-		return EINVAL;
-	}
+	if ( !(st && addr) ) return EINVAL;
 
-	if ( st->type != PROTOCOL_ETHERNET_MULTICAST ){
+	switch ( stream_addr_type(addr) ){
+	case STREAM_ADDR_ETHERNET:
+#ifdef HAVE_PFRING
+		return stream_pfring_add(st, &addr->ether_addr);
+#else
+		return stream_ethernet_add(st, &addr->ether_addr);
+#endif
+
+	case STREAM_ADDR_UDP:
+		return stream_udp_add(st, addr->ipv4.sin_addr);
+
+	default:
 		return ERROR_INVALID_PROTOCOL;
 	}
-
-#ifdef HAVE_PFRING
-	return stream_pfring_add(st, &addr->ether_addr);
-#else
-	return stream_ethernet_add(st, &addr->ether_addr);
-#endif
 }
 
 unsigned int stream_num_address(const stream_t st){

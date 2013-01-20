@@ -169,17 +169,18 @@ int stream_addr_aton(stream_addr_t* dst, const char* src, enum AddressType type,
 			char* ip = buf;
 			strncpy(buf, src, 48);
 
-			dst->in_port = htons(0x0810); /* default port */
+			dst->ipv4.sin_family = AF_INET;
+			dst->ipv4.sin_port = htons(0x0810); /* default port */
 
 			char* separator = strchr(buf, ':');
 			if( separator ) {
 				*separator = 0;
-				dst->in_port = htons(atoi(separator+1));
+				dst->ipv4.sin_port = htons(atoi(separator+1));
 			}
 
-			dst->in_addr.s_addr = inet_addr(ip);
+			dst->ipv4.sin_addr.s_addr = inet_addr(ip);
 
-			if ( dst->in_addr.s_addr == INADDR_NONE ){
+			if ( dst->ipv4.sin_addr.s_addr == INADDR_NONE ){
 				return EINVAL;
 			}
 		}
@@ -248,7 +249,7 @@ const char* stream_addr_ntoa_r(const stream_addr_t* src, char* buf, size_t bytes
 
 	case STREAM_ADDR_TCP:
 	case STREAM_ADDR_UDP:
-		written = snprintf(buf, bytes, "%s://%s:%d", stream_addr_type(src) == STREAM_ADDR_UDP ? "udp" : "tcp", inet_ntoa(src->in_addr), ntohs(src->in_port));
+		written = snprintf(buf, bytes, "%s://%s:%d", stream_addr_type(src) == STREAM_ADDR_UDP ? "udp" : "tcp", inet_ntoa(src->ipv4.sin_addr), ntohs(src->ipv4.sin_port));
 		break;
 	case STREAM_ADDR_ETHERNET:
 		written = snprintf(buf, bytes, "eth://%s", hexdump_address(&src->ether_addr));

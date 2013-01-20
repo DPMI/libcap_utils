@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <netinet/ether.h>
 #include <netinet/in.h>
+#include <netinet/ip.h>
 #include <arpa/inet.h>
 
 /**
@@ -64,10 +65,7 @@ extern "C" {
 	    FILE* fp;
 
       /* for TCP/UDP streams */
-      struct {
-	      struct in_addr in_addr;
-	      uint16_t in_port;
-      };
+	    struct sockaddr_in ipv4;
     } __attribute__((packed));
 
     uint16_t _type;
