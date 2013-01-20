@@ -1,6 +1,12 @@
 caputils-0.7.14
 ---------------
 
+	* fix: [capshow] iface now shows all 8 chars.
+	* fix: UDP streaming (both unicast and multicast)
+	* add: refactor buffer behaviour so it is reusable.
+	* add: [marc] adding ping event.
+	* change: minor but breaking changes to API.
+	* add: [script] including script for running capdump as debian service.
 	* add: [capdump] support for different operations when using markers
 	* fix: [capdump] better support for positional arguments
 	* fix: [capinfo] read from stdin by default
