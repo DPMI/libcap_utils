@@ -64,6 +64,7 @@ static stream_t st = NULL;
 static struct count ipproto[UINT8_MAX]; /* protocol is defined as 1 octet */
 static struct simple_list mpid = {NULL, NULL, 0, 0};
 static struct simple_list CI = {NULL, NULL, 0, 0};
+static struct simple_list location = {NULL, NULL, 0, 0};
 
 static const char* shortopts = "h";
 static struct option longopts[] = {
@@ -126,6 +127,7 @@ static void reset(){
 	 * only for the current file.) */
 	slist_clear(&mpid);
 	slist_clear(&CI);
+	slist_clear(&location);
 }
 
 static void format_bytes(char* dst, size_t size, uint64_t bytes){
@@ -231,6 +233,17 @@ static void print_overview(){
 	printf(" pkt size: min/avg/max = %d/%d/%d\n", local_byte_min, local_byte_avg, local_byte_max);
 	printf(" avg rate: %s\n", rate_str);
 	printf("\n");
+
+	printf("Locations\n"
+	       "---------\n");
+	for ( size_t i = 0; i < location.size; i++ ){
+		const struct stats* s = &location.value[i];
+		const timepico time_diff = timepico_sub(s->last, s->first);
+		uint64_t hseconds = time_diff.tv_sec * 10 + time_diff.tv_psec / (PICODIVIDER / 10);
+		format_seconds(sec_str, 128, global.first, global.last);
+		printf("  location:%s %.1f seconds, %ld packets, %ld bytes\n", location.key[i], (float)hseconds/10, s->packets, s->bytes);
+	}
+	printf("\n");
 }
 
 static void print_distribution(){
@@ -274,6 +287,16 @@ static void print_distribution(){
 	}
 }
 
+/**
+ * Get location for this packet.
+ * Returns pointer to internal buffer that will be overwritten by successive calls.
+ */
+static const char* get_location(struct cap_header* cp){
+  static char buffer[17];
+  sprintf(buffer,"%.8s:%.8s", cp->mampid, cp->nic);
+  return buffer;
+}
+
 static unsigned int store_unique(struct simple_list* slist, const char* key, size_t maxlen){
 	/* try to locate an existing string */
 	for ( unsigned int i = 0; i < slist->size; i++ ){
@@ -301,6 +324,11 @@ static void store_mampid(struct cap_header* cp){
 static void store_CI(struct cap_header* cp){
 	const int i = store_unique(&CI, cp->nic, CAPHEAD_NICLEN);
 	store_stats(&CI.value[i], cp);
+}
+
+static void store_location(struct cap_header* cp){
+	const int i = store_unique(&location, get_location(cp), 17);
+	store_stats(&location.value[i], cp);
 }
 
 static void parse_ethernetII(const struct cap_header* cp){
@@ -354,6 +382,7 @@ static int show_info(const char* filename){
 		store_stats(&global, cp);
 		store_mampid(cp);
 		store_CI(cp);
+		store_location(cp);
 
 		/* this is not a fool-proof test since ethertypes can be < 0x05dc and
 		 * jumboframes exist. 0x05dc refers to the MTU. */
@@ -406,6 +435,7 @@ int main(int argc, char* argv[]){
 	/* initial storage */
 	slist_alloc(&mpid, 8);
 	slist_alloc(&CI, 8);
+	slist_alloc(&location, 8);
 
 	/* no positional arguments, try to process stdin */
 	if ( optind == argc ){
@@ -427,6 +457,7 @@ int main(int argc, char* argv[]){
 	/* release resources */
 	slist_free(&mpid);
 	slist_free(&CI);
+	slist_free(&location);
 
 	return status == 0 ? 0 : 1;
 }
