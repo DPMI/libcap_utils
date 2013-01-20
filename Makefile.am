@@ -203,10 +203,10 @@ tests_address_SOURCES = tests/address.cpp
 # multiple objects of be64toh. By having different cflags it will
 # rename the files.
 tests_endian_CFLAGS = ${AM_CFLAGS} -Dfulhack
-tests_endian_CXXFLAGS = ${AM_CFLAGS} $(CPPUNIT_CFLAGS)
+tests_endian_CXXFLAGS = ${AM_CFLAGS} $(CPPUNIT_CFLAGS) -I${top_srcdir}/fallback
 tests_endian_LDFLAGS = $(CPPUNIT_LIBS)
 tests_endian_LDADD = libcap_utils-07.la
-tests_endian_SOURCES = tests/endian.cpp be64toh.c
+tests_endian_SOURCES = tests/endian.cpp fallback/be64toh.c
 
 tests_packet_CXXFLAGS = ${AM_CFLAGS} $(CPPUNIT_CFLAGS)
 tests_packet_LDFLAGS = $(CPPUNIT_LIBS)
