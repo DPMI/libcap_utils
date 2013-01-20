@@ -1,3 +1,11 @@
-Anders Ekberg       Initial version of software
-Patrik Arlos        Maintenance work
-David Sveningsson   Major rewrite, version bump to 0.7
+David Sveningsson <david.sveningsson@bth.se>
+  2011-2013
+  Major rewrite, version bump to 0.7
+
+Patrik Arlos <patrik.arlos@bth.se>
+  2005-2010
+  Maintenance work and variable size capturing
+
+Anders Ekberg <anders.ekberg@bth.se>
+   2003-2004
+   Initial version of software
