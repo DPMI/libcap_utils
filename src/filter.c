@@ -40,7 +40,7 @@
 #include <pcap/pcap.h>
 #endif
 
-#define FILTER __attribute__ ((pure))
+#define FILTER __attribute__ ((pure, hot, visibility ("hidden")))
 
 /**
  * Match ethernet address.
@@ -95,63 +95,63 @@ const struct udphdr* find_udp_header(const void* pkt, const struct ethhdr* ether
  * Filters return non-zero if the match and zero if rejected.
  */
 
-static int FILTER filter_iface(const struct filter* filter, const char* iface){
+int FILTER filter_iface(const struct filter* filter, const char* iface){
 	return  (filter->index & FILTER_CI) && (strstr(iface, filter->iface) != NULL);
 }
 
-static int FILTER filter_vlan_tci(const struct filter* filter, const struct ether_vlan_header* vlan){
+int FILTER filter_vlan_tci(const struct filter* filter, const struct ether_vlan_header* vlan){
 	return (filter->index & FILTER_VLAN) && vlan && (ntohs(vlan->vlan_tci) & filter->vlan_tci_mask) == filter->vlan_tci;
 }
 
-static int FILTER filter_h_proto(const struct filter* filter, uint16_t h_proto){
+int FILTER filter_h_proto(const struct filter* filter, uint16_t h_proto){
 	return (filter->index & FILTER_ETH_TYPE) && ((h_proto & filter->eth_type_mask) == filter->eth_type);
 }
 
-static int FILTER filter_eth_src(const struct filter* filter, const struct ethhdr* ether){
+int FILTER filter_eth_src(const struct filter* filter, const struct ethhdr* ether){
 	return (filter->index & FILTER_ETH_SRC) && matchEth(&filter->eth_src, &filter->eth_src_mask, ether->h_source);
 }
 
-static int FILTER filter_eth_dst(const struct filter* filter, const struct ethhdr* ether){
+int FILTER filter_eth_dst(const struct filter* filter, const struct ethhdr* ether){
 	return (filter->index & FILTER_ETH_DST) && matchEth(&filter->eth_dst, &filter->eth_dst_mask, ether->h_dest);
 }
 
-static int FILTER filter_ip_proto(const struct filter* filter, const struct ip* ip){
+int FILTER filter_ip_proto(const struct filter* filter, const struct ip* ip){
 	return (filter->index & FILTER_IP_PROTO) && (ip && filter->ip_proto == ip->ip_p);
 }
 
-static int FILTER filter_ip_src(const struct filter* filter, const struct ip* ip){
+int FILTER filter_ip_src(const struct filter* filter, const struct ip* ip){
 	return (filter->index & FILTER_IP_SRC) && (ip && (ip->ip_src.s_addr & filter->ip_src_mask.s_addr) == filter->ip_src.s_addr);
 }
 
-static int FILTER filter_ip_dst(const struct filter* filter, const struct ip* ip){
+int FILTER filter_ip_dst(const struct filter* filter, const struct ip* ip){
 	return (filter->index & FILTER_IP_DST) && (ip && (ip->ip_dst.s_addr & filter->ip_dst_mask.s_addr) == filter->ip_dst.s_addr);
 }
 
-static int FILTER filter_src_port(const struct filter* filter, uint16_t port){
+int FILTER filter_src_port(const struct filter* filter, uint16_t port){
 	return (filter->index & FILTER_SRC_PORT) && (filter->src_port == (port & filter->src_port_mask));
 }
 
-static int FILTER filter_dst_port(const struct filter* filter, uint16_t port){
+int FILTER filter_dst_port(const struct filter* filter, uint16_t port){
 	return (filter->index & FILTER_DST_PORT) && (filter->dst_port == (port & filter->dst_port_mask));
 }
 
-static int FILTER filter_port(const struct filter* filter, uint16_t src, uint16_t dst){
+int FILTER filter_port(const struct filter* filter, uint16_t src, uint16_t dst){
 	return (filter->index & FILTER_PORT) && (filter->port == src || filter->port == dst);
 }
 
-static int FILTER filter_mampid(const struct filter* filter, char mampid[]){
+int FILTER filter_mampid(const struct filter* filter, char mampid[]){
 	return (filter->index & FILTER_MAMPID) && (strncmp(filter->mampid, mampid, 8) == 0);
 }
 
-static int FILTER filter_start_time(const struct filter* filter, const timepico* time){
+int FILTER filter_start_time(const struct filter* filter, const timepico* time){
 	return (filter->index & FILTER_START_TIME) && (timecmp(&filter->starttime, time) <= 0);
 }
 
-static int FILTER filter_end_time(const struct filter* filter, const timepico* time){
+int FILTER filter_end_time(const struct filter* filter, const timepico* time){
 	return (filter->index & FILTER_END_TIME) && (timecmp(&filter->endtime, time) >= 0);
 }
 
-static int FILTER filter_frame_dt(const struct filter* filter, const timepico time){
+int FILTER filter_frame_dt(const struct filter* filter, const timepico time){
 	if ( !(filter->index & FILTER_FRAME_MAX_DT) ){
 		return 0;
 	}
