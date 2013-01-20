@@ -5,7 +5,6 @@
 #include <caputils/caputils.h>
 #include <caputils/marker.h>
 #include <caputils/picotime.h>
-#include "caputils_int.h"
 
 #include <stdio.h>
 #include <stdlib.h>

@@ -6,7 +6,6 @@
 
 #include "caputils/caputils.h"
 #include "caputils/marker.h"
-#include "caputils_int.h"
 #include <unistd.h>
 #include <getopt.h>
 #include <string.h>

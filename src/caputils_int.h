@@ -12,9 +12,7 @@
 int eth_aton(struct ether_addr* dst, const char* addr);
 
 #define CAPUTILS_FILE_MAGIC 0x8f1ae247c53d9b6e
-#define MARKER_MAGIC 0x9f7a3c83
 #define LISTENPORT 0x0810
-#define MARKERPORT 0x0811
 
 /**
  * Error enumerations.

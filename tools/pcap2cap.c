@@ -31,7 +31,6 @@
 
 #include <caputils/caputils.h>
 #include <caputils/capture.h>
-#include "caputils_int.h"
 
 #include <stdio.h>
 #include <stdlib.h>

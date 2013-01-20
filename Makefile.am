@@ -94,47 +94,49 @@ pkgconfig_DATA = libcap_stream-0.7.pc libcap_filter-0.7.pc libcap_utils-0.7.pc l
 
 libcap_stream_07_la_LDFLAGS = -version-info 2:1:2 ${PFRING_LIBS}
 libcap_stream_07_la_LIBADD = libcap_filter-07.la
-libcap_stream_07_la_SOURCES = stream.c stream.h stream_buffer.c stream_buffer.h stream_file.c stream_udp.c
+libcap_stream_07_la_SOURCES = src/stream.c src/stream.h src/stream_buffer.c src/stream_buffer.h src/stream_file.c src/stream_udp.c
 
 if BUILD_PFRING
-libcap_stream_07_la_SOURCES += stream_pfring.c
+libcap_stream_07_la_SOURCES += src/stream_pfring.c
 else
-libcap_stream_07_la_SOURCES += stream_ethernet.c
+libcap_stream_07_la_SOURCES += src/stream_ethernet.c
 endif
 
 libcap_utils_07_la_CFLAGS = ${AM_CFLAGS}
 libcap_utils_07_la_LDFLAGS = -version-info 1:0:1
 libcap_utils_07_la_LIBADD = libcap_stream-07.la libcap_filter-07.la libcap_marc-07.la
 libcap_utils_07_la_SOURCES =   \
-	caputils_int.h      \
-	address.c           \
-	error.c             \
-	format/arp.c        \
-	format/dns.c        \
-	format/ethernet.c   \
-	format/icmp.c       \
-	format/ip.c         \
-	format/ipv4.c       \
-	format/ipv6.c       \
-	format/tcp.c        \
-	format/udp.c        \
-	format.c            \
-	interface.c         \
-	log.c               \
-	marker.c            \
-	utils.c             \
-	packet.c            \
-	picotime.c
+	src/caputils_int.h      \
+	src/address.c           \
+	src/error.c             \
+	src/format/arp.c        \
+	src/format/dns.c        \
+	src/format/ethernet.c   \
+	src/format/icmp.c       \
+	src/format/ip.c         \
+	src/format/ipv4.c       \
+	src/format/ipv6.c       \
+	src/format/tcp.c        \
+	src/format/udp.c        \
+	src/format.c            \
+	src/interface.c         \
+	src/log.c               \
+	src/marker.c            \
+	src/utils.c             \
+	src/packet.c            \
+	src/picotime.c
 #	stream_tcp.c
 
 if BUILD_BE64TOH
-libcap_utils_07_la_SOURCES += be64toh.c be64toh.h
+libcap_utils_07_la_SOURCES += fallback/be64toh.c fallback/be64toh.h
 endif
 
+BUILT_SOURCES = vcs.h
+CLEANFILES = vcs.h
 if HAVE_VCS
 .PHONY: .vcs
-BUILT_SOURCES = .vcs vcs.h
-CLEANFILES = .vcs vcs.h
+BUILT_SOURCES += .vcs vcs.h stamp-vcs
+CLEANFILES += .vcs stamp-vcs
 .vcs: Makefile
 	@git rev-parse --short HEAD | sed 's/\(.*\)/#define VCS_REV "\1"/' > .vcs
 	@git rev-parse --abbrev-ref HEAD | sed 's/\(.*\)/#define VCS_BRANCH "\1"/' >> .vcs
@@ -150,21 +152,42 @@ libcap_utils_07_la_SOURCES += vcs.h
 
 libcap_filter_07_la_LDFLAGS = -version-info 0:2:0
 libcap_filter_07_la_LIBADD = ${PCAP_LIBS}
-libcap_filter_07_la_SOURCES = createfilter.c filter.c
+libcap_filter_07_la_SOURCES = src/createfilter.c src/filter.c
 
 libcap_marc_07_la_LDFLAGS = -shared -version-info 0:1:0
 libcap_marc_07_la_CFLAGS = ${AM_CFLAGS} ${libcap_filter_CFLAGS}
-libcap_marc_07_la_SOURCES = marc.c
+libcap_marc_07_la_SOURCES = src/marc.c
 
-pcap2cap_LDADD = libcap_utils-07.la libcap_filter-07.la libcap_stream-07.la ${PCAP_LIBS}
-cap2pcap_LDADD = libcap_utils-07.la libcap_filter-07.la libcap_stream-07.la ${PCAP_LIBS}
-capinfo_LDADD = libcap_utils-07.la libcap_filter-07.la libcap_stream-07.la
-capdump_LDADD = libcap_utils-07.la libcap_filter-07.la libcap_stream-07.la
-capfilter_LDADD = libcap_filter-07.la libcap_utils-07.la libcap_stream-07.la
+tools_CFLAGS = ${AM_CFLAGS} -I${top_srcdir}/fallback
+tools_LIBS = libcap_utils-07.la libcap_filter-07.la libcap_stream-07.la ${PCAP_LIBS}
+
+pcap2cap_SOURCES = tools/pcap2cap.c
+pcap2cap_CFLAGS = ${tools_CFLAGS}
+pcap2cap_LDADD = ${tools_LIBS}
+cap2pcap_SOURCES = tools/cap2pcap.c
+cap2pcap_CFLAGS = ${tools_CFLAGS}
+cap2pcap_LDADD = ${tools_LIBS}
+capinfo_SOURCES = tools/capinfo.c
+capinfo_CFLAGS = ${tools_CFLAGS}
+capinfo_LDADD = ${tools_LIBS}
+capdump_SOURCES = tools/capdump.c
+capdump_CFLAGS = ${tools_CFLAGS}
+capdump_LDADD = ${tools_LIBS}
+capfilter_SOURCES = tools/capfilter.c
+capfilter_CFLAGS = ${tools_CFLAGS}
+capfilter_LDADD = ${tools_LIBS}
+capmarker_SOURCES = tools/capmarker.c
+capmarker_CFLAGS = ${tools_CFLAGS}
 capmarker_LDADD = libcap_utils-07.la
-capmerge_LDADD = libcap_filter-07.la libcap_utils-07.la libcap_stream-07.la
-capshow_LDADD = libcap_filter-07.la libcap_utils-07.la libcap_stream-07.la
-ifstat_LDADD = libcap_filter-07.la libcap_utils-07.la libcap_stream-07.la
+capmerge_SOURCES = tools/capmerge.c
+capmerge_CFLAGS = ${tools_CFLAGS}
+capmerge_LDADD = ${tools_LIBS}
+capshow_SOURCES = tools/capshow.c
+capshow_CFLAGS = ${tools_CFLAGS}
+capshow_LDADD = ${tools_LIBS}
+ifstat_SOURCES = tools/ifstat.c
+ifstat_CFLAGS = ${tools_CFLAGS}
+ifstat_LDADD = ${tools_LIBS}
 
 tests_filter_argv_CXXFLAGS = ${AM_CFLAGS} $(CPPUNIT_CFLAGS)
 tests_filter_argv_LDFLAGS = $(CPPUNIT_LIBS)

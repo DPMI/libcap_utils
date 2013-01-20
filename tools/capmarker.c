@@ -3,7 +3,7 @@
 #endif /* HAVE_CONFIG_H */
 
 #include "caputils/marker.h"
-#include "caputils_int.h"
+#include "caputils/utils.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -14,6 +14,7 @@
 #include <signal.h>
 #include <unistd.h>
 #include <sys/stat.h>
+#include <arpa/inet.h>
 #include <pwd.h>
 #include "be64toh.h" /* for compability */
 

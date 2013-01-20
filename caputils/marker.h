@@ -8,6 +8,11 @@
 extern "C" {
 #endif
 
+enum {
+	MARKERPORT = 0x0811,
+	MARKER_MAGIC = 0x9f7a3c83,
+};
+
 enum MarkerFlags {
 	/* If termination flag is set capdump will close the current file and stop saving
 	 * packets until it receives another marker. */
