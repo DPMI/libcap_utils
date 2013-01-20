@@ -16,7 +16,7 @@ int iface_get(const char* name, struct iface* iface){
   strncpy(ifr.ifr_name,   name, IFNAMSIZ);
   strncpy(iface->if_name, name, IFNAMSIZ);
 
-  /* open raw socket */
+  /* open socket */
   int fd = socket(AF_INET, SOCK_DGRAM, 0);
   if ( fd < 0 ){
     return errno;
