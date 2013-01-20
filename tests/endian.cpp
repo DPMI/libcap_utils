@@ -20,42 +20,42 @@ static uint64_t values[4] = {
 };
 
 class EndianTest: public CppUnit::TestFixture {
-  CPPUNIT_TEST_SUITE(EndianTest);
+	CPPUNIT_TEST_SUITE(EndianTest);
 #ifdef HAVE_BE64TOH
-  CPPUNIT_TEST( test_endian );
+	CPPUNIT_TEST( test_endian );
 #else
 #warning be64toh is not available on build system, test disabled
 #endif
-  CPPUNIT_TEST_SUITE_END();
+	CPPUNIT_TEST_SUITE_END();
 
 public:
 
-  void test_endian(){
-	  uint64_t tmp[2][4];
+	void test_endian(){
+		uint64_t tmp[2][4];
 
-	  for ( int i = 0; i < 4; i++ ){
-		  tmp[0][i] = htobe64(values[i]);
-		  tmp[1][i] = _int_htobe64(values[i]);
-		  CPPUNIT_ASSERT_EQUAL(tmp[0][i], tmp[1][i]);
-	  }
+		for ( int i = 0; i < 4; i++ ){
+			tmp[0][i] = htobe64(values[i]);
+			tmp[1][i] = _int_htobe64(values[i]);
+			CPPUNIT_ASSERT_EQUAL(tmp[0][i], tmp[1][i]);
+		}
 
-	  for ( int i = 0; i < 4; i++ ){
-		  uint64_t rev = _int_htobe64(tmp[1][i]);
-		  CPPUNIT_ASSERT_EQUAL(values[i], rev);
-	  }
-  }
+		for ( int i = 0; i < 4; i++ ){
+			uint64_t rev = _int_htobe64(tmp[1][i]);
+			CPPUNIT_ASSERT_EQUAL(values[i], rev);
+		}
+	}
 };
 
 CPPUNIT_TEST_SUITE_REGISTRATION(EndianTest);
 
 int main(int argc, const char* argv[]){
-  CppUnit::Test *suite = CppUnit::TestFactoryRegistry::getRegistry().makeTest();
+	CppUnit::Test *suite = CppUnit::TestFactoryRegistry::getRegistry().makeTest();
 
-  CppUnit::TextUi::TestRunner runner;
+	CppUnit::TextUi::TestRunner runner;
 
-  runner.addTest( suite );
-  runner.setOutputter(new CppUnit::CompilerOutputter(&runner.result(), std::cerr ));
+	runner.addTest(suite);
+	runner.setOutputter(new CppUnit::CompilerOutputter(&runner.result(), std::cerr));
 
-  return runner.run() ? 0 : 1;
+	return runner.run() ? 0 : 1;
 }
 

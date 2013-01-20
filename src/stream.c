@@ -598,7 +598,7 @@ int stream_from_getopt(stream_t* st, char* argv[], int optind, int argc, const c
 		}
 	}
 
-  out:
+	out:
 	stream_addr_reset(&addr);
 	return ret;
 }

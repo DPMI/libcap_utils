@@ -24,12 +24,12 @@
 #define LIBPFRING_PROMISC 1
 
 struct stream_pfring {
-  struct stream base;
-  pfring* pd;
-  int port;
-  int if_mtu;
-  struct sockaddr_ll sll;
-  struct ether_addr address[MAX_ADDRESS];
+	struct stream base;
+	pfring* pd;
+	int port;
+	int if_mtu;
+	struct sockaddr_ll sll;
+	struct ether_addr address[MAX_ADDRESS];
 	long unsigned int seqnum[MAX_ADDRESS];
 
 	size_t num_frames;  /* how many frames that buffer can hold */
@@ -96,43 +96,43 @@ static int stream_pfring_read_frame(struct stream_pfring* st, int block){
 			continue;
 		}
 
-		#ifdef DEBUG
+#ifdef DEBUG
 		fprintf(stderr, "got measurement frame with %d capture packets [BU: %3.2f%%]\n", ntohl(sh->nopkts), 0.0f);
-		#endif
+#endif
 
 		/* increase packet count */
 		st->base.stat.recv += ntohl(sh->nopkts);
 
-    /* if no sequencenr is set some additional checks are made.
-     * they will also run when the sequence number wraps, but that ok since the
-     * sequence number will match in that case anyway. */
-    if ( st->seqnum[match] == 0 ){
-      /* read stream version */
-	    struct file_header_t FH;
-	    FH.version.major=ntohs(sh->version.major);
-	    FH.version.minor=ntohs(sh->version.minor);
+		/* if no sequencenr is set some additional checks are made.
+		 * they will also run when the sequence number wraps, but that ok since the
+		 * sequence number will match in that case anyway. */
+		if ( st->seqnum[match] == 0 ){
+			/* read stream version */
+			struct file_header_t FH;
+			FH.version.major=ntohs(sh->version.major);
+			FH.version.minor=ntohs(sh->version.minor);
 
-	    /* ensure we can read this version */
-	    if ( !is_valid_version(&FH) ){
-		    perror("invalid stream version");
-		    break;
-	    }
+			/* ensure we can read this version */
+			if ( !is_valid_version(&FH) ){
+				perror("invalid stream version");
+				break;
+			}
 
-      /* this is set last, as we want to wait until a packet with valid version
-       * arrives before proceeding. */
-      st->seqnum[match] = ntohl(sh->sequencenr);
-    }
-    match_inc_seqnr(&st->base, &st->seqnum[match], sh);
+			/* this is set last, as we want to wait until a packet with valid version
+			 * arrives before proceeding. */
+			st->seqnum[match] = ntohl(sh->sequencenr);
+		}
+		match_inc_seqnr(&st->base, &st->seqnum[match], sh);
 
-    st->base.writePos = (st->base.writePos+1) % st->num_frames;
+		st->base.writePos = (st->base.writePos+1) % st->num_frames;
 
-    /* This indicates a flush from the sender.. */
-    if( ntohs(sh->flush) == 1 ){
-	    fprintf(stderr, "Sender terminated.\n");
-	    st->base.flushed=1;
-    }
+		/* This indicates a flush from the sender.. */
+		if( ntohs(sh->flush) == 1 ){
+			fprintf(stderr, "Sender terminated.\n");
+			st->base.flushed=1;
+		}
 
-    return 1;
+		return 1;
 
 	} while (1);
 
@@ -209,27 +209,27 @@ long stream_pfring_add(struct stream* stt, const struct ether_addr* addr){
 		return EBUSY;
 	}
 
-  /* parse hwaddr from user */
-  if ( (addr->ether_addr_octet[0] & 0x01) == 0 ){
-    return ERROR_INVALID_MULTICAST;
-  }
+	/* parse hwaddr from user */
+	if ( (addr->ether_addr_octet[0] & 0x01) == 0 ){
+		return ERROR_INVALID_MULTICAST;
+	}
 
-  /* store parsed address */
-  memcpy(&st->address[st->base.num_addresses], addr, ETH_ALEN);
-  st->base.num_addresses++;
+	/* store parsed address */
+	memcpy(&st->address[st->base.num_addresses], addr, ETH_ALEN);
+	st->base.num_addresses++;
 
-  return 0;
+	return 0;
 }
 
 static long destroy(struct stream_pfring* st){
-  free(st->base.comment);
-  free(st);
-  return 0;
+	free(st->base.comment);
+	free(st);
+	return 0;
 }
 
 long stream_pfring_create(struct stream** stptr, const struct ether_addr* addr, const char* iface, const char* mpid, const char* comment, int flags){
-  fprintf(stderr, "libcap_utils with pf_ring does not yet support output streams\n");
-  return EINVAL;
+	fprintf(stderr, "libcap_utils with pf_ring does not yet support output streams\n");
+	return EINVAL;
 }
 
 static int iface_mtu(const char* iface){
@@ -243,117 +243,117 @@ static int iface_mtu(const char* iface){
 		return -1;
 	}
 
-  /* get iface MTU */
-  if ( ioctl(sd, SIOCGIFMTU, &ifr) == -1 ){
-    return -1;
-  }
-  int if_mtu = ifr.ifr_mtu;
+	/* get iface MTU */
+	if ( ioctl(sd, SIOCGIFMTU, &ifr) == -1 ){
+		return -1;
+	}
+	int if_mtu = ifr.ifr_mtu;
 
-  /* close socket */
-  close(sd);
+	/* close socket */
+	close(sd);
 
-  return if_mtu;
+	return if_mtu;
 }
 
 long stream_pfring_open(struct stream** stptr, const struct ether_addr* addr, const char* iface, size_t buffer_size){
-  int ret = 0;
-  assert(stptr);
+	int ret = 0;
+	assert(stptr);
 
-  /* validate arguments */
-  if ( !(addr && iface) ){
-    return EINVAL;
-  }
+	/* validate arguments */
+	if ( !(addr && iface) ){
+		return EINVAL;
+	}
 
-  /* get MTU for interface */
-  const int if_mtu = iface_mtu(iface);
-  if ( if_mtu < 0 ){
-	  return errno;
-  }
+	/* get MTU for interface */
+	const int if_mtu = iface_mtu(iface);
+	if ( if_mtu < 0 ){
+		return errno;
+	}
 
-  pfring_config(99);
+	pfring_config(99);
 
-  /* open pfring */
-  char* derp = strdup(iface);
-  pfring* pd = pfring_open(derp, LIBPFRING_PROMISC, if_mtu, 0);
-  if ( !pd ){
-	  return errno;
-  }
+	/* open pfring */
+	char* derp = strdup(iface);
+	pfring* pd = pfring_open(derp, LIBPFRING_PROMISC, if_mtu, 0);
+	if ( !pd ){
+		return errno;
+	}
 
-  pfring_set_application_name(pd, "libcap_utils");
+	pfring_set_application_name(pd, "libcap_utils");
 
-  uint32_t version;
-  pfring_version(pd, &version);
-  fprintf(stderr, "Using PF_RING v.%d.%d.%d\n",
-          (version & 0xFFFF0000) >> 16,
-          (version & 0x0000FF00) >> 8,
-          version & 0x000000FF);
+	uint32_t version;
+	pfring_version(pd, &version);
+	fprintf(stderr, "Using PF_RING v.%d.%d.%d\n",
+	        (version & 0xFFFF0000) >> 16,
+	        (version & 0x0000FF00) >> 8,
+	        version & 0x000000FF);
 
-  if((ret = pfring_set_direction(pd, rx_and_tx_direction)) != 0)
-    fprintf(stderr, "pfring_set_direction returned %d (perhaps you use a direction other than rx only with DNA ?)\n", ret);
+	if((ret = pfring_set_direction(pd, rx_and_tx_direction)) != 0)
+		fprintf(stderr, "pfring_set_direction returned %d (perhaps you use a direction other than rx only with DNA ?)\n", ret);
 
-  if((ret = pfring_set_socket_mode(pd, recv_only_mode)) != 0)
-    fprintf(stderr, "pfring_set_socket_mode returned [rc=%d]\n", ret);
+	if((ret = pfring_set_socket_mode(pd, recv_only_mode)) != 0)
+		fprintf(stderr, "pfring_set_socket_mode returned [rc=%d]\n", ret);
 
-  char bpfFilter[] = "ether proto 0x810";
-  ret = pfring_set_bpf_filter(pd, bpfFilter);
-  if ( ret != 0 ) {
-	  fprintf(stderr, "pfring_set_bpf_filter(%s) returned %d\n", bpfFilter, ret);
-  } else {
-	  fprintf(stderr, "Successfully set BPF filter '%s'\n", bpfFilter);
-  }
+	char bpfFilter[] = "ether proto 0x810";
+	ret = pfring_set_bpf_filter(pd, bpfFilter);
+	if ( ret != 0 ) {
+		fprintf(stderr, "pfring_set_bpf_filter(%s) returned %d\n", bpfFilter, ret);
+	} else {
+		fprintf(stderr, "Successfully set BPF filter '%s'\n", bpfFilter);
+	}
 
-  /* default buffer_size of 250*MTU */
-  if ( buffer_size == 0 ){
-    buffer_size = 250 * sizeof(char*);
-  }
-  const size_t num_frames = buffer_size / sizeof(char*);
+	/* default buffer_size of 250*MTU */
+	if ( buffer_size == 0 ){
+		buffer_size = 250 * sizeof(char*);
+	}
+	const size_t num_frames = buffer_size / sizeof(char*);
 
-  /* Initialize the structure */
-  if ( (ret = stream_alloc(stptr, PROTOCOL_ETHERNET_MULTICAST, sizeof(struct stream_pfring), buffer_size, if_mtu) != 0) ){
-    return ret;
-  }
-  struct stream_pfring* st = (struct stream_pfring*)*stptr;
-  st->pd = pd;
-  st->if_mtu = if_mtu;
-  memset(st->seqnum, 0, sizeof(long unsigned int) * MAX_ADDRESS);
+	/* Initialize the structure */
+	if ( (ret = stream_alloc(stptr, PROTOCOL_ETHERNET_MULTICAST, sizeof(struct stream_pfring), buffer_size, if_mtu) != 0) ){
+		return ret;
+	}
+	struct stream_pfring* st = (struct stream_pfring*)*stptr;
+	st->pd = pd;
+	st->if_mtu = if_mtu;
+	memset(st->seqnum, 0, sizeof(long unsigned int) * MAX_ADDRESS);
 
-  if (pfring_enable_ring(pd) != 0) {
-	  fprintf(stderr, "Unable to enable ring :-(\n");
-    pfring_close(pd);
-    return(-1);
-  }
+	if (pfring_enable_ring(pd) != 0) {
+		fprintf(stderr, "Unable to enable ring :-(\n");
+		pfring_close(pd);
+		return(-1);
+	}
 
-  /* setup buffer pointers (see brief overview at struct declaration) */
-  st->num_frames = num_frames;
-  st->num_packets = 0;
-  st->read_ptr = NULL;
-  st->base.readPos = 0;
-  st->base.writePos = 0;
-  for ( unsigned int i = 0; i < num_frames; i++ ){
-    st->frame[i] = NULL;
-  }
+	/* setup buffer pointers (see brief overview at struct declaration) */
+	st->num_frames = num_frames;
+	st->num_packets = 0;
+	st->read_ptr = NULL;
+	st->base.readPos = 0;
+	st->base.writePos = 0;
+	for ( unsigned int i = 0; i < num_frames; i++ ){
+		st->frame[i] = NULL;
+	}
 
-  /* add membership to group */
-  if ( (ret=stream_pfring_add(&st->base, addr)) != 0 ){
-	  return ret;
-  }
+	/* add membership to group */
+	if ( (ret=stream_pfring_add(&st->base, addr)) != 0 ){
+		return ret;
+	}
 
 /*
   if ( (ret=stream_pfring_init(stptr, addr, iface, ETH_P_ALL, buffer_size)) != 0 ){
-    return ret;
+  return ret;
   }
 */
-  st->base.type = PROTOCOL_ETHERNET_MULTICAST;
-  st->base.FH.comment_size = 0;
-  st->base.comment = NULL;
+	st->base.type = PROTOCOL_ETHERNET_MULTICAST;
+	st->base.FH.comment_size = 0;
+	st->base.comment = NULL;
 
-  /* callbacks */
-  st->base.fill_buffer = NULL;
-  st->base.destroy = (destroy_callback)destroy;
-  st->base.write = NULL;
-  st->base.read = (read_callback)stream_pfring_read;
+	/* callbacks */
+	st->base.fill_buffer = NULL;
+	st->base.destroy = (destroy_callback)destroy;
+	st->base.write = NULL;
+	st->base.read = (read_callback)stream_pfring_read;
 
-  return 0;
+	return 0;
 }
 
 /* I CAN HAZ PASTA PLOX? */
@@ -376,16 +376,16 @@ int pcap_compile_nopcap(int snaplen_arg, int linktype_arg,
 }
 
 /*
-static int stream_add(struct stream* st, const stream_addr_t* addr){
-	if ( !st || stream_addr_type(addr) != STREAM_ADDR_ETHERNET ){
-		return EINVAL;
-	}
+  static int stream_add(struct stream* st, const stream_addr_t* addr){
+  if ( !st || stream_addr_type(addr) != STREAM_ADDR_ETHERNET ){
+  return EINVAL;
+  }
 
-	if ( st->type != PROTOCOL_ETHERNET_MULTICAST ){
-		return ERROR_INVALID_PROTOCOL;
-	}
+  if ( st->type != PROTOCOL_ETHERNET_MULTICAST ){
+  return ERROR_INVALID_PROTOCOL;
+  }
 
-	struct stream_pfring* se = (struct stream_pfring*)st;
-	return stream_pfring_add(se, &addr->ether_addr);
-}
+  struct stream_pfring* se = (struct stream_pfring*)st;
+  return stream_pfring_add(se, &addr->ether_addr);
+  }
 */

@@ -10,37 +10,37 @@
 #include <sys/ioctl.h>
 
 int iface_get(const char* name, struct iface* iface){
-  struct ifreq ifr;
+	struct ifreq ifr;
 
-  /* store the iface name */
-  strncpy(ifr.ifr_name,   name, IFNAMSIZ);
-  strncpy(iface->if_name, name, IFNAMSIZ);
+	/* store the iface name */
+	strncpy(ifr.ifr_name,   name, IFNAMSIZ);
+	strncpy(iface->if_name, name, IFNAMSIZ);
 
-  /* open socket */
-  int fd = socket(AF_INET, SOCK_DGRAM, 0);
-  if ( fd < 0 ){
-    return errno;
-  }
+	/* open socket */
+	int fd = socket(AF_INET, SOCK_DGRAM, 0);
+	if ( fd < 0 ){
+		return errno;
+	}
 
-  /* get iface index */
-  if ( ioctl(fd, SIOCGIFINDEX, &ifr) == -1 ){
-    return errno;
-  }
-  iface->if_index = ifr.ifr_ifindex;
+	/* get iface index */
+	if ( ioctl(fd, SIOCGIFINDEX, &ifr) == -1 ){
+		return errno;
+	}
+	iface->if_index = ifr.ifr_ifindex;
 
-  /* get iface MTU */
-  if ( ioctl(fd, SIOCGIFMTU, &ifr) == -1 ){
-    return errno;
-  }
-  iface->if_mtu = ifr.ifr_mtu;
+	/* get iface MTU */
+	if ( ioctl(fd, SIOCGIFMTU, &ifr) == -1 ){
+		return errno;
+	}
+	iface->if_mtu = ifr.ifr_mtu;
 
-  /* query interface flags */
-  if ( ioctl(fd, SIOCGIFFLAGS, &ifr) == -1 ){
-    return errno;
-  }
-  iface->if_up        = ifr.ifr_flags & IFF_UP;
-  iface->if_loopback  = ifr.ifr_flags & IFF_LOOPBACK;
-  iface->if_multicast = ifr.ifr_flags & IFF_MULTICAST;
+	/* query interface flags */
+	if ( ioctl(fd, SIOCGIFFLAGS, &ifr) == -1 ){
+		return errno;
+	}
+	iface->if_up        = ifr.ifr_flags & IFF_UP;
+	iface->if_loopback  = ifr.ifr_flags & IFF_LOOPBACK;
+	iface->if_multicast = ifr.ifr_flags & IFF_MULTICAST;
 
-  return 0;
+	return 0;
 }

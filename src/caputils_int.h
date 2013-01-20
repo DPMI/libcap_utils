@@ -19,28 +19,28 @@
  * @note Remember to add the error description to error.c
  */
 enum {
-  NO_ERROR = 0,
+	NO_ERROR = 0,
 
-  /* errno codes goes here */
+	/* errno codes goes here */
 
-  ERROR_FIRST = (1<<15),
+	ERROR_FIRST = (1<<15),
 
-  /* errors related to capfiles */
-  ERROR_CAPFILE_INVALID,
-  ERROR_CAPFILE_TRUNCATED,
-  ERROR_CAPFILE_FIFO_EXIST,
+	/* errors related to capfiles */
+	ERROR_CAPFILE_INVALID,
+	ERROR_CAPFILE_TRUNCATED,
+	ERROR_CAPFILE_FIFO_EXIST,
 
-  /* misc */
-  ERROR_INVALID_PROTOCOL,
-  ERROR_INVALID_HWADDR,
-  ERROR_INVALID_MULTICAST,
-  ERROR_INVALID_IFACE,
-  ERROR_BUFFER_LENGTH,
-  ERROR_BUFFER_MULTIPLE,
+	/* misc */
+	ERROR_INVALID_PROTOCOL,
+	ERROR_INVALID_HWADDR,
+	ERROR_INVALID_MULTICAST,
+	ERROR_INVALID_IFACE,
+	ERROR_BUFFER_LENGTH,
+	ERROR_BUFFER_MULTIPLE,
 
-  ERROR_NOT_IMPLEMENTED, /* should not normally be used but during the transition period it is useful */
+	ERROR_NOT_IMPLEMENTED, /* should not normally be used but during the transition period it is useful */
 
-  ERROR_LAST
+	ERROR_LAST
 };
 
 #endif /* CAPUTILS_INT_H */

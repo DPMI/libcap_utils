@@ -3,13 +3,13 @@
                              -------------------
     begin                : Fri Jan 31 2003
     copyright            : (C) 2003 by Anders Ekberg,
-    			 : (C) 2005 by Patrik Arlos,
+			 : (C) 2005 by Patrik Arlos,
                          : (C) 2011 by David Sveningsson
     email                : anders.ekberg@bth.se
-    			 : Patrik.Arlos@bth.se
+			 : Patrik.Arlos@bth.se
                          : david.sveningsson@bth.se
 
- ***************************************************************************/
+***************************************************************************/
 /***************************************************************************
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -28,10 +28,10 @@
 
 /* Protocol definitions */
 enum protocol_t {
-  PROTOCOL_LOCAL_FILE = 0,
-  PROTOCOL_ETHERNET_MULTICAST,
-  PROTOCOL_UDP_MULTICAST,
-  PROTOCOL_TCP_UNICAST,
+	PROTOCOL_LOCAL_FILE = 0,
+	PROTOCOL_ETHERNET_MULTICAST,
+	PROTOCOL_UDP_MULTICAST,
+	PROTOCOL_TCP_UNICAST,
 };
 
 /* forward declare */
@@ -56,12 +56,12 @@ struct filter;
 #define ETHERTYPE_IPV6 0x86dd
 #endif /* ETHERTYPE_IPV6 */
 
+/* our ethernet format */
+#define ETHERTYPE_MP 0x0810
+
 #ifndef IPPROTO_OSPF
 #define IPPROTO_OSPF 89
 #endif
-
-/* our ethernet format */
-#define ETHERTYPE_MP 0x0810
 
 #define STPBRIDGES 0x0026
 #define CDPVTP 0x016E
@@ -71,10 +71,10 @@ struct filter;
 #endif
 
 struct llc_pdu_sn {
-  uint8_t dsap;
-  uint8_t ssap;
-  uint8_t ctrl_1;
-  uint8_t ctrl_2;
+	uint8_t dsap;
+	uint8_t ssap;
+	uint8_t ctrl_1;
+	uint8_t ctrl_2;
 };
 
 #endif /* CAP_UTILS */

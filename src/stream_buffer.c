@@ -12,19 +12,19 @@ size_t stream_frame_buffer_size(size_t num_frames, size_t mtu){
 }
 
 void stream_frame_init(struct stream_frame_buffer* fb, read_frame_callback cb, char* src, size_t num_frames, size_t mtu){
-  const size_t frame_offset = sizeof(char*) * num_frames;
+	const size_t frame_offset = sizeof(char*) * num_frames;
 
-  fb->read_frame = cb;
-  fb->frame = (char**)src;
-  fb->num_frames = num_frames;
-  fb->num_packets = 0;
-  fb->header_offset = 0;
+	fb->read_frame = cb;
+	fb->frame = (char**)src;
+	fb->num_frames = num_frames;
+	fb->num_packets = 0;
+	fb->header_offset = 0;
 
-  /* setup buffer pointers (see brief overview at struct declaration) */
-  fb->read_ptr = NULL;
-  for ( unsigned int i = 0; i < num_frames; i++ ){
-	  fb->frame[i] = src + frame_offset + i * mtu;
-  }
+	/* setup buffer pointers (see brief overview at struct declaration) */
+	fb->read_ptr = NULL;
+	for ( unsigned int i = 0; i < num_frames; i++ ){
+		fb->frame[i] = src + frame_offset + i * mtu;
+	}
 }
 
 static int read_frame(stream_t st, struct stream_frame_buffer* fb, struct timeval* timeout){
@@ -39,7 +39,7 @@ static int read_frame(stream_t st, struct stream_frame_buffer* fb, struct timeva
 
 int stream_frame_buffer_read(stream_t st, struct stream_frame_buffer* fb, struct cap_header** header, struct filter* filter, struct timeval* timeout){
 	/* I heard ext is a pretty cool guy, uses goto and doesn't afraid of anything */
-  retry:
+	retry:
 
 	/* empty buffer */
 	if ( !fb->read_ptr ){

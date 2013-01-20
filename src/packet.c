@@ -121,32 +121,32 @@ size_t layer_size(enum Level level, const cap_head* caphead){
 
 const struct ip* find_ipv4_header(const struct ethhdr* ether, const char** ptr){
 	const char* ref = (const char*)ether + sizeof(struct ethhdr);
-  uint16_t proto = ntohs(ether->h_proto);
+	uint16_t proto = ntohs(ether->h_proto);
 
-  retry:
-  switch ( proto ){
-  case ETHERTYPE_IP:
-	  break;
+	retry:
+	switch ( proto ){
+	case ETHERTYPE_IP:
+		break;
 
-  case ETHERTYPE_VLAN:
-  {
-	  /* Packet contains a VLAN tag */
-	  const struct ether_vlan_header* vlan = (const struct ether_vlan_header*)ether;
-	  ref = (const char*)ether + sizeof(struct ether_vlan_header);
-	  proto = ntohs(vlan->h_proto);
-	  goto retry;
-  }
+	case ETHERTYPE_VLAN:
+	{
+		/* Packet contains a VLAN tag */
+		const struct ether_vlan_header* vlan = (const struct ether_vlan_header*)ether;
+		ref = (const char*)ether + sizeof(struct ether_vlan_header);
+		proto = ntohs(vlan->h_proto);
+		goto retry;
+	}
 
-  default:
-	  /* Not an IPv4 packet */
-	  if ( ptr ) *ptr = NULL;
-	  return NULL;
-  }
+	default:
+		/* Not an IPv4 packet */
+		if ( ptr ) *ptr = NULL;
+		return NULL;
+	}
 
-  const struct ip* ip = (const struct ip*)ref;
-  if ( ptr ){
-	  const size_t hl = 4*ip->ip_hl;
-	  *ptr = ref + hl;
-  }
-  return ip;
+	const struct ip* ip = (const struct ip*)ref;
+	if ( ptr ){
+		const size_t hl = 4*ip->ip_hl;
+		*ptr = ref + hl;
+	}
+	return ip;
 }
