@@ -31,7 +31,6 @@ struct stream_pfring {
   struct sockaddr_ll sll;
   struct ether_addr address[MAX_ADDRESS];
 	long unsigned int seqnum[MAX_ADDRESS];
-	unsigned int num_address;
 
 	size_t num_frames;  /* how many frames that buffer can hold */
 	size_t num_packets; /* how many packets is left in current frame */
@@ -58,18 +57,18 @@ static int match_ma_pkt(const struct stream_pfring* st, const struct ethhdr* eth
 	}
 
 	int match;
-	for ( match = 0; match < st->num_address; match++ ){
+	for ( match = 0; match < st->base.num_addresses; match++ ){
 		if ( memcmp((const void*)ethhdr->h_dest, st->address[match].ether_addr_octet, ETH_ALEN) == 0 ) break;
 	}
 
-	if ( match == st->num_address ){
+	if ( match == st->base.num_addresses ){
 		return -1; /* ethernet stream did not match any of our expected */
 	}
 
 	return match;
 }
 
-static int read_packet(struct stream_pfring* st, int block){
+static int stream_pfring_read_frame(struct stream_pfring* st, int block){
 	assert(st);
 
 	do {
@@ -140,13 +139,13 @@ static int read_packet(struct stream_pfring* st, int block){
 	return 0;
 }
 
-int stream_pfring_read(struct stream_pfring* st, cap_head** header, const struct filter* filter, struct timeval* timeout){
+int stream_pfring_read(struct stream_pfring* st, cap_head** header, struct filter* filter, struct timeval* timeout){
 	/* I heard ext is a pretty cool guy, uses goto and doesn't afraid of anything */
   retry:
 
 	/* empty buffer */
 	if ( !st->read_ptr ){
-		if ( !read_packet(st, BLOCK) ){
+		if ( !stream_pfring_read_frame(st, BLOCK) ){
 			return EAGAIN;
 		}
 
@@ -158,7 +157,7 @@ int stream_pfring_read(struct stream_pfring* st, cap_head** header, const struct
 
 	/* always read if there is space available */
 	if ( st->base.writePos != st->base.readPos ){
-		read_packet(st, NONBLOCK);
+		stream_pfring_read_frame(st, NONBLOCK);
 	}
 
 	/* no packets available */
@@ -206,18 +205,18 @@ int stream_pfring_read(struct stream_pfring* st, cap_head** header, const struct
 long stream_pfring_add(struct stream* stt, const struct ether_addr* addr){
 	struct stream_pfring* st= (struct stream_pfring*)stt;
 
-	if ( st->num_address == MAX_ADDRESS ){
+	if ( st->base.num_addresses == MAX_ADDRESS ){
 		return EBUSY;
 	}
 
   /* parse hwaddr from user */
   if ( (addr->ether_addr_octet[0] & 0x01) == 0 ){
-    return ERROR_INVALID_HWADDR_MULTICAST;
+    return ERROR_INVALID_MULTICAST;
   }
 
   /* store parsed address */
-  memcpy(&st->address[st->num_address], addr, ETH_ALEN);
-  st->num_address++;
+  memcpy(&st->address[st->base.num_addresses], addr, ETH_ALEN);
+  st->base.num_addresses++;
 
   return 0;
 }
@@ -295,7 +294,6 @@ long stream_pfring_open(struct stream** stptr, const struct ether_addr* addr, co
   if((ret = pfring_set_socket_mode(pd, recv_only_mode)) != 0)
     fprintf(stderr, "pfring_set_socket_mode returned [rc=%d]\n", ret);
 
-
   char bpfFilter[] = "ether proto 0x810";
   ret = pfring_set_bpf_filter(pd, bpfFilter);
   if ( ret != 0 ) {
@@ -304,30 +302,18 @@ long stream_pfring_open(struct stream** stptr, const struct ether_addr* addr, co
 	  fprintf(stderr, "Successfully set BPF filter '%s'\n", bpfFilter);
   }
 
-  /* default buffer_size of 25*MTU */
+  /* default buffer_size of 250*MTU */
   if ( buffer_size == 0 ){
-	  buffer_size = 250 * if_mtu;
+    buffer_size = 250 * sizeof(char*);
   }
-
-  /* ensure buffer is a multiple of MTU and can hold at least one frame */
-  if ( buffer_size < if_mtu ){
-	  return ERROR_BUFFER_LENGTH;
-  } else if ( buffer_size % if_mtu != 0 ){
-	  return ERROR_BUFFER_MULTIPLE;
-  }
-
-  /* additional memory for the frame pointers */
-  size_t frames = buffer_size / if_mtu;
-  size_t frame_offset = sizeof(char*) * frames;
-  buffer_size += frame_offset;
+  const size_t num_frames = buffer_size / sizeof(char*);
 
   /* Initialize the structure */
-  if ( (ret = stream_alloc(stptr, PROTOCOL_ETHERNET_MULTICAST, sizeof(struct stream_pfring), buffer_size) != 0) ){
+  if ( (ret = stream_alloc(stptr, PROTOCOL_ETHERNET_MULTICAST, sizeof(struct stream_pfring), buffer_size, if_mtu) != 0) ){
     return ret;
   }
   struct stream_pfring* st = (struct stream_pfring*)*stptr;
   st->pd = pd;
-  st->num_address = 0;
   st->if_mtu = if_mtu;
   memset(st->seqnum, 0, sizeof(long unsigned int) * MAX_ADDRESS);
 
@@ -338,13 +324,13 @@ long stream_pfring_open(struct stream** stptr, const struct ether_addr* addr, co
   }
 
   /* setup buffer pointers (see brief overview at struct declaration) */
-  st->num_frames = frames;
+  st->num_frames = num_frames;
   st->num_packets = 0;
   st->read_ptr = NULL;
   st->base.readPos = 0;
   st->base.writePos = 0;
-  for ( unsigned int i = 0; i < frames; i++ ){
-	  st->frame[i] = st->base.buffer + frame_offset + i * if_mtu;
+  for ( unsigned int i = 0; i < num_frames; i++ ){
+    st->frame[i] = NULL;
   }
 
   /* add membership to group */
