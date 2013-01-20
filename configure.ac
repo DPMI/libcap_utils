@@ -16,12 +16,12 @@ m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_FILES([
-	libcap_filter-0.7.pc
-	libcap_stream-0.7.pc
-	libcap_marc-0.7.pc
-	libcap_utils-0.7.pc
-	caputils/version.h
-	Makefile
+  libcap_filter-0.7.pc
+  libcap_stream-0.7.pc
+  libcap_marc-0.7.pc
+  libcap_utils-0.7.pc
+  caputils/version.h
+  Makefile
   dist/deb-control
   dist/dumper_init
 ])
@@ -37,16 +37,7 @@ AC_SUBST([VERSION_MICRO])
 AC_SUBST([VERSION_SUFFIX])
 AC_DEFINE_UNQUOTED([TOP_SRCDIR], ["${srcdir}"], [top source directory])
 
-# use -O2 by default
-AC_MSG_CHECKING([if CFLAGS is set])
-AS_IF([test -z "$CFLAGS"], [
-  AC_MSG_RESULT([no, defaulting to -O2])
-	CFLAGS="-O2"
-  CXXFLAGS="-O2"
-], [
-  AC_MSG_RESULT([yes ($CFLAGS)])
-])
-
+AX_DEFAULT_CFLAGS([-O2])
 AC_PROG_SED
 AM_PROG_CC_C_O
 AC_PROG_CC_C99
@@ -59,51 +50,8 @@ m4_ifdef([AM_PROG_AR], [AM_PROG_AR])
 LT_INIT
 AC_SYS_LARGEFILE
 AC_SEARCH_LIBS([clock_gettime], [rt])
-
-AC_LANG_PUSH([C])
-AC_MSG_CHECKING([for be64toh])
-saved_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="$CPPFLAGS -Werror"
-AC_COMPILE_IFELSE([AC_LANG_SOURCE([
-#include <endian.h>
-#include <stdint.h>
-int foo(void){ uint64_t x = be64toh((uint64_t)0); }
-])], [
-  AC_MSG_RESULT([yes])
-  AC_DEFINE([HAVE_BE64TOH], [], [Define to 1 if you have the be64toh function.])
-  BE64TOH="yes"
-], [
-  AC_MSG_RESULT([no])
-  BE64TOH="no"
-])
-AM_CONDITIONAL([BUILD_BE64TOH], [test "x$BE64TOH" != "xyes"])
-CPPFLAGS="$saved_CPPFLAGS"
-AC_LANG_POP
-
-AC_LANG_PUSH([C])
-AC_MSG_CHECKING([for IP_MTU in netinet/ip.h])
-saved_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="$CPPFLAGS -Werror"
-AC_COMPILE_IFELSE([AC_LANG_SOURCE([
-#include <netinet/ip.h>
-int main(void){ return IP_MTU; }
-])], [
-  AC_MSG_RESULT([yes])
-], [
-  AC_MSG_RESULT([no])
-  AC_MSG_CHECKING([for IP_MTU in linux/in.h])
-  dnl This probably fails if crosscompiling
-  ip_mtu=`$SED -nr 's/.*@<:@ \t@:>@IP_MTU@<:@ \t@:>@+(@<:@0-9@:>@+)$/\1/p' /usr/include/linux/in.h`
-  AS_IF([test -n "$ip_mtu"], [
-    AC_MSG_RESULT([yes])
-    AC_DEFINE_UNQUOTED([IP_MTU], [$ip_mtu], [Fallback value when netinet/ip.h does not provide this enumeration])
-  ], [
-     AC_MSG_RESULT([no])
-    AC_MSG_ERROR([No definition of IP_MTU could be located])
-  ])
-])
-CPPFLAGS="$saved_CPPFLAGS"
-AC_LANG_POP
+AX_BE64
+AX_IP_MTU
 
 AC_ARG_ENABLE([debug], [AS_HELP_STRING([--enable-debug], [will print debugging information during runtime @<:@default=disabled@:>@])])
 AS_IF([test "x$enable_debug" = "xyes"],
