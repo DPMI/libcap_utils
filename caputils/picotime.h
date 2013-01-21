@@ -49,6 +49,12 @@ timepico timeval_to_timepico(struct timeval);
 timepico timespec_to_timepico(struct timespec);
 
 /**
+ * Create a timepico from two integers.
+ * Good for C++ or when lacking c99.
+ */
+timepico timepico_new(long int sec, long int psec);
+
+/**
  * Get current timestamp expressed as picotime.
  * The precision is limited to nanoseconds.
  */

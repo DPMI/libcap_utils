@@ -658,3 +658,18 @@ void filter_mampid_set(struct filter* filter, const char* mampid){
 	filter->index |= FILTER_MAMPID;
 	strncpy(filter->mampid, mampid, 8);
 }
+
+void filter_starttime_set(struct filter* filter, const timepico t){
+	filter->index |= FILTER_START_TIME;
+	filter->starttime = t;
+}
+
+void filter_endtime_set(struct filter* filter, const timepico t){
+	filter->index |= FILTER_END_TIME;
+	filter->endtime = t;
+}
+
+void filter_frame_dt_set(struct filter* filter, const timepico t){
+	filter->index |= FILTER_FRAME_MAX_DT;
+	filter->frame_max_dt = t;
+}

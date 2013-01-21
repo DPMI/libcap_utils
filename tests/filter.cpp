@@ -32,6 +32,9 @@ class Test: public CppUnit::TestFixture {
 	CPPUNIT_TEST(test_tp_sport);
 	CPPUNIT_TEST(test_tp_port);
 	CPPUNIT_TEST(test_mampid);
+	CPPUNIT_TEST(test_start_time);
+	CPPUNIT_TEST(test_end_time);
+	CPPUNIT_TEST(test_frame_dt);
 	CPPUNIT_TEST_SUITE_END();
 
 	void test_tp_dport(){
@@ -88,6 +91,58 @@ class Test: public CppUnit::TestFixture {
 		CPPUNIT_ASSERT_EQUAL_MESSAGE("[3] foobarbaz == foobarbazspam", 1, filter_mampid(&filter, "foobarbazspam"));
 	}
 
+	void test_start_time(){
+		struct filter filter;
+		timepico ts;
+
+		timepico_from_string(&ts, "1.5");
+		filter_starttime_set(&filter, ts);
+
+		timepico_from_string(&ts, "1.5");
+		CPPUNIT_ASSERT_EQUAL_MESSAGE("[1] 1.5 >= 1.5", 1, filter_start_time(&filter, &ts));
+
+		timepico_from_string(&ts, "1.6");
+		CPPUNIT_ASSERT_EQUAL_MESSAGE("[2] 1.6 >= 1.5", 1, filter_start_time(&filter, &ts));
+
+		timepico_from_string(&ts, "1.4");
+		CPPUNIT_ASSERT_EQUAL_MESSAGE("[3] 1.4 >= 1.5", 0, filter_start_time(&filter, &ts));
+	}
+
+	void test_end_time(){
+		struct filter filter;
+		timepico ts;
+
+		timepico_from_string(&ts, "1.5");
+		filter_endtime_set(&filter, ts);
+
+		timepico_from_string(&ts, "1.5");
+		CPPUNIT_ASSERT_EQUAL_MESSAGE("[1] 1.5 < 1.5", 0, filter_end_time(&filter, &ts));
+
+		timepico_from_string(&ts, "1.6");
+		CPPUNIT_ASSERT_EQUAL_MESSAGE("[2] 1.6 < 1.5", 0, filter_end_time(&filter, &ts));
+
+		timepico_from_string(&ts, "1.4");
+		CPPUNIT_ASSERT_EQUAL_MESSAGE("[3] 1.4 < 1.5", 1, filter_end_time(&filter, &ts));
+	}
+
+	void test_frame_dt(){
+		struct filter filter;
+		filter.frame_last_ts.tv_sec = 0;
+		filter.frame_last_ts.tv_psec = 0;
+		timepico ts;
+
+		timepico_from_string(&ts, "0.2");
+		filter_frame_dt_set(&filter, ts);
+
+		timepico_from_string(&ts, "0.1");
+		CPPUNIT_ASSERT_EQUAL_MESSAGE("[1] dt >= 0.1 ", 1, filter_frame_dt(&filter, ts));
+
+		timepico_from_string(&ts, "0.2");
+		CPPUNIT_ASSERT_EQUAL_MESSAGE("[2] dt >= 0.2 ", 1, filter_frame_dt(&filter, ts));
+
+		timepico_from_string(&ts, "0.3");
+		CPPUNIT_ASSERT_EQUAL_MESSAGE("[3] dt >= 0.3 ", 0, filter_frame_dt(&filter, ts));
+	}
 };
 
 CPPUNIT_TEST_SUITE_REGISTRATION(Test);

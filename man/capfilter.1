@@ -25,15 +25,18 @@ Discard all packages before DATETIME. See DATE FORMAT for a description of
 accepted formats.
 .TP
 \fB\-\-endtime\fR=\fIDATETIME\fR
-Discard all packages after DATETIME. See DATE FORMAT for a description of
-accepted formats. This will also stop the filtering as no more packages can
-match.
+Discard all packages including and after DATETIME. See DATE FORMAT for a
+description of accepted formats. This will also stop the filtering as no more
+packages can match.
 .TP
 \fB\-\-begin\fR=\fIDATETIME\fR
 Alias for --starttime.
 .TP
 \fB\-\-end\fR=\fIDATETIME\fR
 Alias for --endtime.
+.TP
+\fB\-\-frame\-max\-dt\fR=\fIDATETIME\fR
+Discard all packets after DATETIME seconds went since the last packet.
 .TP
 \fB\-\-iface\fR=\fISTRING\fR
 Discard all packages which isn't captured on the interface give by STRING.

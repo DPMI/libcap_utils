@@ -148,7 +148,7 @@ int FILTER filter_start_time(const struct filter* filter, const timepico* time){
 }
 
 int FILTER filter_end_time(const struct filter* filter, const timepico* time){
-	return (filter->index & FILTER_END_TIME) && (timecmp(&filter->endtime, time) >= 0);
+	return (filter->index & FILTER_END_TIME) && (timecmp(&filter->endtime, time) > 0);
 }
 
 int FILTER filter_frame_dt(const struct filter* filter, const timepico time){
@@ -162,7 +162,7 @@ int FILTER filter_frame_dt(const struct filter* filter, const timepico time){
 	}
 
 	const timepico iat = timepico_sub(time, filter->frame_last_ts);
-	return timecmp(&iat, &filter->frame_max_dt) == -1;
+	return timecmp(&iat, &filter->frame_max_dt) <= 0;
 }
 
 static int filter_frame_num(const struct filter* filter){
