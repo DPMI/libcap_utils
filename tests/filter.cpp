@@ -27,10 +27,11 @@ int filter_frame_dt(const struct filter* filter, const timepico time);
 }
 
 class Test: public CppUnit::TestFixture {
-  CPPUNIT_TEST_SUITE(Test);
+	CPPUNIT_TEST_SUITE(Test);
 	CPPUNIT_TEST(test_tp_dport);
 	CPPUNIT_TEST(test_tp_sport);
-  CPPUNIT_TEST_SUITE_END();
+	CPPUNIT_TEST(test_tp_port);
+	CPPUNIT_TEST_SUITE_END();
 
 	void test_tp_dport(){
 		struct filter filter;
@@ -56,6 +57,21 @@ class Test: public CppUnit::TestFixture {
 		filter_src_port_set(&filter, 0x027b, 0x00ff);	/* filter should mask input as well */
 		CPPUNIT_ASSERT_EQUAL_MESSAGE("0x027b/0x00ff == 0x007b", 1, filter_src_port(&filter, 0x007b));
 		CPPUNIT_ASSERT_EQUAL_MESSAGE("0x027b/0x00ff != 0x007c", 0, filter_src_port(&filter, 0x007c));
+	}
+
+	void test_tp_port(){
+		struct filter filter;
+		for ( int i = 0; i < 2; i++ ){
+			filter_tp_port_set(&filter, 0x007b, 0x00ff);
+			CPPUNIT_ASSERT_EQUAL_MESSAGE("[1] 0x007b/0x00ff == 0x007b", 1, filter_port(&filter, 0x007b*i, 0x007b*(1-i)));
+			CPPUNIT_ASSERT_EQUAL_MESSAGE("[2] 0x007b/0x00ff != 0x007c", 0, filter_port(&filter, 0x007c*i, 0x007c*(1-i)));
+			CPPUNIT_ASSERT_EQUAL_MESSAGE("[3] 0x007b/0x00ff == 0x017b", 1, filter_port(&filter, 0x017b*i, 0x017b*(1-i)));
+			CPPUNIT_ASSERT_EQUAL_MESSAGE("[4] 0x007b/0x00ff != 0x017c", 0, filter_port(&filter, 0x017c*i, 0x017c*(1-i)));
+
+			filter_src_port_set(&filter, 0x027b, 0x00ff);	/* filter should mask input as well */
+			CPPUNIT_ASSERT_EQUAL_MESSAGE("[5] 0x027b/0x00ff == 0x007b", 1, filter_port(&filter, 0x007b*i, 0x007b*(1-i)));
+			CPPUNIT_ASSERT_EQUAL_MESSAGE("[6] 0x027b/0x00ff != 0x007c", 0, filter_port(&filter, 0x007c*i, 0x007c*(1-i)));
+		}
 	}
 
 };
