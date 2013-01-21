@@ -28,6 +28,8 @@ int filter_frame_dt(const struct filter* filter, const timepico time);
 
 class Test: public CppUnit::TestFixture {
 	CPPUNIT_TEST_SUITE(Test);
+	CPPUNIT_TEST(test_eth_src);
+	CPPUNIT_TEST(test_eth_dst);
 	CPPUNIT_TEST(test_ip_proto);
 	CPPUNIT_TEST(test_ip_src);
 	CPPUNIT_TEST(test_ip_dst);
@@ -39,6 +41,38 @@ class Test: public CppUnit::TestFixture {
 	CPPUNIT_TEST(test_end_time);
 	CPPUNIT_TEST(test_frame_dt);
 	CPPUNIT_TEST_SUITE_END();
+
+	void test_eth_src(){
+		static const char addr1[] = {1,0,0,0,0,1};
+		static const char addr2[] = {1,0,0,0,0,2};
+		static const char addr3[] = {1,0,0,0,1,1};
+		struct filter filter;
+		struct ethhdr eth;
+
+		filter_eth_src_set(&filter, "01:00:00:00:00:01");
+		memcpy(eth.h_source, addr1, sizeof(addr1)); CPPUNIT_ASSERT_EQUAL_MESSAGE("[1] 01::01 == 01::01", 1, filter_eth_src(&filter, &eth));
+		memcpy(eth.h_source, addr2, sizeof(addr2)); CPPUNIT_ASSERT_EQUAL_MESSAGE("[2] 01::01 != 01::02", 0, filter_eth_src(&filter, &eth));
+
+		filter_eth_src_set(&filter, "01:00:00:00:00:01/ff:ff:ff:ff:ff:00");
+		memcpy(eth.h_source, addr1, sizeof(addr3)); CPPUNIT_ASSERT_EQUAL_MESSAGE("[3] 01::01/ff::00 == 01::00:01", 1, filter_eth_src(&filter, &eth));
+		memcpy(eth.h_source, addr3, sizeof(addr3)); CPPUNIT_ASSERT_EQUAL_MESSAGE("[4] 01::01/ff::00 != 01::01:01", 0, filter_eth_src(&filter, &eth));
+	}
+
+	void test_eth_dst(){
+		static const char addr1[] = {1,0,0,0,0,1};
+		static const char addr2[] = {1,0,0,0,0,2};
+		static const char addr3[] = {1,0,0,0,1,1};
+		struct filter filter;
+		struct ethhdr eth;
+
+		filter_eth_dst_set(&filter, "01:00:00:00:00:01");
+		memcpy(eth.h_dest, addr1, sizeof(addr1)); CPPUNIT_ASSERT_EQUAL_MESSAGE("[1] 01::01 == 01::01", 1, filter_eth_dst(&filter, &eth));
+		memcpy(eth.h_dest, addr2, sizeof(addr2)); CPPUNIT_ASSERT_EQUAL_MESSAGE("[2] 01::01 != 01::02", 0, filter_eth_dst(&filter, &eth));
+
+		filter_eth_dst_set(&filter, "01:00:00:00:00:01/ff:ff:ff:ff:ff:00");
+		memcpy(eth.h_dest, addr1, sizeof(addr3)); CPPUNIT_ASSERT_EQUAL_MESSAGE("[3] 01::01/ff::00 == 01::00:01", 1, filter_eth_dst(&filter, &eth));
+		memcpy(eth.h_dest, addr3, sizeof(addr3)); CPPUNIT_ASSERT_EQUAL_MESSAGE("[4] 01::01/ff::00 != 01::01:01", 0, filter_eth_dst(&filter, &eth));
+	}
 
 	void test_ip_proto(){
 		struct filter filter;

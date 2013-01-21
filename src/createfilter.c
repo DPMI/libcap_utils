@@ -261,8 +261,9 @@ static int parse_eth_type(const char* src, uint16_t* type, uint16_t* mask, const
 	return 1;
 }
 
-static int parse_eth_addr(const char* src, struct ether_addr* addr, struct ether_addr* mask, const char* flag){
+static int parse_eth_addr(const char* str, struct ether_addr* addr, struct ether_addr* mask, const char* flag){
 	static const char* mask_default = "FF:FF:FF:FF:FF:FF";
+	char* src = strdup(str);
 	const char* buf_addr = src;
 	const char* buf_mask = mask_default;
 
@@ -275,10 +276,12 @@ static int parse_eth_addr(const char* src, struct ether_addr* addr, struct ether
 
 	if ( !eth_aton(addr, buf_addr) ){
 		fprintf(stderr, "Invalid ethernet address passed to --%s: %s. Ignoring\n", flag, buf_addr);
+		free(src);
 		return 0;
 	}
 	if ( !eth_aton(mask, buf_mask) ){
 		fprintf(stderr, "Invalid ethernet mask passed to --%s: %s. Ignoring\n", flag, buf_mask);
+		free(src);
 		return 0;
 	}
 
@@ -287,6 +290,7 @@ static int parse_eth_addr(const char* src, struct ether_addr* addr, struct ether
 		addr->ether_addr_octet[i] &= mask->ether_addr_octet[i];
 	}
 
+	free(src);
 	return 1;
 }
 
@@ -631,6 +635,16 @@ int filter_close(struct filter* filter){
 	}
 
 	return 0;
+}
+
+void filter_eth_src_set(struct filter* filter, const char* str){
+	filter->index |= FILTER_ETH_SRC;
+	parse_eth_addr(str, &filter->eth_src, &filter->eth_src_mask, "eth.src");
+}
+
+void filter_eth_dst_set(struct filter* filter, const char* str){
+	filter->index |= FILTER_ETH_DST;
+	parse_eth_addr(str, &filter->eth_dst, &filter->eth_dst_mask, "eth.dst");
 }
 
 void filter_ip_proto_set(struct filter* filter, int proto){
