@@ -20,7 +20,7 @@ int filter_ip_dst(const struct filter* filter, const struct ip* ip);
 int filter_src_port(const struct filter* filter, uint16_t port);
 int filter_dst_port(const struct filter* filter, uint16_t port);
 int filter_port(const struct filter* filter, uint16_t src, uint16_t dst);
-int filter_mampid(const struct filter* filter, char mampid[]);
+int filter_mampid(const struct filter* filter, const char mampid[]);
 int filter_start_time(const struct filter* filter, const timepico* time);
 int filter_end_time(const struct filter* filter, const timepico* time);
 int filter_frame_dt(const struct filter* filter, const timepico time);
@@ -31,6 +31,7 @@ class Test: public CppUnit::TestFixture {
 	CPPUNIT_TEST(test_tp_dport);
 	CPPUNIT_TEST(test_tp_sport);
 	CPPUNIT_TEST(test_tp_port);
+	CPPUNIT_TEST(test_mampid);
 	CPPUNIT_TEST_SUITE_END();
 
 	void test_tp_dport(){
@@ -72,6 +73,19 @@ class Test: public CppUnit::TestFixture {
 			CPPUNIT_ASSERT_EQUAL_MESSAGE("[5] 0x027b/0x00ff == 0x007b", 1, filter_port(&filter, 0x007b*i, 0x007b*(1-i)));
 			CPPUNIT_ASSERT_EQUAL_MESSAGE("[6] 0x027b/0x00ff != 0x007c", 0, filter_port(&filter, 0x007c*i, 0x007c*(1-i)));
 		}
+	}
+
+	void test_mampid(){
+		struct filter filter;
+
+		/* simple cases */
+		filter_mampid_set(&filter, "foo");
+		CPPUNIT_ASSERT_EQUAL_MESSAGE("[1] foo == foo", 1, filter_mampid(&filter, "foo"));
+		CPPUNIT_ASSERT_EQUAL_MESSAGE("[2] bar != foo", 0, filter_mampid(&filter, "bar"));
+
+		/* too long */
+		filter_mampid_set(&filter, "foobarbaz");
+		CPPUNIT_ASSERT_EQUAL_MESSAGE("[3] foobarbaz == foobarbazspam", 1, filter_mampid(&filter, "foobarbazspam"));
 	}
 
 };

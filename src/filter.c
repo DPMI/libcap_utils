@@ -139,7 +139,7 @@ int FILTER filter_port(const struct filter* filter, uint16_t src, uint16_t dst){
 	return (filter->index & FILTER_PORT) && (filter->port == (src & filter->port_mask) || filter->port == (dst & filter->port_mask));
 }
 
-int FILTER filter_mampid(const struct filter* filter, char mampid[]){
+int FILTER filter_mampid(const struct filter* filter, const char mampid[]){
 	return (filter->index & FILTER_MAMPID) && (strncmp(filter->mampid, mampid, 8) == 0);
 }
 

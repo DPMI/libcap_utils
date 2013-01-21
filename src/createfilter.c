@@ -653,3 +653,8 @@ void filter_dst_ip_set(struct filter* filter, struct in_addr ip, struct in_addr 
 	filter->ip_dst.s_addr = ip.s_addr & mask.s_addr;
 	filter->ip_dst_mask = mask;
 }
+
+void filter_mampid_set(struct filter* filter, const char* mampid){
+	filter->index |= FILTER_MAMPID;
+	strncpy(filter->mampid, mampid, 8);
+}

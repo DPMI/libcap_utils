@@ -221,6 +221,7 @@ void filter_dst_port_set(struct filter* filter, uint16_t port, uint16_t mask);
 void filter_tp_port_set(struct filter* filter, uint16_t port, uint16_t mask);
 void filter_src_ip_set(struct filter* filter, struct in_addr ip, struct in_addr mask);
 void filter_dst_ip_set(struct filter* filter, struct in_addr ip, struct in_addr mask);
+void filter_mampid_set(struct filter* filter, const char* mampid);
 
 /**
  * Display a representation of the filter.
