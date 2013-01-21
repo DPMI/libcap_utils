@@ -1,6 +1,7 @@
 caputils-0.7.14
 ---------------
 
+	* add: [capshow] support for decoding IPv6 and DNS.
 	* fix: [capshow] iface now shows all 8 chars.
 	* fix: UDP streaming (both unicast and multicast)
 	* add: refactor buffer behaviour so it is reusable.
