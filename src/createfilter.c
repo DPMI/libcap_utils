@@ -155,8 +155,9 @@ static void split_argv(int* src_argc, char** src_argv, int* dst_argc, char** dst
  * Parse a string as IP address and mask. Mask does not have to correspond to valid netmask.
  * CIDR-notation works.
  */
-static int parse_inet_addr(const char* src, struct in_addr* addr, struct in_addr* mask, const char* flag){
+static int parse_inet_addr(const char* str, struct in_addr* addr, struct in_addr* mask, const char* flag){
 	static const char* mask_default = "255.255.255.255";
+	char* src = strdup(str);
 	const char* buf_addr = src;
 	const char* buf_mask = mask_default;
 
@@ -169,6 +170,7 @@ static int parse_inet_addr(const char* src, struct in_addr* addr, struct in_addr
 
 	if ( inet_aton(buf_addr, addr) == 0 ){
 		fprintf(stderr, "Invalid IP address passed to --%s: %s. Ignoring\n", flag, buf_addr);
+		free(src);
 		return 0;
 	}
 
@@ -183,6 +185,7 @@ static int parse_inet_addr(const char* src, struct in_addr* addr, struct in_addr
 	} else { /* regular address */
 		if ( inet_aton(buf_mask, mask) == 0 ){
 			fprintf(stderr, "Invalid mask passed to --%s: %s. Ignoring\n", flag, buf_mask);
+			free(src);
 			return 0;
 		}
 	}
@@ -190,6 +193,7 @@ static int parse_inet_addr(const char* src, struct in_addr* addr, struct in_addr
 	/* always mask the address based on mask */
 	addr->s_addr &= mask->s_addr;
 
+	free(src);
 	return 1;
 }
 
@@ -652,6 +656,16 @@ void filter_dst_ip_set(struct filter* filter, struct in_addr ip, struct in_addr 
 	filter->index |= FILTER_IP_DST;
 	filter->ip_dst.s_addr = ip.s_addr & mask.s_addr;
 	filter->ip_dst_mask = mask;
+}
+
+void filter_src_ip_aton(struct filter* filter, const char* str){
+	filter->index |= FILTER_IP_SRC;
+	parse_inet_addr(str, &filter->ip_src, &filter->ip_src_mask, "ip.src");
+}
+
+void filter_dst_ip_aton(struct filter* filter, const char* str){
+	filter->index |= FILTER_IP_DST;
+	parse_inet_addr(str, &filter->ip_dst, &filter->ip_dst_mask, "ip.dst");
 }
 
 void filter_mampid_set(struct filter* filter, const char* mampid){

@@ -28,6 +28,8 @@ int filter_frame_dt(const struct filter* filter, const timepico time);
 
 class Test: public CppUnit::TestFixture {
 	CPPUNIT_TEST_SUITE(Test);
+	CPPUNIT_TEST(test_ip_src);
+	CPPUNIT_TEST(test_ip_dst);
 	CPPUNIT_TEST(test_tp_dport);
 	CPPUNIT_TEST(test_tp_sport);
 	CPPUNIT_TEST(test_tp_port);
@@ -36,6 +38,34 @@ class Test: public CppUnit::TestFixture {
 	CPPUNIT_TEST(test_end_time);
 	CPPUNIT_TEST(test_frame_dt);
 	CPPUNIT_TEST_SUITE_END();
+
+	void test_ip_src(){
+		struct filter filter;
+		struct ip ip;
+
+		filter_src_ip_aton(&filter, "10.1.2.0/24");
+		ip.ip_src.s_addr = inet_addr("10.1.2.3"); CPPUNIT_ASSERT_EQUAL_MESSAGE("[1] 10.1.2.0/24 == 10.1.2.3", 1, filter_ip_src(&filter, &ip));
+		ip.ip_src.s_addr = inet_addr("10.1.2.4"); CPPUNIT_ASSERT_EQUAL_MESSAGE("[2] 10.1.2.0/24 == 10.1.2.4", 1, filter_ip_src(&filter, &ip));
+		ip.ip_src.s_addr = inet_addr("10.1.3.3"); CPPUNIT_ASSERT_EQUAL_MESSAGE("[3] 10.1.2.0/24 == 10.1.3.3", 0, filter_ip_src(&filter, &ip));
+		ip.ip_src.s_addr = inet_addr("10.1.3.4"); CPPUNIT_ASSERT_EQUAL_MESSAGE("[4] 10.1.2.0/24 == 10.1.3.4", 0, filter_ip_src(&filter, &ip));
+
+		filter_src_ip_aton(&filter, "10.1.2.3/24"); /* filter should mask input as well */
+		ip.ip_src.s_addr = inet_addr("10.1.2.5"); CPPUNIT_ASSERT_EQUAL_MESSAGE("[5] 10.1.2.3/24 == 10.1.2.5", 1, filter_ip_src(&filter, &ip));
+	}
+
+	void test_ip_dst(){
+		struct filter filter;
+		struct ip ip;
+
+		filter_dst_ip_aton(&filter, "10.1.2.0/24");
+		ip.ip_dst.s_addr = inet_addr("10.1.2.3"); CPPUNIT_ASSERT_EQUAL_MESSAGE("[1] 10.1.2.0/24 == 10.1.2.3", 1, filter_ip_dst(&filter, &ip));
+		ip.ip_dst.s_addr = inet_addr("10.1.2.4"); CPPUNIT_ASSERT_EQUAL_MESSAGE("[2] 10.1.2.0/24 == 10.1.2.4", 1, filter_ip_dst(&filter, &ip));
+		ip.ip_dst.s_addr = inet_addr("10.1.3.3"); CPPUNIT_ASSERT_EQUAL_MESSAGE("[3] 10.1.2.0/24 == 10.1.3.3", 0, filter_ip_dst(&filter, &ip));
+		ip.ip_dst.s_addr = inet_addr("10.1.3.4"); CPPUNIT_ASSERT_EQUAL_MESSAGE("[4] 10.1.2.0/24 == 10.1.3.4", 0, filter_ip_dst(&filter, &ip));
+
+		filter_dst_ip_aton(&filter, "10.1.2.3/24"); /* filter should mask input as well */
+		ip.ip_dst.s_addr = inet_addr("10.1.2.5"); CPPUNIT_ASSERT_EQUAL_MESSAGE("[5] 10.1.2.3/24 == 10.1.2.5", 1, filter_ip_dst(&filter, &ip));
+	}
 
 	void test_tp_dport(){
 		struct filter filter;

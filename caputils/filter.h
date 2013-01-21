@@ -216,11 +216,13 @@ void filter_from_argv_usage(void);
 extern int filter_from_argv_opterr;
 
 /* functions for pragmatically creating filter */
+void filter_src_ip_set(struct filter* filter, struct in_addr ip, struct in_addr mask);
+void filter_dst_ip_set(struct filter* filter, struct in_addr ip, struct in_addr mask);
+void filter_src_ip_aton(struct filter* filter, const char* str);
+void filter_dst_ip_aton(struct filter* filter, const char* str);
 void filter_src_port_set(struct filter* filter, uint16_t port, uint16_t mask);
 void filter_dst_port_set(struct filter* filter, uint16_t port, uint16_t mask);
 void filter_tp_port_set(struct filter* filter, uint16_t port, uint16_t mask);
-void filter_src_ip_set(struct filter* filter, struct in_addr ip, struct in_addr mask);
-void filter_dst_ip_set(struct filter* filter, struct in_addr ip, struct in_addr mask);
 void filter_mampid_set(struct filter* filter, const char* mampid);
 void filter_starttime_set(struct filter* filter, const timepico t);
 void filter_endtime_set(struct filter* filter, const timepico t);
