@@ -28,6 +28,7 @@ int filter_frame_dt(const struct filter* filter, const timepico time);
 
 class Test: public CppUnit::TestFixture {
 	CPPUNIT_TEST_SUITE(Test);
+	CPPUNIT_TEST(test_ip_proto);
 	CPPUNIT_TEST(test_ip_src);
 	CPPUNIT_TEST(test_ip_dst);
 	CPPUNIT_TEST(test_tp_dport);
@@ -38,6 +39,17 @@ class Test: public CppUnit::TestFixture {
 	CPPUNIT_TEST(test_end_time);
 	CPPUNIT_TEST(test_frame_dt);
 	CPPUNIT_TEST_SUITE_END();
+
+	void test_ip_proto(){
+		struct filter filter;
+		struct ip ip;
+		filter_ip_proto_aton(&filter, "tcp");
+		ip.ip_p = 6; CPPUNIT_ASSERT_EQUAL_MESSAGE("[1] 6 == tcp", 1, filter_ip_proto(&filter, &ip));
+		ip.ip_p = 7; CPPUNIT_ASSERT_EQUAL_MESSAGE("[2] 7 != tcp", 0, filter_ip_proto(&filter, &ip));
+		filter_ip_proto_aton(&filter, "6");
+		ip.ip_p = 6; CPPUNIT_ASSERT_EQUAL_MESSAGE("[3] 6 == 6", 1, filter_ip_proto(&filter, &ip));
+		ip.ip_p = 7; CPPUNIT_ASSERT_EQUAL_MESSAGE("[4] 7 != 6", 0, filter_ip_proto(&filter, &ip));
+	}
 
 	void test_ip_src(){
 		struct filter filter;

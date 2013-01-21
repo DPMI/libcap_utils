@@ -290,6 +290,19 @@ static int parse_eth_addr(const char* src, struct ether_addr* addr, struct ether
 	return 1;
 }
 
+static int parse_ip_proto(const char* src, uint8_t* ip_proto, const char* flag){
+	struct protoent* proto = getprotobyname(src);
+	if ( proto ){
+		*ip_proto = proto->p_proto;
+	} else if ( isdigit(src[0]) ) {
+		*ip_proto = atoi(src);
+	} else {
+		fprintf(stderr, "Invalid IP protocol passed to --%s: %s. Ignoring\n", flag, src);
+		return 0;
+	}
+	return 1;
+}
+
 /**
  * Parse frame range.
  *
@@ -543,18 +556,10 @@ int filter_from_argv(int* argcptr, char** argv, struct filter* filter){
 			break;
 
 		case FILTER_IP_PROTO:
-		{
-			struct protoent* proto = getprotobyname(optarg);
-			if ( proto ){
-				filter->ip_proto = proto->p_proto;
-			} else if ( isdigit(optarg[0]) ) {
-				filter->ip_proto = atoi(optarg);
-			} else {
-				fprintf(stderr, "Invalid IP protocol: %s. Ignoring\n", optarg);
+			if ( !parse_ip_proto(optarg, &filter->ip_proto, "ip.proto") ){
 				continue;
 			}
-		}
-		break;
+			break;
 
 		case FILTER_IP_SRC:
 			if ( !parse_inet_addr(optarg, &filter->ip_src, &filter->ip_src_mask, "ip.src") ){
@@ -626,6 +631,16 @@ int filter_close(struct filter* filter){
 	}
 
 	return 0;
+}
+
+void filter_ip_proto_set(struct filter* filter, int proto){
+	filter->index |= FILTER_IP_PROTO;
+	filter->ip_proto = proto;
+}
+
+void filter_ip_proto_aton(struct filter* filter, const char* str){
+	filter->index |= FILTER_IP_PROTO;
+	parse_ip_proto(str, &filter->ip_proto, "--ip.proto");
 }
 
 void filter_src_port_set(struct filter* filter, uint16_t port, uint16_t mask){
