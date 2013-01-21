@@ -27,14 +27,14 @@ void print_eth(FILE* dst, const struct cap_header* cp, const struct ethhdr* eth,
 	case ETHERTYPE_IP:
 		fputs(" IPv4", dst);
 		if ( flags >= FORMAT_LAYER_TRANSPORT ){
-			print_ipv4(dst, (const struct ip*)payload, flags);
+			print_ipv4(dst, cp, (const struct ip*)payload, flags);
 		}
 		break;
 
 	case ETHERTYPE_IPV6:
 		fputs(" IPv6", dst);
 		if ( flags >= FORMAT_LAYER_TRANSPORT ){
-			print_ipv6(dst, (const struct ip6_hdr*)payload, flags);
+			print_ipv6(dst, cp, (const struct ip6_hdr*)payload, flags);
 		}
 		break;
 

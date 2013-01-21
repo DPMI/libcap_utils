@@ -4,7 +4,7 @@
 
 #include "format.h"
 
-void print_icmp(FILE* dst, net_t net, const struct icmphdr* icmp, unsigned int flags){
+void print_icmp(FILE* dst, const struct cap_header* cp, net_t net, const struct icmphdr* icmp, unsigned int flags){
 	fputs("ICMP", dst);
 	if ( flags & FORMAT_HEADER ){
 		fprintf(dst, "[Type=%d, code=%d]", icmp->type, icmp->code);

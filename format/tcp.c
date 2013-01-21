@@ -19,14 +19,25 @@ static const char* tcp_flags(const struct tcphdr* tcp){
 	return buf;
 }
 
-void print_tcp(FILE* fp, net_t net, const struct tcphdr* tcp, unsigned int flags){
+void print_tcp(FILE* fp, const struct cap_header* cp, net_t net, const struct tcphdr* tcp, unsigned int flags){
 	fputs("TCP", fp);
 
+	const size_t header_size = 4*tcp->doff;
+	const size_t payload_size = net->plen - header_size;
 	if ( flags & FORMAT_HEADER ){
-		fprintf(fp, "(HDR[%d]DATA[%0zx])", 4*tcp->doff, net->plen - 4*tcp->doff);
+		fprintf(fp, "(HDR[%zd]DATA[%zd])", header_size, payload_size);
 	}
 
+	const uint16_t sport = ntohs(tcp->source);
+	const uint16_t dport = ntohs(tcp->dest);
+
 	fprintf(fp, ": [%s] %s:%d --> %s:%d", tcp_flags(tcp),
-	        net->net_src, ntohs(tcp->source),
-	        net->net_dst, ntohs(tcp->dest));
+	        net->net_src, sport,
+	        net->net_dst, dport);
+
+	const char* payload = (const char*)tcp + 4*tcp->doff;
+	if ( payload_size > 0 && (sport == PORT_DNS || dport == PORT_DNS) ){
+		/* offset the length field */
+		print_dns(fp, cp, payload + 2, payload_size - 2, flags);
+	}
 }
