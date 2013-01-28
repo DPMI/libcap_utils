@@ -468,12 +468,6 @@ int stream_read(struct stream *myStream, cap_head** data, struct filter *my_Filt
 		const size_t start_pos = myStream->readPos;
 		const size_t end_pos = start_pos + packet_size;
 
-		if ( cp->caplen == 0 ){
-			return ERROR_CAPFILE_INVALID;
-		}
-
-		assert(packet_size > 0);
-
 		if( end_pos > myStream->writePos ) {
 			if ( (ret=fill_buffer(myStream, timeout)) != 0 ){
 				return ret; /* could not read */
