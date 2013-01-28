@@ -1,6 +1,7 @@
 caputils-0.7.14
 ---------------
 
+	* add: [capfilter] support for truncating packets using --caplen.
 	* add: [capfilter] adding options for limiting number of packets.
 	* add: [capshow] support for decoding IPv6 and DNS.
 	* fix: [capshow] iface now shows all 8 chars.

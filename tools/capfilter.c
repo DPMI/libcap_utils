@@ -34,6 +34,10 @@
 #include <unistd.h>
 #include <inttypes.h>
 
+static inline int min(int a, int b){
+	return a<b?a:b;
+}
+
 static const char* program_name = NULL;
 static const char* dst_filename = NULL;
 static const char* src_filename = NULL;
@@ -224,6 +228,11 @@ int main(int argc, char* argv[]){
 			matched++;
 		} else if ( rej ){
 			target = rej;
+		}
+
+		/* truncate if requested */
+		if ( filter.caplen != (unsigned int)-1 ){
+			cp->caplen = min(filter.caplen, cp->caplen);
 		}
 
 		/* copy packet */
