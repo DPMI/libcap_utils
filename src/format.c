@@ -118,3 +118,9 @@ void format_ignore(FILE* fp, struct format* state, const struct cap_header* cp){
 		state->first = 0;
 	}
 }
+
+int limited_caplen(const struct cap_header* cp, const void* ptr, size_t bytes){
+	const size_t used = (const char*)ptr - cp->payload;
+	const size_t left = cp->caplen - used;
+	return left < bytes;
+}

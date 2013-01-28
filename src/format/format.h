@@ -40,6 +40,15 @@ struct network {
 };
 typedef const struct network* net_t;
 
+/**
+ * Test if there is enough data left for parsing.
+ * @param cp capture header
+ * @param ptr current read position
+ * @param bytes number of bytes required.
+ * @return non-zero if there isn't enough data left
+ */
+int limited_caplen(const struct cap_header* cp, const void* ptr, size_t bytes);
+
 /* layer 2 */
 void print_eth(FILE* dst, const struct cap_header* cp, const struct ethhdr* eth, unsigned int flags);
 

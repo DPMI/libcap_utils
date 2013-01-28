@@ -34,6 +34,10 @@
 #include <unistd.h>
 #include <inttypes.h>
 
+static inline int min(int a, int b){
+	return a<b?a:b;
+}
+
 static const char* program_name = NULL;
 static const char* dst_filename = NULL;
 static const char* src_filename = NULL;
@@ -41,9 +45,13 @@ static const char* rej_filename = NULL;
 static int keep_running = 1;
 static int invert = 0;
 static int quiet = 0;
+static unsigned int max_read = 0;
+static unsigned int max_matched = 0;
 
-static const char* shortopts = "i:o:r:b:vqh";
+static const char* shortopts = "p:m:i:o:r:b:vqh";
 static struct option longopts[] = {
+	{"packets", required_argument, 0, 'p'},
+	{"matched", required_argument, 0, 'm'},
 	{"input",   required_argument, 0, 'i'},
 	{"output",  required_argument, 0, 'o'},
 	{"rejects", required_argument, 0, 'r'},
@@ -57,6 +65,8 @@ static void show_usage(){
 	printf("%s-%s\n", program_name, caputils_version(NULL));
 	printf("(C) 2011 david.sveningsson@bth.se\n"
 	       "Usage: %s [OPTIONS...] [SRC] [DST] \n"
+	       "  -p, --packets=N             Stop after N read packets.\n"
+	       "  -m, --matched=N             Stop after N matched packets.\n"
 	       "  -i, --input=FILE            read from FILE [default stdin].\n"
 	       "  -o, --output=FILE           write to FILE [default stdout].\n"
 	       "  -r, --rejects=FILE          write packets not matching to FILE.\n"
@@ -96,6 +106,14 @@ int main(int argc, char* argv[]){
 	int op = 0;
 	while ( (op=getopt_long(argc, argv, shortopts, longopts, &index)) != -1 ){
 		switch (op){
+		case 'p': /* --packets */
+			max_read = atoi(optarg);
+			break;
+
+		case 'm': /* --matched */
+			max_matched = atoi(optarg);
+			break;
+
 		case 'o': /* --output */
 			dst_filename = optarg;
 			break;
@@ -212,10 +230,20 @@ int main(int argc, char* argv[]){
 			target = rej;
 		}
 
+		/* truncate if requested */
+		if ( filter.caplen != (unsigned int)-1 ){
+			cp->caplen = min(filter.caplen, cp->caplen);
+		}
+
 		/* copy packet */
 		if ( target && (ret=stream_copy(target, cp)) != 0 ){
 			fprintf(stderr, "%s: stream_copy() returned %d: %s\n", program_name, ret, caputils_error_string(ret));
 			keep_running = 0;
+		}
+
+		if ( (max_read > 0 && stats->read >= max_read) || (max_matched > 0 && matched >= max_matched) ){
+			/* Read enough pkts lets break. */
+			break;
 		}
 	}
 

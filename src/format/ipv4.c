@@ -24,6 +24,11 @@
 #include "format.h"
 
 void print_ipv4(FILE* fp, const struct cap_header* cp, const struct ip* ip, unsigned int flags){
+	if ( limited_caplen(cp, ip, sizeof(struct ip)) ){
+		fprintf(fp, " [Packet size limited during capture]");
+		return;
+	}
+
 	const void* payload = ((const char*)ip) + 4*ip->ip_hl;
 
 	if ( flags & FORMAT_HEADER ){
