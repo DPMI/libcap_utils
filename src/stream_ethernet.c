@@ -101,7 +101,7 @@ static size_t sendheader_bytes(const struct sendhead* sh){
 /**
  * Test if the received number of bytes is valid for this frame.
  */
-static int valid_framesize(size_t actual, const struct sendhead* sh){
+int valid_framesize(size_t actual, const struct sendhead* sh){
 	const size_t expected = sendheader_bytes(sh);
 	if ( actual != expected ){
 		fprintf(stderr,
