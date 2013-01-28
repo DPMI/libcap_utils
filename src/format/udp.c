@@ -25,6 +25,10 @@
 
 void print_udp(FILE* fp, const struct cap_header* cp, net_t net, const struct udphdr* udp, unsigned int flags){
 	fputs("UDP", fp);
+	if ( limited_caplen(cp, udp, sizeof(struct udphdr)) ){
+		fprintf(fp, " [Packet size limited during capture]");
+		return;
+	}
 
 	const size_t header_size = sizeof(struct udphdr);
 	const size_t total_size = ntohs(udp->len);

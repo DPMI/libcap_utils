@@ -40,6 +40,10 @@ static const char* tcp_flags(const struct tcphdr* tcp){
 
 void print_tcp(FILE* fp, const struct cap_header* cp, net_t net, const struct tcphdr* tcp, unsigned int flags){
 	fputs("TCP", fp);
+	if ( limited_caplen(cp, tcp, sizeof(struct tcphdr)) ){
+		fprintf(fp, " [Packet size limited during capture]");
+		return;
+	}
 
 	const size_t header_size = 4*tcp->doff;
 	const size_t payload_size = net->plen - header_size;

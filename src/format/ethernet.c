@@ -29,7 +29,7 @@ static void print_ieee8023(FILE* dst, const struct llc_pdu_sn* llc){
 }
 
 void print_eth(FILE* dst, const struct cap_header* cp, const struct ethhdr* eth, unsigned int flags){
-	if ( cp->caplen < sizeof(struct ethhdr) ){
+	if ( limited_caplen(cp, cp->payload, sizeof(struct ethhdr)) ){
 		fprintf(dst, " [Packet size limited during capture]");
 		return;
 	}
