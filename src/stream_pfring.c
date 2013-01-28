@@ -62,6 +62,8 @@ enum {
 	BLOCK = 1,
 };
 
+int valid_framesize(size_t actual, const struct sendhead* sh); /* defined in stream_ethernet.c */
+
 /**
  * Test if a MA packet is valid and matches our expected destinations
  * Returns the matching address index or -1 for invalid packets.
@@ -118,6 +120,12 @@ static int stream_pfring_read_frame(struct stream_pfring* st, int block){
 #ifdef DEBUG
 		fprintf(stderr, "got measurement frame with %d capture packets [BU: %3.2f%%]\n", ntohl(sh->nopkts), 0.0f);
 #endif
+
+		/* validate frame */
+		if ( !valid_framesize(bytes, sh) ){
+			/* error message already shown */
+			continue;
+		}
 
 		/* increase packet count */
 		st->base.stat.recv += ntohl(sh->nopkts);
