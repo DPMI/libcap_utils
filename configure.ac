@@ -3,7 +3,7 @@ m4_define([__VERSION_MINOR__], [7])
 m4_define([__VERSION_MICRO__], [14])
 m4_define([__VERSION_SUFFIX__], [-git])
 
-AC_INIT([libcap_utils], m4_join([],m4_join([.], __VERSION_MAJOR__, __VERSION_MINOR__, __VERSION_MICRO__), __VERSION_SUFFIX__), [dsv@bth.se])
+AC_INIT([libcap_utils], m4_defn([__VERSION_MAJOR__]).m4_defn([__VERSION_MINOR__]).m4_defn([__VERSION_MICRO__])m4_defn([__VERSION_SUFFIX__])), [dsv@bth.se])
 
 VERSION_MAJOR=__VERSION_MAJOR__
 VERSION_MINOR=__VERSION_MINOR__
