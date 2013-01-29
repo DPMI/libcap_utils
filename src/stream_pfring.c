@@ -154,7 +154,7 @@ static int stream_pfring_read_frame(struct stream_pfring* st, int block){
 		st->base.writePos = (st->base.writePos+1) % st->num_frames;
 
 		/* This indicates a flush from the sender.. */
-		if( ntohs(sh->flush) == 1 ){
+		if( ntohl(sh->flags) & SENDER_FLUSH ){
 			fprintf(stderr, "Sender terminated.\n");
 			st->base.flushed=1;
 		}

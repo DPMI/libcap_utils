@@ -185,7 +185,7 @@ static int stream_ethernet_read_frame(struct stream_ethernet* st, char* dst, str
 		match_inc_seqnr(&st->base, &st->seqnum[match], sh);
 
 		/* This indicates a flush from the sender.. */
-		if( ntohs(sh->flush) == 1 ){
+		if( ntohl(sh->flags) & SENDER_FLUSH ){
 			fprintf(stderr, "Sender terminated.\n");
 			st->base.flushed=1;
 		}
