@@ -61,15 +61,6 @@ struct cap_header {
 typedef struct cap_header cap_head;
 typedef struct cap_header* caphead_t;
 
-// Send Structure, used infront of each send data packet. The sequence number is indicates the number
-// of sent data packets. I.e. after a send packet this value is increased by one.
-struct sendhead {
-	uint32_t sequencenr;                  // Sequence number.
-	uint32_t nopkts;                      // How many packets are here.
-	uint32_t flush;                       // Indicate that this is the last packet.
-	struct file_version version;          // What version of the file format is used for storing mp_pkts.
-};
-
 #ifdef CAPUTILS_EXPORT
 #pragma GCC visibility pop
 #endif

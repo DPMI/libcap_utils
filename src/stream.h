@@ -21,6 +21,7 @@
 #define CAPUTILS_INT_STREAM_H
 
 #include <caputils/caputils.h>
+#include <caputils/send.h>
 #include <caputils/stream.h>
 
 /**

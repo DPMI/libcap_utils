@@ -84,6 +84,7 @@ nobase_include_HEADERS =    \
 	caputils/caputils.h \
 	caputils/log.h      \
 	caputils/packet.h   \
+	caputils/send.h     \
 	caputils/stream.h   \
 	caputils/marc.h     \
 	caputils/marker.h   \
