@@ -70,7 +70,6 @@ enum FORMAT_FLAGS {
 	/* layer bits must be last, don't out any extra fields here */
 };
 
-
 struct format {
 	uint64_t pktcount;
 	timepico ref;
