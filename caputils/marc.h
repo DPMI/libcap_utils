@@ -76,12 +76,13 @@ enum MPEvent {
 
 	/* libmarc client -> server filter events */
 	MP_STATUS_EVENT = 64,              /* status report */
-	MP_STATUS2_EVENT,                  /* Extended status report */
+	MP_STATUS2_OLD_EVENT,              /* Old extended status report */
 	MP_FILTER_REQUEST_EVENT,           /* request filter (client should handle
 	                                    * this event as well and resend it to the
 	                                    * server. (happens when libmarc rewrites
 	                                    * events and the full filter wasn't
 	                                    * available) */
+	MP_STATUS3_EVENT,                  /* Extended status report */
 
 	/* libmarc server -> client filter events */
 	MP_FILTER_EVENT,                   /* new or updated filter */
@@ -173,7 +174,7 @@ struct MPVerifyFilter{
 	struct filter_packed filter;
 };
 
-struct MPstatus {
+struct MPstatusLegacy {
 	uint32_t type;
 	mampid_t MAMPid;        // Name of MP.
 	int noFilters;          // Number of filters present on MP.
@@ -186,10 +187,11 @@ struct CIstats {
 	char iface[8];
 	uint32_t packet_count;
 	uint32_t matched_count;
+	uint32_t dropped_count;
 	uint32_t buffer_usage;
 };
 
-struct MPstatus2 {
+struct MPstatusLegacyExt {
 	uint32_t type;
 	mampid_t MAMPid;
 
@@ -200,6 +202,30 @@ struct MPstatus2 {
 	uint8_t noFilters;
 	uint8_t noCI;
 	uint8_t __padding;
+
+	struct {
+		char iface[8];
+		uint32_t packet_count;
+		uint32_t matched_count;
+		uint32_t buffer_usage;
+	} CI[0];
+};
+
+struct MPstatusExtended {
+	uint32_t type;
+	mampid_t MAMPid;
+	uint8_t version;
+	uint8_t _res1;
+	uint16_t _res2;
+
+	uint32_t packet_count;
+	uint32_t matched_count;
+	uint32_t dropped_count;
+
+	uint8_t status;
+	uint8_t noFilters;
+	uint8_t noCI;
+	uint8_t _res4;
 
 	struct CIstats CI[0];
 };
@@ -215,8 +241,9 @@ typedef union {
 	struct MPauth auth;
 	struct MPFilter filter;
 	struct MPFilterID filter_id;
-	struct MPstatus status;
-	struct MPstatus2 status2;
+	struct MPstatusLegacy legacy_status;
+	struct MPstatusLegacyExt legacy_ext_status;
+	struct MPstatusExtended status;
 } MPMessage;
 
 /**
