@@ -41,20 +41,6 @@ extern "C" {
  */
 const char* caputils_error_string(int code);
 
-typedef struct {
-	int major;
-	int minor;
-	int micro;
-	int features; /* bitmask, not yet implemented */
-}	caputils_version_t;
-
-/**
- * Get version from libcap_utils.
- * If version is non-null it fills the struct with data.
- * It returns a string containing the version (pointing to static memory)
- */
-const char* caputils_version(caputils_version_t* version);
-
 /**
  * Like ether_ntoa but does not omit leading zeros.
  */

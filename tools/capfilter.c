@@ -25,6 +25,7 @@
 #include <caputils/filter.h>
 #include <caputils/capture.h>
 #include <caputils/utils.h>
+#include <caputils/version.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
