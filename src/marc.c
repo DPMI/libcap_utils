@@ -392,10 +392,10 @@ static size_t event_size(MPMessage* event){
 		return sizeof(struct MPauth);
 
 	case MP_STATUS_EVENT:
-		return offsetof(struct MPstatus, CIstats) + strlen(((struct MPstatus*)event)->CIstats) + 1; /* +1 nullterminator */
+		return offsetof(struct MPstatusLegacy, CIstats) + strlen(((struct MPstatusLegacy*)event)->CIstats) + 1; /* +1 nullterminator */
 
-	case MP_STATUS2_EVENT:
-		return sizeof(struct MPstatus2) + sizeof(struct CIstats) * ((struct MPstatus2*)event)->noCI;
+	case MP_STATUS3_EVENT:
+		return sizeof(struct MPstatusExtended) + sizeof(struct CIstats) * ((struct MPstatusExtended*)event)->noCI;
 
 	case MP_FILTER_EVENT:
 		return sizeof(struct MPFilter);

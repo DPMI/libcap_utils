@@ -1,6 +1,7 @@
 caputils-0.7.14
 ---------------
 
+	* change: [marc] adding more fields to status report.
 	* fix: Allow capfiles with caplen zero.
 	* add: [capfilter] support for truncating packets using --caplen.
 	* add: [capfilter] adding options for limiting number of packets.
