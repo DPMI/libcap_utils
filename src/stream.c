@@ -47,6 +47,7 @@ int stream_alloc(struct stream** stptr, enum protocol_t protocol, size_t size, s
 
 	/* the buffer is always placed after the struct */
 	struct stream* st = (struct stream*)malloc(size + buffer_size);
+	memset(st, 0, size + buffer_size);
 	*stptr = st;
 
 	st->type = protocol;
