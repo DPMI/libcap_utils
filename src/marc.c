@@ -53,7 +53,7 @@ enum context_type {
 struct marc_context {
 	char ip[INET_ADDRSTRLEN];
 	int port;
-	const char* iface;
+	char* iface;
 	struct ether_addr hwaddr;
 	enum context_type type;
 	int sd;
@@ -377,6 +377,8 @@ int marc_init_server(marc_context_t* ctxptr, int port){
 }
 
 int marc_cleanup(marc_context_t ctx){
+	free(ctx->iface);
+	free(ctx);
 	return 0;
 }
 
