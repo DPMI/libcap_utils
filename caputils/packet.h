@@ -62,6 +62,7 @@ size_t layer_size(enum Level level, const cap_head* caphead);
  * @return Pointer to IPv4 header or NULL if packet does not contain IPv4.
  */
 const struct ip* find_ipv4_header(const struct ethhdr* ether, const char** payload);
+struct ip* find_ipv4_headerRW(struct ethhdr* ether, char** payload);
 
 const struct tcphdr* find_tcp_header(const void* pkt, const struct ethhdr* ether, const struct ip* ip, uint16_t* src, uint16_t* dest);
 const struct udphdr* find_udp_header(const void* pkt, const struct ethhdr* ether, const struct ip* ip, uint16_t* src, uint16_t* dest);

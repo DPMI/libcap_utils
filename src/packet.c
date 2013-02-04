@@ -138,8 +138,9 @@ size_t layer_size(enum Level level, const cap_head* caphead){
 	return payload_size(q, caphead);
 }
 
-const struct ip* find_ipv4_header(const struct ethhdr* ether, const char** ptr){
-	const char* ref = (const char*)ether + sizeof(struct ethhdr);
+static int find_ipv4_header_int(const struct ethhdr* ether, int* ptr){
+	const char* const ref = (const char*)ether;
+	const char* cur = ref + sizeof(struct ethhdr);
 	uint16_t proto = ntohs(ether->h_proto);
 
 	retry:
@@ -151,21 +152,48 @@ const struct ip* find_ipv4_header(const struct ethhdr* ether, const char** ptr){
 	{
 		/* Packet contains a VLAN tag */
 		const struct ether_vlan_header* vlan = (const struct ether_vlan_header*)ether;
-		ref = (const char*)ether + sizeof(struct ether_vlan_header);
+		cur    += sizeof(struct ether_vlan_header);
 		proto = ntohs(vlan->h_proto);
 		goto retry;
 	}
 
 	default:
 		/* Not an IPv4 packet */
+		if ( ptr ) *ptr = -1;
+		return -1;
+	}
+
+	const int offset = cur - ref;
+	const struct ip* ip = (const struct ip*)cur;
+	if ( ptr ){
+		const size_t hl = 4*ip->ip_hl;
+		*ptr = offset + hl;
+	}
+	return offset;
+}
+
+const struct ip* find_ipv4_header(const struct ethhdr* ether, const char** ptr){
+	int payload;
+	const char* ref = (const char*)ether;
+	const int offset = find_ipv4_header_int(ether, &payload);
+	if ( offset == -1 ){
 		if ( ptr ) *ptr = NULL;
 		return NULL;
 	}
 
-	const struct ip* ip = (const struct ip*)ref;
-	if ( ptr ){
-		const size_t hl = 4*ip->ip_hl;
-		*ptr = ref + hl;
+	if ( ptr ) *ptr = ref + payload;
+	return (const struct ip*)(ref + offset);
+}
+
+struct ip* find_ipv4_headerRW(struct ethhdr* ether, char** ptr){
+	int payload;
+	char* ref = (char*)ether;
+	const int offset = find_ipv4_header_int(ether, &payload);
+	if ( offset == -1 ){
+		if ( ptr ) *ptr = NULL;
+		return NULL;
 	}
-	return ip;
+
+	if ( ptr ) *ptr = ref + payload;
+	return (struct ip*)(ref + offset);
 }
