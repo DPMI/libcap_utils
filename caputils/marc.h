@@ -82,10 +82,9 @@ enum MPEvent {
 	                                    * server. (happens when libmarc rewrites
 	                                    * events and the full filter wasn't
 	                                    * available) */
-	MP_STATUS3_EVENT,                  /* Extended status report */
 
 	/* libmarc server -> client filter events */
-	MP_FILTER_EVENT,                   /* new or updated filter */
+	MP_FILTER_EVENT = 67,              /* new or updated filter */
 	MP_FILTER_RELOAD_EVENT,            /* reload all filters */
 	MP_FILTER_DEL_EVENT,               /* delete filter */
 	MP_FILTER_VERIFY_EVENT,            /* verify given filter */
@@ -93,7 +92,9 @@ enum MPEvent {
 	MP_FILTER_INVALID_ID,              /* an invalid filter was requested */
 
 	/* libmarc client -> server control events */
+	MP_STATUS3_EVENT = 100,            /* Extended status report */
 	MP_CONTROL_INIT_EVENT = 1,         /* init request */
+
 
 	/* libmarc server -> client control events */
 	MP_CONTROL_AUTHORIZE_EVENT = 128,  /* authorize MP */
