@@ -27,6 +27,7 @@ notrans_dist_man_MANS =     \
 	man/stream_read.3
 
 EXTRA_DIST =
+CLEANFILES =
 
 if BUILD_PCAP
 bin_PROGRAMS += pcap2cap cap2pcap
@@ -72,22 +73,24 @@ TESTS += tests/filter_argv tests/address tests/endian tests/packet tests/stream 
 endif
 TESTS += tests/capdump_argv tests/capinfo_zero tests/capmerge_zero
 check_PROGRAMS = ${TESTS}
-EXTRA_DIST += tests/empty.cap
+EXTRA_DIST += tests/http.packet tests/single.cap tests/empty.cap
+CLEANFILES += test-temp.cap
 
 nobase_include_HEADERS =    \
-	caputils/address.h  \
-	caputils/picotime.h \
-	caputils/file.h     \
-	caputils/utils.h    \
-	caputils/capture.h  \
-	caputils/filter.h   \
-	caputils/caputils.h \
-	caputils/log.h      \
-	caputils/packet.h   \
-	caputils/send.h     \
-	caputils/stream.h   \
-	caputils/marc.h     \
-	caputils/marker.h   \
+	caputils/address.h   \
+	caputils/capture.h   \
+	caputils/caputils.h  \
+	caputils/file.h      \
+	caputils/filter.h    \
+	caputils/interface.h \
+	caputils/log.h       \
+	caputils/marc.h      \
+	caputils/marker.h    \
+	caputils/packet.h    \
+	caputils/picotime.h  \
+	caputils/send.h      \
+	caputils/stream.h    \
+	caputils/utils.h     \
 	caputils/version.h
 
 pkgconfigdir = $(libdir)/pkgconfig
@@ -113,6 +116,7 @@ libcap_utils_07_la_SOURCES =   \
 	src/format/arp.c        \
 	src/format/dns.c        \
 	src/format/ethernet.c   \
+	src/format/format.h     \
 	src/format/icmp.c       \
 	src/format/ip.c         \
 	src/format/ipv4.c       \
@@ -133,7 +137,7 @@ libcap_utils_07_la_SOURCES += fallback/be64toh.c fallback/be64toh.h
 endif
 
 BUILT_SOURCES = vcs.h
-CLEANFILES = vcs.h
+CLEANFILES += vcs.h
 if HAVE_VCS
 .PHONY: .vcs
 BUILT_SOURCES += .vcs vcs.h stamp-vcs
