@@ -25,7 +25,19 @@
 #include "caputils/log.h"
 #include <stdio.h>
 #include <arpa/inet.h>
+
+#ifdef HAVE_NETINET_IP6_H
 #include <netinet/ip6.h>
+#endif
+
+#ifndef HAVE_IP6_EXT
+struct ip6_ext {
+	uint8_t  ip6e_nxt;          /* next header.  */
+	uint8_t  ip6e_len;          /* length in units of 8 octets.  */
+};
+#endif
+
+#ifdef HAVE_IPV6
 
 static int is_ipv6_ext(uint8_t nxt){
 	switch (nxt){
@@ -102,3 +114,11 @@ void print_ipv6(FILE* fp, const struct cap_header* cp, const struct ip6_hdr* ip,
 	};
 	print_ipproto(fp, cp, &net, proto, payload, flags);
 }
+
+#else /* HAVE_IPV6 */
+
+void print_ipv6(FILE* fp, const struct cap_header* cp, const struct ip6_hdr* ip, unsigned int flags){
+	fprintf(fp, " [IPv6 support is not available]");
+}
+
+#endif /* HAVE_IPV6 */

@@ -51,6 +51,7 @@ LT_INIT
 AC_SYS_LARGEFILE
 AC_SEARCH_LIBS([clock_gettime], [rt])
 AX_BE64
+AX_IPV6
 AX_IP_MTU
 
 dnl Hide all symbols by default, if supported.
