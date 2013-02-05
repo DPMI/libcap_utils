@@ -20,7 +20,7 @@ static void check_timepico(const timepico& expected, const char* string, CppUnit
 	check_timepico(expected, actual, sourceLine);
 }
 
-static timepico t(uint64_t a, uint64_t b){ timepico tmp = {a,b}; return tmp; }
+static timepico t(uint32_t a, uint64_t b){ timepico tmp = {a,b}; return tmp; }
 
 #define CPPUNIT_ASSERT_TIMEPICO(expected, actual) check_timepico(expected, actual, CPPUNIT_SOURCELINE())
 
