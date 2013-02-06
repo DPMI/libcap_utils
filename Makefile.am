@@ -106,7 +106,7 @@ else
 libcap_stream_07_la_SOURCES += src/stream_ethernet.c
 endif
 
-libcap_utils_07_la_CFLAGS = ${AM_CFLAGS}
+libcap_utils_07_la_CFLAGS = ${AM_CFLAGS} -I${top_srcdir}/fallback
 libcap_utils_07_la_LDFLAGS = -version-info 1:0:1
 libcap_utils_07_la_LIBADD = libcap_stream-07.la libcap_filter-07.la libcap_marc-07.la
 libcap_utils_07_la_SOURCES =   \
