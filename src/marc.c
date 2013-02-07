@@ -310,6 +310,7 @@ int marc_client_init_request(marc_context_t ctx, struct marc_client_info* info){
 	init->port = client->client_addr.sin_port;
 	init->maxFilters = htons(info->max_filters);
 	init->noCI = htons(info->noCI);
+	init->ma_mtu = htons(info->ma_mtu);
 	init->version.protocol.major = htons(CAPUTILS_VERSION_MAJOR);
 	init->version.protocol.minor = htons(CAPUTILS_VERSION_MINOR);
 

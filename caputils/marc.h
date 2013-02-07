@@ -261,6 +261,7 @@ struct marc_client_info {
 
 	int max_filters;
 	int noCI;
+	int ma_mtu;
 
 	struct {
 		versionex_t caputils;
