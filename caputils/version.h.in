@@ -33,6 +33,8 @@ extern "C" {
 #define CAPUTILS_VERSION_MICRO @VERSION_MICRO@
 #define CAPUTILS_VERSION "@VERSION@"
 
+#define CAPUTILS_0_7_14 1
+
 typedef struct {
 	int major;
 	int minor;
