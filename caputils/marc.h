@@ -130,7 +130,8 @@ struct MPinitialization {
 	uint32_t type;
 	struct ether_addr hwaddr; // MAC address of Measurement Point
 	char __padding[2];      // Padding for compatability
-	char hostname[200];     // Name of MP
+	char hostname[198];     // Name of MP
+	uint16_t ma_mtu;        // MTU on MA interface (available since 0.7.14)
 	uint8_t ipaddress[4];   // ipaddress
 	uint16_t port;          // UDP port that the MP listens to
 	uint16_t maxFilters;    // Maximum number of filters
