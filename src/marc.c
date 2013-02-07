@@ -305,7 +305,7 @@ int marc_client_init_request(marc_context_t ctx, struct marc_client_info* info){
 	msg.type = MP_CONTROL_INIT_EVENT;
 
 	memcpy(&init->hwaddr, &ctx->hwaddr, sizeof(struct ether_addr));
-	gethostname(init->hostname, 200);
+	gethostname(init->hostname, sizeof(init->hostname));
 	memcpy(init->ipaddress, &client->client_addr.sin_addr.s_addr, sizeof(struct in_addr));
 	init->port = client->client_addr.sin_port;
 	init->maxFilters = htons(info->max_filters);
