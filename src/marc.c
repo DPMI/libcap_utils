@@ -219,7 +219,6 @@ int marc_init_client(marc_context_t* ctxptr, const char* iface, struct marc_clie
 	int n = 1;
 	static const int max_retries = 6; /* try at most n times */
 	static const int timeout_factor = 8; /* for each retry, wait n*x sec */
-	signal(SIGUSR1, SIG_IGN); /* why? --ext 2011-11-25 */
 	while ( n < max_retries ){
 		struct timeval timeout = { n * timeout_factor, 0 };
 		out_func(dst_verbose, "Sending init request to MArelayD (try: %d timeout: %d)\n", n, timeout.tv_sec);
