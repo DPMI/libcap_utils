@@ -134,6 +134,7 @@ libcap_utils_07_la_SOURCES =   \
 
 if BUILD_BE64TOH
 libcap_utils_07_la_SOURCES += fallback/be64toh.c fallback/be64toh.h
+libcap_utils_07_la_LDFLAGS += -Wl,-defsym=be64toh=_int_htobe64 -Wl,-defsym=be64toh=_int_be64toh
 endif
 
 BUILT_SOURCES = vcs.h
