@@ -30,16 +30,8 @@
 extern "C" {
 #endif
 
-#if __GNUC__ == 3
-#define weakref alias
-#endif
-
-uint64_t htobe64(uint64_t val) __attribute__((weakref("_int_htobe64")));
-uint64_t be64toh(uint64_t val) __attribute__((weakref("_int_be64toh")));
-
-#if __GNUC__ == 3
-#undef weakref
-#endif
+uint64_t htobe64(uint64_t val);
+uint64_t be64toh(uint64_t val);
 
 #ifdef __cplusplus
 }
