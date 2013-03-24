@@ -218,7 +218,7 @@ struct MPstatusExtended {
 	mampid_t MAMPid;
 	uint8_t version;
 	uint8_t _res1;
-	uint16_t _res2;
+	uint16_t MTU;                   /* MP MTU on MArC interface */
 
 	uint32_t packet_count;
 	uint32_t matched_count;
