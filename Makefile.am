@@ -85,6 +85,7 @@ nobase_include_HEADERS =    \
 	caputils/interface.h \
 	caputils/log.h       \
 	caputils/marc.h      \
+	caputils/marc_dstat.h\
 	caputils/marker.h    \
 	caputils/packet.h    \
 	caputils/picotime.h  \
@@ -162,7 +163,7 @@ libcap_filter_07_la_SOURCES = src/createfilter.c src/filter.c
 
 libcap_marc_07_la_LDFLAGS = -shared -version-info 0:1:0
 libcap_marc_07_la_CFLAGS = ${AM_CFLAGS} ${libcap_filter_CFLAGS}
-libcap_marc_07_la_SOURCES = src/marc.c
+libcap_marc_07_la_SOURCES = src/marc.c src/marc_dstat.c
 
 tools_CFLAGS = ${AM_CFLAGS} -I${top_srcdir}/fallback
 tools_LIBS = libcap_utils-07.la libcap_filter-07.la libcap_stream-07.la ${PCAP_LIBS}

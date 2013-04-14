@@ -22,6 +22,7 @@
 #endif /* HAVE_CONFIG_H */
 
 #include "caputils/marc.h"
+#include "caputils/marc_dstat.h"
 #include "caputils/version.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -398,6 +399,9 @@ static size_t event_size(MPMessage* event){
 
 	case MP_STATUS3_EVENT:
 		return sizeof(struct MPstatusExtended) + sizeof(struct CIstats) * ((struct MPstatusExtended*)event)->noCI;
+
+	case MP_DSTAT_EVENT:
+		return mp_dstat_size(&event->dstat);
 
 	case MP_FILTER_EVENT:
 		return sizeof(struct MPFilter);
