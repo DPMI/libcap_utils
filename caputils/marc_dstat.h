@@ -83,6 +83,7 @@ struct MPDStat_DAGVersion {
  * Get a pointer to the next header.
  */
 const struct MPDStatHdr* mp_dstat_next(const struct MPDStatHdr* cur);
+struct MPDStatHdr* mp_dstat_nextw(struct MPDStatHdr* cur);
 
 /**
  * Get total size of message.
