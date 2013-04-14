@@ -235,7 +235,7 @@ struct MPstatusExtended {
 
 struct MPDStatHdr {
 	uint16_t type;
-	uint16_t length;
+	uint16_t len;
 };
 
 struct MPDStat {
