@@ -21,5 +21,5 @@ size_t mp_dstat_size(const struct MPDStat* event){
 		bytes += ntohs(cur->length);
 		cur = mp_dstat_next(cur);
 	}
-	return bytes;
+	return bytes + sizeof(struct MPDStatHdr); /* accumulated size + trailer */
 }
