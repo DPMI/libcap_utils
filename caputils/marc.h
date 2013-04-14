@@ -92,7 +92,8 @@ enum MPEvent {
 	MP_FILTER_INVALID_ID,              /* an invalid filter was requested */
 
 	/* libmarc client -> server control events */
-	MP_STATUS3_EVENT = 100,            /* Extended status report */
+	MP_STATUS3_EVENT = 100,            /* Extended status report (yet another old event) */
+	MP_DSTAT_EVENT = 101,              /* Dynamic extended report (based on separate and extendable headers) */
 	MP_CONTROL_INIT_EVENT = 1,         /* init request */
 
 
@@ -232,6 +233,22 @@ struct MPstatusExtended {
 	struct CIstats CI[0];
 };
 
+struct MPDStatHdr {
+	uint16_t type;
+	uint16_t length;
+};
+
+struct MPDStat {
+	uint32_t type;                /* marcd event type */
+	mampid_t MAMPid;              /* sender mampid */
+	uint8_t version;              /* version of this message */
+
+	uint8_t  _res1;
+	uint16_t _res2;
+
+	struct MPDStatHdr next[0];    /* extension header (last is always a trailer) */
+};
+
 typedef union {
 	struct {
 		uint32_t type;
@@ -246,6 +263,7 @@ typedef union {
 	struct MPstatusLegacy legacy_status;
 	struct MPstatusLegacyExt legacy_ext_status;
 	struct MPstatusExtended status;
+	struct MPDStat dstat;
 } MPMessage;
 
 /**
