@@ -68,6 +68,7 @@ struct MPDStat_DAG {
 	uint32_t rxerrors;                    /* Number of rx errors */
 	uint32_t dserrors;                    /* Number of internal errors */
 	uint32_t trunc;                       /* Number of truncations */
+	uint64_t timestamp;                   /* Current timestamp on DAG card */
 	uint16_t slen;                        /* Current snaplen */
 	uint16_t _res1;
 };
