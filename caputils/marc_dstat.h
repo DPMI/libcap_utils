@@ -30,9 +30,7 @@ struct MPDStat_Summary {
 	uint16_t type;
 	uint16_t len;
 
-	uint16_t MTU;                         /* MP MTU on MArC interface */
-	uint16_t _res1;
-
+	uint32_t MTU;                         /* MP MTU on MArC interface */
 	uint32_t packet_count;                /* Total number of packet processed by this MP (on all interfaces)*/
 	uint32_t matched_count;               /* Total number of matched packets */
 	uint32_t dropped_count;               /* Total number of dropped packets */
