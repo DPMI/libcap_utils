@@ -202,8 +202,9 @@ int stream_ethernet_read(struct stream_ethernet* st, cap_head** cp, struct filte
 }
 
 static long stream_ethernet_write(struct stream_ethernet* st, const void* data, size_t size){
-	if ( size > st->base.if_mtu ){
-		fprintf(stderr, "packet is larger (%zd) than MTU (%zd), ignoring\n", size, st->base.if_mtu);
+	const size_t payload_size = size - sizeof(struct ethhdr);
+	if ( payload_size > st->base.if_mtu ){
+		fprintf(stderr, "packet payload is larger (%zd) than MTU (%zd), ignoring\n", payload_size, st->base.if_mtu);
 		return EINVAL;
 	}
 	if ( sendto(st->socket, data, size, 0, (struct sockaddr*)&st->sll, sizeof(st->sll)) < 0 ){
