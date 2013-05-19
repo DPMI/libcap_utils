@@ -98,7 +98,6 @@ pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = libcap_stream-0.7.pc libcap_filter-0.7.pc libcap_utils-0.7.pc libcap_marc-0.7.pc
 
 libcap_stream_07_la_LDFLAGS = -version-info 2:1:2 ${PFRING_LIBS}
-libcap_stream_07_la_LIBADD = libcap_filter-07.la
 libcap_stream_07_la_SOURCES = src/stream.c src/stream.h src/stream_buffer.c src/stream_buffer.h src/stream_file.c src/stream_udp.c
 
 if BUILD_PFRING
@@ -108,8 +107,7 @@ libcap_stream_07_la_SOURCES += src/stream_ethernet.c
 endif
 
 libcap_utils_07_la_CFLAGS = ${AM_CFLAGS} -I${top_srcdir}/fallback
-libcap_utils_07_la_LDFLAGS = -version-info 1:0:1
-libcap_utils_07_la_LIBADD = libcap_stream-07.la libcap_filter-07.la libcap_marc-07.la
+libcap_utils_07_la_LDFLAGS = -version-info 1:0:1 -Wl,allow-shlib-undefined
 libcap_utils_07_la_SOURCES =   \
 	src/caputils_int.h      \
 	src/address.c           \
@@ -185,7 +183,7 @@ capfilter_CFLAGS = ${tools_CFLAGS}
 capfilter_LDADD = ${tools_LIBS}
 capmarker_SOURCES = tools/capmarker.c
 capmarker_CFLAGS = ${tools_CFLAGS}
-capmarker_LDADD = libcap_utils-07.la
+capmarker_LDADD = libcap_utils-07.la libcap_filter-07.la
 capmerge_SOURCES = tools/capmerge.c
 capmerge_CFLAGS = ${tools_CFLAGS}
 capmerge_LDADD = ${tools_LIBS}
