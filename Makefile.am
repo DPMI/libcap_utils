@@ -107,7 +107,7 @@ libcap_stream_07_la_SOURCES += src/stream_ethernet.c
 endif
 
 libcap_utils_07_la_CFLAGS = ${AM_CFLAGS} -I${top_srcdir}/fallback
-libcap_utils_07_la_LDFLAGS = -version-info 1:0:1 -Wl,allow-shlib-undefined
+libcap_utils_07_la_LDFLAGS = -version-info 1:0:1 -Wl,--allow-shlib-undefined
 libcap_utils_07_la_SOURCES =   \
 	src/caputils_int.h      \
 	src/address.c           \
