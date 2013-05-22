@@ -201,7 +201,7 @@ tests_filter_argv_SOURCES = tests/filter_argv.cpp
 
 tests_address_CXXFLAGS = ${AM_CFLAGS} $(CPPUNIT_CFLAGS)
 tests_address_LDFLAGS = $(CPPUNIT_LIBS)
-tests_address_LDADD = libcap_utils-07.la
+tests_address_LDADD = libcap_utils-07.la libcap_filter-07.la
 tests_address_SOURCES = tests/address.cpp
 
 # -Dfulhack is needed so libtool will become less confused about
@@ -215,20 +215,20 @@ tests_endian_SOURCES = tests/endian.cpp fallback/be64toh.c
 
 tests_packet_CXXFLAGS = ${AM_CFLAGS} $(CPPUNIT_CFLAGS)
 tests_packet_LDFLAGS = $(CPPUNIT_LIBS)
-tests_packet_LDADD = libcap_utils-07.la
+tests_packet_LDADD = libcap_utils-07.la libcap_filter-07.la
 tests_packet_SOURCES = tests/packet.cpp
 
 tests_stream_CXXFLAGS = ${AM_CFLAGS} $(CPPUNIT_CFLAGS)
 tests_stream_LDFLAGS = $(CPPUNIT_LIBS)
-tests_stream_LDADD = libcap_utils-07.la libcap_stream-07.la
+tests_stream_LDADD = libcap_utils-07.la libcap_stream-07.la libcap_filter-07.la
 tests_stream_SOURCES = tests/stream.cpp
 
 tests_timepico_CXXFLAGS = ${AM_CFLAGS} $(CPPUNIT_CFLAGS)
 tests_timepico_LDFLAGS = $(CPPUNIT_LIBS)
-tests_timepico_LDADD = libcap_utils-07.la
+tests_timepico_LDADD = libcap_utils-07.la libcap_filter-07.la
 tests_timepico_SOURCES = tests/timepico.cpp
 
-tests_capdump_argv_LDADD = libcap_utils-07.la libcap_stream-07.la
+tests_capdump_argv_LDADD = libcap_utils-07.la libcap_stream-07.la libcap_filter-07.la
 
 install-dumper:
 	install -D -m 0755 dist/dumper_init $(DESTDIR)${sysconfdir}/init.d/dumper
