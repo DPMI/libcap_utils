@@ -310,7 +310,7 @@ long stream_pfring_open(struct stream** stptr, const struct ether_addr* addr, co
 	int saved = errno;
 	free(derp);
 	if ( !pd ){
-		return errno;
+		return saved;
 	}
 
 	pfring_set_application_name(pd, "libcap_utils");
