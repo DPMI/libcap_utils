@@ -656,3 +656,39 @@ int stream_flush(stream_t st){
 	}
 	return 0;
 }
+
+/**
+ * Calculate the number of bytes to expected from this frame.
+ */
+static size_t sendheader_bytes(const struct sendhead* sh){
+	static const size_t header_size = sizeof(struct ethhdr) + sizeof(struct sendhead);
+	int n = ntohl(sh->nopkts);
+	size_t expected = header_size;
+	const char* ptr = ((const char*)sh) + sizeof(struct sendhead);
+	while ( n --> 0 ){
+		const struct cap_header* cp = (const struct cap_header*)ptr;
+		if ( cp->caplen == 0 ){
+			fprintf(stderr, "cp->caplen == 0, discarding frame.\n");
+			return 0;
+		}
+		const size_t size = sizeof(struct cap_header) + cp->caplen;
+		expected += size;
+		ptr += size;
+	}
+	return expected;
+}
+
+int valid_framesize(size_t actual, const struct sendhead* sh){
+	const size_t expected = sendheader_bytes(sh);
+	if ( actual != expected ){
+		fprintf(stderr,
+		        "invalid measurement frame received.\n"
+		        "  seqnum: 0x%04X [raw: 0x%08X]\n"
+		        "  nopkts: %d [raw: 0x%08X]\n"
+		        "  frame size: %zd bytes\n"
+		        "  expected: %zd bytes\n",
+		        ntohl(sh->sequencenr), sh->sequencenr, ntohl(sh->nopkts), sh->nopkts, actual, expected);
+		return 0;
+	}
+	return 1;
+}

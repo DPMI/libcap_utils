@@ -118,4 +118,9 @@ int stream_file_open(struct stream** stptr, FILE* fp, const char* filename, size
  */
 int stream_file_create(struct stream** stptr, FILE* fp, const char* filename, const char* mpid, const char* comment, int flags);
 
+/**
+ * Test if the received number of bytes is valid for this MA frame.
+ */
+int valid_framesize(size_t actual, const struct sendhead* sh);
+
 #endif /* CAPUTILS_INT_STREAM_H */

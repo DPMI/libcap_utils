@@ -62,8 +62,6 @@ enum {
 	BLOCK = 1,
 };
 
-int valid_framesize(size_t actual, const struct sendhead* sh); /* defined in stream_ethernet.c */
-
 /**
  * Test if a MA packet is valid and matches our expected destinations
  * Returns the matching address index or -1 for invalid packets.
