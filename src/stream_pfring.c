@@ -122,7 +122,7 @@ static int stream_pfring_read_frame(struct stream_pfring* st, int block){
 #endif
 
 		/* validate frame */
-		if ( !valid_framesize(bytes, sh) ){
+		if ( !valid_framesize(hdr.caplen, sh) ){
 			/* error message already shown */
 			continue;
 		}
