@@ -35,11 +35,15 @@ extern "C" {
 
 #define CAPUTILS_0_7_14 1
 
+enum caputils_features {
+	CAPUTILS_PFRING = (1<<0),
+};
+
 typedef struct {
 	int major;
 	int minor;
 	int micro;
-	int features; /* bitmask, not yet implemented */
+	int features; /* bitmask, see caputils_features */
 }	caputils_version_t;
 
 /**

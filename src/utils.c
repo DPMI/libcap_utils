@@ -60,12 +60,19 @@ const char* hexdump_address(const struct ether_addr* address){
 }
 
 const char* caputils_version(caputils_version_t* version){
+	int features = 0
+#ifdef HAVE_PFRING
+		| CAPUTILS_PFRING
+#endif
+	;
+
 	if ( version ){
 		version->major = VERSION_MAJOR;
 		version->minor = VERSION_MINOR;
 		version->micro = VERSION_MICRO;
-		version->features = 0;
+		version->features = features;
 	}
+
 	return VERSION
 #ifdef VCS_REV
 		"[" VCS_REV "/" VCS_BRANCH "]"
