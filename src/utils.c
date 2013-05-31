@@ -77,6 +77,9 @@ const char* caputils_version(caputils_version_t* version){
 #ifdef VCS_REV
 		"[" VCS_REV "/" VCS_BRANCH "]"
 #endif
+#ifdef HAVE_PFRING
+		" (PF_RING enabled)"
+#endif
 		;
 }
 
