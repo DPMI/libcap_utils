@@ -38,6 +38,88 @@ static const char* tcp_flags(const struct tcphdr* tcp){
 	return buf;
 }
 
+static void tcp_options(const struct tcphdr* tcp,FILE* dst ){
+
+  	uint16_t wf=1;
+	uint16_t mss=0;
+  	uint8_t SAC=0;
+  //	int k;
+
+	typedef struct {
+	  u_int8_t kind;
+	  u_int8_t size;
+	} tcp_option_t;
+	    
+
+
+	if ((tcp->doff)>5){
+	  int optlen=0;
+
+	  fprintf(dst,"|");//, 4*tcp->doff-sizeof(struct tcphdr));
+	  /*
+	  fprintf(dst,"options %d bytes, tcp at %p with size %d \nHDR:", 4*tcp->doff,tcp,sizeof(struct tcphdr));
+	  uint8_t* opt=(u_int8_t*)(tcp+sizeof(struct tcphdr));
+	  for(k=0;k<44;k++){
+	    fprintf(dst,"%0x ",*(opt+k));
+	  }
+	  fprintf(dst,"\nOPT:");
+	  */
+	  uint8_t* opt=(u_int8_t*)((const char*)tcp) + sizeof(struct tcphdr);
+	  /*
+	    for(k=0;k<10;k++){
+	    fprintf(dst,"%0x ",*(opt+k));
+	  }
+	  */
+
+	  //	  fprintf(dst,"\n");
+	  int optcount=0;
+	  while ( *opt != 0 && optlen<4*tcp->doff){
+	    tcp_option_t* _opt = (tcp_option_t*)opt;
+
+	    //	    fprintf(dst,"%p | len = %d | kind %d | len %d\n",*opt,optlen,_opt->kind,_opt->size);
+	    optcount++;
+
+	    if(_opt->kind == 0 ){ // NOP
+	      fprintf(dst,"EOL|");
+	      break;
+	    }
+	    if(_opt->kind == 1 ){ // NOP
+	      fprintf(dst,"NOP|");
+	      opt+=1;
+	      optlen+=1;
+	      continue;
+	    }
+	    if(_opt->kind == 2 ) { //MSS
+	      typedef struct {
+		u_int8_t kind;
+		u_int8_t size;
+		u_int16_t mss;
+	      } tcpopt_mss;
+	      tcpopt_mss* _mss=(tcpopt_mss*)opt;
+	      mss=ntohs(_mss->mss);
+	      fprintf(dst,"MSS(%d)|",mss);	     
+
+	    }
+	    if(_opt->kind == 3 ) { //Windowscale factor
+	      wf=*(opt+sizeof(tcp_option_t));
+	      fprintf(dst,"WS(%d)|",wf);
+
+	    }
+	    if(_opt->kind == 4 ) { //SAC
+	      fprintf(dst,"SAC|");
+	      SAC=1;
+	    }
+	    if(_opt->kind == 8 ) { //TSS
+	      fprintf(dst,"TSS|");
+	    }
+	    opt+=_opt->size;
+	    optlen+=_opt->size;
+	  }
+	}
+	
+}
+
+
 void print_tcp(FILE* fp, const struct cap_header* cp, net_t net, const struct tcphdr* tcp, unsigned int flags){
 	fputs("TCP", fp);
 	if ( limited_caplen(cp, tcp, sizeof(struct tcphdr)) ){
@@ -57,6 +139,10 @@ void print_tcp(FILE* fp, const struct cap_header* cp, net_t net, const struct tc
 	fprintf(fp, ": [%s] %s:%d --> %s:%d", tcp_flags(tcp),
 	        net->net_src, sport,
 	        net->net_dst, dport);
+
+	fprintf(fp, " ws=%d seq=%lu ack=%lu ", (u_int16_t)ntohs(tcp->window),(u_int32_t)ntohl(tcp->seq),(u_int32_t)ntohl(tcp->ack_seq));
+	tcp_options(tcp,fp);
+
 
 	const char* payload = (const char*)tcp + 4*tcp->doff;
 	if ( payload_size > 0 && (sport == PORT_DNS || dport == PORT_DNS) ){
