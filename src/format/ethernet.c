@@ -70,6 +70,10 @@ void print_eth(FILE* dst, const struct cap_header* cp, const struct ethhdr* eth,
 		print_mp(dst, cp, (const struct sendhead*)payload);
 		break;
 
+	case ETHERTYPE_MP_DIAGNOSTIC:
+		print_mp_diagnostic(dst, cp, payload);
+		break;
+
 	case STPBRIDGES:
 		fprintf(dst, " STP(0x%04x): (spanning-tree for bridges)", h_proto);
 		break;
