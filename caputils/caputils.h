@@ -56,6 +56,7 @@ struct filter;
 
 /* our ethernet format */
 #define ETHERTYPE_MP 0x0810
+#define ETHERTYPE_MP_DIAGNOSTIC 0x0811
 
 #ifndef IPPROTO_OSPF
 #define IPPROTO_OSPF 89
