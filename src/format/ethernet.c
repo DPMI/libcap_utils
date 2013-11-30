@@ -66,7 +66,7 @@ void print_eth(FILE* dst, const struct cap_header* cp, const struct ethhdr* eth,
 		print_arp(dst, cp, (const struct ether_arp*)payload);
 		break;
 
-	case 0x0810:
+	case ETHERTYPE_MP:
 		fprintf(dst, " MP packet");
 		break;
 
