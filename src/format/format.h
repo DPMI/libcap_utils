@@ -22,6 +22,7 @@
 #endif
 
 #include <caputils/log.h>
+#include <caputils/send.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <arpa/inet.h>
@@ -57,6 +58,7 @@ void print_ipproto(FILE* fp, const struct cap_header* cp, net_t net, uint8_t pro
 void print_ipv4(FILE* fp, const struct cap_header* cp, const struct ip* ip, unsigned int flags);
 void print_ipv6(FILE* fp, const struct cap_header* cp, const struct ip6_hdr* ip, unsigned int flags);
 void print_arp(FILE* dst, const struct cap_header* cp, const struct ether_arp* arp);
+void print_mp(FILE* fp, const struct cap_header* cp, const struct sendhead* send);
 
 /* layer 4 */
 void print_tcp(FILE* fp, const struct cap_header* cp, net_t net, const struct tcphdr* tcp, unsigned int flags);

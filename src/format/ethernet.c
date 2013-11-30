@@ -67,7 +67,7 @@ void print_eth(FILE* dst, const struct cap_header* cp, const struct ethhdr* eth,
 		break;
 
 	case ETHERTYPE_MP:
-		fprintf(dst, " MP packet");
+		print_mp(dst, cp, (const struct sendhead*)payload);
 		break;
 
 	case STPBRIDGES:
