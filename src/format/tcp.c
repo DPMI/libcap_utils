@@ -42,14 +42,13 @@ static void tcp_options(const struct tcphdr* tcp,FILE* dst ){
 
   	uint16_t wf=1;
 	uint16_t mss=0;
-  	uint8_t SAC=0;
   //	int k;
 
 	typedef struct {
 	  u_int8_t kind;
 	  u_int8_t size;
 	} tcp_option_t;
-	    
+
 
 
 	if ((tcp->doff)>5){
@@ -64,7 +63,7 @@ static void tcp_options(const struct tcphdr* tcp,FILE* dst ){
 	  }
 	  fprintf(dst,"\nOPT:");
 	  */
-	  uint8_t* opt=(u_int8_t*)((const char*)tcp) + sizeof(struct tcphdr);
+	  const uint8_t* opt=(const u_int8_t*)((const char*)tcp) + sizeof(struct tcphdr);
 	  /*
 	    for(k=0;k<10;k++){
 	    fprintf(dst,"%0x ",*(opt+k));
@@ -74,7 +73,7 @@ static void tcp_options(const struct tcphdr* tcp,FILE* dst ){
 	  //	  fprintf(dst,"\n");
 	  int optcount=0;
 	  while ( *opt != 0 && optlen<4*tcp->doff){
-	    tcp_option_t* _opt = (tcp_option_t*)opt;
+	    const tcp_option_t* _opt = (const tcp_option_t*)opt;
 
 	    //	    fprintf(dst,"%p | len = %d | kind %d | len %d\n",*opt,optlen,_opt->kind,_opt->size);
 	    optcount++;
@@ -95,9 +94,9 @@ static void tcp_options(const struct tcphdr* tcp,FILE* dst ){
 		u_int8_t size;
 		u_int16_t mss;
 	      } tcpopt_mss;
-	      tcpopt_mss* _mss=(tcpopt_mss*)opt;
+	      const tcpopt_mss* _mss=(const tcpopt_mss*)opt;
 	      mss=ntohs(_mss->mss);
-	      fprintf(dst,"MSS(%d)|",mss);	     
+	      fprintf(dst,"MSS(%d)|",mss);
 
 	    }
 	    if(_opt->kind == 3 ) { //Windowscale factor
@@ -107,7 +106,6 @@ static void tcp_options(const struct tcphdr* tcp,FILE* dst ){
 	    }
 	    if(_opt->kind == 4 ) { //SAC
 	      fprintf(dst,"SAC|");
-	      SAC=1;
 	    }
 	    if(_opt->kind == 8 ) { //TSS
 	      fprintf(dst,"TSS|");
@@ -116,7 +114,7 @@ static void tcp_options(const struct tcphdr* tcp,FILE* dst ){
 	    optlen+=_opt->size;
 	  }
 	}
-	
+
 }
 
 
@@ -140,7 +138,7 @@ void print_tcp(FILE* fp, const struct cap_header* cp, net_t net, const struct tc
 	        net->net_src, sport,
 	        net->net_dst, dport);
 
-	fprintf(fp, " ws=%d seq=%lu ack=%lu ", (u_int16_t)ntohs(tcp->window),(u_int32_t)ntohl(tcp->seq),(u_int32_t)ntohl(tcp->ack_seq));
+	fprintf(fp, " ws=%d seq=%u ack=%u ", ntohs(tcp->window), ntohl(tcp->seq), ntohl(tcp->ack_seq));
 	tcp_options(tcp,fp);
 
 
