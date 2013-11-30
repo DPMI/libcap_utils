@@ -91,7 +91,7 @@ static int stream_ethernet_read_frame(struct stream_ethernet* st, char* dst, str
 		}
 
 		/* Read data into framebuffer. */
-		int bytes = recvfrom(st->socket, dst, st->base.if_mtu, 0, NULL, NULL);
+		int bytes = recvfrom(st->socket, dst, st->base.if_mtu + sizeof(struct ethhdr), 0, NULL, NULL);
 		if ( bytes < 0 ){ /* error occurred */
 			perror("Cannot receive Ethernet data.");
 			break;
