@@ -236,7 +236,7 @@ static int stream_ethernet_init(struct stream** stptr, const struct ether_addr* 
 		return ret;
 	}
 
-	const unsigned int if_mtu = ifstat.if_mtu;
+	const unsigned int if_mtu = ifstat.if_mtu + sizeof(struct ethhdr);
 
 	/* default buffer_size of 250*MTU */
 	if ( buffer_size == 0 ){
