@@ -59,6 +59,7 @@ typedef int (*read_frame_callback)(stream_t st, char* dst, struct timeval* timeo
 
 struct stream_frame_buffer {
 	read_frame_callback read_frame;  /* Read next frame */
+	size_t frame_size;               /* Number of bytes in one frame */
 	size_t num_frames;               /* How many frames that buffer can hold */
 	size_t num_packets;              /* How many packets is left in current frame */
 	size_t header_offset;            /* How many bytes of headers to skip to get to sendheader */
@@ -75,8 +76,9 @@ size_t stream_frame_buffer_size(size_t num_frames, size_t mtu);
 /**
  * Initialize buffer frame structure.
  * @param src Pointer to the start of the stream buffer.
+ * @param frame_size Usually MTU + sizeof(struct ethhdr)
  */
-void stream_frame_init(struct stream_frame_buffer* buf, read_frame_callback cb, char* src, size_t num_frames, size_t mtu);
+void stream_frame_init(struct stream_frame_buffer* buf, read_frame_callback cb, char* src, size_t num_frames, size_t frame_size);
 
 /**
  * Read the next packet from the buffer.
