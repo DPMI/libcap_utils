@@ -76,6 +76,8 @@ static char buf[BUFSIZE]; /* message buf */
 char *hostaddrp; /* dotted decimal host addr string */
 static int optval; /* flag value for setsockopt */
 static int n; /* message byte size */
+struct ether_addr hwaddr;
+
 
 
 static const char* shortopts = "o:p:i:c:b:m:K:LP:f:M:C:s::h";
@@ -96,6 +98,16 @@ static struct option longopts[]= {
 	{"help",    no_argument,       0, 'h'},
 	{0, 0, 0, 0} /* sentinel */
 };
+
+struct packet {
+  struct cap_header cap;
+  struct ethhdr eth_inner;
+  struct iphdr ip_inner;
+  struct udphdr udp_inner;
+  struct marker mark_inner;
+} __attribute__((packed));
+
+
 
 static void show_usage(void){
 	printf("(C) 2011 David Sveningsson <david.sveningsson@bth.se>\n");
@@ -657,31 +669,66 @@ int main(int argc, char **argv){
 	int errmsg;
 	int sockread;
 	
-	  
+	int packet_size=sizeof(struct cap_header) + sizeof(struct ethhdr) + sizeof(struct iphdr) + sizeof(struct udphdr) + sizeof( struct marker);
+	struct packet* packet=(struct packet*)(malloc(packet_size));
+	struct timeval pkttv;
+
+	/* caphead */
+	packet->cap.len = packet_size-sizeof(struct cap_header);
+	packet->cap.caplen = packet_size-sizeof(struct cap_header);
+	/*ethernet*/
+	packet->eth_inner.h_proto = htons(ETHERTYPE_IP);
+	//memcpy(&packet->eth_inner.h_source, &hwaddr, ETH_ALEN);
+	//memcpy(&packet->eth_inner.h_dest, &addr.ether_addr, ETH_ALEN);
+	strncpy(packet->cap.nic, "c0", 2);
+	strncpy(packet->cap.mampid, "control", 8);
+	/* The following IP&UDP packet is just a place holder, it's configured just to trick libcap_utils to think that its a marker */
+	/* ip */
+	packet->ip_inner.protocol=IPPROTO_UDP;
+	packet->ip_inner.saddr= inet_addr("127.0.0.1");
+	packet->ip_inner.daddr= inet_addr("127.0.0.1");	
+	packet->ip_inner.ihl=5;
+	packet->ip_inner.version=4;
+	packet->ip_inner.tot_len=sizeof(struct iphdr) + sizeof(struct udphdr) + sizeof(struct marker);
+	packet->ip_inner.id=htonl(12345);     
+	/* udp */
+	packet->udp_inner.dest=htons(portno);
+	packet->udp_inner.source=htons(MARKERPORT);
+	packet->udp_inner.len=sizeof(struct udphdr)+sizeof(struct marker);
+	/* Make sure that the marker comment is empty. */
+	memset(packet->mark_inner.comment,0,64);
 
 	while( keep_running ){
-	        errmsg=ioctl(sockfd, FIONREAD,&socket_read);
-	        if(errmsg<0) {
-		  error("ioctl");
-		}
-		if (socket_read>=sizeof(struct marker)) {
-		  /* There should be some bytes to read. */
-		  sockread=recvfrom(sockfd, buf, BUFSIZE,0, (struct sockaddr *) &clientaddr, &clientlen);
-		  if (sockread < 0) {
-		    error("Error in recvfrom .");
+	          errmsg=ioctl(sockfd, FIONREAD,&socket_read);
+		  if(errmsg<0) {
+		    error("ioctl");
 		  }
-		  fprintf(stderr,"Received marker via server.\n");
-		  if ( handle_marker_server(&buf, &output, &dst) != 0 ){
-                    break; /* error already shown */
-                  }
-
-		  /* As we do not have a 'proper packet', we need to fix it.  */
-		  /* Create a 'dummy' packet, with mampid=consumerid nic=control ?  Write it.. 
-		     Requires that libcap_utils can treat nics differently.... */ 
-		  /* Left for now */
-
-
-		} else {
+		  /* check if the udp socket received any data, require it to be the size of a marker message */
+		  if (socket_read>=sizeof(struct marker)) {
+		    /* There should be some bytes to read. */
+		    sockread=recvfrom(sockfd, buf, BUFSIZE,0, (struct sockaddr *) &clientaddr, &clientlen);
+		    if (sockread < 0) {
+		      error("Error in recvfrom .");
+		    }
+		    fprintf(stderr,"Received marker via server.\n");
+		    if ( handle_marker_server(&buf, &output, &dst) != 0 ){
+		      break; /* error already shown */
+		    }
+		    
+		    /* Use the 'dummy' packet */
+		    /* Give the packet a proper timestamp */
+		    gettimeofday(&pkttv,NULL);
+		    packet->cap.ts=timeval_to_timepico(pkttv);
+		    
+		    /* Copy the marker message that we got, relay it. */
+		    memcpy(&packet->mark_inner,&buf,sockread);
+		    
+		    
+		    if ( write_packet(packet, dst) != 0 ){
+		      break; /* error already shown */
+		    }
+		    
+		  } else { /* If no marker was rececived via udp do normal business */
 
 		  /* Read the next packet */
 		  cap_head* cp;
