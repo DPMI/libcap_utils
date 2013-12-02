@@ -36,6 +36,7 @@
 #include <ctype.h>
 #include <libgen.h> /* for dirname */
 #include <sys/stat.h>
+#include <sys/ioctl.h>
 #include <netinet/udp.h>
 #include <inttypes.h>
 #include "be64toh.h" /* for compability */
@@ -46,6 +47,7 @@ enum MarkerMode {
 	MARKER_OVERWRITE,
 	MARKER_APPEND,
 };
+#define BUFSIZE 1500
 
 static const size_t FILENAME_SUFFIX_MAX = 1000; /* maximum number of filename suffixes */
 static const size_t PROGRESS_REPORT_DELAY = 60;  /* seconds between progress reports */
@@ -61,8 +63,22 @@ static const char* comment = "capdump-" VERSION " stream";
 static const struct stream_stat* stream_stat = NULL;
 static char mpid[8];
 static int progress = -1;          /* if >0 progress reports is written to this file descriptor */
+static uint32_t marker_key; /* Key to look for */
 
-static const char* shortopts = "o:p:i:c:b:m:f:M:C:s::h";
+/* Added to act as a marker recipient */
+static int sockfd; /* Socket for the UDP server */
+static int portno; /* Port number, default 4000 */
+static int clientlen; /* byte size of client addr */
+struct sockaddr_in serveraddr; /* server's addr */
+struct sockaddr_in clientaddr; /* client addr */
+struct hostent *hostp; /* client host info */
+static char buf[BUFSIZE]; /* message buf */
+char *hostaddrp; /* dotted decimal host addr string */
+static int optval; /* flag value for setsockopt */
+static int n; /* message byte size */
+
+
+static const char* shortopts = "o:p:i:c:b:m:K:LP:f:M:C:s::h";
 static struct option longopts[]= {
 	{"output",  required_argument, 0, 'o'},
 	{"packets", required_argument, 0, 'p'},
@@ -70,6 +86,9 @@ static struct option longopts[]= {
 	{"comment", required_argument, 0, 'c'},
 	{"bufsize", required_argument, 0, 'b'},
 	{"marker",  required_argument, 0, 'm'},
+	{"key",  optional_argument,0, 'K'},
+	{"listen", optional_argument,0,'L'},
+	{"port", optional_argument,0,'P'},
 	{"marker-format", required_argument, 0, 'f'},
 	{"marker-mode",   required_argument, 0, 'M'},
 	{"marker-comment", required_argument, 0, 'C'},
@@ -90,6 +109,12 @@ static void show_usage(void){
 	       "  -b, --bufsize=BYTES  Use BYTES buffer size [default depends on driver].\n"
 	       "  -m, --marker=PORT    Split streams based on marker packet. See capdump(1) for\n"
 	       "                       further description of this feature.\n"
+	       "  -K, --key=KEY        If markers are used, and the key is set, the marker must contain\n"
+	       "                       this key as to be considered as a marker. If key is not set, normal\n"
+	       "                       behaviour is applied. \n"
+	       "  -L, --listen         If applied, we will accept capmarker messages via UDP.\n"
+	       "                       Will be treated the same as a mp marker.\n"
+	       "  -P, --port           UDP port to listen to [default: 4000].\n"
 	       "  -f, --marker-format  Renaming format for marker.\n"
 	       "      --marker-mode    What to do when identical filename is generated. Valid\n"
 	       "                       modes are [I]crement (default), [O]verwrite and [A]ppend.\n"
@@ -161,6 +186,11 @@ static const char* marker_flags(const struct marker* marker){
 	}
 	*dst++ = ']';
 	return buf;
+}
+
+static void error(char *msg) {
+  perror(msg);
+  exit(1);
 }
 
 static void marker_report(const struct marker* marker){
@@ -326,6 +356,11 @@ static int handle_marker(const struct cap_header* cp, stream_addr_t* addr, strea
 	if ( !(marker && is_marker(cp, &mark, marker)) ){
 		return 0;
 	}
+	if ( ! ( marker_key && (mark.key_id == marker_key) ) ){
+	  fprintf(stderr, "Found marker, missmatch on key ; looking for %zd, got %zd.\n ",marker_key, mark.key_id);
+	  return 0;
+	}
+
 
 	/* show marker */
 	marker_report(&mark);
@@ -352,6 +387,51 @@ static int handle_marker(const struct cap_header* cp, stream_addr_t* addr, strea
 
 	return 0;
 }
+
+static int handle_marker_server(void* payload, stream_addr_t* addr, stream_t* st){
+  struct marker mark;
+  if ( !(marker && is_marker_udp(payload, &mark, marker)) ){
+    return 0;
+  }
+
+
+  if ( ! ( marker_key && (mark.key_id == marker_key) ) ){
+    fprintf(stderr, "Found marker, missmatch on key ; looking for %zd, got %zd.\n ",marker_key, mark.key_id);
+    return 0;
+  }
+
+
+  /* show marker */
+  marker_report(&mark);
+
+  /* abort if output is pipe */
+  if ( strcmp("/dev/stdout", addr->local_filename) == 0 ){
+    return 1;
+  }
+
+  /* termination marker */
+  if ( mark.flags & MARKER_TERMINATE ){
+    if ( *st ){
+      stream_addr_str(addr, "", STREAM_ADDR_LOCAL);
+      stream_close(*st);
+      *st = NULL;
+    }
+    fprintf(stderr, "\ttermination flag set, stopping capture until next marker arrives\n");
+    return 0;
+  }
+
+  if ( open_next(addr, st, &mark) != 0 ){
+    return 1; /* error already shown */
+  }
+
+  return 0;
+}
+
+
+
+
+
+
 
 static int write_packet(struct cap_header* cp, stream_t st){
 	if ( !st ) return 0;
@@ -397,6 +477,9 @@ int main(int argc, char **argv){
 	stream_addr_t output = STREAM_ADDR_INITIALIZER;
 	unsigned int max_packets = 0;
 	unsigned long written_packets = 0;
+	marker_key = 0; /* Default key, 0 -- not applicable */
+	portno=4000;  /* Default port for udp server */
+	sockfd=0; /* Default, no server active */
 
 	while ( (op = getopt_long(argc, argv, shortopts, longopts, &option_index)) != -1 ){
 		switch (op){
@@ -436,6 +519,51 @@ int main(int argc, char **argv){
 			marker_mode = parse_marker_mode(optarg);
 			break;
 
+                case 'K': /* --marker-key */
+		        marker_key = atoi(optarg);
+			break;
+		case 'P': /* set port */
+		        portno=atoi(optarg);
+			break;
+		case 'L': /* We will activate the udp marker receiver */
+		          /* 
+			   * socket: create the parent socket 
+			   */
+		        sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+			if (sockfd < 0) 
+			  error("ERROR opening socket");
+			
+			/* setsockopt: Handy debugging trick that lets 
+			 * us rerun the server immediately after we kill it; 
+			 * otherwise we have to wait about 20 secs. 
+			 * Eliminates "ERROR on binding: Address already in use" error. 
+			 */
+			optval = 1;
+			setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, 
+				   (const void *)&optval , sizeof(int));
+			
+			/*
+			 * build the server's Internet address
+			 */
+			bzero((char *) &serveraddr, sizeof(serveraddr));
+			serveraddr.sin_family = AF_INET;
+			serveraddr.sin_addr.s_addr = htonl(INADDR_ANY);
+			serveraddr.sin_port = htons((unsigned short)portno);
+			
+			/* 
+			 * bind: associate the parent socket with a port 
+			 */
+			if (bind(sockfd, (struct sockaddr *) &serveraddr, 
+				 sizeof(serveraddr)) < 0) 
+			  error("ERROR on binding");
+			
+			/* 
+			 * main loop: wait for a datagram, then echo it
+			 */
+			clientlen = sizeof(clientaddr);
+			fprintf(stderr," Waiting for markers on port %d.\n",portno);
+			break;
+			
 		case 'C': /* --marker-comment */
 			marker_comment = 1;
 			break;
@@ -521,41 +649,78 @@ int main(int argc, char **argv){
 		setitimer(ITIMER_REAL, &tv, NULL);
 		signal(SIGALRM, progress_report);
 	}
+	if (marker_key){
+	  fprintf(stderr, "Looking for %zd as key.\n",marker_key);
+	}
+	/* Now setup the socket poll/select */
+	int socket_read=0;
+	int errmsg;
+	int sockread;
+	
+	  
 
 	while( keep_running ){
-		/* Read the next packet */
-		cap_head* cp;
-		ret = stream_read(src, &cp, NULL, NULL);
-		if ( ret == EAGAIN ){ /* a timeout occured */
-			continue;
-		} else if ( ret == EINTR && keep_running != 0 ){ /* don't abort unless signal caused a halt */
-			continue;
-		} else if ( ret > 0 ){ /* either an error or proper shutdown */
-			fprintf(stderr, "%s: stream_read() returned 0x%08lX: %s\n", program_name, ret, caputils_error_string(ret));
-			break;
-		} else if ( ret == -1 ){
-			break;
-		} else if ( ret != 0 ){
-			abort();
+	        errmsg=ioctl(sockfd, FIONREAD,&socket_read);
+	        if(errmsg<0) {
+		  error("ioctl");
 		}
+		if (socket_read>=sizeof(struct marker)) {
+		  /* There should be some bytes to read. */
+		  sockread=recvfrom(sockfd, buf, BUFSIZE,0, (struct sockaddr *) &clientaddr, &clientlen);
+		  if (sockread < 0) {
+		    error("Error in recvfrom .");
+		  }
+		  fprintf(stderr,"Received marker via server.\n");
+		  if ( handle_marker_server(&buf, &output, &dst) != 0 ){
+                    break; /* error already shown */
+                  }
 
-		if ( handle_marker(cp, &output, &dst) != 0 ){
-			break; /* error already shown */
-		}
+		  /* As we do not have a 'proper packet', we need to fix it.  */
+		  /* Create a 'dummy' packet, with mampid=consumerid nic=control ?  Write it.. 
+		     Requires that libcap_utils can treat nics differently.... */ 
+		  /* Left for now */
 
-		if ( write_packet(cp, dst) != 0 ){
-			break; /* error already shown */
-		}
 
-		written_packets++;
-		if ( max_packets > 0 && stream_stat->read >= max_packets ){
-				break;
+		} else {
+
+		  /* Read the next packet */
+		  cap_head* cp;
+		  ret = stream_read(src, &cp, NULL, NULL);
+		  if ( ret == EAGAIN ){ /* a timeout occured */
+		    continue;
+		  } else if ( ret == EINTR && keep_running != 0 ){ /* don't abort unless signal caused a halt */
+		    continue;
+		  } else if ( ret > 0 ){ /* either an error or proper shutdown */
+		    fprintf(stderr, "%s: stream_read() returned 0x%08lX: %s\n", program_name, ret, caputils_error_string(ret));
+		    break;
+		  } else if ( ret == -1 ){
+		    break;
+		  } else if ( ret != 0 ){
+		    abort();
+		  }
+
+		  if ( handle_marker(cp, &output, &dst) != 0 ){
+		    break; /* error already shown */
+		  }
+		  
+
+		  if ( write_packet(cp, dst) != 0 ){
+		    break; /* error already shown */
+		  }
+
+		  written_packets++;
+		  if ( max_packets > 0 && stream_stat->read >= max_packets ){
+		    break;
+		  }
 		}
 	}
+
 
 	fprintf(stderr, "%s: There was a total of %'"PRIu64" packets recv.\n", program_name, stream_stat->recv);
 	fprintf(stderr, "%s: There was a total of %'"PRIu64" packets read.\n", program_name, stream_stat->read);
 	fprintf(stderr, "%s: There was a total of %'ld packets writen.\n", program_name, written_packets);
+
+	close(sockfd);
 
 	stream_close(src);
 	stream_close(dst);

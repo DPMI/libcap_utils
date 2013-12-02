@@ -68,6 +68,7 @@ struct marker {
  * marker. ptr is undefined if packet isn't a marker.
  */
 int is_marker(const struct cap_header* cp, struct marker* ptr, int port);
+int is_marker_udp(void* payload, struct marker* ptr, int port);
 
 #ifdef __cplusplus
 }

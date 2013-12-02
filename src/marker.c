@@ -59,3 +59,25 @@ int is_marker(const struct cap_header* cp, struct marker* ptr, int port){
 
 	return dst;
 }
+
+int is_marker_udp(void* payload, struct marker* ptr, int port){
+
+  /* match magic */
+  const struct marker* marker = (const struct marker*)(payload);
+  if ( ntohl(marker->magic) != MARKER_MAGIC ){ return 0; }
+
+  /* assume it is a marker */
+  if ( ptr ){
+    ptr->magic = ntohl(marker->magic);
+    ptr->version = marker->version;
+    ptr->flags = marker->flags;
+    ptr->reserved = ntohs(marker->reserved);
+    ptr->exp_id = ntohl(marker->exp_id);
+    ptr->run_id = ntohl(marker->run_id);
+    ptr->key_id = ntohl(marker->key_id);
+    ptr->seq_num = ntohl(marker->seq_num);
+    ptr->timestamp = be64toh(marker->timestamp);
+  }
+
+  return 1;
+}
