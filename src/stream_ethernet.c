@@ -91,7 +91,7 @@ static int stream_ethernet_read_frame(struct stream_ethernet* st, char* dst, str
 		}
 
 		/* Read data into framebuffer. */
-		int bytes = recvfrom(st->socket, dst, st->base.if_mtu + sizeof(struct ethhdr), 0, NULL, NULL);
+		int bytes = recvfrom(st->socket, dst, st->fb.frame_size, 0, NULL, NULL);
 		if ( bytes < 0 ){ /* error occurred */
 			perror("Cannot receive Ethernet data.");
 			break;
@@ -236,30 +236,30 @@ static int stream_ethernet_init(struct stream** stptr, const struct ether_addr* 
 		return ret;
 	}
 
-	const unsigned int if_mtu = ifstat.if_mtu;
+	const unsigned int frame_size = ifstat.if_mtu + sizeof(struct ethhdr);
 
 	/* default buffer_size of 250*MTU */
 	if ( buffer_size == 0 ){
-		buffer_size = 250 * if_mtu;
+		buffer_size = 250 * frame_size;
 	}
 
 	/* ensure buffer is a multiple of MTU and can hold at least one frame */
-	if ( buffer_size < if_mtu ){
+	if ( buffer_size < frame_size ){
 		return ERROR_BUFFER_LENGTH;
-	} else if ( buffer_size % if_mtu != 0 ){
+	} else if ( buffer_size % frame_size != 0 ){
 		return ERROR_BUFFER_MULTIPLE;
 	}
 
 	/* slightly backwards calculation, but user want to enter buffer size in bytes (and it maintains compatibility) */
-	const size_t num_frames = buffer_size / if_mtu;
-	buffer_size = stream_frame_buffer_size(num_frames, if_mtu);
+	const size_t num_frames = buffer_size / frame_size;
+	buffer_size = stream_frame_buffer_size(num_frames, frame_size);
 
 	/* Initialize stream */
-	if ( (ret = stream_alloc(stptr, PROTOCOL_ETHERNET_MULTICAST, sizeof(struct stream_ethernet), buffer_size, if_mtu) != 0) ){
+	if ( (ret = stream_alloc(stptr, PROTOCOL_ETHERNET_MULTICAST, sizeof(struct stream_ethernet), buffer_size, ifstat.if_mtu) != 0) ){
 		return ret;
 	}
 	struct stream_ethernet* st = (struct stream_ethernet*)*stptr;
-	stream_frame_init(&st->fb, (read_frame_callback)stream_ethernet_read_frame, (char*)st->frame, num_frames, if_mtu);
+	stream_frame_init(&st->fb, (read_frame_callback)stream_ethernet_read_frame, (char*)st->frame, num_frames, frame_size);
 
 	/* open raw socket */
 	if ( (st->socket=socket(AF_PACKET, SOCK_RAW, htons(proto))) < 0 ){

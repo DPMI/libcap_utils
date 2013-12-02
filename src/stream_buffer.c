@@ -30,11 +30,12 @@ size_t stream_frame_buffer_size(size_t num_frames, size_t mtu){
 	return num_frames * mtu + sizeof(char*) * num_frames;
 }
 
-void stream_frame_init(struct stream_frame_buffer* fb, read_frame_callback cb, char* src, size_t num_frames, size_t mtu){
+void stream_frame_init(struct stream_frame_buffer* fb, read_frame_callback cb, char* src, size_t num_frames, size_t frame_size){
 	const size_t frame_offset = sizeof(char*) * num_frames;
 
 	fb->read_frame = cb;
 	fb->frame = (char**)src;
+	fb->frame_size = frame_size;
 	fb->num_frames = num_frames;
 	fb->num_packets = 0;
 	fb->header_offset = 0;
@@ -42,7 +43,7 @@ void stream_frame_init(struct stream_frame_buffer* fb, read_frame_callback cb, c
 	/* setup buffer pointers (see brief overview at struct declaration) */
 	fb->read_ptr = NULL;
 	for ( unsigned int i = 0; i < num_frames; i++ ){
-		fb->frame[i] = src + frame_offset + i * mtu;
+		fb->frame[i] = src + frame_offset + i * frame_size;
 	}
 }
 

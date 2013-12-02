@@ -53,6 +53,13 @@ int iface_get(const char* name, struct iface* iface){
 	}
 	iface->if_mtu = ifr.ifr_mtu;
 
+	/* get interface hwaddr */
+	if(ioctl(fd, SIOCGIFHWADDR, &ifr) == -1) {
+		perror("SIOCGIFHWADDR");
+		exit(1);
+	}
+	memcpy(iface->if_hwaddr.ether_addr_octet, ifr.ifr_hwaddr.sa_data, ETH_ALEN);
+
 	/* query interface flags */
 	if ( ioctl(fd, SIOCGIFFLAGS, &ifr) == -1 ){
 		return errno;
