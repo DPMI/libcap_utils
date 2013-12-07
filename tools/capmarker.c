@@ -126,6 +126,64 @@ static int send_udp(const struct in_addr dst, in_port_t port){
 	return 0;
 }
 
+static int send_tcp(const struct in_addr dst, in_port_t port){
+  /* open socket */
+  int sd = socket(AF_INET, SOCK_STREAM, 0);
+  if ( sd == -1 ){
+    fprintf(stderr, "%s: failed to open socket: %s\n", program_name, strerror(errno));
+    return 1;
+  }
+
+  int on = 1;
+  if (setsockopt(sd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(int)) < 0) {
+    fprintf(stderr, "%s: setsockopt(SO_REUSEADDR) failed: %s\n", program_name, strerror(errno));
+    return 1;
+  }
+
+  /* setup source address */
+  static struct sockaddr_in src_addr;
+  memset(&src_addr, 0, sizeof(struct sockaddr_in));
+  src_addr.sin_family = AF_INET;
+  src_addr.sin_port = (in_port_t)htons(MARKERPORT);
+  src_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+
+  /* setup destination address */
+  static struct sockaddr_in dst_addr;
+  memset(&dst_addr, 0, sizeof(struct sockaddr_in));
+  dst_addr.sin_family = AF_INET;
+  dst_addr.sin_port = port;
+  dst_addr.sin_addr.s_addr = dst.s_addr;
+
+  if ( bind(sd, &src_addr, sizeof(struct sockaddr_in)) == -1 ){
+    fprintf(stderr, "%s: failed to bind socket: %s\n", program_name, strerror(errno));
+    return 1;
+  }
+
+
+
+  if ( connect(sd, &dst_addr, sizeof(struct sockaddr_in)) == -1 ){
+    fprintf(stderr, "%s: failed to bind socket: %s\n", program_name, strerror(errno));
+    return 1;
+  }
+
+  fprintf(stderr, "%s: Sending from %d to %d \n",program_name,MARKERPORT,port);
+
+  /* send marker */
+  if ( sendto(sd, &marker, sizeof(struct marker), 0, (struct sockaddr*)&dst_addr, sizeof(struct sockaddr_in)) == -1 ){
+    fprintf(stderr, "%s: sendto failed: %s\n", program_name, strerror(errno));
+  }
+
+  close(sd);
+  return 0;
+}
+
+
+
+
+
+
+
+
 int main(int argc, char **argv){
 	/* extract program name from path. e.g. /path/to/MArCd -> MArCd */
 	const char* separator = strrchr(argv[0], '/');
@@ -247,6 +305,11 @@ int main(int argc, char **argv){
 		switch ( mode ){
 		case MODE_UDP:
 			send_udp(ip_addr, ip_port);
+		case MODE_TCP:
+			send_tcp(ip_addr, ip_port);
+		default:
+		  fprintf(stderr,"Selected method is not implemented.\n");
+
 		}
 	}
 
