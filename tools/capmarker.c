@@ -299,14 +299,19 @@ int main(int argc, char **argv){
 			ip_port = htons(atoi(tmp));
 
 			fprintf(stderr, "%s: Sending marker to %s:%d\n", program_name, inet_ntoa(ip_addr), ntohs(ip_port));
+			break;
+		default:
+		  fprintf(stderr,"What mode are you trying? I can handle TCP and UDP, whats %d?.\n",mode);
 		}
 
 		/* send */
 		switch ( mode ){
 		case MODE_UDP:
 			send_udp(ip_addr, ip_port);
+			break;
 		case MODE_TCP:
 			send_tcp(ip_addr, ip_port);
+			break;
 		default:
 		  fprintf(stderr,"Selected method is not implemented.\n");
 

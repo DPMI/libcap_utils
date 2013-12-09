@@ -108,6 +108,9 @@ struct packet {
 } __attribute__((packed));
 
 
+stream_t dst;
+stream_addr_t output = STREAM_ADDR_INITIALIZER;
+
 
 static void show_usage(void){
 	printf("(C) 2011 David Sveningsson <david.sveningsson@bth.se>\n");
@@ -124,7 +127,7 @@ static void show_usage(void){
 	       "  -K, --key=KEY        If markers are used, and the key is set, the marker must contain\n"
 	       "                       this key as to be considered as a marker. If key is not set, normal\n"
 	       "                       behaviour is applied. \n"
-	       "  -L, --listen         If applied, we will accept capmarker messages via UDP.\n"
+	       "  -L, --listen         If applied, we will accept capmarker messages via UDP and TCP.\n"
 	       "                       Will be treated the same as a mp marker.\n"
 	       "  -P, --port           UDP port to listen to [default: 4000].\n"
 	       "  -f, --marker-format  Renaming format for marker.\n"
@@ -407,9 +410,11 @@ static int handle_marker_server(void* payload, stream_addr_t* addr, stream_t* st
   }
 
 
-  if ( ! ( marker_key && (mark.key_id == marker_key) ) ){
-    fprintf(stderr, "Found marker, missmatch on key ; looking for %zd, got %zd.\n ",marker_key, mark.key_id);
-    return 0;
+  if (marker_key>0){
+    if ( mark.key_id != marker_key ){
+      fprintf(stderr, "Found marker, missmatch on key ; looking for %zd, got %zd.\n ",marker_key, mark.key_id);
+      return 0;
+    }
   }
 
 
@@ -472,9 +477,118 @@ static void set_destination(stream_addr_t* addr, const char* str){
 	}
 }
 
+void *tcprelay(void *arg){
+  fprintf(stderr,"TCP thread awaken.\n");
+  int tcpmainsocket;
+  int tcpchildsocket;
+  int clientlen;
+  struct sockaddr_in clientaddr; /* client addr */
+  struct sockaddr_in serveraddr; /* client addr */
+
+  int socket_read;
+  int errmsg;
+  int optval;
+  
+
+  tcpmainsocket = socket(PF_INET, SOCK_STREAM, 0);
+  if ( tcpmainsocket < 0 ){
+    error("socket");
+  }
+
+  optval = 1;
+  setsockopt(tcpmainsocket, SOL_SOCKET, SO_REUSEADDR, (const void *)&optval , sizeof(int));
+
+
+  /*--- bind port/address to socket ---*/
+  memset(&serveraddr, 0, sizeof(serveraddr));
+  serveraddr.sin_family = AF_INET;
+  serveraddr.sin_port = htons(portno);
+  serveraddr.sin_addr.s_addr = INADDR_ANY;                   /* any interface */
+  if ( bind(tcpmainsocket, (struct sockaddr*)&serveraddr, sizeof(serveraddr)) != 0 ){
+    error("bind");
+  }
+  /*--- make into listener with 10 slots ---*/
+  if ( listen(tcpmainsocket, 10) != 0 ){
+    error("listen");
+  }
+
+  int packet_size=sizeof(struct cap_header) + sizeof(struct ethhdr) + sizeof(struct iphdr) + sizeof(struct udphdr) + sizeof( struct marker);                        
+  struct packet* packet=(struct packet*)(malloc(packet_size));                                                                                                      
+  struct timeval pkttv;                                                                                                                                             
+  
+    /* caphead */                                                                                                                                                     
+    packet->cap.len = packet_size-sizeof(struct cap_header);                                                                                                          
+    packet->cap.caplen = packet_size-sizeof(struct cap_header);                                                                                                       
+    /*ethernet*/                                                                                                                                                      
+    packet->eth_inner.h_proto = htons(ETHERTYPE_IP);                                                                                                                  
+    //memcpy(&packet->eth_inner.h_source, &hwaddr, ETH_ALEN);                                                                                                         
+    //memcpy(&packet->eth_inner.h_dest, &addr.ether_addr, ETH_ALEN);                                                                                                  
+    strncpy(packet->cap.nic, "c0", 2);                                                                                                                                
+    strncpy(packet->cap.mampid, "control", 8);                                                                                                                        
+    /* The following IP&UDP packet is just a place holder, it's configured just to trick libcap_utils to think that its a marker */                                   
+    /* ip */                                                                                                                                                          
+    packet->ip_inner.protocol=IPPROTO_UDP;                                                                                                                            
+    packet->ip_inner.saddr= inet_addr("127.0.0.1");                                                                                                                   
+    packet->ip_inner.daddr= inet_addr("127.0.0.1");                                                                                                                   
+    packet->ip_inner.ihl=5;                                                                                                                                           
+    packet->ip_inner.version=4;                                                                                                                                       
+    packet->ip_inner.tot_len=sizeof(struct iphdr) + sizeof(struct udphdr) + sizeof(struct marker);                                                                    
+    packet->ip_inner.id=htonl(12345);                                                                                                                                 
+    /* udp */                                                                                                                                                         
+    packet->udp_inner.dest=htons(portno);                                                                                                                             
+    packet->udp_inner.source=htons(MARKERPORT);                                                                                                                       
+    packet->udp_inner.len=sizeof(struct udphdr)+sizeof(struct marker);                                                                                                
+    /* Make sure that the marker comment is empty. */                                                                                                                 
+    memset(packet->mark_inner.comment,0,64);
+
+    int sockread;
+
+
+  /*--- begin waiting for connections ---*/
+    while (keep_running){ 
+      fprintf(stderr,"Waiting for TCP input on %d.\n",portno);
+      tcpchildsocket = accept(tcpmainsocket, (struct sockaddr *)&clientaddr, &clientlen);     /* accept connection */
+      if (tcpchildsocket<0){
+	error("Error on accept.\n");
+      }
+      fprintf(stderr,"Accepted tcp connection, read message.");
+      /* There should be some bytes to read. */
+      sockread=recvfrom(tcpchildsocket, buf, BUFSIZE,0, (struct sockaddr *) &clientaddr, &clientlen);
+      if (sockread < 0) { 
+	error("Error in recvfrom .");
+      }
+      fprintf(stderr,"Received marker via server (TCP).\n");
+      if ( handle_marker_server(&buf, &output, &dst) != 0 ){
+	break; /* error already shown */
+      }
+      /* Use the 'dummy' packet */
+      /* Give the packet a proper timestamp */
+      gettimeofday(&pkttv,NULL);
+      packet->cap.ts=timeval_to_timepico(pkttv);
+      
+      /* Copy the marker message that we got, relay it. */
+      memcpy(&packet->mark_inner,&buf,sockread);
+      
+      if ( write_packet(packet, dst) != 0 ){                                                                                                                        
+	break; /* error already shown */                                                                                                                            
+      }
+      fprintf(stderr,"Close connection.\n");
+      close(tcpchildsocket);
+    }
+   
+    close(tcpmainsocket);
+
+}
+
+
+
+
+
 int main(int argc, char **argv){
 	fprintf(stderr, "capdump-%s\n", caputils_version(NULL));
 	int op, option_index = -1;
+
+	pthread_t child;
 
 	/* extract program name from path. e.g. /path/to/MArCd -> MArCd */
 	const char* separator = strrchr(argv[0], '/');
@@ -486,7 +600,8 @@ int main(int argc, char **argv){
 
 	char* iface = NULL;
 	size_t buffer_size = 0;
-	stream_addr_t output = STREAM_ADDR_INITIALIZER;
+
+
 	unsigned int max_packets = 0;
 	unsigned long written_packets = 0;
 	marker_key = 0; /* Default key, 0 -- not applicable */
@@ -573,7 +688,10 @@ int main(int argc, char **argv){
 			 * main loop: wait for a datagram, then echo it
 			 */
 			clientlen = sizeof(clientaddr);
-			fprintf(stderr," Waiting for markers on port %d.\n",portno);
+			fprintf(stderr," Waiting for markers on UDP port %d.\n",portno);
+			pthread_create(&child,0,tcprelay,0);
+			pthread_detach(child);
+			 
 			break;
 			
 		case 'C': /* --marker-comment */
@@ -612,7 +730,7 @@ int main(int argc, char **argv){
 	}
 
 	stream_t src;
-	stream_t dst;
+
 	long ret;
 
 	/* use stdout as default output if connected stdout is redirected */
@@ -699,70 +817,74 @@ int main(int argc, char **argv){
 	memset(packet->mark_inner.comment,0,64);
 
 	while( keep_running ){
-	          errmsg=ioctl(sockfd, FIONREAD,&socket_read);
-		  if(errmsg<0) {
-		    error("ioctl");
-		  }
-		  /* check if the udp socket received any data, require it to be the size of a marker message */
-		  if (socket_read>=sizeof(struct marker)) {
-		    /* There should be some bytes to read. */
-		    sockread=recvfrom(sockfd, buf, BUFSIZE,0, (struct sockaddr *) &clientaddr, &clientlen);
-		    if (sockread < 0) {
-		      error("Error in recvfrom .");
-		    }
-		    fprintf(stderr,"Received marker via server.\n");
-		    if ( handle_marker_server(&buf, &output, &dst) != 0 ){
-		      break; /* error already shown */
-		    }
-		    
-		    /* Use the 'dummy' packet */
-		    /* Give the packet a proper timestamp */
-		    gettimeofday(&pkttv,NULL);
-		    packet->cap.ts=timeval_to_timepico(pkttv);
-		    
-		    /* Copy the marker message that we got, relay it. */
-		    memcpy(&packet->mark_inner,&buf,sockread);
-		    
-		    
-		    if ( write_packet(packet, dst) != 0 ){
-		      break; /* error already shown */
-		    }
-		    
-		  } else { /* If no marker was rececived via udp do normal business */
-
-		  /* Read the next packet */
-		  cap_head* cp;
-		  ret = stream_read(src, &cp, NULL, NULL);
-		  if ( ret == EAGAIN ){ /* a timeout occured */
-		    continue;
-		  } else if ( ret == EINTR && keep_running != 0 ){ /* don't abort unless signal caused a halt */
-		    continue;
-		  } else if ( ret > 0 ){ /* either an error or proper shutdown */
-		    fprintf(stderr, "%s: stream_read() returned 0x%08lX: %s\n", program_name, ret, caputils_error_string(ret));
-		    break;
-		  } else if ( ret == -1 ){
-		    break;
-		  } else if ( ret != 0 ){
-		    abort();
-		  }
-
-		  if ( handle_marker(cp, &output, &dst) != 0 ){
-		    break; /* error already shown */
-		  }
-		  
-
-		  if ( write_packet(cp, dst) != 0 ){
-		    break; /* error already shown */
-		  }
-
-		  written_packets++;
-		  if ( max_packets > 0 && stream_stat->read >= max_packets ){
-		    break;
-		  }
-		}
+	  if(sockfd!=0){
+	    errmsg=ioctl(sockfd, FIONREAD,&socket_read);
+	    if(errmsg<0) {
+	      error("ioctl");
+	    }
+	    /* check if the udp socket received any data, require it to be the size of a marker message */
+	  } else {
+	    socket_read=0;
+	  }
+	  if (socket_read>=sizeof(struct marker)) {
+	    /* There should be some bytes to read. */
+	    sockread=recvfrom(sockfd, buf, BUFSIZE,0, (struct sockaddr *) &clientaddr, &clientlen);
+	    if (sockread < 0) {
+	      error("Error in recvfrom .");
+	    }
+	    fprintf(stderr,"Received marker via server.\n");
+	    if ( handle_marker_server(&buf, &output, &dst) != 0 ){
+	      break; /* error already shown */
+	    }
+	    
+	    /* Use the 'dummy' packet */
+	    /* Give the packet a proper timestamp */
+	    gettimeofday(&pkttv,NULL);
+	    packet->cap.ts=timeval_to_timepico(pkttv);
+	    
+	    /* Copy the marker message that we got, relay it. */
+	    memcpy(&packet->mark_inner,&buf,sockread);
+	    
+	    
+	    if ( write_packet(packet, dst) != 0 ){
+	      break; /* error already shown */
+	    }
+	    
+	  } else { /* If no marker was rececived via udp do normal business */
+	    
+	    /* Read the next packet */
+	    cap_head* cp;
+	    ret = stream_read(src, &cp, NULL, NULL);
+	    if ( ret == EAGAIN ){ /* a timeout occured */
+	      continue;
+	    } else if ( ret == EINTR && keep_running != 0 ){ /* don't abort unless signal caused a halt */
+	      continue;
+	    } else if ( ret > 0 ){ /* either an error or proper shutdown */
+	      fprintf(stderr, "%s: stream_read() returned 0x%08lX: %s\n", program_name, ret, caputils_error_string(ret));
+	      break;
+	    } else if ( ret == -1 ){
+	      break;
+	    } else if ( ret != 0 ){
+	      abort();
+	    }
+	    
+	    if ( handle_marker(cp, &output, &dst) != 0 ){
+	      break; /* error already shown */
+	    }
+	    
+	    
+	    if ( write_packet(cp, dst) != 0 ){
+	      break; /* error already shown */
+	    }
+	    
+	    written_packets++;
+	    if ( max_packets > 0 && stream_stat->read >= max_packets ){
+	      break;
+	    }
+	  }
 	}
-
-
+	
+	
 	fprintf(stderr, "%s: There was a total of %'"PRIu64" packets recv.\n", program_name, stream_stat->recv);
 	fprintf(stderr, "%s: There was a total of %'"PRIu64" packets read.\n", program_name, stream_stat->read);
 	fprintf(stderr, "%s: There was a total of %'ld packets writen.\n", program_name, written_packets);
