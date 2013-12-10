@@ -67,9 +67,9 @@ static int progress = -1;          /* if >0 progress reports is written to this 
 static uint32_t marker_key = 0; /* Key to look for, 0 means disabled */
 
 /* Added to act as a marker recipient */
+static int use_listen = 0;
 static int sockfd = 0; /* Socket for the UDP server */
 static int portno = 4000; /* Port number for UDP server */
-struct sockaddr_in serveraddr; /* server's addr */
 struct sockaddr_in clientaddr; /* client addr */
 struct hostent *hostp; /* client host info */
 static char buf[BUFSIZE]; /* message buf */
@@ -448,7 +448,7 @@ static void set_destination(stream_addr_t* addr, const char* str){
 	}
 }
 
-void *tcprelay(void *arg){
+static void *tcprelay(void *arg){
 	fprintf(stderr,"TCP thread awaken.\n");
 	int tcpmainsocket;
 	int tcpchildsocket;
@@ -546,6 +546,46 @@ void *tcprelay(void *arg){
 	return NULL;
 }
 
+static void setup_udp(){
+	/* We will activate the udp marker receiver */
+	/*
+	 * socket: create the parent socket
+	 */
+	sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+	if (sockfd < 0)
+		error("ERROR opening socket");
+
+	/* setsockopt: Handy debugging trick that lets
+	 * us rerun the server immediately after we kill it;
+	 * otherwise we have to wait about 20 secs.
+	 * Eliminates "ERROR on binding: Address already in use" error.
+	 */
+	optval = 1;
+	setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR,
+	           (const void *)&optval , sizeof(int));
+
+	/*
+	 * build the server's Internet address
+	 */
+	struct sockaddr_in serveraddr;
+	bzero((char *) &serveraddr, sizeof(serveraddr));
+	serveraddr.sin_family = AF_INET;
+	serveraddr.sin_addr.s_addr = htonl(INADDR_ANY);
+	serveraddr.sin_port = htons((unsigned short)portno);
+
+	/*
+	 * bind: associate the parent socket with a port
+	 */
+	if (bind(sockfd, (struct sockaddr *) &serveraddr,
+	         sizeof(serveraddr)) < 0)
+		error("ERROR on binding");
+
+	/*
+	 * main loop: wait for a datagram, then echo it
+	 */
+	fprintf(stderr," Waiting for markers on UDP port %d.\n",portno);
+}
+
 int main(int argc, char **argv){
 	fprintf(stderr, "capdump-%s\n", caputils_version(NULL));
 
@@ -605,47 +645,13 @@ int main(int argc, char **argv){
 		case 'K': /* --marker-key */
 			marker_key = atoi(optarg);
 			break;
+
 		case 'P': /* set port */
 			portno=atoi(optarg);
 			break;
-		case 'L': /* We will activate the udp marker receiver */
-		          /*
-		           * socket: create the parent socket
-		           */
-			sockfd = socket(AF_INET, SOCK_DGRAM, 0);
-			if (sockfd < 0)
-				error("ERROR opening socket");
 
-			/* setsockopt: Handy debugging trick that lets
-			 * us rerun the server immediately after we kill it;
-			 * otherwise we have to wait about 20 secs.
-			 * Eliminates "ERROR on binding: Address already in use" error.
-			 */
-			optval = 1;
-			setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR,
-			           (const void *)&optval , sizeof(int));
-
-			/*
-			 * build the server's Internet address
-			 */
-			bzero((char *) &serveraddr, sizeof(serveraddr));
-			serveraddr.sin_family = AF_INET;
-			serveraddr.sin_addr.s_addr = htonl(INADDR_ANY);
-			serveraddr.sin_port = htons((unsigned short)portno);
-
-			/*
-			 * bind: associate the parent socket with a port
-			 */
-			if (bind(sockfd, (struct sockaddr *) &serveraddr,
-			         sizeof(serveraddr)) < 0)
-				error("ERROR on binding");
-
-			/*
-			 * main loop: wait for a datagram, then echo it
-			 */
-			fprintf(stderr," Waiting for markers on UDP port %d.\n",portno);
-			pthread_create(&child,0,tcprelay,0);
-			pthread_detach(child);
+		case 'L': /* --listen */
+			use_listen = 1;
 			break;
 
 		case 'C': /* --marker-comment */
@@ -737,6 +743,13 @@ int main(int argc, char **argv){
 	/* key validation */
 	if (marker_key){
 		fprintf(stderr, "%s: Looking for %ld as key.\n", program_name, (unsigned long)marker_key);
+	}
+
+	/* setup listen server */
+	if ( use_listen ){
+		setup_udp();
+		pthread_create(&child,0,tcprelay,0);
+		pthread_detach(child);
 	}
 
 	/* Now setup the socket poll/select */
