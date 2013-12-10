@@ -64,12 +64,11 @@ static const char* comment = "capdump-" VERSION " stream";
 static const struct stream_stat* stream_stat = NULL;
 static char mpid[8];
 static int progress = -1;          /* if >0 progress reports is written to this file descriptor */
-static uint32_t marker_key; /* Key to look for */
+static uint32_t marker_key = 0; /* Key to look for, 0 means disabled */
 
 /* Added to act as a marker recipient */
-static int sockfd; /* Socket for the UDP server */
-static int portno; /* Port number, default 4000 */
-static int clientlen; /* byte size of client addr */
+static int sockfd = 0; /* Socket for the UDP server */
+static int portno = 4000; /* Port number for UDP server */
 struct sockaddr_in serveraddr; /* server's addr */
 struct sockaddr_in clientaddr; /* client addr */
 struct hostent *hostp; /* client host info */
@@ -511,7 +510,7 @@ void *tcprelay(void *arg){
 
 	/*--- begin waiting for connections ---*/
 	while (keep_running){
-		socklen_t clientlen;
+		socklen_t clientlen = sizeof(clientaddr);
 
 		fprintf(stderr,"Waiting for TCP input on %d.\n",portno);
 		tcpchildsocket = accept(tcpmainsocket, (struct sockaddr *)&clientaddr, &clientlen);     /* accept connection */
@@ -548,9 +547,6 @@ void *tcprelay(void *arg){
 
 int main(int argc, char **argv){
 	fprintf(stderr, "capdump-%s\n", caputils_version(NULL));
-	int op, option_index = -1;
-
-	pthread_t child;
 
 	/* extract program name from path. e.g. /path/to/MArCd -> MArCd */
 	const char* separator = strrchr(argv[0], '/');
@@ -562,14 +558,11 @@ int main(int argc, char **argv){
 
 	char* iface = NULL;
 	size_t buffer_size = 0;
-
-
 	unsigned int max_packets = 0;
 	unsigned long written_packets = 0;
-	marker_key = 0; /* Default key, 0 -- not applicable */
-	portno=4000;  /* Default port for udp server */
-	sockfd=0; /* Default, no server active */
+	pthread_t child;
 
+	int op, option_index = -1;
 	while ( (op = getopt_long(argc, argv, shortopts, longopts, &option_index)) != -1 ){
 		switch (op){
 		case 0:   /* long opt */
@@ -649,11 +642,9 @@ int main(int argc, char **argv){
 			/*
 			 * main loop: wait for a datagram, then echo it
 			 */
-			clientlen = sizeof(clientaddr);
 			fprintf(stderr," Waiting for markers on UDP port %d.\n",portno);
 			pthread_create(&child,0,tcprelay,0);
 			pthread_detach(child);
-
 			break;
 
 		case 'C': /* --marker-comment */
@@ -793,6 +784,7 @@ int main(int argc, char **argv){
 		}
 		if (socket_read>=sizeof(struct marker)) {
 			/* There should be some bytes to read. */
+			socklen_t clientlen = sizeof(clientaddr);
 			sockread=recvfrom(sockfd, buf, BUFSIZE,0, (struct sockaddr *) &clientaddr, &clientlen);
 			if (sockread < 0) {
 				error("Error in recvfrom .");
