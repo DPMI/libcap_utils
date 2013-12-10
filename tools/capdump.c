@@ -479,7 +479,6 @@ static void *tcprelay(void *arg){
 
 	int packet_size=sizeof(struct cap_header) + sizeof(struct ethhdr) + sizeof(struct iphdr) + sizeof(struct udphdr) + sizeof( struct marker);
 	struct packet* packet=(struct packet*)malloc(sizeof(struct packet));
-	struct timeval pkttv;
 
 	/* caphead */
 	packet->cap.len = packet_size-sizeof(struct cap_header);
@@ -529,8 +528,7 @@ static void *tcprelay(void *arg){
 		}
 		/* Use the 'dummy' packet */
 		/* Give the packet a proper timestamp */
-		gettimeofday(&pkttv,NULL);
-		packet->cap.ts=timeval_to_timepico(pkttv);
+		packet->cap.ts = timepico_now();
 
 		/* Copy the marker message that we got, relay it. */
 		memcpy(&packet->mark_inner,&buf,sockread);
@@ -643,9 +641,7 @@ static int handle_udp(struct packet* packet){
 
 	/* Use the 'dummy' packet */
 	/* Give the packet a proper timestamp */
-	struct timeval pkttv;
-	gettimeofday(&pkttv,NULL);
-	packet->cap.ts = timeval_to_timepico(pkttv);
+	packet->cap.ts = timepico_now();
 
 	/* Copy the marker message that we got, relay it. */
 	memcpy(&packet->mark_inner,&buf, bytes);
