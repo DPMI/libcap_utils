@@ -538,7 +538,7 @@ void *tcprelay(void *arg){
 		/* Copy the marker message that we got, relay it. */
 		memcpy(&packet->mark_inner,&buf,sockread);
 
-		if ( write_packet(packet, dst) != 0 ){
+		if ( write_packet(&packet->cap, dst) != 0 ){
 			break; /* error already shown */
 		}
 		fprintf(stderr,"Close connection.\n");
@@ -809,7 +809,7 @@ int main(int argc, char **argv){
 			/* Copy the marker message that we got, relay it. */
 			memcpy(&packet->mark_inner,&buf,sockread);
 
-			if ( write_packet(packet, dst) != 0 ){
+			if ( write_packet(&packet->cap, dst) != 0 ){
 				break; /* error already shown */
 			}
 
