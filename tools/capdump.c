@@ -863,6 +863,7 @@ int main(int argc, char **argv){
 	stream_close(dst);
 	stream_addr_reset(&output);
 	free(fmt_basename);
+	free(udp_dummy);
 
 	return 0;
 }
