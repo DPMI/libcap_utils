@@ -71,10 +71,6 @@ static int use_listen = 0;
 static int sockfd = 0; /* Socket for the UDP server */
 static int portno = 4000; /* Port number for UDP server */
 struct sockaddr_in clientaddr; /* client addr */
-struct hostent *hostp; /* client host info */
-char *hostaddrp; /* dotted decimal host addr string */
-static int optval; /* flag value for setsockopt */
-struct ether_addr hwaddr;
 
 static const char* shortopts = "o:p:i:c:b:m:K:LP:f:M:C:s::h";
 static struct option longopts[]= {
@@ -453,7 +449,6 @@ static void *tcprelay(void *arg){
 	int tcpchildsocket;
 	struct sockaddr_in clientaddr; /* client addr */
 	struct sockaddr_in serveraddr; /* client addr */
-	int optval;
 	static char buf[BUFSIZE]; /* message buf */
 
 	tcpmainsocket = socket(PF_INET, SOCK_STREAM, 0);
@@ -461,7 +456,7 @@ static void *tcprelay(void *arg){
 		error("socket");
 	}
 
-	optval = 1;
+	int optval = 1;
 	setsockopt(tcpmainsocket, SOL_SOCKET, SO_REUSEADDR, (const void *)&optval , sizeof(int));
 
 	/*--- bind port/address to socket ---*/
@@ -558,7 +553,7 @@ static void setup_udp(struct packet* packet){
 	 * otherwise we have to wait about 20 secs.
 	 * Eliminates "ERROR on binding: Address already in use" error.
 	 */
-	optval = 1;
+	int optval = 1;
 	setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR,
 	           (const void *)&optval , sizeof(int));
 
