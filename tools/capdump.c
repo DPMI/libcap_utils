@@ -543,6 +543,7 @@ void *tcprelay(void *arg){
 	}
 
 	close(tcpmainsocket);
+	return NULL;
 }
 
 int main(int argc, char **argv){
