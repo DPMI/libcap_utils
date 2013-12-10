@@ -41,6 +41,7 @@
 #include <inttypes.h>
 #include "be64toh.h" /* for compability */
 #include <time.h>
+#include <pthread.h>
 
 enum MarkerMode {
 	MARKER_INCREMENT,
