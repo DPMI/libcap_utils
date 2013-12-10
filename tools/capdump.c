@@ -374,18 +374,14 @@ static int validate_key(const struct marker* marker){
 	return 1;
 }
 
-static int handle_marker(const struct cap_header* cp, stream_addr_t* addr, stream_t* st){
-	struct marker mark;
-	if ( !(marker && is_marker(cp, &mark, marker)) ){
-		return 0;
-	}
-
-	if ( !validate_key(&mark) ){
+static int handle_marker(const struct marker* mark, stream_addr_t* addr, stream_t* st){
+	/* validate key */
+	if ( !validate_key(mark) ){
 		return 0;
 	}
 
 	/* show marker */
-	marker_report(&mark);
+	marker_report(mark);
 
 	/* abort if output is pipe */
 	if ( strcmp("/dev/stdout", addr->local_filename) == 0 ){
@@ -393,7 +389,7 @@ static int handle_marker(const struct cap_header* cp, stream_addr_t* addr, strea
 	}
 
 	/* termination marker */
-	if ( mark.flags & MARKER_TERMINATE ){
+	if ( mark->flags & MARKER_TERMINATE ){
 		if ( *st ){
 			stream_addr_str(addr, "", STREAM_ADDR_LOCAL);
 			stream_close(*st);
@@ -403,11 +399,19 @@ static int handle_marker(const struct cap_header* cp, stream_addr_t* addr, strea
 		return 0;
 	}
 
-	if ( open_next(addr, st, &mark) != 0 ){
+	if ( open_next(addr, st, mark) != 0 ){
 		return 1; /* error already shown */
 	}
 
 	return 0;
+}
+
+static int handle_marker_caphead(const struct cap_header* cp, stream_addr_t* addr, stream_t* st){
+	struct marker mark;
+	if ( !(marker && is_marker(cp, &mark, marker)) ){
+		return 0;
+	}
+	return handle_marker(&mark, addr, st);
 }
 
 static int handle_marker_server(void* payload, stream_addr_t* addr, stream_t* st){
@@ -415,35 +419,7 @@ static int handle_marker_server(void* payload, stream_addr_t* addr, stream_t* st
 	if ( !(marker && is_marker_udp(payload, &mark, marker)) ){
 		return 0;
 	}
-
-	if ( !validate_key(&mark) ){
-		return 0;
-	}
-
-	/* show marker */
-	marker_report(&mark);
-
-	/* abort if output is pipe */
-	if ( strcmp("/dev/stdout", addr->local_filename) == 0 ){
-		return 1;
-	}
-
-	/* termination marker */
-	if ( mark.flags & MARKER_TERMINATE ){
-		if ( *st ){
-			stream_addr_str(addr, "", STREAM_ADDR_LOCAL);
-			stream_close(*st);
-			*st = NULL;
-		}
-		fprintf(stderr, "\ttermination flag set, stopping capture until next marker arrives\n");
-		return 0;
-	}
-
-	if ( open_next(addr, st, &mark) != 0 ){
-		return 1; /* error already shown */
-	}
-
-	return 0;
+	return handle_marker(&mark, addr, st);
 }
 
 static int write_packet(struct cap_header* cp, stream_t st){
@@ -854,7 +830,7 @@ int main(int argc, char **argv){
 				abort();
 			}
 
-			if ( handle_marker(cp, &output, &dst) != 0 ){
+			if ( handle_marker_caphead(cp, &output, &dst) != 0 ){
 				break; /* error already shown */
 			}
 
