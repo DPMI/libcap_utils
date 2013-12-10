@@ -453,7 +453,6 @@ void *tcprelay(void *arg){
 	fprintf(stderr,"TCP thread awaken.\n");
 	int tcpmainsocket;
 	int tcpchildsocket;
-	int clientlen;
 	struct sockaddr_in clientaddr; /* client addr */
 	struct sockaddr_in serveraddr; /* client addr */
 	int socket_read;
@@ -514,6 +513,8 @@ void *tcprelay(void *arg){
 
 	/*--- begin waiting for connections ---*/
 	while (keep_running){
+		socklen_t clientlen;
+
 		fprintf(stderr,"Waiting for TCP input on %d.\n",portno);
 		tcpchildsocket = accept(tcpmainsocket, (struct sockaddr *)&clientaddr, &clientlen);     /* accept connection */
 		if (tcpchildsocket<0){
