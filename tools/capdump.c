@@ -741,9 +741,12 @@ int main(int argc, char **argv){
 		setitimer(ITIMER_REAL, &tv, NULL);
 		signal(SIGALRM, progress_report);
 	}
+
+	/* key validation */
 	if (marker_key){
-		fprintf(stderr, "Looking for %zd as key.\n",marker_key);
+		fprintf(stderr, "%s: Looking for %ld as key.\n", program_name, (unsigned long)marker_key);
 	}
+
 	/* Now setup the socket poll/select */
 	int socket_read=0;
 	int errmsg;
