@@ -75,7 +75,6 @@ struct hostent *hostp; /* client host info */
 static char buf[BUFSIZE]; /* message buf */
 char *hostaddrp; /* dotted decimal host addr string */
 static int optval; /* flag value for setsockopt */
-static int n; /* message byte size */
 struct ether_addr hwaddr;
 
 static const char* shortopts = "o:p:i:c:b:m:K:LP:f:M:C:s::h";
@@ -455,8 +454,6 @@ void *tcprelay(void *arg){
 	int tcpchildsocket;
 	struct sockaddr_in clientaddr; /* client addr */
 	struct sockaddr_in serveraddr; /* client addr */
-	int socket_read;
-	int errmsg;
 	int optval;
 
 	tcpmainsocket = socket(PF_INET, SOCK_STREAM, 0);
