@@ -362,13 +362,25 @@ static int open_next(stream_addr_t* addr, stream_t* st, const struct marker* mar
 	return 0;
 }
 
+/**
+ * Validate selected key versus key present in marker.
+ * @return 1 if key is valid.
+ */
+static int validate_key(const struct marker* marker){
+	if ( ! (marker_key && (marker->key_id == marker_key)) ){
+		fprintf(stderr, "%s: Found marker, mismatch on key: looking for %ld, got %ld.\n ", program_name, (unsigned long)marker_key, (unsigned long)marker->key_id);
+		return 0;
+	}
+	return 1;
+}
+
 static int handle_marker(const struct cap_header* cp, stream_addr_t* addr, stream_t* st){
 	struct marker mark;
 	if ( !(marker && is_marker(cp, &mark, marker)) ){
 		return 0;
 	}
-	if ( ! ( marker_key && (mark.key_id == marker_key) ) ){
-		fprintf(stderr, "Found marker, missmatch on key ; looking for %zd, got %zd.\n ",marker_key, mark.key_id);
+
+	if ( !validate_key(&mark) ){
 		return 0;
 	}
 
@@ -404,11 +416,8 @@ static int handle_marker_server(void* payload, stream_addr_t* addr, stream_t* st
 		return 0;
 	}
 
-	if (marker_key>0){
-		if ( mark.key_id != marker_key ){
-			fprintf(stderr, "Found marker, missmatch on key ; looking for %zd, got %zd.\n ",marker_key, mark.key_id);
-			return 0;
-		}
+	if ( !validate_key(&mark) ){
+		return 0;
 	}
 
 	/* show marker */
