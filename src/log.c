@@ -46,7 +46,8 @@ static void write_time(FILE* fp){
 static void write_tag(FILE* fp, const char* tag){
 	static const size_t tag_width = 7;
 	const size_t len = strlen(tag);
-	const size_t diff = tag_width - len;
+	// make sure that we dont have negative diff, would make half very large...
+	const size_t diff = (tag_width - len) > 0 ? (tag_width - len) : 0 ;
 	const size_t half = diff >> 1; /* divide by 2 */
 	fputc('[', fp);
 	{ /* left padding (adding remainder here, so the sum of padding and tag is tag_width) */
