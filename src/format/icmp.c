@@ -26,7 +26,7 @@
 void print_icmp(FILE* dst, const struct cap_header* cp, net_t net, const struct icmphdr* icmp, unsigned int flags){
 	fputs("ICMP", dst);
 	if ( flags & FORMAT_HEADER ){
-		fprintf(dst, "[Type=%d, code=%d]", icmp->type, icmp->code);
+	  fprintf(dst, "[Type=%d, code=%d]", ntohs(icmp->type), ntohs(icmp->code));
 	}
 
 	fprintf(dst, ": %s --> %s",  net->net_src, net->net_dst);
@@ -38,7 +38,7 @@ void print_icmp(FILE* dst, const struct cap_header* cp, net_t net, const struct 
 
 	switch ( icmp->type ){
 	case ICMP_ECHOREPLY:
-		fprintf(dst, "echo reply: SEQNR = %d ", icmp->un.echo.sequence);
+	  fprintf(dst, "echo reply: %d SEQNR = %d ", ntohs(icmp->un.echo.id), ntohs(icmp->un.echo.sequence));
 		break;
 
 	case ICMP_DEST_UNREACH:
@@ -72,7 +72,7 @@ void print_icmp(FILE* dst, const struct cap_header* cp, net_t net, const struct 
 		break;
 
 	case ICMP_ECHO:
-		fprintf(dst, "echo reqest: SEQNR = %d ", icmp->un.echo.sequence);
+	  fprintf(dst, "echo reqest: %d SEQNR = %d ", ntohs(icmp->un.echo.id), ntohs(icmp->un.echo.sequence));
 		break;
 
 	case ICMP_TIME_EXCEEDED:
