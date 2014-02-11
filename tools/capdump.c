@@ -619,7 +619,7 @@ static int handle_udp(struct packet* packet){
 	if ( ioctl(sockfd, FIONREAD, &bytes) != 0) {
 		fprintf(stderr, "%s: ioctl(udp, FIONREAD, ..) failed: %s\n", program_name, strerror(errno));
 	}
-	if ( bytes < sizeof(struct marker) ) {
+	if ( bytes < (int)sizeof(struct marker) ) {
 		return 0;
 	}
 
