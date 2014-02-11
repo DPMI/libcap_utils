@@ -179,6 +179,7 @@ capinfo_LDADD = ${tools_LIBS}
 capdump_SOURCES = tools/capdump.c
 capdump_CFLAGS = ${tools_CFLAGS}
 capdump_LDADD = ${tools_LIBS}
+capdump_LDFLAGS = -pthread
 capfilter_SOURCES = tools/capfilter.c
 capfilter_CFLAGS = ${tools_CFLAGS}
 capfilter_LDADD = ${tools_LIBS}
