@@ -212,7 +212,7 @@ tests_address_SOURCES = tests/address.cpp
 tests_endian_CFLAGS = ${AM_CFLAGS} -Dfulhack
 tests_endian_CXXFLAGS = ${AM_CFLAGS} $(CPPUNIT_CFLAGS) -I${top_srcdir}/fallback
 tests_endian_LDFLAGS = $(CPPUNIT_LIBS)
-tests_endian_LDADD = libcap_utils-07.la
+tests_endian_LDADD = libcap_utils-07.la libcap_filter-07.la
 tests_endian_SOURCES = tests/endian.cpp fallback/be64toh.c
 
 tests_packet_CXXFLAGS = ${AM_CFLAGS} $(CPPUNIT_CFLAGS)

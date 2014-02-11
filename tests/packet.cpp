@@ -88,7 +88,10 @@ int main(int argc, const char* argv[]){
 		fprintf(stderr, "failed to read `%s'\n", path);
 		return 1;
 	}
-	fread(data, 1, sizeof(data), fp);
+	if ( fread(data, sizeof(data), 1, fp) != 1 ){
+		fprintf(stderr, "failed to read `%s' (data truncated)\n", path);
+		return 1;
+	}
 	fclose(fp);
 
 	runner.addTest(suite);
