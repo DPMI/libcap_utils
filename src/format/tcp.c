@@ -75,6 +75,12 @@ static void tcp_options(const struct tcphdr* tcp,FILE* dst ){
 	  while ( *opt != 0 && optlen<4*tcp->doff){
 	    const tcp_option_t* _opt = (const tcp_option_t*)opt;
 
+	    if ( _opt->size == 0 ){
+		    fprintf(dst, "invalid flag size 0, aborting\n");
+		    break;
+	    }
+
+
 	    //	    fprintf(dst,"%p | len = %d | kind %d | len %d\n",*opt,optlen,_opt->kind,_opt->size);
 	    optcount++;
 
