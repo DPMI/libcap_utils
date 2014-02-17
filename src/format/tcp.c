@@ -59,7 +59,6 @@ static void tcp_options(const struct tcphdr* tcp, FILE* dst){
 	fprintf(dst,"|");
 	const uint8_t* ptr=(const u_int8_t*)((const char*)tcp) + sizeof(struct tcphdr);
 
-	int optcount=0;
 	while ( *ptr != 0 && optlen<4*tcp->doff){
 		const tcp_option_t* opt = (const tcp_option_t*)ptr;
 
@@ -67,8 +66,6 @@ static void tcp_options(const struct tcphdr* tcp, FILE* dst){
 			fprintf(dst, "invalid flag size 0, aborting\n");
 			break;
 		}
-
-		optcount++;
 
 		if(opt->kind == 0 ){ // NOP
 			fprintf(dst,"EOL|");
