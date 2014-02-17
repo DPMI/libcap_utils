@@ -57,46 +57,46 @@ static void tcp_options(const struct tcphdr* tcp, FILE* dst){
 	int optlen=sizeof(struct tcphdr);
 
 	fprintf(dst,"|");
-	const uint8_t* opt=(const u_int8_t*)((const char*)tcp) + sizeof(struct tcphdr);
+	const uint8_t* ptr=(const u_int8_t*)((const char*)tcp) + sizeof(struct tcphdr);
 
 	int optcount=0;
-	while ( *opt != 0 && optlen<4*tcp->doff){
-		const tcp_option_t* _opt = (const tcp_option_t*)opt;
+	while ( *ptr != 0 && optlen<4*tcp->doff){
+		const tcp_option_t* opt = (const tcp_option_t*)ptr;
 
-		if ( _opt->size == 0 ){
+		if ( opt->size == 0 ){
 			fprintf(dst, "invalid flag size 0, aborting\n");
 			break;
 		}
 
 		optcount++;
 
-		if(_opt->kind == 0 ){ // NOP
+		if(opt->kind == 0 ){ // NOP
 			fprintf(dst,"EOL|");
 			break;
 		}
-		if(_opt->kind == 1 ){ // NOP
+		if(opt->kind == 1 ){ // NOP
 			fprintf(dst,"NOP|");
-			opt+=1;
+			ptr+=1;
 			optlen+=1;
 			continue;
 		}
-		if(_opt->kind == 2 ) { //MSS
+		if(opt->kind == 2 ) { //MSS
 			const tcpopt_mss_t* mss = (const tcpopt_mss_t*)opt;
 			fprintf(dst,"MSS(%d)|", ntohs(mss->mss));
 		}
-		if(_opt->kind == 3 ) { //Windowscale factor
-			wf=*(opt+sizeof(tcp_option_t));
+		if(opt->kind == 3 ) { //Windowscale factor
+			wf=*(ptr+sizeof(tcp_option_t));
 			fprintf(dst,"WS(%d)|",wf);
 
 		}
-		if(_opt->kind == 4 ) { //SAC
+		if(opt->kind == 4 ) { //SAC
 			fprintf(dst,"SAC|");
 		}
-		if(_opt->kind == 8 ) { //TSS
+		if(opt->kind == 8 ) { //TSS
 			fprintf(dst,"TSS|");
 		}
-		opt+=_opt->size;
-		optlen+=_opt->size;
+		ptr+=opt->size;
+		optlen+=opt->size;
 	}
 }
 
