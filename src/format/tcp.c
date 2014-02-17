@@ -23,6 +23,16 @@
 
 #include "format.h"
 
+enum OptionKind {
+	EOL = 0,
+	NOP = 1,
+	MSS = 2,
+	WSOPT = 3,
+	SACK_PERMITTED = 4,
+	SACK = 5,
+	TSOPT = 8,
+};
+
 typedef struct {
 	u_int8_t kind;
 	u_int8_t size;
@@ -52,14 +62,11 @@ static const char* tcp_flags(const struct tcphdr* tcp){
 static void tcp_options(const struct tcphdr* tcp, FILE* dst){
 	if ( tcp->doff <= 5 ) return; /* no options present */
 
-	uint16_t wf=1;
-
-	int optlen=sizeof(struct tcphdr);
-
 	fprintf(dst,"|");
-	const uint8_t* ptr=(const u_int8_t*)((const char*)tcp) + sizeof(struct tcphdr);
+	const uint8_t* ptr = (const u_int8_t*)((const char*)tcp) + sizeof(struct tcphdr);
 
-	while ( *ptr != 0 && optlen<4*tcp->doff){
+	int optlen = sizeof(struct tcphdr);
+	while ( *ptr != 0 && optlen < 4*tcp->doff ){
 		const tcp_option_t* opt = (const tcp_option_t*)ptr;
 
 		if ( opt->size == 0 ){
@@ -67,33 +74,47 @@ static void tcp_options(const struct tcphdr* tcp, FILE* dst){
 			break;
 		}
 
-		if(opt->kind == 0 ){ // NOP
-			fprintf(dst,"EOL|");
+		switch ( opt->kind ){
+		case EOL:
+			fprintf(dst, "EOL|");
+			return;
+
+		case NOP:
+			fprintf(dst, "NOP|");
+			ptr += 1;
+			optlen += 1;
+			continue;
+
+		case MSS:
+		{
+			const tcpopt_mss_t* mss = (const tcpopt_mss_t*)ptr;
+			fprintf(dst, "MSS(%d)|", ntohs(mss->mss));
 			break;
 		}
-		if(opt->kind == 1 ){ // NOP
-			fprintf(dst,"NOP|");
-			ptr+=1;
-			optlen+=1;
-			continue;
-		}
-		if(opt->kind == 2 ) { //MSS
-			const tcpopt_mss_t* mss = (const tcpopt_mss_t*)opt;
-			fprintf(dst,"MSS(%d)|", ntohs(mss->mss));
-		}
-		if(opt->kind == 3 ) { //Windowscale factor
-			wf=*(ptr+sizeof(tcp_option_t));
-			fprintf(dst,"WS(%d)|",wf);
 
+		case WSOPT: /* Windowscale factor */
+		{
+			uint16_t wf = *(ptr+sizeof(tcp_option_t));
+			fprintf(dst, "WS(%d)|", ntohs(wf));
+			break;
 		}
-		if(opt->kind == 4 ) { //SAC
-			fprintf(dst,"SAC|");
+
+		case SACK_PERMITTED:
+		case SACK:
+			fprintf(dst, "SAC|");
+			break;
+
+		case TSOPT:
+			fprintf(dst, "TSS|");
+			break;
+
+		default:
+			fprintf(dst, "%d|", opt->kind);
+			break;
 		}
-		if(opt->kind == 8 ) { //TSS
-			fprintf(dst,"TSS|");
-		}
-		ptr+=opt->size;
-		optlen+=opt->size;
+
+		ptr += opt->size;
+		optlen += opt->size;
 	}
 }
 
