@@ -48,7 +48,7 @@ static void tcp_options(const struct tcphdr* tcp, FILE* dst){
 	} tcp_option_t;
 
 	if ((tcp->doff)>5){
-		int optlen=0;
+		int optlen=sizeof(struct tcphdr);
 
 		fprintf(dst,"|");
 		const uint8_t* opt=(const u_int8_t*)((const char*)tcp) + sizeof(struct tcphdr);
