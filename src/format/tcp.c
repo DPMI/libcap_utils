@@ -23,6 +23,17 @@
 
 #include "format.h"
 
+typedef struct {
+	u_int8_t kind;
+	u_int8_t size;
+} tcp_option_t;
+
+typedef struct {
+	u_int8_t kind;
+	u_int8_t size;
+	u_int16_t mss;
+} tcpopt_mss_t;
+
 static const char* tcp_flags(const struct tcphdr* tcp){
 	static char buf[12];
 	size_t i = 0;
@@ -40,12 +51,6 @@ static const char* tcp_flags(const struct tcphdr* tcp){
 
 static void tcp_options(const struct tcphdr* tcp, FILE* dst){
 	uint16_t wf=1;
-	uint16_t mss=0;
-
-	typedef struct {
-		u_int8_t kind;
-		u_int8_t size;
-	} tcp_option_t;
 
 	if ((tcp->doff)>5){
 		int optlen=sizeof(struct tcphdr);
@@ -75,14 +80,8 @@ static void tcp_options(const struct tcphdr* tcp, FILE* dst){
 				continue;
 			}
 			if(_opt->kind == 2 ) { //MSS
-				typedef struct {
-					u_int8_t kind;
-					u_int8_t size;
-					u_int16_t mss;
-				} tcpopt_mss;
-				const tcpopt_mss* _mss=(const tcpopt_mss*)opt;
-				mss=ntohs(_mss->mss);
-				fprintf(dst,"MSS(%d)|",mss);
+				const tcpopt_mss_t* mss = (const tcpopt_mss_t*)opt;
+				fprintf(dst,"MSS(%d)|", ntohs(mss->mss));
 			}
 			if(_opt->kind == 3 ) { //Windowscale factor
 				wf=*(opt+sizeof(tcp_option_t));
