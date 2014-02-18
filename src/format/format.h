@@ -33,6 +33,7 @@
 #include <netinet/ip_icmp.h>
 
 #define PORT_DNS 53
+#define PORT_HTTP 80
 
 struct network {
 	const char* net_src; /* human-readable representation of src address */
@@ -68,3 +69,4 @@ void print_icmp(FILE* fp, const struct cap_header* cp, net_t net, const struct i
 
 /* application layer */
 void print_dns(FILE* fp, const struct cap_header* cp, const char* payload, size_t size, unsigned int flags);
+void print_http(FILE* fp, const struct cap_header* cp, const char* payload, size_t size, unsigned int flags);

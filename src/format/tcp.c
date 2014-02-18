@@ -142,8 +142,14 @@ void print_tcp(FILE* fp, const struct cap_header* cp, net_t net, const struct tc
 	tcp_options(tcp,fp);
 
 	const char* payload = (const char*)tcp + 4*tcp->doff;
-	if ( payload_size > 0 && (sport == PORT_DNS || dport == PORT_DNS) ){
+	if ( payload_size == 0 ) return;
+
+	if ( (sport == PORT_DNS || dport == PORT_DNS) ) {
 		/* offset the length field */
 		print_dns(fp, cp, payload + 2, payload_size - 2, flags);
+	}
+
+	if ( (sport == PORT_HTTP || dport == PORT_HTTP) ) {
+		print_http(fp, cp, payload, payload_size, flags);
 	}
 }

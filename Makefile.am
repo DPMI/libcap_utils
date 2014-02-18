@@ -116,6 +116,7 @@ libcap_utils_07_la_SOURCES =   \
 	src/format/dns.c        \
 	src/format/ethernet.c   \
 	src/format/format.h     \
+	src/format/http.c       \
 	src/format/icmp.c       \
 	src/format/ip.c         \
 	src/format/ipv4.c       \
