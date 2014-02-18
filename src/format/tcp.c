@@ -94,8 +94,8 @@ static void tcp_options(const struct tcphdr* tcp, FILE* dst){
 
 		case WSOPT: /* Windowscale factor */
 		{
-			uint16_t wf = *(ptr+sizeof(tcp_option_t));
-			fprintf(dst, "WS(%d)|", ntohs(wf));
+			uint8_t wf = *(ptr+sizeof(tcp_option_t));
+			fprintf(dst, "WS(%d)|", wf);
 			break;
 		}
 
