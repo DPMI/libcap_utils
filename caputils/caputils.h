@@ -58,6 +58,10 @@ struct filter;
 #define ETHERTYPE_MP 0x0810
 #define ETHERTYPE_MP_DIAGNOSTIC 0x0811
 
+#ifndef ETHERTYPE_MPLS
+#define ETHERTYPE_MPLS 0x8847
+#endif /* ETHERTYPE_MPLS */
+
 #ifndef IPPROTO_OSPF
 #define IPPROTO_OSPF 89
 #endif

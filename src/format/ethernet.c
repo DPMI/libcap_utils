@@ -66,6 +66,10 @@ void print_eth(FILE* dst, const struct cap_header* cp, const struct ethhdr* eth,
 		print_arp(dst, cp, (const struct ether_arp*)payload);
 		break;
 
+	case ETHERTYPE_MPLS:
+		print_mpls(dst, cp, payload);
+		break;
+
 	case ETHERTYPE_MP:
 		print_mp(dst, cp, (const struct sendhead*)payload);
 		break;

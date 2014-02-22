@@ -122,6 +122,7 @@ libcap_utils_07_la_SOURCES =   \
 	src/format/ipv4.c       \
 	src/format/ipv6.c       \
 	src/format/mp.c         \
+	src/format/mpls.c       \
 	src/format/tcp.c        \
 	src/format/udp.c        \
 	src/format.c            \
