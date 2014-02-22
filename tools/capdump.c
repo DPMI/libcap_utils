@@ -305,7 +305,8 @@ static const char* generate_filename(const char* fmt, const struct marker* marke
 			}
 
 			/* increment suffix and retry */
-			sprintf(dst, ".%d", suffix++); /** @todo potential buffer overflow */
+			const size_t left = sizeof(buffer)  - (dst - buffer);
+			snprintf(dst, left, ".%d", suffix++);
 		} while (1);
 	}
 
