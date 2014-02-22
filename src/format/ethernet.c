@@ -43,8 +43,8 @@ void print_eth(FILE* dst, const struct cap_header* cp, const struct ethhdr* eth,
 	switch ( h_proto ){
 	case ETHERTYPE_VLAN:
 		vlan_tci = ((const uint16_t*)payload)[0];
-		h_proto = ntohs(((const uint16_t*)payload)[0]);
-		payload = ((const char*)eth) + sizeof(struct ethhdr);
+		h_proto = ntohs(((const uint16_t*)payload)[1]);
+		payload += 4;
 		fprintf(dst, "802.1Q vlan# %d: ", 0x0FFF&ntohs(vlan_tci));
 		goto begin;
 
