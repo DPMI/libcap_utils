@@ -50,7 +50,6 @@ enum MarkerMode {
 };
 #define BUFSIZE 1500
 
-static const size_t FILENAME_SUFFIX_MAX = 1000; /* maximum number of filename suffixes */
 static const size_t PROGRESS_REPORT_DELAY = 60;  /* seconds between progress reports */
 static int keep_running = 1;
 static int marker = 0;
@@ -291,19 +290,9 @@ static const char* generate_filename(const char* fmt, const struct marker* marke
 
 	if ( marker_mode == MARKER_INCREMENT ){
 		/* try if the file exists already and append a suffix if it does */
-		unsigned int suffix = 1;
+		static unsigned int suffix = 1;
+
 		do {
-
-			/* if tried to many times, give up and randomize name */
-			if ( suffix > FILENAME_SUFFIX_MAX ){
-				*dst = 0;
-				char* tmp = tempnam("./", NULL);
-				fprintf(stderr, "%s: more than %zd filename collisions detected for `%s', giving up and using `%s.%s'.\n", program_name, FILENAME_SUFFIX_MAX, buffer, buffer, tmp+2);
-				sprintf(dst, ".%s", tmp+2); /* +2 to to ignore ./ */ /** @todo potential overflow */
-				free(tmp);
-				break;
-			}
-
 			/* test if filename already exists */
 			struct stat st;
 			if ( stat(buffer, &st) == -1  ){
@@ -315,7 +304,7 @@ static const char* generate_filename(const char* fmt, const struct marker* marke
 				break;
 			}
 
-			/* append suffix */
+			/* increment suffix and retry */
 			sprintf(dst, ".%d", suffix++); /** @todo potential buffer overflow */
 		} while (1);
 	}
