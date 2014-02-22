@@ -1,0 +1,5 @@
+Origin: http://packetlife.net/captures/category/mpls/
+Packets 10, duration 1s.
+Protocols: Ethernet, MPLS
+
+ICMP on a Frame-relay over MPLS link. If Wireshark doesn't understand it's FR, right click on a packet, select "Decode as" from the menu and select "Frame Relay DLCI PW" on the "MPLS" tab.

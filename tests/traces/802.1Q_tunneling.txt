@@ -1,0 +1,6 @@
+Origin: http://packetlife.net/captures/protocol/vlan
+
+Packets: 26	Duration: 35s	Downloads: 13106
+Categories: Switching
+Protocols: CDP, Ethernet, IP, LLC, VLAN
+

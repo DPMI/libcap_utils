@@ -1,0 +1,7 @@
+Origin: http://packetlife.net/captures/QinQ.pcap.cap
+
+Packets: 2	Duration: 2s	Downloads: 9658
+ARP requests having two vlan IDs attached (QinQ)
+
+Categories: Switching
+Protocols: ARP, Ethernet, VLAN

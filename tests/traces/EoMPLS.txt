@@ -1,0 +1,7 @@
+Origin: http://packetlife.net/captures/category/mpls/
+
+Packets: 56	Duration: 32s	Downloads: 6816
+Routers at 1.1.2.1 and 1.1.2.2 are PEs in a MPLS cloud. LDP starts at packet 8 and they build up a pseudo-wire VC (last FEC in packets 11 and 13). At packet 15 we already have STP running between CE1 and CE2 (two routers with ESW), encapsulated in 2 MPLS headers. All the ethernet stuff follows: CDP, ARP, ICMP between two hosts on the same subnet.
+
+Categories: MPLS
+Protocols: Ethernet, IP, LOOP, MPLS, TCP, UDP

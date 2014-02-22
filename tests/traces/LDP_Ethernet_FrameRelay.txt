@@ -1,0 +1,5 @@
+Origin: http://packetlife.net/captures/category/mpls/
+Packets 14, duration 1s.
+Protocols: Ethernet, IP, LDP, MPLS, TCP, UDP
+
+LDP with pseudowire FEC elements (Ethernet and Frame-Relay DLCI-to-DLCI)

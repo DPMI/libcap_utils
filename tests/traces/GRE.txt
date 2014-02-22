@@ -1,0 +1,7 @@
+Origin: http://packetlife.net/captures/GRE.cap
+
+Packets: 10	Duration: n/a	Downloads: 9304
+ICMP is encapsulated into a Generic Routing Encapsulation (GRE) tunnel.
+
+Categories: Tunneling
+Protocols: Ethernet, GRE, IP
