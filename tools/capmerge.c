@@ -212,8 +212,8 @@ int main(int argc, char* argv[]){
 		}
 
 		struct file_header_t* fh = (struct file_header_t*)sort_buffer;
-		const char* begin = sort_buffer + fh->header_offset + fh->comment_size;
-		const char* end = sort_buffer + sort_size;
+		char* begin = sort_buffer + fh->header_offset + fh->comment_size;
+		char* end = sort_buffer + sort_size;
 
 		unsigned long int written = 0;
 		do {
@@ -222,13 +222,13 @@ int main(int argc, char* argv[]){
 
 			/* recalculate begin pointer */
 			do {
-				const struct cap_header* cp = (const struct cap_header*)begin;
+				struct cap_header* cp = (struct cap_header*)begin;
 				if ( cp->len > 0 ) break;
 				begin += cp->caplen + sizeof(struct cap_header);
 			} while ( begin < end );
 
 			/* find "smallest" packet, i.e. packet will smallest timestamp */
-			const char* ptr = begin;
+			char* ptr = begin;
 			while ( ptr < end ){
 				struct cap_header* cp = (struct cap_header*)ptr;
 				if ( cp->len > 0 && timecmp(&cur, &cp->ts) > 0 ){
