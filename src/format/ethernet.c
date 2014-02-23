@@ -78,6 +78,12 @@ void print_eth(FILE* dst, const struct cap_header* cp, const struct ethhdr* eth,
 		print_mp_diagnostic(dst, cp, payload);
 		break;
 
+	case ETHERTYPE_LOOPBACK:
+		/* Ethernet Configuration Testing Protocol */
+		/* http://www.mit.edu/people/jhawk/ctp.pdf */
+		fprintf(dst, " Ethernet loopback packet (CTP)");
+		break;
+
 	case STPBRIDGES:
 		fprintf(dst, " STP(0x%04x): (spanning-tree for bridges)", h_proto);
 		break;
