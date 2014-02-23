@@ -23,6 +23,36 @@
 
 #include "format.h"
 
+union mpls_header {
+	struct {
+#if __BYTE_ORDER == __LITTLE_ENDIAN
+		uint32_t ttl           : 8;
+		uint32_t bottom        : 1;
+		uint32_t experimental  : 3;
+		uint32_t label         : 20;
+#else /* __BYTE_ORDER */
+		uint32_t label         : 20;
+		uint32_t experimental  : 3;
+		uint32_t bottom        : 1;
+		uint32_t ttl           : 8;
+#endif /* __BYTE_ORDER */
+	};
+	uint32_t val;
+} __attribute__((packed));
+
 void print_mpls(FILE* fp, const struct cap_header* cp, const char* data){
-	fprintf(fp, " MPLS");
+	const size_t bytes = cp->caplen - (data - cp->payload);
+	if ( bytes < sizeof(union mpls_header) ){
+		fputs(" MPLS [Packet size limited during capture]", fp);
+		return;
+	}
+
+	const union mpls_header mpls = {.val = ntohl(*(uint32_t*)data)};
+	fprintf(fp, " MPLS(label: %d, Exp: %d, S: %d, TTL: %d):",
+		mpls.label, mpls.experimental, mpls.bottom, mpls.ttl
+	);
+
+	if ( !mpls.bottom ){
+		print_mpls(fp, cp, data + sizeof(union mpls_header));
+	}
 }
