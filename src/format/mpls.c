@@ -22,6 +22,7 @@
 #endif
 
 #include "format.h"
+#include <endian.h>
 
 union mpls_header {
 	struct {
@@ -40,6 +41,21 @@ union mpls_header {
 	uint32_t val;
 } __attribute__((packed));
 
+union pw_control {
+	struct {
+#if __BYTE_ORDER == __LITTLE_ENDIAN
+		uint32_t sequence      : 16;
+		uint32_t reserved      : 12;
+		uint32_t zero          : 4;
+#else /* __BYTE_ORDER */
+		uint32_t zero          : 4;
+		uint32_t reserved      : 12;
+		uint32_t sequence      : 16;
+#endif /* __BYTE_ORDER */
+	};
+	uint32_t val;
+} __attribute__((packed));
+
 void print_mpls(FILE* fp, const struct cap_header* cp, const char* data){
 	const size_t bytes = cp->caplen - (data - cp->payload);
 	if ( bytes < sizeof(union mpls_header) ){
@@ -52,7 +68,18 @@ void print_mpls(FILE* fp, const struct cap_header* cp, const char* data){
 		mpls.label, mpls.experimental, mpls.bottom, mpls.ttl
 	);
 
+	const char* payload = data + sizeof(union mpls_header);
+
+	/* traverse all MPLS headers */
 	if ( !mpls.bottom ){
-		print_mpls(fp, cp, data + sizeof(union mpls_header));
+		print_mpls(fp, cp, payload);
+		return;
+	}
+
+	/* detect pseudo-wire control word */
+	if ( (payload[0] & 0xf0) == 0 ){
+		const union pw_control pw = {.val = ntohl(*(uint32_t*)payload)};
+		fprintf(fp, " PW(seq: %d):", pw.sequence);
+		print_eth(fp, cp, (const struct ethhdr*)(payload + sizeof(union pw_control)), 0); /** @todo missing flags */
 	}
 }
