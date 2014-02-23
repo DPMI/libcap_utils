@@ -87,13 +87,15 @@ void print_eth(FILE* dst, const struct cap_header* cp, const struct ethhdr* eth,
 		break;
 
 	default:
-		fprintf(dst, " IEEE802.3 [0x%04x] ", h_proto);
-		fputs(hexdump_address((const struct ether_addr*)eth->h_source), dst);
-		fputs(" -> ", dst);
-		fputs(hexdump_address((const struct ether_addr*)eth->h_dest), dst);
-		if(h_proto<0x05DC){
+		if ( h_proto < 0x05DC ){
+			fprintf(dst, " IEEE802.3 [0x%04x] ", h_proto);
+			fputs(hexdump_address((const struct ether_addr*)eth->h_source), dst);
+			fputs(" -> ", dst);
+			fputs(hexdump_address((const struct ether_addr*)eth->h_dest), dst);
 			fputs(" ", dst);
 			print_ieee8023(dst, (const struct llc_pdu_sn*)payload);
+		} else {
+			fprintf(dst, " unknown h_proto 0x%04x", h_proto);
 		}
 		break;
 	}
