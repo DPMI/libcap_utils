@@ -62,6 +62,7 @@ void print_arp(FILE* dst, const struct cap_header* cp, const struct ether_arp* a
 void print_mp(FILE* fp, const struct cap_header* cp, const struct sendhead* send);
 void print_mp_diagnostic(FILE* fp, const struct cap_header* cp, const char* data);
 void print_mpls(FILE* fp, const struct cap_header* cp, const char* data);
+void print_gre(FILE* fp, const struct cap_header* cp, net_t net, const char* data, unsigned int flags);
 
 /* layer 4 */
 void print_tcp(FILE* fp, const struct cap_header* cp, net_t net, const struct tcphdr* tcp, unsigned int flags);
