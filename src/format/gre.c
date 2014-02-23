@@ -58,6 +58,6 @@ void print_gre(FILE* fp, const struct cap_header* cp, net_t net, const char* dat
 	}
 
 	const char* payload = data + sizeof(union gre_header);
-	const union gre_header gre = {.val = ntohl(*(uint32_t*)data)};
+	const union gre_header gre = {.val = ntohl(*(const uint32_t*)data)};
 	fprintf(fp, "GRE(0x%02x):", gre.val & 0x00ff);
 }

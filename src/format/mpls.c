@@ -63,7 +63,7 @@ void print_mpls(FILE* fp, const struct cap_header* cp, const char* data){
 		return;
 	}
 
-	const union mpls_header mpls = {.val = ntohl(*(uint32_t*)data)};
+	const union mpls_header mpls = {.val = ntohl(*(const uint32_t*)data)};
 	fprintf(fp, " MPLS(label: %d, Exp: %d, S: %d, TTL: %d):",
 		mpls.label, mpls.experimental, mpls.bottom, mpls.ttl
 	);
@@ -78,7 +78,7 @@ void print_mpls(FILE* fp, const struct cap_header* cp, const char* data){
 
 	/* detect pseudo-wire control word */
 	if ( (payload[0] & 0xf0) == 0 ){
-		const union pw_control pw = {.val = ntohl(*(uint32_t*)payload)};
+		const union pw_control pw = {.val = ntohl(*(const uint32_t*)payload)};
 		fprintf(fp, " PW(seq: %d):", pw.sequence);
 		print_eth(fp, cp, (const struct ethhdr*)(payload + sizeof(union pw_control)), 0); /** @todo missing flags */
 	}
