@@ -45,6 +45,11 @@ void print_ipproto(FILE* fp, const struct cap_header* cp, net_t net, uint8_t pro
 		print_gre(fp, cp, net, payload, flags);
 		break;
 
+	case IPPROTO_IPIP:
+		fputs("IPIP:", fp);
+		print_ipv4(fp, cp, (const struct ip*)payload, flags);
+		break;
+
 	case IPPROTO_ICMPV6:
 		fprintf(fp, "ICMPv6");
 		break;

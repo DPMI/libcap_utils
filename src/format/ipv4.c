@@ -31,6 +31,7 @@ void print_ipv4(FILE* fp, const struct cap_header* cp, const struct ip* ip, unsi
 
 	const void* payload = ((const char*)ip) + 4*ip->ip_hl;
 
+	fputs(" IPv4", fp);
 	if ( flags & FORMAT_HEADER ){
 		fprintf(fp, "(HDR[%d])[", 4*ip->ip_hl);
 		fprintf(fp, "Len=%d:",(u_int16_t)ntohs(ip->ip_len));

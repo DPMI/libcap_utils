@@ -91,6 +91,7 @@ void print_ipv6(FILE* fp, const struct cap_header* cp, const struct ip6_hdr* ip,
 		return;
 	}
 
+	fputs(" IPv6", fp);
 	if ( flags & FORMAT_HEADER ){
 		fprintf(fp, "(HDR[%zd])[plen=%d,hops=%d]",
 		        header_size, ntohs(ip->ip6_plen), ip->ip6_hops);

@@ -47,16 +47,18 @@ void print_eth(FILE* dst, const struct cap_header* cp, const struct ethhdr* eth,
 		goto begin;
 
 	case ETHERTYPE_IP:
-		fputs(" IPv4", dst);
 		if ( flags >= FORMAT_LAYER_TRANSPORT ){
 			print_ipv4(dst, cp, (const struct ip*)payload, flags);
+		} else {
+			fputs(" IPv4", dst);
 		}
 		break;
 
 	case ETHERTYPE_IPV6:
-		fputs(" IPv6", dst);
 		if ( flags >= FORMAT_LAYER_TRANSPORT ){
 			print_ipv6(dst, cp, (const struct ip6_hdr*)payload, flags);
+		} else {
+			fputs(" IPv6", dst);
 		}
 		break;
 
