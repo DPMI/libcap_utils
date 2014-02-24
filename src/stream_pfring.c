@@ -75,7 +75,7 @@ static int match_ma_pkt(const struct stream_pfring* st, const struct ethhdr* eth
 		return -1;
 	}
 
-	int match;
+	unsigned int match;
 	for ( match = 0; match < st->base.num_addresses; match++ ){
 		if ( memcmp((const void*)ethhdr->h_dest, st->address[match].ether_addr_octet, ETH_ALEN) == 0 ) break;
 	}
