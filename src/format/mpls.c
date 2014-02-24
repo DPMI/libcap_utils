@@ -64,7 +64,7 @@ void print_mpls(FILE* fp, const struct cap_header* cp, const char* data){
 	}
 
 	const union mpls_header mpls = {.val = ntohl(*(const uint32_t*)data)};
-	fprintf(fp, " MPLS(label: %d, Exp: %d, S: %d, TTL: %d):",
+	fprintf(fp, " MPLS(label: %d, Exp: %d, S: %d, TTL: %d)",
 		mpls.label, mpls.experimental, mpls.bottom, mpls.ttl
 	);
 
@@ -79,10 +79,23 @@ void print_mpls(FILE* fp, const struct cap_header* cp, const char* data){
 	/* detect pseudo-wire control word */
 	if ( (payload[0] & 0xf0) == 0 ){
 		const union pw_control pw = {.val = ntohl(*(const uint32_t*)payload)};
-		fprintf(fp, " PW(seq: %d):", pw.sequence);
+		fprintf(fp, ": PW(seq: %d):", pw.sequence);
 
 		payload += sizeof(union pw_control);
 		const struct ethhdr* eth = (const struct ethhdr*)payload;
 		print_eth(fp, cp, eth, ntohs(eth->h_proto), payload + sizeof(struct ethhdr), 0); /** @todo missing flags */
+		return;
+	}
+
+	/* detect IPv4 */
+	if ( (payload[0] & 0xf0) == 0x40 ){
+		print_ipv4(fp, cp, (const struct ip*)payload, 0);
+		return;
+	}
+
+	/* detect IPv6 */
+	if ( (payload[0] & 0xf0) == 0x60 ){
+		print_ipv6(fp, cp, (const struct ip6_hdr*)payload, 0);
+		return;
 	}
 }
