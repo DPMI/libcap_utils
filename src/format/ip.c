@@ -46,8 +46,13 @@ void print_ipproto(FILE* fp, const struct cap_header* cp, net_t net, uint8_t pro
 		break;
 
 	case IPPROTO_IPIP:
-		fputs("IPIP:", fp);
+		fputs("IP-in-IP:", fp);
 		print_ipv4(fp, cp, (const struct ip*)payload, flags);
+		break;
+
+	case IPPROTO_IPV6:
+		fputs("IPv6-in-IP:", fp);
+		print_ipv6(fp, cp, (const struct ip6_hdr*)payload, flags);
 		break;
 
 	case IPPROTO_ICMPV6:
