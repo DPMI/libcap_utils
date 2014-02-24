@@ -28,14 +28,12 @@ static void print_ieee8023(FILE* dst, const struct llc_pdu_sn* llc){
 	fprintf(dst,"dsap=%02x ssap=%02x ctrl1 = %02x ctrl2 = %02x", llc->dsap, llc->ssap, llc->ctrl_1, llc->ctrl_2);
 }
 
-void print_eth(FILE* dst, const struct cap_header* cp, const struct ethhdr* eth, unsigned int flags){
+void print_eth(FILE* dst, const struct cap_header* cp, const struct ethhdr* eth, unsigned int h_proto, const char* payload, unsigned int flags){
 	if ( limited_caplen(cp, cp->payload, sizeof(struct ethhdr)) ){
 		fprintf(dst, " [Packet size limited during capture]");
 		return;
 	}
 
-	const void* payload = ((const char*)eth) + sizeof(struct ethhdr);
-	uint16_t h_proto = ntohs(eth->h_proto);
 	uint16_t vlan_tci;
 
  begin:
@@ -95,10 +93,12 @@ void print_eth(FILE* dst, const struct cap_header* cp, const struct ethhdr* eth,
 	default:
 		if ( h_proto < 0x05DC ){
 			fprintf(dst, " IEEE802.3 [0x%04x] ", h_proto);
-			fputs(hexdump_address((const struct ether_addr*)eth->h_source), dst);
-			fputs(" -> ", dst);
-			fputs(hexdump_address((const struct ether_addr*)eth->h_dest), dst);
-			fputs(" ", dst);
+			if ( eth ){
+				fputs(hexdump_address((const struct ether_addr*)eth->h_source), dst);
+				fputs(" -> ", dst);
+				fputs(hexdump_address((const struct ether_addr*)eth->h_dest), dst);
+				fputs(" ", dst);
+			}
 			print_ieee8023(dst, (const struct llc_pdu_sn*)payload);
 		} else {
 			fprintf(dst, " unknown h_proto 0x%04x", h_proto);

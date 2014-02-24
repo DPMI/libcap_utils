@@ -74,7 +74,7 @@ static void print_linklayer(FILE* fp, const struct cap_header* cp, unsigned int 
 		return;
 	}
 
-	print_eth(fp, cp, cp->ethhdr, flags);
+	print_eth(fp, cp, cp->ethhdr, ntohs(cp->ethhdr->h_proto), cp->payload + sizeof(struct ethhdr), flags);
 }
 
 static void print_pkt(FILE* fp, struct format* state, const struct cap_header* cp){

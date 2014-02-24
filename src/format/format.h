@@ -52,7 +52,7 @@ typedef const struct network* net_t;
 int limited_caplen(const struct cap_header* cp, const void* ptr, size_t bytes);
 
 /* layer 2 */
-void print_eth(FILE* dst, const struct cap_header* cp, const struct ethhdr* eth, unsigned int flags);
+void print_eth(FILE* dst, const struct cap_header* cp, const struct ethhdr* eth, unsigned int h_proto, const char* payload, unsigned int flags);
 
 /* layer 3 */
 void print_ipproto(FILE* fp, const struct cap_header* cp, net_t net, uint8_t proto, const char* payload, unsigned int flags);
