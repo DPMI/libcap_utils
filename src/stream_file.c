@@ -30,6 +30,16 @@
 #include <string.h>
 #include <unistd.h>
 
+enum extension_type {
+	HEADER_EXT_NONE = 0,
+	HEADER_EXT_PADDING = 1,
+};
+
+struct file_extension {
+	uint16_t type;
+	uint16_t next_offset; /* sizeof(header) + sizeof(data) */
+};
+
 struct stream_file {
 	struct stream base;
 	FILE* file;
@@ -190,6 +200,33 @@ int stream_file_open(struct stream** stptr, FILE* fp, const char* filename, size
 		} else {
 			return ERROR_CAPFILE_INVALID;
 		}
+	}
+
+	/* read extension headers */
+	const int have_extensions = fhptr->header_offset > 216;
+	if ( have_extensions ){
+		do {
+			struct file_extension ext;
+			fread(&ext, sizeof(struct file_extension), 1, st->file);
+
+			if ( ext.type == HEADER_EXT_NONE ){
+				/* last extension header */
+				break;
+			}
+
+			switch ( ext.type ){
+			case HEADER_EXT_PADDING:
+				/* padding only, just skip bytes */
+				break;
+
+			default:
+				/* unrecognized extension header, ignored */
+				break;
+			}
+
+			/* move to next */
+			fseek(st->file, ext.next_offset - sizeof(struct file_extension), SEEK_CUR);
+		} while (1);
 	}
 
 	fseek(st->file, fhptr->header_offset, SEEK_SET);
