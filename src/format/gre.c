@@ -60,4 +60,12 @@ void print_gre(FILE* fp, const struct cap_header* cp, net_t net, const char* dat
 	const char* payload = data + sizeof(union gre_header);
 	const union gre_header gre = {.val = ntohl(*(const uint32_t*)data)};
 	fprintf(fp, "GRE(0x%02x):", gre.val & 0x00ff);
+
+	/* skip optional parts of GRE header */
+	if ( gre.checksum || gre.routing ) payload += 4;
+	if ( gre.key      ) payload += 4;
+	if ( gre.sequence ) payload += 4;
+
+	/* print contained header */
+	print_eth(fp, cp, NULL, gre.proto, payload, flags);
 }

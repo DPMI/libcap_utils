@@ -80,6 +80,9 @@ void print_mpls(FILE* fp, const struct cap_header* cp, const char* data){
 	if ( (payload[0] & 0xf0) == 0 ){
 		const union pw_control pw = {.val = ntohl(*(const uint32_t*)payload)};
 		fprintf(fp, " PW(seq: %d):", pw.sequence);
-		print_eth(fp, cp, (const struct ethhdr*)(payload + sizeof(union pw_control)), 0); /** @todo missing flags */
+
+		payload += sizeof(union pw_control);
+		const struct ethhdr* eth = (const struct ethhdr*)payload;
+		print_eth(fp, cp, eth, ntohs(eth->h_proto), payload + sizeof(struct ethhdr), 0); /** @todo missing flags */
 	}
 }
