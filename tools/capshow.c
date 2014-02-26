@@ -54,6 +54,10 @@ void handle_sigint(int signum){
 	keep_running = 0;
 }
 
+enum {
+	ARGUMENT_VERSION = 256,
+};
+
 static const char* shortopts = "p:c:i:t:dDar1234xHh";
 static struct option longopts[]= {
 	{"packets",  required_argument, 0, 'p'},
@@ -66,6 +70,7 @@ static struct option longopts[]= {
 	{"relative", no_argument,       0, 'r'},
 	{"hexdump",  no_argument,       0, 'x'},
 	{"headers",  no_argument,       0, 'H'},
+	{"version",  no_argument,       0, ARGUMENT_VERSION},
 	{"help",     no_argument,       0, 'h'},
 	{0, 0, 0, 0} /* sentinel */
 };
@@ -81,6 +86,7 @@ static void show_usage(void){
 	       "  -c, --count=N        Stop after N matched packets.\n"
 	       "                       If both -p and -c is used, what ever happens first will stop.\n"
 	       "  -t, --timeout=N      Wait for N ms while buffer fills [default: 1000ms].\n"
+	       "      --version        Show program version and exit.\n"
 	       "  -h, --help           This text.\n"
 	       "\n"
 	       "Formatting options:\n"
@@ -96,6 +102,10 @@ static void show_usage(void){
 	       "  -r, --relative       Show timestamps relative to first packet. [default]\n"
 	       "\n");
 	filter_from_argv_usage();
+}
+
+static void show_version(void){
+	printf("%s-%s\n", program_name, caputils_version(NULL));
 }
 
 int main(int argc, char **argv){
@@ -158,7 +168,6 @@ int main(int argc, char **argv){
 			max_matched_packets = atoi(optarg);
 			break;
 
-
 		case 't': /* --timeout */
 		{
 			int tmp = atoi(optarg);
@@ -174,6 +183,10 @@ int main(int argc, char **argv){
 		case 'i': /* --iface */
 			iface = optarg;
 			break;
+
+		case ARGUMENT_VERSION: /* --version */
+			show_version();
+			return 0;
 
 		case 'h': /* --help */
 			show_usage();
