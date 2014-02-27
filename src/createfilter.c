@@ -76,6 +76,7 @@ static struct option options[]= {
 
 	/* local-only filters */
 	{"frame-max-dt", required_argument, 0, FILTER_FRAME_MAX_DT},
+	{"frame-num",    required_argument, 0, FILTER_FRAME_NUM},
 
 	{"bpf",       required_argument, 0, PARAM_BPF | PARAM_BIT},
 	{0, 0, 0, 0}
@@ -283,6 +284,64 @@ static int parse_eth_addr(const char* src, struct ether_addr* addr, struct ether
 	return 1;
 }
 
+/**
+ * Parse frame range.
+ *
+ * FRAME         - Match this frame frame only
+ * LOWER-UPPER   - Match frames between lower and upper (inclusive)
+ * -UPPER        - Match all frames until upper (inclusive)
+ * LOWER-        - Match all frames from lower and onwards (include)
+ *
+ * Multiple ranges can be joined with a comma.
+ */
+static void parse_frame_range(const char* arg, struct filter* filter){
+	char* buf = strdup(arg);
+	struct frame_num_node** dst = &filter->frame_num;
+
+	char* range_ptr;
+	char* range = strtok_r(buf, ",", &range_ptr);
+	for ( ; range; range=strtok_r(NULL, ",", &range_ptr) ){
+		struct frame_num_node* node = (struct frame_num_node*)malloc(sizeof(struct frame_num_node));
+		node->lower = -1;
+		node->upper = -1;
+		node->next = NULL;
+
+		/* special handing for single frames */
+		char* delim = strchr(range, '-');
+		if ( !delim ){
+			node->lower = node->upper = atoi(range);
+			*dst = node;
+			dst = &node->next;
+			continue;
+		}
+
+		/* match lower and upper */
+		switch ( sscanf(range, "%d-%d", &node->lower, &node->upper) ){
+		case 0:
+			/* bad range, skipped */
+			free(node);
+			continue;
+
+		case 1:
+			/* special handing for the case when only upper range is given, e.g.: "-10" */
+			if ( node->lower < 0 ){
+				node->upper = -node->lower;
+				node->lower = -1;
+			}
+			break;
+
+		case 2:
+			break;
+		}
+
+		/* store range */
+		*dst = node;
+		dst = &node->next;
+	}
+
+	free(buf);
+}
+
 static int bpf_set(struct filter* filter, const char* expr, const char* program_name){
 #ifdef HAVE_PCAP
 	char errbuf[PCAP_ERRBUF_SIZE];
@@ -338,6 +397,8 @@ void filter_from_argv_usage(){
 	       "                                either is a match the packet matches).\n"
 	       "      --frame-max-dt=TIME       Starts to reject packets after the interarrival-\n"
 	       "                                time is greater than TIME (WRT matched packets).\n"
+	       "      --frame-num=RANGE[,..]    Reject all packets not in specified range (see\n"
+	       "                                capfilter(1) for further description of syntax).\n"
 	       "      --caplen=BYTES            Store BYTES of the captured packet. [default=ALL]\n"
 	       "      --filter-mode=MODE        Set filter mode to AND or OR. [default=AND]\n"
 #ifdef HAVE_PCAP
@@ -360,6 +421,8 @@ int filter_from_argv(int* argcptr, char** argv, struct filter* filter){
 	filter->caplen = -1; /* capture everything (-1 overflows to a very large int) */
 	filter->mode = FILTER_AND;
 	filter->first = 1;
+	filter->frame_num = NULL;
+	filter->frame_counter = 1;
 
 	/* fast path */
 	if ( argc == 0 ){
@@ -514,6 +577,10 @@ int filter_from_argv(int* argcptr, char** argv, struct filter* filter){
 			}
 			break;
 
+		case FILTER_FRAME_NUM:
+			parse_frame_range(optarg, filter);
+			break;
+
 		default:
 			fprintf(stderr, "op: %d\n", op);
 		}
@@ -536,7 +603,18 @@ int filter_close(struct filter* filter){
 	struct bpf_program prg = {0, filter->bpf_insn};
 	pcap_freecode(&prg);
 	free(filter->bpf_expr);
+	filter->bpf_insn = NULL;
+	filter->bpf_expr = NULL;
 #endif
+
+	/* release all frame num ranges */
+	struct frame_num_node* cur = filter->frame_num;
+	while ( cur ){
+		struct frame_num_node* next = cur->next;
+		free(cur);
+		cur = next;
+	}
+
 	return 0;
 }
 

@@ -108,6 +108,7 @@ class FilterCreate : public CppUnit::TestFixture {
 	CPPUNIT_TEST( test_ethertype2   );
 	CPPUNIT_TEST( test_ethertype3   );
 	CPPUNIT_TEST( test_ethertype4   );
+	CPPUNIT_TEST( test_frame_range   );
 	CPPUNIT_TEST_SUITE_END();
 
 	struct filter filter;
@@ -436,6 +437,36 @@ public:
 		std::string name = ethertype ? ethertype->name : "invalid";
 		std::transform(name.begin(), name.end(), name.begin(), ::tolower);
 		CPPUNIT_ASSERT_EQUAL(std::string("ipv4"), name);
+	}
+
+	void test_frame_range(){
+		generate_argv("programname", "--frame-num=-10,13,20-25,50-", NULL);
+		CPPUNIT_ASSERT_SUCCESS(filter_from_argv(&argc, argv, &filter), 1);
+
+		int i;
+		struct frame_num_node* cur;
+		for ( i=0, cur = filter.frame_num; cur; ++i, cur = cur->next ){
+			switch (i){
+			case 0:
+				CPPUNIT_ASSERT_EQUAL_MESSAGE("-10 lower", -1, cur->lower);
+				CPPUNIT_ASSERT_EQUAL_MESSAGE("-10 upper", 10, cur->upper);
+				break;
+			case 1:
+				CPPUNIT_ASSERT_EQUAL_MESSAGE("13 lower", 13, cur->lower);
+				CPPUNIT_ASSERT_EQUAL_MESSAGE("13 upper", 13, cur->upper);
+				break;
+			case 2:
+				CPPUNIT_ASSERT_EQUAL_MESSAGE("-20,25 lower", 20, cur->lower);
+				CPPUNIT_ASSERT_EQUAL_MESSAGE("-20,25 upper", 25, cur->upper);
+				break;
+			case 3:
+				CPPUNIT_ASSERT_EQUAL_MESSAGE("50- lower", 50, cur->lower);
+				CPPUNIT_ASSERT_EQUAL_MESSAGE("50- upper", -1, cur->upper);
+				break;
+			}
+		}
+
+		CPPUNIT_ASSERT_EQUAL_MESSAGE("num ranges", 4, i);
 	}
 };
 

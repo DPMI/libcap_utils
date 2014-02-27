@@ -165,6 +165,25 @@ static int FILTER filter_frame_dt(const struct filter* filter, const timepico ti
 	return timecmp(&iat, &filter->frame_max_dt) == -1;
 }
 
+static int filter_frame_num(const struct filter* filter){
+	if ( !filter->frame_num ){
+		return 0;
+	}
+
+	/* only the first range has to be tested as they are continously pruned when
+	 * the state is updated. */
+
+	if ( filter->frame_counter < filter->frame_num->lower ){
+		return 0;
+	}
+
+	if ( filter->frame_num->upper > 0 && filter->frame_counter > filter->frame_num->upper ){
+		return 0;
+	}
+
+	return 1;
+}
+
 static int filter_core(const struct filter* filter, const void* pkt, struct cap_header* head){
 	const struct ethhdr* ether = (const struct ethhdr*)pkt;
 	uint16_t h_proto = ntohs(ether->h_proto); /* may be overwritten by find_ether_vlan_header */
@@ -198,6 +217,7 @@ static int filter_core(const struct filter* filter, const void* pkt, struct cap_
 
 	/* local tests */
 	match |= filter_frame_dt(filter, head->ts)       << OFFSET_FRAME_MAX_DT;
+	match |= filter_frame_num(filter)                << OFFSET_FRAME_NUM;
 
 	switch ( filter->mode ){
 	case FILTER_AND: return match == filter->index;
@@ -221,7 +241,15 @@ int filter_match(struct filter* filter, const void* pkt, struct cap_header* head
 	const int bpf_match = filter->bpf_insn == NULL || bpf_filter(filter->bpf_insn, pkt, head->len, head->caplen);
 	const int match = core_match && bpf_match;
 
+	/* prune old frame ranges */
+	if ( filter->frame_num && filter->frame_num->upper > 0 && filter->frame_counter > filter->frame_num->upper ){
+		struct frame_num_node* next = filter->frame_num->next;
+		free(filter->frame_num);
+		filter->frame_num = next;
+	}
+
 	/* store filter state */
+	filter->frame_counter++;
 	if ( match ){
 		filter->frame_last_ts = head->ts;
 	}
@@ -412,4 +440,7 @@ void filter_unpack(struct filter_packed* src, struct filter* dst){
 
 	/* filter version */
 	dst->version = htonl(0x02);
+
+	/* fill defaults for local filters */
+	dst->frame_num = NULL;
 }

@@ -81,6 +81,23 @@ protocol number or a valid name from `/etc/services`.
 \fIMODE\fP can be set to either OR or AND (default) which changes the operator
 when joining the different filters. By setting to OR only one of the filters
 has to match while AND all must match.
+.TP
+\fB\-\-frame-num\fR=\fIRANGE\fR
+Discards all packets not in the specified range.
+Range can be specified as
+.RS
+.TP
+\[bu] FRAME - Match only this specific frame.
+.TP
+\[bu] LOWER-UPPER - Match all frames between LOWER and UPPER (inclusive)
+.TP
+\[bu] -UPPER - Match all frames up to UPPER (inclusive)
+.TP
+\[bu] LOWER- - Match all frames from LOWER and onwards (inclusive)
+.TP
+.RE
+Multiple ranges can be joined with comma. E.g. "-5,7,10-" would match packets
+1-5, 7 and then from 10 until the end of the stream.
 .SH DATE FORMAT
 Valid date formats are:
 .sp
