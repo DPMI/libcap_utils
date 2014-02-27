@@ -475,6 +475,7 @@ CPPUNIT_TEST_SUITE_REGISTRATION(FilterCreate);
 int main(int argc, const char* argv[]){
 	CppUnit::Test *suite = CppUnit::TestFactoryRegistry::getRegistry().makeTest();
 	CppUnit::TextUi::TestRunner runner;
+	filter_from_argv_opterr = 0;
 
 	runner.addTest(suite);
 	runner.setOutputter(new CppUnit::CompilerOutputter(&runner.result(), std::cerr));

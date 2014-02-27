@@ -122,7 +122,9 @@ static void split_argv(int* src_argc, char** src_argv, int* dst_argc, char** dst
 				n = 1;
 			} else { /* "--foo=bar */
 				if ( (i+1) == *src_argc || ptr[1][0] == '-' ){
-					fprintf(stderr, "%s: option '--%s' requires an argument\n", src_argv[0], cur->name);
+					if ( filter_from_argv_opterr ){
+						fprintf(stderr, "%s: option '--%s' requires an argument\n", src_argv[0], cur->name);
+					}
 					n = 1;
 				}
 			}
@@ -358,7 +360,9 @@ static int bpf_set(struct filter* filter, const char* expr, const char* program_
 
 	/* compile new filter */
 	if ( pcap_compile(handle, &prg, expr, 1, 0xffffffff) != 0 ){
-		fprintf(stderr, "%s: BPF error: %s\n", program_name, pcap_geterr(handle));
+		if ( filter_from_argv_opterr ){
+			fprintf(stderr, "%s: BPF error: %s\n", program_name, pcap_geterr(handle));
+		}
 		return EINVAL;
 	}
 	filter->bpf_insn = prg.bf_insns;
@@ -409,6 +413,8 @@ void filter_from_argv_usage(){
 		);
 }
 
+int filter_from_argv_opterr = 1;
+
 int filter_from_argv(int* argcptr, char** argv, struct filter* filter){
 	if ( !(argcptr && filter) ){
 		return EINVAL;
@@ -442,7 +448,7 @@ int filter_from_argv(int* argcptr, char** argv, struct filter* filter){
 	/* save getopt settings */
 	int opterr_save = opterr;
 	int optind_save = optind;
-	opterr = 1;
+	opterr = filter_from_argv_opterr;
 
 	int ret = 0;
 	int index;
@@ -462,7 +468,7 @@ int filter_from_argv(int* argcptr, char** argv, struct filter* filter){
 			case PARAM_MODE:
 				if      ( strcasecmp(optarg, "and") == 0 ){ filter->mode = FILTER_AND; }
 				else if ( strcasecmp(optarg, "or")  == 0 ){ filter->mode = FILTER_OR; }
-				else {
+				else if ( filter_from_argv_opterr ){
 					fprintf(stderr, "%s: Invalid filter mode `%s'. Ignored.\n", argv[0], optarg);
 				}
 				break;
