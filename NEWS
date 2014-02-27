@@ -1,3 +1,17 @@
+caputils-0.7.14
+---------------
+
+  * adding a custom ethernet type for DPMI diagnostic packets.
+  * capshow supports many additional protocols.
+  * general improvements to output from tools.
+  * capdump improved filename generation when using markers.
+  * version number always includes git revision if available.
+  * new local-only filters for DT and frame numbers.
+  * adding generic functions for printing, stateful.
+  * pfring always using MTU buffer size instead of hardcoded value.
+  * fix issues when doing capture on loopback interfaces.
+  * general build fixes.
+
 caputils-0.7.13
 ---------------
 
