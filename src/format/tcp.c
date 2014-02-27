@@ -83,13 +83,17 @@ static void tcp_options(const struct cap_header* cp,const struct tcphdr* tcp, FI
 		/* Ensure there is enough data left in packet. (used + 1) is used to tell if
 		 * there is enough data to read option kind. */
 		const size_t used = (const char*)ptr - cp->payload;
-		if ( (used + 1) > cp->caplen || (used + tcp_option_size(opt)) > cp->caplen ){
+		if (
+			(used + 1) > cp->caplen ||                              /* ensure option kind is present */
+			(used + (opt->kind > NOP ? 2 : 1)) > cp->caplen ||      /* ensure option size is present if needed */
+			(used + tcp_option_size(opt)) > cp->caplen ){           /* ensure option data is present */
+
 			fprintf(dst,"tcp option truncated (caplen)");
 			break;
 		}
 
-		if ( opt->size == 0 ){
-			fprintf(dst, "invalid flag size 0, aborting\n");
+		if ( tcp_option_size(opt) == 0 ){
+			fprintf(dst, "invalid flag size 0 (kind: %d), aborting\n", opt->kind);
 			break;
 		}
 
