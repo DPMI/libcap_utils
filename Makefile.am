@@ -67,13 +67,16 @@ man1_MANS += man/capshow.1
 notrans_dist_man_MANS += man/capshow.1
 endif
 
-TESTS =
+COMPILED_TESTS = tests/capdump_argv tests/capinfo_zero tests/capmerge_zero
 if BUILD_TESTS
-TESTS += tests/filter_argv tests/address tests/endian tests/packet tests/stream tests/timepico
+# tests which requires cppunit
+COMPILED_TESTS += tests/filter_argv tests/address tests/endian tests/packet tests/stream tests/timepico
 endif
-TESTS += tests/capdump_argv tests/capinfo_zero tests/capmerge_zero
-check_PROGRAMS = ${TESTS}
-EXTRA_DIST += tests/http.packet tests/single.cap tests/empty.cap
+
+check_PROGRAMS = ${COMPILED_TESTS}
+TESTS = ${COMPILED_TESTS} tests/regressions/issue007_tcp_options.sh
+
+EXTRA_DIST += tests/http.packet tests/single.cap tests/empty.cap tests/regressions/issue007_tcp_options.sh tests/traces/t2.cap
 CLEANFILES += test-temp.cap
 
 nobase_include_HEADERS =    \

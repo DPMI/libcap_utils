@@ -25,6 +25,7 @@ AC_CONFIG_FILES([
   Makefile
   dist/deb-control
   dist/dumper_init
+  tests/init.sh
 ])
 
 AC_DEFINE_UNQUOTED([VERSION_MAJOR],  [${VERSION_MAJOR}], [Major version number of package])
