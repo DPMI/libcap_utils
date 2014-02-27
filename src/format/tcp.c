@@ -59,6 +59,17 @@ static const char* tcp_flags(const struct tcphdr* tcp){
 	return buf;
 }
 
+static size_t tcp_option_size(const tcp_option_t* opt){
+	switch ( opt->kind ){
+	case EOL:
+	case NOP:
+		return 1;
+
+	default:
+		return opt->size;
+	}
+}
+
 static void tcp_options(const struct cap_header* cp,const struct tcphdr* tcp, FILE* dst){
 	if ( tcp->doff <= 5 ) return; /* no options present */
 
@@ -69,9 +80,10 @@ static void tcp_options(const struct cap_header* cp,const struct tcphdr* tcp, FI
 	while ( *ptr != 0 && optlen < 4*tcp->doff ){
 		const tcp_option_t* opt = (const tcp_option_t*)ptr;
 
-		/* Ensure there is enough data left in packet */
-		const size_t used = (const char*)ptr - cp->payload + sizeof(tcp_option_t);
-		if ( used > cp->caplen || (used + opt->size - sizeof(tcp_option_t)) > cp->caplen ){
+		/* Ensure there is enough data left in packet. (used + 1) is used to tell if
+		 * there is enough data to read option kind. */
+		const size_t used = (const char*)ptr - cp->payload;
+		if ( (used + 1) > cp->caplen || (used + tcp_option_size(opt)) > cp->caplen ){
 			fprintf(dst,"tcp option truncated (caplen)");
 			break;
 		}
