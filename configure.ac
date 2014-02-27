@@ -1,6 +1,6 @@
 m4_define([__VERSION_MAJOR__], [0])
 m4_define([__VERSION_MINOR__], [7])
-m4_define([__VERSION_MICRO__], [14])
+m4_define([__VERSION_MICRO__], [15])
 m4_define([__VERSION_SUFFIX__], [-git])
 
 AC_INIT([libcap_utils], m4_defn([__VERSION_MAJOR__]).m4_defn([__VERSION_MINOR__]).m4_defn([__VERSION_MICRO__])m4_defn([__VERSION_SUFFIX__]), [dsv@bth.se])
