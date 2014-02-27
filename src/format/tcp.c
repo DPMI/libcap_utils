@@ -59,15 +59,31 @@ static const char* tcp_flags(const struct tcphdr* tcp){
 	return buf;
 }
 
-static void tcp_options(const struct tcphdr* tcp, FILE* dst){
+static void tcp_options(const struct cap_header* cp,const struct tcphdr* tcp, FILE* dst){
 	if ( tcp->doff <= 5 ) return; /* no options present */
+
+
 
 	fprintf(dst,"|");
 	const uint8_t* ptr = (const u_int8_t*)((const char*)tcp) + sizeof(struct tcphdr);
 
+	size_t used = (const char*)ptr - cp->payload;
+	size_t left = cp->caplen - used;
+	int opts = 0;
+	//return left < bytes;
+	
 	int optlen = sizeof(struct tcphdr);
 	while ( *ptr != 0 && optlen < 4*tcp->doff ){
 		const tcp_option_t* opt = (const tcp_option_t*)ptr;
+		
+		size_t used = (const char*)ptr - cp->payload;
+		size_t left = cp->caplen - used;
+		int opts = left-opt->size;
+		//		fprintf(dst,"\nused: %d left: %d optsize=%d -->opts=%d\n",used, left, opt->size,opts);
+		if ( left<0 || opts < 0 ){
+		  fprintf(dst,"tcp option truncated (caplen)");
+		  break;
+		} 
 
 		if ( opt->size == 0 ){
 			fprintf(dst, "invalid flag size 0, aborting\n");
@@ -139,7 +155,7 @@ void print_tcp(FILE* fp, const struct cap_header* cp, net_t net, const struct tc
 	        net->net_dst, dport);
 
 	fprintf(fp, " ws=%d seq=%u ack=%u ", ntohs(tcp->window), ntohl(tcp->seq), ntohl(tcp->ack_seq));
-	tcp_options(tcp,fp);
+	tcp_options(cp,tcp,fp);
 
 	const char* payload = (const char*)tcp + 4*tcp->doff;
 	if ( payload_size == 0 ) return;
