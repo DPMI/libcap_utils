@@ -1,3 +1,9 @@
+caputils-0.7.15
+---------------
+
+	* fix: format properly handles truncated http
+	* fix: format properly handles truncated tcp options
+
 caputils-0.7.14
 ---------------
 
