@@ -49,10 +49,13 @@ void print_http(FILE* fp, const struct cap_header* cp, const char* payload, size
 
 		/* copy memory so it can be tokenized and ensures a null-terminator is present */
 		char* buf = strndup(payload, size);
-		char* line = strtok(buf, "\r\n");
+		const char* line = strtok(buf, "\r\n");
+		const char* rest = strtok(NULL, "\r\n");
 
-		/* only print if the full request line is present */
-		if ( line ){
+		/* only print if the full request line is present (determined by looking if
+		 * the next line is readable at all, which would happen if the \r\n line
+		 * terminator was found. If it isn't found the strtok call will fail) */
+		if ( line && rest ){
 			fprintf(fp, " %s", line);
 		}
 
