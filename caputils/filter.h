@@ -66,6 +66,7 @@ enum FilterOffset {
 
 	/* Local filters (these is not used by MArCd, can be reordered) */
 	OFFSET_FRAME_MAX_DT,
+	OFFSET_FRAME_NUM,
 };
 
 enum FilterBitmask {
@@ -90,12 +91,19 @@ enum FilterBitmask {
 
 	/* local filters */
 	FILTER_FRAME_MAX_DT = (1<<OFFSET_FRAME_MAX_DT),
+	FILTER_FRAME_NUM = (1<<OFFSET_FRAME_NUM),
 };
 
 enum FilterMode {
 	FILTER_UNKNOWN = 0,
 	FILTER_AND,
 	FILTER_OR,
+};
+
+struct frame_num_node {
+	struct frame_num_node* next;
+	signed int lower;
+	signed int upper;
 };
 
 /**
@@ -139,6 +147,7 @@ struct filter {
 
 	/* local filters */
 	timepico frame_max_dt;             /* reject all packets after a interarrival-time is higher than specified, no more packets will be matched */
+	struct frame_num_node* frame_num;  /* reject packets based on frame number (useful to manually select packets to keep or discard) */
 
 	/* BFP filter (if supported) */
 	struct bpf_insn* bpf_insn;
@@ -146,6 +155,7 @@ struct filter {
 
 	/* state */
 	int first;                         /* 1 if this is the first packet */
+	int frame_counter;                 /* Incrementing number for each frame */
 	timepico frame_last_ts;            /* timestamp of the previous packet */
 
 	/* destination */

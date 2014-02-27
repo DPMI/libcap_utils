@@ -12,32 +12,18 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <list>
 
 #include <cppunit/CompilerOutputter.h>
 #include <cppunit/extensions/TestFactoryRegistry.h>
 #include <cppunit/ui/text/TestRunner.h>
 #include <cppunit/extensions/HelperMacros.h>
 
-int generate_argv(char** dst, const char* name, ...){
-	va_list ap;
-	int argc = 0;
-	const char* arg;
-
-	dst[argc++] = strdup(name);
-	va_start(ap, name);
-	do {
-		arg = va_arg(ap, const char*);
-		dst[argc++] = arg ? strdup(arg) : NULL;
-	} while ( arg );
-
-	return argc - 1;
-}
-
-void free_argv(int argc, char** argv){
-	for ( int i = 0; i < argc; i++ ){
-		free(argv[i]);
-	}
-}
+/* hack: all strings in here will be released before program terminates. getopt
+ * look as the previous arg so they cannot be released in tearDown but they
+ * should be released at some point to valgrind won't whine about it. (helps
+ * when debugging actual memory-related errors in the code) */
+static std::list<char*> strings;
 
 extern "C" const char* hexdump_address_r(const struct ether_addr* address, char* buf);
 void check_eth_addr(const struct ether_addr& a, const struct ether_addr& b, CppUnit::SourceLine sourceLine){
@@ -122,6 +108,7 @@ class FilterCreate : public CppUnit::TestFixture {
 	CPPUNIT_TEST( test_ethertype2   );
 	CPPUNIT_TEST( test_ethertype3   );
 	CPPUNIT_TEST( test_ethertype4   );
+	CPPUNIT_TEST( test_frame_range   );
 	CPPUNIT_TEST_SUITE_END();
 
 	struct filter filter;
@@ -129,6 +116,30 @@ class FilterCreate : public CppUnit::TestFixture {
 	int argc;
 
 public:
+
+	void generate_argv(const char* name, ...){
+		va_list ap;
+		argc = 0;
+		const char* arg;
+
+		argv[argc++] = strdup(name);
+		strings.push_back(argv[argc-1]);
+
+		va_start(ap, name);
+		do {
+			arg = va_arg(ap, const char*);
+			argv[argc++] = arg ? strdup(arg) : NULL;
+			strings.push_back(argv[argc-1]);
+		} while ( arg );
+
+		/* -1 because it will fill the last one with NULL sentinel which shouldn't count */
+		argc -= 1;
+	}
+
+	void tearDown(){
+		filter_close(&filter);
+	}
+
 	void test_empty(){
 		argc = 0;
 		CPPUNIT_ASSERT( filter_from_argv(&argc, NULL, &filter) == 0 );
@@ -168,7 +179,7 @@ public:
 
 	void test_starttime(){
 		/**@todo Check all supported date formats */
-		argc = generate_argv(argv, "programname", "--begin", "123.4007", NULL);
+		generate_argv("programname", "--begin", "123.4007", NULL);
 		CPPUNIT_ASSERT_SUCCESS(filter_from_argv(&argc, argv, &filter), 1);
 
 		CPPUNIT_ASSERT_EQUAL((uint32_t)FILTER_START_TIME, filter.index);
@@ -178,7 +189,7 @@ public:
 
 	void test_endtime(){
 		/**@todo Check all supported date formats */
-		argc = generate_argv(argv, "programname", "--end", "123.4007", NULL);
+		generate_argv("programname", "--end", "123.4007", NULL);
 		CPPUNIT_ASSERT_SUCCESS(filter_from_argv(&argc, argv, &filter), 1);
 
 		CPPUNIT_ASSERT_EQUAL((uint32_t)FILTER_END_TIME, filter.index);
@@ -187,7 +198,7 @@ public:
 	}
 
 	void test_mampid(){
-		argc = generate_argv(argv, "programname", "--mampid", "foobar", NULL);
+		generate_argv("programname", "--mampid", "foobar", NULL);
 		CPPUNIT_ASSERT_SUCCESS(filter_from_argv(&argc, argv, &filter), 1);
 
 		CPPUNIT_ASSERT_EQUAL((uint32_t)FILTER_MAMPID, filter.index);
@@ -195,7 +206,7 @@ public:
 	}
 
 	void test_iface(){
-		argc = generate_argv(argv, "programname", "--iface", "foobar", NULL);
+		generate_argv("programname", "--iface", "foobar", NULL);
 		CPPUNIT_ASSERT_SUCCESS(filter_from_argv(&argc, argv, &filter), 1);
 
 		CPPUNIT_ASSERT_EQUAL((uint32_t)FILTER_IFACE, filter.index);
@@ -203,7 +214,7 @@ public:
 	}
 
 	void test_eth_vlan(){
-		argc = generate_argv(argv, "programname", "--eth.vlan", "1234/4321", NULL);
+		generate_argv("programname", "--eth.vlan", "1234/4321", NULL);
 		CPPUNIT_ASSERT_SUCCESS(filter_from_argv(&argc, argv, &filter), 1);
 
 		CPPUNIT_ASSERT_EQUAL((uint32_t)FILTER_VLAN, filter.index);
@@ -212,7 +223,7 @@ public:
 	}
 
 	void test_eth_type1(){
-		argc = generate_argv(argv, "programname", "--eth.type", "ip", NULL);
+		generate_argv("programname", "--eth.type", "ip", NULL);
 		CPPUNIT_ASSERT_SUCCESS(filter_from_argv(&argc, argv, &filter), 1);
 
 		CPPUNIT_ASSERT_EQUAL_MESSAGE("filter.index", (uint32_t)FILTER_ETH_TYPE, filter.index);
@@ -221,7 +232,7 @@ public:
 	}
 
 	void test_eth_type2(){
-		argc = generate_argv(argv, "programname", "--eth.type", "arp/0xff00", NULL);
+		generate_argv("programname", "--eth.type", "arp/0xff00", NULL);
 		CPPUNIT_ASSERT_SUCCESS(filter_from_argv(&argc, argv, &filter), 1);
 
 		CPPUNIT_ASSERT_EQUAL_MESSAGE("filter.index", (uint32_t)FILTER_ETH_TYPE, filter.index);
@@ -230,7 +241,7 @@ public:
 	}
 
 	void test_eth_type3(){
-		argc = generate_argv(argv, "programname", "--eth.type", "2048/0xffff", NULL);
+		generate_argv("programname", "--eth.type", "2048/0xffff", NULL);
 		CPPUNIT_ASSERT_SUCCESS(filter_from_argv(&argc, argv, &filter), 1);
 
 		CPPUNIT_ASSERT_EQUAL_MESSAGE("filter.index", (uint32_t)FILTER_ETH_TYPE, filter.index);
@@ -243,14 +254,14 @@ public:
 		struct ether_addr mask1 = *ether_aton("FF:FF:FF:FF:FF:FF");
 		struct ether_addr mask2 = *ether_aton("FF:00:00:00:00:FF");
 
-		argc = generate_argv(argv, "programname", "--eth.src", "01:00:00:00:00:02", NULL);
+		generate_argv("programname", "--eth.src", "01:00:00:00:00:02", NULL);
 		CPPUNIT_ASSERT_SUCCESS(filter_from_argv(&argc, argv, &filter), 1);
 
 		CPPUNIT_ASSERT_EQUAL((uint32_t)FILTER_ETH_SRC, filter.index);
 		CPPUNIT_ASSERT_ETH_ADDR(addr,  filter.eth_src);
 		CPPUNIT_ASSERT_ETH_ADDR(mask1, filter.eth_src_mask);
 
-		argc = generate_argv(argv, "programname", "--eth.src", "01:00:00:00:00:02/FF:00:00:00:00:ff", NULL);
+		generate_argv("programname", "--eth.src", "01:00:00:00:00:02/FF:00:00:00:00:ff", NULL);
 		CPPUNIT_ASSERT_SUCCESS(filter_from_argv(&argc, argv, &filter), 1);
 
 		CPPUNIT_ASSERT_EQUAL((uint32_t)FILTER_ETH_SRC, filter.index);
@@ -259,7 +270,7 @@ public:
 	}
 
 	void test_eth_dst(){
-		argc = generate_argv(argv, "programname", "--eth.dst", "01:00:00:00:00:02/FF:00:00:00:00:00", NULL);
+		generate_argv("programname", "--eth.dst", "01:00:00:00:00:02/FF:00:00:00:00:00", NULL);
 		CPPUNIT_ASSERT_SUCCESS(filter_from_argv(&argc, argv, &filter), 1);
 
 		struct ether_addr addr = *ether_aton("01:00:00:00:00:00");
@@ -271,13 +282,13 @@ public:
 	}
 
 	void test_ip_proto(){
-		argc = generate_argv(argv, "programname", "--ip.proto", "tcp", NULL);
+		generate_argv("programname", "--ip.proto", "tcp", NULL);
 		CPPUNIT_ASSERT_SUCCESS(filter_from_argv(&argc, argv, &filter), 1);
 
 		CPPUNIT_ASSERT_EQUAL((uint32_t)FILTER_IP_PROTO, filter.index);
 		CPPUNIT_ASSERT_EQUAL((uint32_t)6, (uint32_t)filter.ip_proto);
 
-		argc = generate_argv(argv, "programname", "--ip.proto", "6", NULL);
+		generate_argv("programname", "--ip.proto", "6", NULL);
 		CPPUNIT_ASSERT_SUCCESS(filter_from_argv(&argc, argv, &filter), 1);
 
 		CPPUNIT_ASSERT_EQUAL((uint32_t)FILTER_IP_PROTO, filter.index);
@@ -288,14 +299,14 @@ public:
 		in_addr addr = {inet_addr("1.2.3.0")};
 		in_addr mask = {inet_addr("255.255.255.192")};
 
-		argc = generate_argv(argv, "programname", "--ip.src", "1.2.3.4/255.255.255.192", NULL);
+		generate_argv("programname", "--ip.src", "1.2.3.4/255.255.255.192", NULL);
 		CPPUNIT_ASSERT_SUCCESS(filter_from_argv(&argc, argv, &filter), 1);
 
 		CPPUNIT_ASSERT_EQUAL((uint32_t)FILTER_IP_SRC, filter.index);
 		CPPUNIT_ASSERT_INET_ADDR(addr, filter.ip_src);
 		CPPUNIT_ASSERT_INET_ADDR(mask, filter.ip_src_mask);
 
-		argc = generate_argv(argv, "programname", "--ip.src", "1.2.3.4/26", NULL);
+		generate_argv("programname", "--ip.src", "1.2.3.4/26", NULL);
 		CPPUNIT_ASSERT_SUCCESS(filter_from_argv(&argc, argv, &filter), 1);
 
 		CPPUNIT_ASSERT_EQUAL((uint32_t)FILTER_IP_SRC, filter.index);
@@ -307,14 +318,14 @@ public:
 		in_addr addr = {inet_addr("1.2.3.0")};
 		in_addr mask = {inet_addr("255.255.255.192")};
 
-		argc = generate_argv(argv, "programname", "--ip.dst", "1.2.3.4/255.255.255.192", NULL);
+		generate_argv("programname", "--ip.dst", "1.2.3.4/255.255.255.192", NULL);
 		CPPUNIT_ASSERT_SUCCESS(filter_from_argv(&argc, argv, &filter), 1);
 
 		CPPUNIT_ASSERT_EQUAL((uint32_t)FILTER_IP_DST, filter.index);
 		CPPUNIT_ASSERT_INET_ADDR(addr, filter.ip_dst);
 		CPPUNIT_ASSERT_INET_ADDR(mask, filter.ip_dst_mask);
 
-		argc = generate_argv(argv, "programname", "--ip.dst", "1.2.3.4/26", NULL);
+		generate_argv("programname", "--ip.dst", "1.2.3.4/26", NULL);
 		CPPUNIT_ASSERT_SUCCESS(filter_from_argv(&argc, argv, &filter), 1);
 
 		CPPUNIT_ASSERT_EQUAL((uint32_t)FILTER_IP_DST, filter.index);
@@ -323,14 +334,14 @@ public:
 	}
 
 	void test_tp_sport(){
-		argc = generate_argv(argv, "programname", "--tp.sport", "80/123", NULL);
+		generate_argv("programname", "--tp.sport", "80/123", NULL);
 		CPPUNIT_ASSERT_SUCCESS(filter_from_argv(&argc, argv, &filter), 1);
 
 		CPPUNIT_ASSERT_EQUAL((uint32_t)FILTER_SRC_PORT, filter.index);
 		CPPUNIT_ASSERT_EQUAL((uint16_t)80,  filter.src_port);
 		CPPUNIT_ASSERT_EQUAL((uint16_t)123, filter.src_port_mask);
 
-		argc = generate_argv(argv, "programname", "--tp.sport", "http/123", NULL);
+		generate_argv("programname", "--tp.sport", "http/123", NULL);
 		CPPUNIT_ASSERT_SUCCESS(filter_from_argv(&argc, argv, &filter), 1);
 
 		CPPUNIT_ASSERT_EQUAL((uint32_t)FILTER_SRC_PORT, filter.index);
@@ -339,14 +350,14 @@ public:
 	}
 
 	void test_tp_dport(){
-		argc = generate_argv(argv, "programname", "--tp.dport", "22/123", NULL);
+		generate_argv("programname", "--tp.dport", "22/123", NULL);
 		CPPUNIT_ASSERT_SUCCESS(filter_from_argv(&argc, argv, &filter), 1);
 
 		CPPUNIT_ASSERT_EQUAL((uint32_t)FILTER_DST_PORT, filter.index);
 		CPPUNIT_ASSERT_EQUAL((uint16_t)18,  filter.dst_port);
 		CPPUNIT_ASSERT_EQUAL((uint16_t)123, filter.dst_port_mask);
 
-		argc = generate_argv(argv, "programname", "--tp.dport", "ssh/123", NULL);
+		generate_argv("programname", "--tp.dport", "ssh/123", NULL);
 		CPPUNIT_ASSERT_SUCCESS(filter_from_argv(&argc, argv, &filter), 1);
 
 		CPPUNIT_ASSERT_EQUAL((uint32_t)FILTER_DST_PORT, filter.index);
@@ -355,12 +366,12 @@ public:
 	}
 
 	void test_missing(){
-		argc = generate_argv(argv, "programname", "--starttime", NULL);
+		generate_argv("programname", "--starttime", NULL);
 		CPPUNIT_ASSERT_FAILURE(filter_from_argv(&argc, argv, &filter), 1);
 	}
 
 	void test_equal_sign(){
-		argc = generate_argv(argv, "programname", "--endtime=123.4007", NULL);
+		generate_argv("programname", "--endtime=123.4007", NULL);
 		CPPUNIT_ASSERT_SUCCESS(filter_from_argv(&argc, argv, &filter), 1);
 		CPPUNIT_ASSERT_EQUAL((uint32_t)FILTER_END_TIME, filter.index);
 		CPPUNIT_ASSERT_EQUAL((uint32_t)123, filter.endtime.tv_sec);
@@ -368,36 +379,36 @@ public:
 	}
 
 	void test_shortname(){
-		argc = generate_argv(argv, "programname", "3.cap", NULL);
+		generate_argv("programname", "3.cap", NULL);
 		CPPUNIT_ASSERT_SUCCESS(filter_from_argv(&argc, argv, &filter), 2);
 	}
 
 	void test_mode_and(){
-		argc = generate_argv(argv, "programname", "--filter-mode", "aNd", NULL);
+		generate_argv("programname", "--filter-mode", "aNd", NULL);
 		CPPUNIT_ASSERT_SUCCESS(filter_from_argv(&argc, argv, &filter), 1);
 		CPPUNIT_ASSERT_EQUAL(FILTER_AND, filter.mode);
 	}
 
 	void test_mode_or(){
-		argc = generate_argv(argv, "programname", "--filter-mode", "Or", NULL);
+		generate_argv("programname", "--filter-mode", "Or", NULL);
 		CPPUNIT_ASSERT_SUCCESS(filter_from_argv(&argc, argv, &filter), 1);
 		CPPUNIT_ASSERT_EQUAL(FILTER_OR, filter.mode);
 	}
 
 	void test_mode_invalid(){
-		argc = generate_argv(argv, "programname", "--filter-mode", "foo", NULL);
+		generate_argv("programname", "--filter-mode", "foo", NULL);
 		CPPUNIT_ASSERT_SUCCESS(filter_from_argv(&argc, argv, &filter), 1);
 	}
 
 	void test_bpf_valid(){
 		const std::string expr = "icmp or net 1.2.3.0/24";
-		argc = generate_argv(argv, "test_bpf_valid", "--bpf", expr.c_str(), NULL);
+		generate_argv("test_bpf_valid", "--bpf", expr.c_str(), NULL);
 		CPPUNIT_ASSERT_SUCCESS(filter_from_argv(&argc, argv, &filter), 1);
 		CPPUNIT_ASSERT_EQUAL(std::string(filter.bpf_expr), expr);
 	}
 
 	void test_bpf_invalid(){
-		argc = generate_argv(argv, "test_bpf_invalid", "--bpf", "some invalid string", NULL);
+		generate_argv("test_bpf_invalid", "--bpf", "some invalid string", NULL);
 #ifdef HAVE_PCAP
 		CPPUNIT_ASSERT_FAILURE(filter_from_argv(&argc, argv, &filter), 1);
 #else
@@ -427,6 +438,36 @@ public:
 		std::transform(name.begin(), name.end(), name.begin(), ::tolower);
 		CPPUNIT_ASSERT_EQUAL(std::string("ipv4"), name);
 	}
+
+	void test_frame_range(){
+		generate_argv("programname", "--frame-num=-10,13,20-25,50-", NULL);
+		CPPUNIT_ASSERT_SUCCESS(filter_from_argv(&argc, argv, &filter), 1);
+
+		int i;
+		struct frame_num_node* cur;
+		for ( i=0, cur = filter.frame_num; cur; ++i, cur = cur->next ){
+			switch (i){
+			case 0:
+				CPPUNIT_ASSERT_EQUAL_MESSAGE("-10 lower", -1, cur->lower);
+				CPPUNIT_ASSERT_EQUAL_MESSAGE("-10 upper", 10, cur->upper);
+				break;
+			case 1:
+				CPPUNIT_ASSERT_EQUAL_MESSAGE("13 lower", 13, cur->lower);
+				CPPUNIT_ASSERT_EQUAL_MESSAGE("13 upper", 13, cur->upper);
+				break;
+			case 2:
+				CPPUNIT_ASSERT_EQUAL_MESSAGE("-20,25 lower", 20, cur->lower);
+				CPPUNIT_ASSERT_EQUAL_MESSAGE("-20,25 upper", 25, cur->upper);
+				break;
+			case 3:
+				CPPUNIT_ASSERT_EQUAL_MESSAGE("50- lower", 50, cur->lower);
+				CPPUNIT_ASSERT_EQUAL_MESSAGE("50- upper", -1, cur->upper);
+				break;
+			}
+		}
+
+		CPPUNIT_ASSERT_EQUAL_MESSAGE("num ranges", 4, i);
+	}
 };
 
 CPPUNIT_TEST_SUITE_REGISTRATION(FilterCreate);
@@ -438,5 +479,12 @@ int main(int argc, const char* argv[]){
 	runner.addTest(suite);
 	runner.setOutputter(new CppUnit::CompilerOutputter(&runner.result(), std::cerr));
 
-	return runner.run() ? 0 : 1;
+	int ret = runner.run() ? 0 : 1;
+
+	for ( std::list<char*>::iterator it = strings.begin(); it != strings.end(); ++it ){
+		free(*it);
+	}
+	strings.clear();
+
+	return ret;
 }

@@ -88,8 +88,12 @@ int main(int argc, const char* argv[]){
 		fprintf(stderr, "failed to read `%s'\n", path);
 		return 1;
 	}
-	if ( fread(data, sizeof(data), 1, fp) != 1 ){
-		fprintf(stderr, "failed to read `%s' (data truncated)\n", path);
+
+	/* read the test packet */
+	int bytes;
+	const int expected = 541;
+	if ( (bytes=fread(data, 1, sizeof(data), fp)) < expected ){
+		fprintf(stderr, "failed to read `%s' (data truncated, read %d bytes, expected %d)\n", path, bytes, expected);
 		return 1;
 	}
 	fclose(fp);

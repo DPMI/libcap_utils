@@ -73,6 +73,7 @@ Discard all packages where destination address doesn't match ADDRESS. See
 \fB\-\-tp.sport\fR=\fIPORT[/MASK]\fR
 Discard packets not originating from \fIPORT\fP which can either be entered as
 protocol number or a valid name from `/etc/services`.
+.TP
 \fB\-\-tp.dport\fR=\fIPORT[/MASK]\fR
 Discard packets not destined to \fIPORT\fP which can either be entered as
 protocol number or a valid name from `/etc/services`.
@@ -81,6 +82,23 @@ protocol number or a valid name from `/etc/services`.
 \fIMODE\fP can be set to either OR or AND (default) which changes the operator
 when joining the different filters. By setting to OR only one of the filters
 has to match while AND all must match.
+.TP
+\fB\-\-frame-num\fR=\fIRANGE\fR
+Discards all packets not in the specified range.
+Range can be specified as
+.RS
+.TP
+\[bu] FRAME - Match only this specific frame.
+.TP
+\[bu] LOWER-UPPER - Match all frames between LOWER and UPPER (inclusive)
+.TP
+\[bu] -UPPER - Match all frames up to UPPER (inclusive)
+.TP
+\[bu] LOWER- - Match all frames from LOWER and onwards (inclusive)
+.TP
+.RE
+Multiple ranges can be joined with comma. E.g. "-5,7,10-" would match packets
+1-5, 7 and then from 10 until the end of the stream.
 .SH DATE FORMAT
 Valid date formats are:
 .sp
@@ -102,4 +120,4 @@ identical.
 .SH AUTHOR
 Written by David Sveningsson <david.sveningsson@bth.se>.
 .SH "SEE ALSO"
-mp(1), capplay(1)
+mp(1)
