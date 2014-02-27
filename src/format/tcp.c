@@ -71,7 +71,7 @@ static void tcp_options(const struct cap_header* cp,const struct tcphdr* tcp, FI
 
 		/* Ensure there is enough data left in packet */
 		const size_t used = (const char*)ptr - cp->payload + sizeof(tcp_option_t);
-		if ( used > cp->caplen || (used + opt->size) > cp->caplen ){
+		if ( used > cp->caplen || (used + opt->size - sizeof(tcp_option_t)) > cp->caplen ){
 			fprintf(dst,"tcp option truncated (caplen)");
 			break;
 		}
