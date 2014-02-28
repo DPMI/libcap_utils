@@ -742,3 +742,8 @@ void filter_frame_dt_set(struct filter* filter, const timepico t){
 	filter->index |= FILTER_FRAME_MAX_DT;
 	filter->frame_max_dt = t;
 }
+
+void filter_frame_num_set(struct filter* filter, const char* str){
+	filter->index |= FILTER_FRAME_NUM;
+	parse_frame_range(str, filter);
+}

@@ -25,6 +25,7 @@ int filter_mampid(const struct filter* filter, const char mampid[]);
 int filter_start_time(const struct filter* filter, const timepico* time);
 int filter_end_time(const struct filter* filter, const timepico* time);
 int filter_frame_dt(const struct filter* filter, const timepico time);
+int filter_frame_num(const struct filter* filter);
 }
 
 class Test: public CppUnit::TestFixture {
@@ -44,6 +45,7 @@ class Test: public CppUnit::TestFixture {
 	CPPUNIT_TEST(test_start_time);
 	CPPUNIT_TEST(test_end_time);
 	CPPUNIT_TEST(test_frame_dt);
+	CPPUNIT_TEST(test_frame_num);
 	CPPUNIT_TEST_SUITE_END();
 
 	void test_ci(){
@@ -247,6 +249,16 @@ class Test: public CppUnit::TestFixture {
 
 		timepico_from_string(&ts, "0.3");
 		CPPUNIT_ASSERT_EQUAL_MESSAGE("[3] dt >= 0.3 ", 0, filter_frame_dt(&filter, ts));
+	}
+
+	void test_frame_num(){
+		struct filter filter;
+		filter_frame_num_set(&filter, "2-3");
+
+		filter.frame_counter = 1; CPPUNIT_ASSERT_MESSAGE("Frame 1", !filter_frame_num(&filter));
+		filter.frame_counter = 2; CPPUNIT_ASSERT_MESSAGE("Frame 2",  filter_frame_num(&filter));
+		filter.frame_counter = 3; CPPUNIT_ASSERT_MESSAGE("Frame 3",  filter_frame_num(&filter));
+		filter.frame_counter = 4; CPPUNIT_ASSERT_MESSAGE("Frame 4", !filter_frame_num(&filter));
 	}
 };
 

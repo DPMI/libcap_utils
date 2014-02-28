@@ -234,6 +234,7 @@ void filter_mampid_set(struct filter* filter, const char* mampid);
 void filter_starttime_set(struct filter* filter, const timepico t);
 void filter_endtime_set(struct filter* filter, const timepico t);
 void filter_frame_dt_set(struct filter* filter, const timepico t);
+void filter_frame_num_set(struct filter* filter, const char* str);
 
 /**
  * Display a representation of the filter.

@@ -165,7 +165,7 @@ int FILTER filter_frame_dt(const struct filter* filter, const timepico time){
 	return timecmp(&iat, &filter->frame_max_dt) <= 0;
 }
 
-static int filter_frame_num(const struct filter* filter){
+int filter_frame_num(const struct filter* filter){
 	if ( !filter->frame_num ){
 		return 0;
 	}
