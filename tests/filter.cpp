@@ -28,6 +28,7 @@ int filter_frame_dt(const struct filter* filter, const timepico time);
 
 class Test: public CppUnit::TestFixture {
 	CPPUNIT_TEST_SUITE(Test);
+	CPPUNIT_TEST(test_vlan);
 	CPPUNIT_TEST(test_eth_type);
 	CPPUNIT_TEST(test_eth_src);
 	CPPUNIT_TEST(test_eth_dst);
@@ -42,6 +43,16 @@ class Test: public CppUnit::TestFixture {
 	CPPUNIT_TEST(test_end_time);
 	CPPUNIT_TEST(test_frame_dt);
 	CPPUNIT_TEST_SUITE_END();
+
+	void test_vlan(){
+		struct filter filter;
+		struct ether_vlan_header vlan;
+		vlan.vlan_proto = ETHERTYPE_VLAN;
+
+		filter_vlan_set(&filter, "0xaaa/0xfff");
+		vlan.vlan_tci = ntohs(0xfaaa); CPPUNIT_ASSERT_MESSAGE("[1] VID 2730 == VID 2730",  filter_vlan_tci(&filter, &vlan));
+		vlan.vlan_tci = ntohs(0xfbbb); CPPUNIT_ASSERT_MESSAGE("[1] VID 3003 != VID 2730", !filter_vlan_tci(&filter, &vlan));
+	}
 
 	void test_eth_type(){
 		struct filter filter;

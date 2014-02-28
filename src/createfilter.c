@@ -229,6 +229,16 @@ static int parse_port(const char* src, uint16_t* port, uint16_t* mask, const cha
 	return 1;
 }
 
+static int parse_vlan(const char* src, uint16_t* vlan_tci, uint16_t* vlan_tci_mask, const char* flag){
+	*vlan_tci_mask = 0xFFFF;
+	int x = 0;
+	if ( (x=sscanf(src, "%hi/%hi", vlan_tci, vlan_tci_mask)) == 0 ){
+		fprintf(stderr, "Invalid VLAN TCI given to --%s: %s. Ignoring.\n", flag, src);
+		return 0;
+	}
+	return 1;
+}
+
 static int parse_eth_type(const char* src_orig, uint16_t* type, uint16_t* mask, const char* flag){
 	char* src = strdup(src_orig);
 	*mask = 0xFFFF;
@@ -537,9 +547,7 @@ int filter_from_argv(int* argcptr, char** argv, struct filter* filter){
 			break;
 
 		case FILTER_VLAN:
-			filter->vlan_tci_mask = 0xFFFF;
-			if ( sscanf(optarg, "%hd/%hd", &filter->vlan_tci, &filter->vlan_tci_mask) == 0 ){
-				fprintf(stderr, "Invalid VLAN TCI: %s. Ignoring\n", optarg);
+			if ( !parse_vlan(optarg, &filter->vlan_tci, &filter->vlan_tci_mask, "eth.vlan") ){
 				continue;
 			}
 			break;
@@ -638,6 +646,11 @@ int filter_close(struct filter* filter){
 	}
 
 	return 0;
+}
+
+void filter_vlan_set(struct filter* filter, const char* str){
+	filter->index |= FILTER_VLAN;
+	parse_vlan(str, &filter->vlan_tci, &filter->vlan_tci_mask, "eth.vlan");
 }
 
 void filter_eth_type_set(struct filter* filter, const char* str){
