@@ -216,6 +216,7 @@ void filter_from_argv_usage(void);
 extern int filter_from_argv_opterr;
 
 /* functions for pragmatically creating filter */
+void filter_eth_type_set(struct filter* filter, const char* str);
 void filter_eth_src_set(struct filter* filter, const char* str);
 void filter_eth_dst_set(struct filter* filter, const char* str);
 void filter_ip_proto_set(struct filter* filter, int proto);

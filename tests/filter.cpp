@@ -28,6 +28,7 @@ int filter_frame_dt(const struct filter* filter, const timepico time);
 
 class Test: public CppUnit::TestFixture {
 	CPPUNIT_TEST_SUITE(Test);
+	CPPUNIT_TEST(test_eth_type);
 	CPPUNIT_TEST(test_eth_src);
 	CPPUNIT_TEST(test_eth_dst);
 	CPPUNIT_TEST(test_ip_proto);
@@ -41,6 +42,13 @@ class Test: public CppUnit::TestFixture {
 	CPPUNIT_TEST(test_end_time);
 	CPPUNIT_TEST(test_frame_dt);
 	CPPUNIT_TEST_SUITE_END();
+
+	void test_eth_type(){
+		struct filter filter;
+		filter_eth_type_set(&filter, "ip");
+		CPPUNIT_ASSERT_MESSAGE("[1] ip == ip",   filter_h_proto(&filter, ETHERTYPE_IP));
+		CPPUNIT_ASSERT_MESSAGE("[1] ip != arp", !filter_h_proto(&filter, ETHERTYPE_ARP));
+	}
 
 	void test_eth_src(){
 		static const char addr1[] = {1,0,0,0,0,1};

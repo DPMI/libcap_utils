@@ -229,7 +229,8 @@ static int parse_port(const char* src, uint16_t* port, uint16_t* mask, const cha
 	return 1;
 }
 
-static int parse_eth_type(const char* src, uint16_t* type, uint16_t* mask, const char* flag){
+static int parse_eth_type(const char* src_orig, uint16_t* type, uint16_t* mask, const char* flag){
+	char* src = strdup(src_orig);
 	*mask = 0xFFFF;
 
 	/* test if mask was passed */
@@ -253,11 +254,13 @@ static int parse_eth_type(const char* src, uint16_t* type, uint16_t* mask, const
 		/* try to match a number */
 		if ( sscanf(src, "%hd", type) == 0 ){
 			fprintf(stderr, "Invalid ethernet protocol given to --%s: %s. Ignoring.\n", flag, src);
+			free(src);
 			return 0;
 		}
 	}
 
 	*type &= *mask;
+	free(src);
 	return 1;
 }
 
@@ -635,6 +638,11 @@ int filter_close(struct filter* filter){
 	}
 
 	return 0;
+}
+
+void filter_eth_type_set(struct filter* filter, const char* str){
+	filter->index |= FILTER_ETH_TYPE;
+	parse_eth_type(str, &filter->eth_type, &filter->eth_type_mask, "eth.type");
 }
 
 void filter_eth_src_set(struct filter* filter, const char* str){
