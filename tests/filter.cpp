@@ -10,6 +10,7 @@
 #include <arpa/inet.h>
 
 extern "C" {
+int filter_iface(const struct filter* filter, const char* iface);
 int filter_vlan_tci(const struct filter* filter, const struct ether_vlan_header* vlan);
 int filter_h_proto(const struct filter* filter, uint16_t h_proto);
 int filter_eth_src(const struct filter* filter, const struct ethhdr* ether);
@@ -28,6 +29,7 @@ int filter_frame_dt(const struct filter* filter, const timepico time);
 
 class Test: public CppUnit::TestFixture {
 	CPPUNIT_TEST_SUITE(Test);
+	CPPUNIT_TEST(test_ci);
 	CPPUNIT_TEST(test_vlan);
 	CPPUNIT_TEST(test_eth_type);
 	CPPUNIT_TEST(test_eth_src);
@@ -43,6 +45,14 @@ class Test: public CppUnit::TestFixture {
 	CPPUNIT_TEST(test_end_time);
 	CPPUNIT_TEST(test_frame_dt);
 	CPPUNIT_TEST_SUITE_END();
+
+	void test_ci(){
+		struct filter filter;
+		filter_ci_set(&filter, "d01"); CPPUNIT_ASSERT_MESSAGE("[1] d01 == d01",  filter_iface(&filter, "d01"));
+		filter_ci_set(&filter, "d0" ); CPPUNIT_ASSERT_MESSAGE("[2] d0  == d01",  filter_iface(&filter, "d01"));
+		filter_ci_set(&filter, "d11"); CPPUNIT_ASSERT_MESSAGE("[3] d11 != d01", !filter_iface(&filter, "d01"));
+		filter_ci_set(&filter, "d1" ); CPPUNIT_ASSERT_MESSAGE("[4] d1  != d01", !filter_iface(&filter, "d01"));
+	}
 
 	void test_vlan(){
 		struct filter filter;

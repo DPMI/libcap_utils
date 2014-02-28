@@ -648,6 +648,11 @@ int filter_close(struct filter* filter){
 	return 0;
 }
 
+void filter_ci_set(struct filter* filter, const char* str){
+	filter->index |= FILTER_CI;
+	strncpy(filter->iface, str, 8);
+}
+
 void filter_vlan_set(struct filter* filter, const char* str){
 	filter->index |= FILTER_VLAN;
 	parse_vlan(str, &filter->vlan_tci, &filter->vlan_tci_mask, "eth.vlan");
