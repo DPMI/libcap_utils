@@ -3,6 +3,7 @@
 #endif
 
 #include <caputils/packet.h>
+#include "src/format/format.h"
 
 #include <cppunit/CompilerOutputter.h>
 #include <cppunit/extensions/TestFactoryRegistry.h>
@@ -24,6 +25,7 @@ class Test: public CppUnit::TestFixture {
 	CPPUNIT_TEST(test_payload_link);
 	CPPUNIT_TEST(test_payload_network);
 	CPPUNIT_TEST(test_payload_transport);
+	CPPUNIT_TEST(test_limited_caplen);
 	CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -74,6 +76,24 @@ public:
 		CPPUNIT_ASSERT_EQUAL((size_t)439, payload_size(LEVEL_TRANSPORT, caphead));
 	}
 
+	void test_limited_caplen(){
+		union {
+			char buffer[2 + sizeof(struct cap_header)];
+			struct cap_header cp;
+		};
+		cp.caplen = 2;
+
+		CPPUNIT_ASSERT_MESSAGE("cp.payload[ 0] <- 1 bytes", !limited_caplen(&cp, cp.payload+0, 1));
+		CPPUNIT_ASSERT_MESSAGE("cp.payload[ 0] <- 2 bytes", !limited_caplen(&cp, cp.payload+0, 2));
+		CPPUNIT_ASSERT_MESSAGE("cp.payload[ 0] <- 3 bytes",  limited_caplen(&cp, cp.payload+0, 3));
+		CPPUNIT_ASSERT_MESSAGE("cp.payload[ 1] <- 1 bytes", !limited_caplen(&cp, cp.payload+1, 1));
+		CPPUNIT_ASSERT_MESSAGE("cp.payload[ 1] <- 2 bytes",  limited_caplen(&cp, cp.payload+1, 2));
+		CPPUNIT_ASSERT_MESSAGE("cp.payload[ 1] <- 3 bytes",  limited_caplen(&cp, cp.payload+1, 3));
+		CPPUNIT_ASSERT_MESSAGE("cp.payload[ 2] <- 1 bytes",  limited_caplen(&cp, cp.payload+2, 1));
+		CPPUNIT_ASSERT_MESSAGE("cp.payload[ 2] <- 2 bytes",  limited_caplen(&cp, cp.payload+2, 2));
+		CPPUNIT_ASSERT_MESSAGE("cp.payload[ 2] <- 3 bytes",  limited_caplen(&cp, cp.payload+2, 3));
+		CPPUNIT_ASSERT_MESSAGE("cp.payload[-1] <- 1 bytes",  limited_caplen(&cp, cp.payload-1, 1));
+	}
 };
 
 CPPUNIT_TEST_SUITE_REGISTRATION(Test);

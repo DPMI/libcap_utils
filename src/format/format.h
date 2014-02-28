@@ -42,6 +42,10 @@ struct network {
 };
 typedef const struct network* net_t;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * Test if there is enough data left for parsing.
  * @param cp capture header
@@ -49,7 +53,7 @@ typedef const struct network* net_t;
  * @param bytes number of bytes required.
  * @return non-zero if there isn't enough data left
  */
-int limited_caplen(const struct cap_header* cp, const void* ptr, size_t bytes);
+int limited_caplen(const struct cap_header* cp, const void* ptr, size_t bytes) __attribute__((visibility("default")));
 
 /* layer 2 */
 void print_eth(FILE* dst, const struct cap_header* cp, const struct ethhdr* eth, unsigned int h_proto, const char* payload, unsigned int flags);
@@ -72,3 +76,7 @@ void print_icmp(FILE* fp, const struct cap_header* cp, net_t net, const struct i
 /* application layer */
 void print_dns(FILE* fp, const struct cap_header* cp, const char* payload, size_t size, unsigned int flags);
 void print_http(FILE* fp, const struct cap_header* cp, const char* payload, size_t size, unsigned int flags);
+
+#ifdef __cplusplus
+}
+#endif

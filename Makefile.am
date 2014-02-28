@@ -223,7 +223,7 @@ tests_endian_SOURCES = tests/endian.cpp fallback/be64toh.c
 
 tests_packet_CXXFLAGS = ${AM_CFLAGS} $(CPPUNIT_CFLAGS)
 tests_packet_LDFLAGS = $(CPPUNIT_LIBS)
-tests_packet_LDADD = libcap_utils-07.la libcap_filter-07.la
+tests_packet_LDADD = libcap_utils-07.la libcap_filter-07.la libcap_stream-07.la
 tests_packet_SOURCES = tests/packet.cpp
 
 tests_stream_CXXFLAGS = ${AM_CFLAGS} $(CPPUNIT_CFLAGS)
