@@ -269,25 +269,27 @@ typedef union {
 /**
  * Passed to marc_init_client
  * @param client_ip Optional ip to use when connecting.
+ * @param server_ip Optional ip to use when connecting.
  * @param client_port Optional port number. Use 0 for default.
  * @param max_filters
  * @param noCI
  */
 struct marc_client_info {
-	const char* client_ip;
-	int client_port;
-
-	int max_filters;
-	int noCI;
-	int ma_mtu;
-
-	struct {
-		versionex_t caputils;
-		versionex_t self;
-	} version;
-
-	uint32_t drivers; /* bitmask 1:raw 2:pcap 4:dag */
-	struct CIinitialization CI[8];
+  const char* client_ip;
+  const char* server_ip;
+  int client_port;
+  
+  int max_filters;
+  int noCI;
+  int ma_mtu;
+  
+  struct {
+    versionex_t caputils;
+    versionex_t self;
+  } version;
+  
+  uint32_t drivers; /* bitmask 1:raw 2:pcap 4:dag */
+  struct CIinitialization CI[8];
 };
 
 /**

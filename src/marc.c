@@ -195,12 +195,22 @@ int marc_init_client(marc_context_t* ctxptr, const char* iface, struct marc_clie
 	/* setup relay addr */
 	relay_addr.sin_family = AF_INET;
 	relay_addr.sin_port   = htons(DEFAULT_RELAY_PORT);
-	relay_addr.sin_addr.s_addr = htonl(INADDR_BROADCAST);
+	//	fprintf(stdout,"server_ip = %s \n",info->server_ip);
+	if (info->server_ip==0) {
+	  relay_addr.sin_addr.s_addr = htonl(INADDR_BROADCAST);
+	} else {
+	  out_func(dst_verbose, "MArC IP provided via config as %s \n", info->server_ip);
+	  if ( inet_aton(info->server_ip, (struct in_addr*)&relay_addr.sin_addr) == 0){
+	    return perror2("inet_aton");
+	  }
+	}
+	//	fprintf(stdout, "relay.addr = %s\n", inet_ntoa(relay_addr.sin_addr));
 
 	/* bind socket to client addr */
 	if( bind(sd, (struct sockaddr*)&client_addr, sizeof(struct sockaddr_in)) == -1){
 		return perror2("bind");
 	}
+
 
 	/* send initialization request to relay */
 	{
@@ -210,9 +220,10 @@ int marc_init_client(marc_context_t* ctxptr, const char* iface, struct marc_clie
 		mainfo.port = client_addr.sin_port;
 		sprintf(mainfo.address, "%s", inet_ntoa(client_addr.sin_addr));
 
-		if ( sendto(sd, &mainfo, sizeof(struct MAINFO), 0, (struct sockaddr*)&relay_addr, sizeof(struct sockaddr_in)) == -1 ){
-			return perror2("sendto");
-		}
+		  if ( sendto(sd, &mainfo, sizeof(struct MAINFO), 0, (struct sockaddr*)&relay_addr, sizeof(struct sockaddr_in)) == -1 ){
+			return perror2("Sendto (init)");
+		  }
+
 	}
 
 	/* await relay reply */
@@ -221,33 +232,35 @@ int marc_init_client(marc_context_t* ctxptr, const char* iface, struct marc_clie
 	static const int max_retries = 6; /* try at most n times */
 	static const int timeout_factor = 8; /* for each retry, wait n*x sec */
 	while ( n < max_retries ){
-		struct timeval timeout = { n * timeout_factor, 0 };
-		out_func(dst_verbose, "Sending init request to MArelayD (try: %d timeout: %d)\n", n, timeout.tv_sec);
-		fd_set fds;
-
-		FD_ZERO(&fds);
-		FD_SET(sd, &fds);
-
-		switch ( select(sd+1, &fds, NULL, NULL, &timeout) ){
-		case -1:
-			if ( errno == EINTR ){ /* dont want to show perror for this */
-				return errno;
-			}
-			return perror2("select");
-		case 0:
-			out_func(dst_verbose, "Request timed out.\n");
-			n++;
-			continue;
-		default:
-			break;
-		}
-
-		if ( recvfrom(sd, &reply, sizeof(struct MAINFO), 0, NULL, NULL) == -1 ){
-			return perror2("recvfrom");
-		}
-
-		break;
+	  struct timeval timeout = { n * timeout_factor, 0 };
+	  out_func(dst_verbose, "Sending init request to MArelayD (try: %d timeout: %d)\n", n, timeout.tv_sec);
+	  fd_set fds;
+	  
+	  FD_ZERO(&fds);
+	  FD_SET(sd, &fds);
+	  
+	  switch ( select(sd+1, &fds, NULL, NULL, &timeout) ){
+	  case -1:
+	    if ( errno == EINTR ){ /* dont want to show perror for this */
+	      return errno;
+	    }
+	    return perror2("select");
+	  case 0:
+	    out_func(dst_verbose, "Request timed out.\n");
+	    n++;
+	    continue;
+	  default:
+	    break;
+	  }
+	  
+	  if ( recvfrom(sd, &reply, sizeof(struct MAINFO), 0, NULL, NULL) == -1 ){
+	    return perror2("recvfrom");
+	  }
+	  
+	  break;
 	}
+
+	  
 
 	if ( n < max_retries ){
 		out_func(dst_verbose, "Got MArelayD reply (v%d): MArCd: udp://%s:%d\n", reply.version, reply.address, reply.portUDP);
