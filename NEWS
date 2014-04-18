@@ -1,3 +1,8 @@
+caputils-0.7.15
+---------------
+
+  * pf_ring: compatibility with 6.0
+
 caputils-0.7.14
 ---------------
 
