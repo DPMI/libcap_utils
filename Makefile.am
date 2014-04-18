@@ -171,7 +171,7 @@ libcap_marc_07_la_CFLAGS = ${AM_CFLAGS} ${libcap_filter_CFLAGS}
 libcap_marc_07_la_SOURCES = src/marc.c src/marc_dstat.c
 
 tools_CFLAGS = ${AM_CFLAGS} -I${top_srcdir}/fallback
-tools_LIBS = libcap_utils-07.la libcap_filter-07.la libcap_stream-07.la ${PCAP_LIBS}
+tools_LIBS = libcap_utils-07.la libcap_filter-07.la libcap_stream-07.la ${PCAP_LIBS} ${PFRING_LIBS}
 
 pcap2cap_SOURCES = tools/pcap2cap.c
 pcap2cap_CFLAGS = ${tools_CFLAGS}
