@@ -275,21 +275,21 @@ typedef union {
  * @param noCI
  */
 struct marc_client_info {
-  const char* client_ip;
-  const char* server_ip;
-  int client_port;
-  
-  int max_filters;
-  int noCI;
-  int ma_mtu;
-  
-  struct {
-    versionex_t caputils;
-    versionex_t self;
-  } version;
-  
-  uint32_t drivers; /* bitmask 1:raw 2:pcap 4:dag */
-  struct CIinitialization CI[8];
+	const char* client_ip;
+	const char* server_ip;
+	int client_port;
+
+	int max_filters;
+	int noCI;
+	int ma_mtu;
+
+	struct {
+		versionex_t caputils;
+		versionex_t self;
+	} version;
+
+	uint32_t drivers; /* bitmask 1:raw 2:pcap 4:dag */
+	struct CIinitialization CI[8];
 };
 
 /**
