@@ -22,6 +22,14 @@ AC_DEFUN([AX_PFRING], [
   AS_IF([test "x$ax_pfring_want" != "xno"], [
     LDFLAGS="$LDFLAGS -Wl,--undefined=pcap_compile_nopcap"
     AC_CHECK_HEADER([pfring.h])
+
+    dnl NUMA library is required by PF_RING >= 6.0
+    dnl numa_bind is just an arbitrary function tested
+    AC_CHECK_LIB([numa], [numa_bind],,[
+      AC_MSG_WARN([PF_RING 6.0 and later requires libnuma, will continue but the next PF_RING test may fail.])
+    ])
+
+    dnl Test for PF_RING userspace library
     AC_CHECK_LIB([pfring], [pfring_open], [true])
 
     AS_IF([test "x$ac_cv_header_pfring_h" = "xyes" -a "x$ac_cv_lib_pfring_pfring_open" = "xyes"], [

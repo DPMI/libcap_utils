@@ -207,7 +207,9 @@ int stream_file_open(struct stream** stptr, FILE* fp, const char* filename, size
 	if ( have_extensions ){
 		do {
 			struct file_extension ext;
-			fread(&ext, sizeof(struct file_extension), 1, st->file);
+			if ( fread(&ext, sizeof(struct file_extension), 1, st->file) != 1 ){
+				return ERROR_CAPFILE_TRUNCATED;
+			}
 
 			if ( ext.type == HEADER_EXT_NONE ){
 				/* last extension header */
