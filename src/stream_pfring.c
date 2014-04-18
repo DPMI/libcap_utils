@@ -298,17 +298,20 @@ long stream_pfring_open(struct stream** stptr, const struct ether_addr* addr, co
 	pfring_config(99);
 
 	/* open pfring */
-	char* derp = strdup(iface); /* hack because (older versions of) pfring_open isn't const correct */
+	pfring* pd;
+	{
+		char* iface_rw = strdup(iface); /* hack because (older versions of) pfring_open isn't const correct */
 #if RING_VERSION_NUM < 0x050400
-	pfring* pd = pfring_open(derp, LIBPFRING_PROMISC, if_mtu, 0);
+		pd = pfring_open(iface_rw, LIBPFRING_PROMISC, if_mtu, 0);
 #else
-	pfring* pd = pfring_open(derp, if_mtu, 0);
+		pd = pfring_open(iface_rw, if_mtu, 0);
 #endif
 
-	int saved = errno;
-	free(derp);
-	if ( !pd ){
-		return saved;
+		int saved = errno;
+		free(iface_rw);
+		if ( !pd ){
+			return saved;
+		}
 	}
 
 	pfring_set_application_name(pd, "libcap_utils");
