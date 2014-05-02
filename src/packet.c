@@ -140,7 +140,7 @@ size_t layer_size(enum Level level, const cap_head* caphead){
 
 static int find_ipv4_header_int(const struct ethhdr* ether, int* ptr){
 	const char* const ref = (const char*)ether;
-	const char* cur = ref;
+	const char* cur = ref + sizeof(struct ethhdr);
 	uint16_t proto = ntohs(ether->h_proto);
 
 	retry:
@@ -151,9 +151,9 @@ static int find_ipv4_header_int(const struct ethhdr* ether, int* ptr){
 	case ETHERTYPE_VLAN:
 	{
 		/* Packet contains a VLAN tag */
-		const struct ether_vlan_header* vlan = (const struct ether_vlan_header*)cur;
-		cur += sizeof(struct ether_vlan_header);
-		proto = ntohs(vlan->h_proto);
+		cur += 2;
+		proto = ntohs(*((const uint16_t*)cur));
+		cur += 2;
 		goto retry;
 	}
 
@@ -163,7 +163,7 @@ static int find_ipv4_header_int(const struct ethhdr* ether, int* ptr){
 		return -1;
 	}
 
-	const int offset = cur - ref + sizeof(struct ether_vlan_header);
+	const int offset = cur-ref;
 	const struct ip* ip = (const struct ip*)cur;
 	if ( ptr ){
 		const size_t hl = 4*ip->ip_hl;
