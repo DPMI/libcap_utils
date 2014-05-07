@@ -216,7 +216,7 @@ int main(int argc, char **argv){
 
 		/* Read the next packet */
 		cap_head* cp;
-		ret = stream_read(stream, &cp, NULL, &tv);
+		ret = stream_read(stream, &cp, &filter, &tv);
 		if ( ret == EAGAIN ){
 			continue; /* timeout */
 		} else if ( ret != 0 ){
@@ -225,6 +225,14 @@ int main(int argc, char **argv){
 
 		matched++;
 		printf("Packet %ld\n", matched);
+		printf("  DPMI\n"
+		       "    MAMPid:             %.8s\n"
+		       "    Iface:              %.8s\n"
+		       "    Timestamp:          %s\n"
+		       "    Length:             %d\n"
+		       "    Capture length:     %d\n"
+		       , cp->mampid, cp->nic, timepico_to_string(&cp->ts, "%Y-%m-%d %H:%M:%S +00:00")
+		       , cp->len, cp->caplen);
 		struct header_chunk header;
 		header_init(&header, cp);
 		while ( header_walk(&header) ){
