@@ -128,6 +128,15 @@ void format_ignore(FILE* fp, struct format* state, const struct cap_header* cp){
 	}
 }
 
+const char* name_lookup(const struct name_table* table, int value, const char* def){
+	const struct name_table* cur = table;
+	while ( cur->name ){
+		if ( value == cur->value ) return cur->name;
+		cur++;
+	}
+	return def;
+}
+
 int limited_caplen(const struct cap_header* cp, const void* ptr, size_t bytes){
 	const void* begin = cp->payload;
 	const void* end = begin + cp->caplen;

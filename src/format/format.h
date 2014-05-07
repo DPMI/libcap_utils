@@ -40,6 +40,17 @@
 extern "C" {
 #endif
 
+struct name_table {
+	int value;
+	const char* name;
+};
+
+/**
+ * From a name table find entry with value and return name.
+ * If value isn't found it returns def.
+ */
+const char* name_lookup(const struct name_table* table, int value, const char* def);
+
 /**
  * Test if there is enough data left for parsing.
  * @param cp capture header
