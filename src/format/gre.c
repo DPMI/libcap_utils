@@ -67,5 +67,5 @@ void print_gre(FILE* fp, const struct cap_header* cp, net_t net, const char* dat
 	if ( gre.sequence ) payload += 4;
 
 	/* print contained header */
-	print_eth(fp, cp, NULL, gre.proto, payload, flags);
+	//print_eth(fp, cp, NULL, gre.proto, payload, flags);
 }

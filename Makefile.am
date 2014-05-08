@@ -112,33 +112,33 @@ endif
 
 libcap_utils_07_la_CFLAGS = ${AM_CFLAGS} -I${top_srcdir}/fallback
 libcap_utils_07_la_LDFLAGS = -version-info 1:0:1 -Wl,--allow-shlib-undefined
-libcap_utils_07_la_SOURCES =   \
-	src/caputils_int.h      \
-	src/address.c           \
-	src/error.c             \
-	src/format/arp.c        \
-	src/format/dns.c        \
-	src/format/ethernet.c   \
-	src/format/format.h     \
-	src/format/gre.c        \
-	src/format/http.c       \
-	src/format/icmp.c       \
-	src/format/ip.c         \
-	src/format/ipv4.c       \
-	src/format/ipv6.c       \
-	src/format/mp.c         \
-	src/format/mpls.c       \
-	src/format/tcp.c        \
-	src/format/udp.c        \
-	src/format.c            \
-	src/interface.c         \
-	src/log.c               \
-	src/marker.c            \
-	src/utils.c             \
-	src/packet.c            \
-	src/picotime.c          \
-	src/protocol.c          \
-	src/protocols/data.c
+libcap_utils_07_la_SOURCES = \
+	src/caputils_int.h         \
+	src/address.c              \
+	src/error.c                \
+	src/format/arp.c           \
+	src/format/dns.c           \
+	src/format/format.h        \
+	src/format/gre.c           \
+	src/format/http.c          \
+	src/format/icmp.c          \
+	src/format/ip.c            \
+	src/format/ipv4.c          \
+	src/format/ipv6.c          \
+	src/format/mp.c            \
+	src/format/mpls.c          \
+	src/format/tcp.c           \
+	src/format/udp.c           \
+	src/format.c               \
+	src/interface.c            \
+	src/log.c                  \
+	src/marker.c               \
+	src/utils.c                \
+	src/packet.c               \
+	src/picotime.c             \
+	src/protocol.c             \
+	src/protocols/data.c       \
+	src/protocols/ethernet.c
 #	stream_tcp.c
 
 if BUILD_BE64TOH

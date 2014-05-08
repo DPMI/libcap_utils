@@ -42,4 +42,5 @@ struct caputils_protocol* protocol_get(enum caputils_protocol_type type){
 static void __attribute__((constructor)) protocol_init(void){
 	REGISTER_PROTOCOL(protocol_data, PROTOCOL_DATA);
 	REGISTER_PROTOCOL(protocol_done, PROTOCOL_DONE);
+	REGISTER_PROTOCOL(protocol_ethernet, PROTOCOL_ETHERNET);
 }

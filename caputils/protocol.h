@@ -39,6 +39,8 @@ enum caputils_protocol_type {
 	PROTOCOL_DONE,                     /* no more headers, shouldn't be any more payload */
 	PROTOCOL_DATA,                     /* no more headers, payload is data */
 
+	PROTOCOL_ETHERNET,
+
 	PROTOCOL_NUM_AVAILABLE,
 };
 

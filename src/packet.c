@@ -246,7 +246,7 @@ void header_init(struct header_chunk* header, const struct cap_header* cp){
 
 int header_walk(struct header_chunk* header){
 	if ( !header->ptr ){
-		header->protocol = protocol_get(PROTOCOL_DATA);
+		header->protocol = protocol_get(PROTOCOL_ETHERNET);
 		header->ptr = header->cp->payload;
 
 		/* ensure there is enough data left */

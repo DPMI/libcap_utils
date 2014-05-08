@@ -83,7 +83,7 @@ void print_mpls(FILE* fp, const struct cap_header* cp, const char* data){
 
 		payload += sizeof(union pw_control);
 		const struct ethhdr* eth = (const struct ethhdr*)payload;
-		print_eth(fp, cp, eth, ntohs(eth->h_proto), payload + sizeof(struct ethhdr), 0); /** @todo missing flags */
+		//print_eth(fp, cp, eth, ntohs(eth->h_proto), payload + sizeof(struct ethhdr), 0); /** @todo missing flags */
 		return;
 	}
 
