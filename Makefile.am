@@ -130,6 +130,7 @@ libcap_utils_07_la_SOURCES = \
 	src/picotime.c             \
 	src/protocol.c             \
 	src/protocols/arp.c        \
+	src/protocols/cdp.c        \
 	src/protocols/data.c       \
 	src/protocols/ethernet.c   \
 	src/protocols/icmp.c       \
