@@ -32,6 +32,9 @@ enum caputils_protocol_type ethertype_next(const unsigned int ethertype){
 	case ETHERTYPE_IPV6:
 		return PROTOCOL_IPV6;
 
+	case ETHERTYPE_MPLS:
+		return PROTOCOL_MPLS;
+
 	default:
 		return PROTOCOL_DATA;
 	}
