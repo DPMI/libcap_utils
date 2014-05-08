@@ -43,6 +43,7 @@ enum caputils_protocol_type {
 };
 
 struct header_chunk;
+typedef size_t (*size_callback)(const struct header_chunk* header, const char* ptr);
 typedef enum caputils_protocol_type (*payload_callback)(struct header_chunk*, const char* ptr, const char** out);
 typedef void (*format_callback)(FILE* fp, const struct header_chunk* header, const char* ptr, unsigned int flags);
 typedef void (*dump_callback)(FILE* fp, const struct header_chunk* header, const char* ptr, const char* prefix, int flags);
@@ -50,6 +51,9 @@ typedef void (*dump_callback)(FILE* fp, const struct header_chunk* header, const
 struct caputils_protocol {
 	enum caputils_protocol_type type;  /* type id */
 	const char* name;                  /* human-readable name of this protocol */
+	size_t size;                       /* (min) number of bytes required to parse this header (if set to 0 it will always parse, giving you the opportunity to parse as much as possible) */
+	size_callback size_dyn;            /* optional function to calculate the actual size of this header. If set it has precedence over static size */
+	int partial_print;                 /* if non-zero the format- and dump-functions is supported even for truncated packets */
 	payload_callback next_payload;     /* get pointer to next payload */
 	format_callback format;            /* print representation of this header chunk */
 	dump_callback dump;                /* dump all fields in this header chunk */

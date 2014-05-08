@@ -80,6 +80,7 @@ struct header_chunk {
 	const struct cap_header* cp;                 /* packet being processed */
 	const struct caputils_protocol* protocol;    /* protocol of current header */
 	struct network last_net;                     /* filled each time network layer header is found */
+	int truncated;                               /* if non-zero the packet is truncated (not enough data to fully read protocol) */
 
 	/* current header */
 	union {
@@ -93,6 +94,7 @@ void header_init(struct header_chunk* header, const struct cap_header* cp);
 int header_walk(struct header_chunk* header);
 void header_dump(FILE* fp, const struct header_chunk* header, const char* prefix);
 void header_format(FILE* fp, const struct header_chunk* header, int flags);
+size_t header_size(const struct header_chunk* header);
 
 #ifdef __cplusplus
 }
