@@ -44,15 +44,9 @@ void print_ipv4(FILE* fp, const struct cap_header* cp, const struct ip* ip, unsi
 	}
 	fputs(": ", fp);
 
-	char src[INET_ADDRSTRLEN];
-	char dst[INET_ADDRSTRLEN];
-	inet_ntop(AF_INET, &ip->ip_src, src, sizeof(src));
-	inet_ntop(AF_INET, &ip->ip_dst, dst, sizeof(dst));
+	struct network net = { .plen = ntohs(ip->ip_len) - 4*ip->ip_hl, };
+	inet_ntop(AF_INET, &ip->ip_src, net.net_src, sizeof(net.net_src));
+	inet_ntop(AF_INET, &ip->ip_dst, net.net_dst, sizeof(net.net_dst));
 
-	struct network net = {
-		.net_src = src,
-		.net_dst = dst,
-		.plen = ntohs(ip->ip_len) - 4*ip->ip_hl,
-	};
 	print_ipproto(fp, cp, &net, ip->ip_p, payload, flags);
 }

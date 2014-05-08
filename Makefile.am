@@ -92,6 +92,7 @@ nobase_include_HEADERS =    \
 	caputils/marker.h    \
 	caputils/packet.h    \
 	caputils/picotime.h  \
+	caputils/protocol.h  \
 	caputils/send.h      \
 	caputils/stream.h    \
 	caputils/utils.h     \
@@ -135,7 +136,9 @@ libcap_utils_07_la_SOURCES =   \
 	src/marker.c            \
 	src/utils.c             \
 	src/packet.c            \
-	src/picotime.c
+	src/picotime.c          \
+	src/protocol.c          \
+	src/protocols/data.c
 #	stream_tcp.c
 
 if BUILD_BE64TOH

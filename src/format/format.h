@@ -23,6 +23,7 @@
 
 #include <caputils/log.h>
 #include <caputils/send.h>
+#include <caputils/packet.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <arpa/inet.h>
@@ -34,13 +35,6 @@
 
 #define PORT_DNS 53
 #define PORT_HTTP 80
-
-struct network {
-	const char* net_src; /* human-readable representation of src address */
-	const char* net_dst; /* human-readable representation of dst address */
-	size_t plen;         /* payload size (not including network headers) */
-};
-typedef const struct network* net_t;
 
 #ifdef __cplusplus
 extern "C" {
