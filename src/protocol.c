@@ -48,4 +48,5 @@ static void __attribute__((constructor)) protocol_init(void){
 	REGISTER_PROTOCOL(protocol_ipv6, PROTOCOL_IPV6);
 	REGISTER_PROTOCOL(protocol_mpls, PROTOCOL_MPLS);
 	REGISTER_PROTOCOL(protocol_pw, PROTOCOL_PW);
+	REGISTER_PROTOCOL(protocol_tcp, PROTOCOL_TCP);
 }

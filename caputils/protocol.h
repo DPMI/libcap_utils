@@ -45,6 +45,7 @@ enum caputils_protocol_type {
 	PROTOCOL_IPV6,
 	PROTOCOL_MPLS,
 	PROTOCOL_PW,
+	PROTOCOL_TCP,
 
 	PROTOCOL_NUM_AVAILABLE,
 };
