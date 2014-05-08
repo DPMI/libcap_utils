@@ -116,7 +116,6 @@ libcap_utils_07_la_SOURCES = \
 	src/caputils_int.h         \
 	src/address.c              \
 	src/error.c                \
-	src/format/arp.c           \
 	src/format/dns.c           \
 	src/format/format.h        \
 	src/format/gre.c           \
@@ -130,6 +129,7 @@ libcap_utils_07_la_SOURCES = \
 	src/packet.c               \
 	src/picotime.c             \
 	src/protocol.c             \
+	src/protocols/arp.c        \
 	src/protocols/data.c       \
 	src/protocols/ethernet.c   \
 	src/protocols/icmp.c       \
