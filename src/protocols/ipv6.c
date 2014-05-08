@@ -21,7 +21,7 @@
 #include "config.h"
 #endif
 
-#include "format.h"
+#include "src/format/format.h"
 #include "caputils/log.h"
 #include <stdio.h>
 #include <arpa/inet.h>
@@ -81,7 +81,23 @@ static size_t ipv6_total_header_size(const struct cap_header* cp, const struct i
 	return header_size;
 }
 
-void print_ipv6(FILE* fp, const struct cap_header* cp, const struct ip6_hdr* ip, unsigned int flags){
+extern enum caputils_protocol_type ipproto_next(uint8_t proto);
+
+static enum caputils_protocol_type ipv6_next(struct header_chunk* header, const char* ptr, const char** out){
+	uint8_t proto;
+	const char* payload;
+	const struct ip6_hdr* ip = (const struct ip6_hdr*)ptr;
+	const size_t header_size = ipv6_total_header_size(header->cp, ip, &payload, &proto);
+	*out = payload;
+
+	inet_ntop(AF_INET6, &ip->ip6_src, header->last_net.net_src, sizeof(header->last_net.net_src));
+	inet_ntop(AF_INET6, &ip->ip6_dst, header->last_net.net_dst, sizeof(header->last_net.net_dst));
+	header->last_net.plen = ip->ip6_plen + sizeof(struct ip6_hdr) - header_size;
+
+	return ipproto_next(proto);
+}
+
+static void print_ipv6(FILE* fp, const struct cap_header* cp, const struct ip6_hdr* ip, unsigned int flags){
 	const char* payload;
 	uint8_t proto;
 	const size_t header_size = ipv6_total_header_size(cp, ip, &payload, &proto);
@@ -107,13 +123,44 @@ void print_ipv6(FILE* fp, const struct cap_header* cp, const struct ip6_hdr* ip,
 	inet_ntop(AF_INET6, &ip->ip6_src, net.net_src, sizeof(net.net_src));
 	inet_ntop(AF_INET6, &ip->ip6_dst, net.net_dst, sizeof(net.net_dst));
 
-	print_ipproto(fp, cp, &net, proto, payload, flags);
+	//print_ipproto(fp, cp, &net, proto, payload, flags);
+}
+
+static void ipv6_dump(FILE* fp, const struct header_chunk* header, const char* ptr, const char* prefix, int flags){
+	const struct ip6_hdr* ip = (const struct ip6_hdr*)ptr;
+	char src[INET6_ADDRSTRLEN];
+	char dst[INET6_ADDRSTRLEN];
+	inet_ntop(AF_INET6, &ip->ip6_src, src, sizeof(src));
+	inet_ntop(AF_INET6, &ip->ip6_dst, dst, sizeof(dst));
+
+	fprintf(fp, "%sip6_vfc:            %d\n", prefix, ip->ip6_vfc);
+	fprintf(fp, "%sip6_flow:           0x%04x\n", prefix, ntohl(ip->ip6_flow));
+	fprintf(fp, "%sip6_plen:           %d octets\n", prefix, ntohs(ip->ip6_plen));
+	fprintf(fp, "%sip6_nxt             %d\n", prefix, ip->ip6_nxt);
+	fprintf(fp, "%sip6_hops:           %d\n", prefix, ip->ip6_hops);
+	fprintf(fp, "%sip6_src:            %s\n", prefix, src);
+	fprintf(fp, "%sip6_dst:            %s\n", prefix, dst);
+
+	/** @todo extension headers */
 }
 
 #else /* HAVE_IPV6 */
 
-void print_ipv6(FILE* fp, const struct cap_header* cp, const struct ip6_hdr* ip, unsigned int flags){
-	fprintf(fp, " [IPv6 support is not available]");
+static enum caputils_protocol_type ipv6_next(struct header_chunk* header, const char* ptr, const char** out){
+	return PROTOCOL_DATA;
+}
+
+static void ipv6_dump(FILE* fp, const struct header_chunk* header, const char* ptr, const char* prefix, int flags){
+	/* not implemented */
 }
 
 #endif /* HAVE_IPV6 */
+
+struct caputils_protocol protocol_ipv6 = {
+	.name = "IPv6",
+	.size = 0,
+	.partial_print = 0,
+	.next_payload = ipv6_next,
+	.format = NULL,
+	.dump = ipv6_dump,
+};

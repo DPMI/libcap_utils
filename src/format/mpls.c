@@ -89,13 +89,13 @@ void print_mpls(FILE* fp, const struct cap_header* cp, const char* data){
 
 	/* detect IPv4 */
 	if ( (payload[0] & 0xf0) == 0x40 ){
-		print_ipv4(fp, cp, (const struct ip*)payload, 0);
+		//print_ipv4(fp, cp, (const struct ip*)payload, 0);
 		return;
 	}
 
 	/* detect IPv6 */
 	if ( (payload[0] & 0xf0) == 0x60 ){
-		print_ipv6(fp, cp, (const struct ip6_hdr*)payload, 0);
+		//print_ipv6(fp, cp, (const struct ip6_hdr*)payload, 0);
 		return;
 	}
 }

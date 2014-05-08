@@ -26,6 +26,12 @@
 
 enum caputils_protocol_type ethertype_next(const unsigned int ethertype){
 	switch ( ethertype ){
+	case ETHERTYPE_IP:
+		return PROTOCOL_IPV4;
+
+	case ETHERTYPE_IPV6:
+		return PROTOCOL_IPV6;
+
 	default:
 		return PROTOCOL_DATA;
 	}

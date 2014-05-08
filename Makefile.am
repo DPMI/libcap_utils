@@ -122,9 +122,6 @@ libcap_utils_07_la_SOURCES = \
 	src/format/gre.c           \
 	src/format/http.c          \
 	src/format/icmp.c          \
-	src/format/ip.c            \
-	src/format/ipv4.c          \
-	src/format/ipv6.c          \
 	src/format/mp.c            \
 	src/format/mpls.c          \
 	src/format/tcp.c           \
@@ -138,7 +135,10 @@ libcap_utils_07_la_SOURCES = \
 	src/picotime.c             \
 	src/protocol.c             \
 	src/protocols/data.c       \
-	src/protocols/ethernet.c
+	src/protocols/ethernet.c   \
+	src/protocols/ip.c         \
+	src/protocols/ipv4.c       \
+	src/protocols/ipv6.c
 #	stream_tcp.c
 
 if BUILD_BE64TOH

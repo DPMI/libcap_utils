@@ -61,9 +61,6 @@ const char* name_lookup(const struct name_table* table, int value, const char* d
 int limited_caplen(const struct cap_header* cp, const void* ptr, size_t bytes) __attribute__((visibility("default")));
 
 /* layer 3 */
-void print_ipproto(FILE* fp, const struct cap_header* cp, net_t net, uint8_t proto, const char* payload, unsigned int flags);
-void print_ipv4(FILE* fp, const struct cap_header* cp, const struct ip* ip, unsigned int flags);
-void print_ipv6(FILE* fp, const struct cap_header* cp, const struct ip6_hdr* ip, unsigned int flags);
 void print_arp(FILE* dst, const struct cap_header* cp, const struct ether_arp* arp);
 void print_mp(FILE* fp, const struct cap_header* cp, const struct sendhead* send);
 void print_mp_diagnostic(FILE* fp, const struct cap_header* cp, const char* data);
