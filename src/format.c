@@ -82,7 +82,16 @@ static void print_pkt(FILE* fp, struct format* state, const struct cap_header* c
 	fprintf(fp, ":LINK(%4d):CAPLEN(%4d)", cp->len, cp->caplen);
 
 	if ( state->flags >= FORMAT_LAYER_LINK ){
-		print_linklayer(fp, cp, state->flags);
+		struct header_chunk header;
+		header_init(&header, cp);
+		while ( header_walk(&header) ){
+			if ( !header.protocol ){
+				fprintf(fp, "Unknown protocol\n");
+				continue;
+			}
+
+			header_format(fp, &header, state->flags);
+		};
 	}
 	fputc('\n', fp);
 
