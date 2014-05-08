@@ -62,7 +62,7 @@ notrans_dist_man_MANS += man/capmerge.1
 endif
 
 if BUILD_CAPSHOW
-bin_PROGRAMS += capshow
+bin_PROGRAMS += capshow capwalk
 man1_MANS += man/capshow.1
 notrans_dist_man_MANS += man/capshow.1
 endif
@@ -201,6 +201,9 @@ capmerge_LDADD = ${tools_LIBS}
 capshow_SOURCES = tools/capshow.c
 capshow_CFLAGS = ${tools_CFLAGS}
 capshow_LDADD = ${tools_LIBS}
+capwalk_SOURCES = tools/capwalk.c
+capwalk_CFLAGS = ${tools_CFLAGS}
+capwalk_LDADD = ${tools_LIBS}
 ifstat_SOURCES = tools/ifstat.c
 ifstat_CFLAGS = ${tools_CFLAGS}
 ifstat_LDADD = ${tools_LIBS}
