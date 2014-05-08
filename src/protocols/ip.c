@@ -39,6 +39,9 @@ enum caputils_protocol_type ipproto_next(uint8_t proto){
 	case IPPROTO_TCP:
 		return PROTOCOL_TCP;
 
+	case IPPROTO_UDP:
+		return PROTOCOL_UDP;
+
 	default:
 		return PROTOCOL_DATA;
 	}

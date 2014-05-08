@@ -21,9 +21,9 @@
 #include "config.h"
 #endif
 
-#include "format.h"
+#include "src/format/format.h"
 
-void print_udp(FILE* fp, const struct cap_header* cp, net_t net, const struct udphdr* udp, unsigned int flags){
+static void print_udp(FILE* fp, const struct cap_header* cp, net_t net, const struct udphdr* udp, unsigned int flags){
 	fputs("UDP", fp);
 	if ( limited_caplen(cp, udp, sizeof(struct udphdr)) ){
 		fprintf(fp, " [Packet size limited during capture]");
@@ -49,3 +49,32 @@ void print_udp(FILE* fp, const struct cap_header* cp, net_t net, const struct ud
 		print_dns(fp, cp, payload, payload_size, flags);
 	}
 }
+
+static enum caputils_protocol_type next_payload(struct header_chunk* header, const char* ptr, const char** out){
+	if ( limited_caplen(header->cp, ptr, sizeof(struct udphdr)) ){
+		return PROTOCOL_DONE;
+	}
+
+	*out = ptr + sizeof(struct udphdr);
+	return PROTOCOL_DATA;
+}
+
+static void dump(FILE* fp, const struct header_chunk* header, const char* ptr, const char* prefix, int flags){
+	if ( limited_caplen(header->cp, ptr, sizeof(struct udphdr)) ){
+		fprintf(fp, "%s[Packet size limited during capture]", prefix);
+		return;
+	}
+
+	const struct udphdr* udp = (const struct udphdr*)ptr;
+	fprintf(fp, "%ssource:             %d\n", prefix, ntohs(udp->source));
+	fprintf(fp, "%sdest:               %d\n", prefix, ntohs(udp->dest));
+	fprintf(fp, "%slen:                %d\n", prefix, ntohs(udp->len));
+	fprintf(fp, "%scheck:              %d\n", prefix, ntohs(udp->check));
+}
+
+struct caputils_protocol protocol_udp = {
+	.name = "UDP",
+	.next_payload = next_payload,
+	.format = NULL,
+	.dump = dump,
+};

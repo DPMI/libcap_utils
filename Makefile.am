@@ -122,7 +122,6 @@ libcap_utils_07_la_SOURCES = \
 	src/format/gre.c           \
 	src/format/http.c          \
 	src/format/mp.c            \
-	src/format/udp.c           \
 	src/format.c               \
 	src/interface.c            \
 	src/log.c                  \
@@ -138,7 +137,8 @@ libcap_utils_07_la_SOURCES = \
 	src/protocols/ipv4.c       \
 	src/protocols/ipv6.c       \
 	src/protocols/mpls.c       \
-	src/protocols/tcp.c
+	src/protocols/tcp.c        \
+	src/protocols/udp.c
 #	stream_tcp.c
 
 if BUILD_BE64TOH
