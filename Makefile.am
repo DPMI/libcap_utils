@@ -120,6 +120,7 @@ libcap_utils_07_la_SOURCES = \
 	src/format/format.h        \
 	src/format/http.c          \
 	src/format/mp.c            \
+	src/format/stp.c           \
 	src/format.c               \
 	src/interface.c            \
 	src/log.c                  \

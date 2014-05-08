@@ -38,6 +38,9 @@ enum caputils_protocol_type ethertype_next(const unsigned int ethertype){
 	case ETHERTYPE_MPLS:
 		return PROTOCOL_MPLS;
 
+	case STPBRIDGES:
+		return PROTOCOL_STP;
+
 	default:
 		return PROTOCOL_DATA;
 	}
@@ -55,6 +58,11 @@ static enum caputils_protocol_type ethernet_next(struct header_chunk* header, co
 static void ethernet_format(FILE* fp, const struct header_chunk* header, const char* ptr, unsigned int flags){
 	const struct ethhdr* eth = (const struct ethhdr*)ptr;
 	const unsigned int h_proto = ntohs(eth->h_proto);
+
+	switch ( h_proto ){
+	case STPBRIDGES:
+		return;
+	}
 
 	if ( h_proto < 0x05DC ){
 		fprintf(fp, ": IEEE802.3 [0x%04x] ", h_proto);
