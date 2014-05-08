@@ -21,7 +21,7 @@
 #include "config.h"
 #endif
 
-#include "format.h"
+#include "src/format/format.h"
 
 union gre_header {
 	struct {
