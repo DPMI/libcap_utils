@@ -21,7 +21,7 @@
 #include "config.h"
 #endif
 
-#include "format.h"
+#include "src/format/format.h"
 
 void print_icmp(FILE* dst, const struct cap_header* cp, net_t net, const struct icmphdr* icmp, unsigned int flags){
 	fputs("ICMP", dst);
@@ -91,3 +91,18 @@ void print_icmp(FILE* dst, const struct cap_header* cp, net_t net, const struct 
 		fprintf(dst, "Type %d\n", icmp->type);
 	}
 }
+
+static enum caputils_protocol_type next_payload(struct header_chunk* header, const char* ptr, const char** out){
+	return PROTOCOL_DONE;
+}
+
+static void icmp_dump(FILE* fp, const struct header_chunk* header, const char* ptr, const char* prefix, int flags){
+	//fprintf(fp, "%sip_dst:             %s\n", prefix, dst);
+}
+
+struct caputils_protocol protocol_icmp = {
+	.name = "ICMP",
+	.next_payload = next_payload,
+	.format = NULL,
+	.dump = icmp_dump,
+};

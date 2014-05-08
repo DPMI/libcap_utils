@@ -27,6 +27,9 @@
 
 enum caputils_protocol_type ipproto_next(uint8_t proto){
 	switch( proto ) {
+	case IPPROTO_ICMP:
+		return PROTOCOL_ICMP;
+
 	case IPPROTO_IPIP:
 		return PROTOCOL_IPV4;
 

@@ -40,6 +40,7 @@ enum caputils_protocol_type {
 	PROTOCOL_DATA,                     /* no more headers, payload is data */
 
 	PROTOCOL_ETHERNET,
+	PROTOCOL_ICMP,
 	PROTOCOL_IPV4,
 	PROTOCOL_IPV6,
 

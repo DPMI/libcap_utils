@@ -121,7 +121,6 @@ libcap_utils_07_la_SOURCES = \
 	src/format/format.h        \
 	src/format/gre.c           \
 	src/format/http.c          \
-	src/format/icmp.c          \
 	src/format/mp.c            \
 	src/format/mpls.c          \
 	src/format/tcp.c           \
@@ -136,6 +135,7 @@ libcap_utils_07_la_SOURCES = \
 	src/protocol.c             \
 	src/protocols/data.c       \
 	src/protocols/ethernet.c   \
+	src/protocols/icmp.c       \
 	src/protocols/ip.c         \
 	src/protocols/ipv4.c       \
 	src/protocols/ipv6.c
