@@ -24,16 +24,20 @@
 #include "src/format/format.h"
 #include "caputils/caputils.h"
 
+enum caputils_protocol_type ethertype_next(const unsigned int ethertype){
+	switch ( ethertype ){
+	default:
+		return PROTOCOL_DATA;
+	}
+}
+
 static enum caputils_protocol_type ethernet_next(struct header_chunk* header, const char* ptr, const char** out){
 	const struct ethhdr* ethhdr = (const struct ethhdr*)ptr;
 	const char* payload = ptr + sizeof(struct ethhdr);
 	const unsigned int h_proto = ntohs(ethhdr->h_proto);
 
 	*out = payload;
-	switch ( h_proto ){
-	default:
-		return PROTOCOL_DATA;
-	}
+	return ethertype_next(h_proto);
 }
 
 static void ethernet_format(FILE* fp, const struct header_chunk* header, const char* ptr, unsigned int flags){
