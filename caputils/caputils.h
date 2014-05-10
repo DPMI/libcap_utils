@@ -49,6 +49,10 @@ struct filter;
 #define ETHERTYPE_VLAN 0x8100
 #endif
 
+#ifndef ETHERTYPE_LOOPBACK
+#define ETHERTYPE_LOOPBACK 0x9000
+#endif /* ETHERTYPE_LOOPBACK */
+
 /* libc might not provide this if it is missing ipv6 support */
 #ifndef ETHERTYPE_IPV6
 #define ETHERTYPE_IPV6 0x86dd
