@@ -27,6 +27,9 @@
 
 enum caputils_protocol_type ipproto_next(uint8_t proto){
 	switch( proto ) {
+	case IPPROTO_GRE:
+		return PROTOCOL_GRE;
+
 	case IPPROTO_ICMP:
 		return PROTOCOL_ICMP;
 
