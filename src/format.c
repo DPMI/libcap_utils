@@ -62,21 +62,6 @@ static void print_timestamp(FILE* fp, struct format* state, const struct cap_hea
 	fprintf(fp, " %s", buffer);
 }
 
-static void print_linklayer(FILE* fp, const struct cap_header* cp, unsigned int flags){
-	fputc(':', fp);
-
-	/* Test for libcap_utils marker packet */
-	struct marker mark;
-	int marker_port;
-	if ( (marker_port=is_marker(cp, &mark, 0)) != 0 ){
-		fprintf(stdout, "Marker [e=%d, r=%d, k=%d, s=%d, port=%d]",
-		        mark.exp_id, mark.run_id, mark.key_id, mark.seq_num, marker_port);
-		return;
-	}
-
-	print_eth(fp, cp, cp->ethhdr, ntohs(cp->ethhdr->h_proto), cp->payload + sizeof(struct ethhdr), flags);
-}
-
 static void print_pkt(FILE* fp, struct format* state, const struct cap_header* cp){
 	print_timestamp(fp, state, cp);
 	fprintf(fp, ":LINK(%4d):CAPLEN(%4d)", cp->len, cp->caplen);
