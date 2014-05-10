@@ -406,9 +406,9 @@ static int fill_buffer(stream_t st, struct timeval* timeout){
 	}
 }
 
-int stream_read(struct stream *myStream, cap_head** data, struct filter *my_Filter, struct timeval* timeout){
-	if ( myStream->read ){
-		return myStream->read(myStream, data, my_Filter, timeout);
+int stream_read(struct stream *st, cap_head** data, struct filter *my_Filter, struct timeval* timeout){
+	if ( st->read ){
+		return st->read(st, data, my_Filter, timeout);
 	}
 
 	int filterStatus=0;
@@ -429,19 +429,19 @@ int stream_read(struct stream *myStream, cap_head** data, struct filter *my_Filt
 		skip_counter++;
 
 		/* bufferSize tells how much data there is available in the buffer */
-		if( myStream->writePos - myStream->readPos < sizeof(struct cap_header) ){
+		if( st->writePos - st->readPos < sizeof(struct cap_header) ){
 			if ( !timeout ){
 				tv.tv_sec = 1; /* always read for one sec */
 			}
 
-			switch ( (ret=fill_buffer(myStream, &tv)) ){
+			switch ( (ret=fill_buffer(st, &tv)) ){
 			case 0:
 				continue; /* retry, buffer is not full */
 
 			case EAGAIN:
 				/* if a timeout occurred but there is enough data to read a packet it is
 				 * not considered an error. */
-				if ( myStream->writePos - myStream->readPos >= sizeof(struct cap_header) ){
+				if ( st->writePos - st->readPos >= sizeof(struct cap_header) ){
 					continue;
 				}
 
@@ -459,18 +459,18 @@ int stream_read(struct stream *myStream, cap_head** data, struct filter *my_Filt
 		/* Try to read data into the buffer (using a zero timeout so it won't block)
 		 * to keep the buffer full and reducing load on the network buffers.*/
 		struct timeval zero = {0,0};
-		if ( (ret=fill_buffer(myStream, &zero)) != 0 && ret != EAGAIN && ret != -1 ){
+		if ( (ret=fill_buffer(st, &zero)) != 0 && ret != EAGAIN && ret != -1 ){
 			return ret;
 		}
 
 		// We have some data in the buffer.
-		struct cap_header* cp = (struct cap_header*)(myStream->buffer + myStream->readPos);
+		struct cap_header* cp = (struct cap_header*)(st->buffer + st->readPos);
 		const size_t packet_size = sizeof(struct cap_header) + cp->caplen;
-		const size_t start_pos = myStream->readPos;
+		const size_t start_pos = st->readPos;
 		const size_t end_pos = start_pos + packet_size;
 
-		if( end_pos > myStream->writePos ) {
-			if ( (ret=fill_buffer(myStream, timeout)) != 0 ){
+		if( end_pos > st->writePos ) {
+			if ( (ret=fill_buffer(st, timeout)) != 0 ){
 				return ret; /* could not read */
 			}
 
@@ -479,9 +479,9 @@ int stream_read(struct stream *myStream, cap_head** data, struct filter *my_Filt
 
 		/* set next packet and advance the read pointer */
 		*data = cp;
-		myStream->readPos += packet_size;
-		myStream->stat.read++;
-		myStream->stat.buffer_usage = myStream->writePos - myStream->readPos;
+		st->readPos += packet_size;
+		st->stat.read++;
+		st->stat.buffer_usage = st->writePos - st->readPos;
 
 		filterStatus = 1; /* match by default, i.e. if no filter is used. */
 		if ( my_Filter ){
@@ -489,7 +489,7 @@ int stream_read(struct stream *myStream, cap_head** data, struct filter *my_Filt
 		}
 	} while(filterStatus==0);
 
-	myStream->stat.matched++;
+	st->stat.matched++;
 	return 0;
 }
 
