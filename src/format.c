@@ -68,7 +68,7 @@ static void print_pkt(FILE* fp, struct format* state, const struct cap_header* c
 
 	if ( state->flags >= FORMAT_LAYER_LINK ){
 		struct header_chunk header;
-		header_init(&header, cp);
+		header_init(&header, cp, 0);
 		while ( header_walk(&header) ){
 			if ( !header.protocol ){
 				fprintf(fp, "Unknown protocol\n");

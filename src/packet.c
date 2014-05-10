@@ -236,7 +236,7 @@ static int next_payload(struct header_chunk* header){
 		type != PROTOCOL_DONE;
 }
 
-void header_init(struct header_chunk* header, const struct cap_header* cp){
+void header_init(struct header_chunk* header, const struct cap_header* cp, int layer){
 	header->cp = cp;
 	header->protocol = NULL;
 	header->last_net = (struct network){"", "", 0};
