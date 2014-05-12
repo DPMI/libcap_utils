@@ -46,6 +46,7 @@ static void __attribute__((constructor)) protocol_init(void){
 	REGISTER_PROTOCOL(protocol_arp, PROTOCOL_ARP);
 	REGISTER_PROTOCOL(protocol_cdp, PROTOCOL_CDP);
 	REGISTER_PROTOCOL(protocol_ethernet, PROTOCOL_ETHERNET);
+	REGISTER_PROTOCOL(protocol_gre, PROTOCOL_GRE);
 	REGISTER_PROTOCOL(protocol_icmp, PROTOCOL_ICMP);
 	REGISTER_PROTOCOL(protocol_ipv4, PROTOCOL_IPV4);
 	REGISTER_PROTOCOL(protocol_ipv6, PROTOCOL_IPV6);

@@ -77,6 +77,7 @@ typedef const struct network* net_t;
 
 struct header_chunk {
 	/* state */
+	int layer;                                   /* how deep to process protocols before considering data */
 	const struct cap_header* cp;                 /* packet being processed */
 	const struct caputils_protocol* protocol;    /* protocol of current header */
 	struct network last_net;                     /* filled each time network layer header is found */
@@ -90,7 +91,7 @@ struct header_chunk {
 	};
 };
 
-void header_init(struct header_chunk* header, const struct cap_header* cp);
+void header_init(struct header_chunk* header, const struct cap_header* cp, int layer);
 int header_walk(struct header_chunk* header);
 void header_dump(FILE* fp, const struct header_chunk* header, const char* prefix);
 void header_format(FILE* fp, const struct header_chunk* header, int flags);

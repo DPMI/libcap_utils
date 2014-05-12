@@ -234,7 +234,7 @@ int main(int argc, char **argv){
 		       , cp->mampid, cp->nic, timepico_to_string(&cp->ts, "%Y-%m-%d %H:%M:%S +00:00")
 		       , cp->len, cp->caplen);
 		struct header_chunk header;
-		header_init(&header, cp);
+		header_init(&header, cp, 0);
 		while ( header_walk(&header) ){
 			if ( !header.protocol ){
 				printf("Unknown protocol\n");

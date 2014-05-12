@@ -23,72 +23,75 @@
 
 #include "src/format/format.h"
 
-void print_icmp(FILE* dst, const struct cap_header* cp, net_t net, const struct icmphdr* icmp, unsigned int flags){
-	fputs("ICMP", dst);
+static struct name_table icmp_unreachable_table[] = {
+ 		{ICMP_NET_UNREACH,    "Destination network unreachable"},
+		{ICMP_HOST_UNREACH,   "Destination host unreachable"},
+		{ICMP_PROT_UNREACH,   "Destination protocol unreachable"},
+		{ICMP_PORT_UNREACH,   "Destination port unreachable"},
+		{ICMP_FRAG_NEEDED,    "Fragmentation required"},
+		{ICMP_SR_FAILED,      "Source route failed"},
+		{ICMP_NET_UNKNOWN,    "Destination network unknown"},
+		{ICMP_HOST_UNKNOWN,   "Destination host unknown"},
+		{ICMP_HOST_ISOLATED,  "Source host isolated"},
+		{ICMP_NET_ANO,        "Network administratively prohibited"},
+		{ICMP_HOST_ANO,       "Host administratively prohibited"},
+		{ICMP_NET_UNR_TOS,    "Network unreachable for TOS"},
+		{ICMP_HOST_UNR_TOS,   "Host unreachable for TOS"},
+		{ICMP_PKT_FILTERED,   "Communication administratively prohibited"},
+		{ICMP_PREC_VIOLATION, "Host Precedence Violation"},
+		{ICMP_PREC_CUTOFF,    "Precedence cutoff in effect"},
+};
+
+static void icmp_format(FILE* fp, const struct header_chunk* header, const char* ptr, unsigned int flags){
+	const struct icmphdr* icmp = (const struct icmphdr*)ptr;
+
+	fputs(": ICMP", fp);
 	if ( flags & FORMAT_HEADER ){
-	  fprintf(dst, "[Type=%d, code=%d]", ntohs(icmp->type), ntohs(icmp->code));
+	  fprintf(fp, "[Type=%d, code=%d]", ntohs(icmp->type), ntohs(icmp->code));
 	}
 
-	fprintf(dst, ": %s --> %s",  net->net_src, net->net_dst);
+	fprintf(fp, ": %s --> %s",  header->last_net.net_src, header->last_net.net_dst);
 
 	if ( flags < (unsigned int)FORMAT_LAYER_APPLICATION ){
 		return;
 	}
-	fputs(": ", dst);
+	fputs(": ", fp);
 
 	switch ( icmp->type ){
 	case ICMP_ECHOREPLY:
-	  fprintf(dst, "echo reply: %d SEQNR = %d ", ntohs(icmp->un.echo.id), ntohs(icmp->un.echo.sequence));
+	  fprintf(fp, "echo reply: %d SEQNR = %d ", ntohs(icmp->un.echo.id), ntohs(icmp->un.echo.sequence));
 		break;
 
 	case ICMP_DEST_UNREACH:
-		switch ( icmp->code ){
-		case ICMP_NET_UNREACH:    fprintf(dst, "Destination network unreachable"); break;
-		case ICMP_HOST_UNREACH:   fprintf(dst, "Destination host unreachable"); break;
-		case ICMP_PROT_UNREACH:   fprintf(dst, "Destination protocol unreachable"); break;
-		case ICMP_PORT_UNREACH:   fprintf(dst, "Destination port unreachable"); break;
-		case ICMP_FRAG_NEEDED:    fprintf(dst, "Fragmentation required"); break;
-		case ICMP_SR_FAILED:      fprintf(dst, "Source route failed"); break;
-		case ICMP_NET_UNKNOWN:    fprintf(dst, "Destination network unknown"); break;
-		case ICMP_HOST_UNKNOWN:   fprintf(dst, "Destination host unknown"); break;
-		case ICMP_HOST_ISOLATED:  fprintf(dst, "Source host isolated"); break;
-		case ICMP_NET_ANO:        fprintf(dst, "Network administratively prohibited"); break;
-		case ICMP_HOST_ANO:       fprintf(dst, "Host administratively prohibited"); break;
-		case ICMP_NET_UNR_TOS:    fprintf(dst, "Network unreachable for TOS"); break;
-		case ICMP_HOST_UNR_TOS:   fprintf(dst, "Host unreachable for TOS"); break;
-		case ICMP_PKT_FILTERED:   fprintf(dst, "Communication administratively prohibited"); break;
-		case ICMP_PREC_VIOLATION: fprintf(dst, "Host Precedence Violation"); break;
-		case ICMP_PREC_CUTOFF:    fprintf(dst, "Precedence cutoff in effect"); break;
-		default: fprintf(dst, "Destination unreachable (code %d)\n", icmp->code);
-		}
+		fprintf(fp, "%s", name_lookup(icmp_unreachable_table, icmp->code, "Destination Unreachable"));
 		break;
 
 	case ICMP_SOURCE_QUENCH:
-		fprintf(dst, "source quench");
+		fprintf(fp, "source quench");
 		break;
 
 	case ICMP_REDIRECT:
-		fprintf(dst, "redirect");
+		fprintf(fp, "redirect");
 		break;
 
 	case ICMP_ECHO:
-	  fprintf(dst, "echo reqest: %d SEQNR = %d ", ntohs(icmp->un.echo.id), ntohs(icmp->un.echo.sequence));
+	  fprintf(fp, "echo reqest: %d SEQNR = %d ", ntohs(icmp->un.echo.id), ntohs(icmp->un.echo.sequence));
 		break;
 
 	case ICMP_TIME_EXCEEDED:
-		fprintf(dst, "time exceeded");
+		fprintf(fp, "time exceeded");
 		break;
 
 	case ICMP_TIMESTAMP:
-		fprintf(dst, "timestamp request");
+		fprintf(fp, "timestamp request");
 		break;
 
 	case ICMP_TIMESTAMPREPLY:
-		fprintf(dst, "timestamp reply");
+		fprintf(fp, "timestamp reply");
 		break;
 
 	default:
-		fprintf(dst, "Type %d\n", icmp->type);
+		fprintf(fp, "Type %d\n", icmp->type);
 	}
 }
 
@@ -97,12 +100,16 @@ static enum caputils_protocol_type next_payload(struct header_chunk* header, con
 }
 
 static void icmp_dump(FILE* fp, const struct header_chunk* header, const char* ptr, const char* prefix, int flags){
-	//fprintf(fp, "%sip_dst:             %s\n", prefix, dst);
+	const struct icmphdr* icmp = (const struct icmphdr*)ptr;
+
+	fprintf(fp, "%stype:               %d\n", prefix, icmp->type);
+	fprintf(fp, "%scode:               %d\n", prefix, icmp->code);
 }
 
 struct caputils_protocol protocol_icmp = {
 	.name = "ICMP",
+	.size = sizeof(struct icmphdr),
 	.next_payload = next_payload,
-	.format = NULL,
+	.format = icmp_format,
 	.dump = icmp_dump,
 };
