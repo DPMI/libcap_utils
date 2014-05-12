@@ -50,7 +50,7 @@ static void print_udp(FILE* fp, const struct cap_header* cp, net_t net, const st
 	}
 }
 
-static enum caputils_protocol_type next_payload(struct header_chunk* header, const char* ptr, const char** out){
+static enum caputils_protocol_type next_udp(struct header_chunk* header, const char* ptr, const char** out){
 	if ( limited_caplen(header->cp, ptr, sizeof(struct udphdr)) ){
 		return PROTOCOL_DONE;
 	}
@@ -59,7 +59,7 @@ static enum caputils_protocol_type next_payload(struct header_chunk* header, con
 	return PROTOCOL_DATA;
 }
 
-static void dump(FILE* fp, const struct header_chunk* header, const char* ptr, const char* prefix, int flags){
+static void udp_dump(FILE* fp, const struct header_chunk* header, const char* ptr, const char* prefix, int flags){
 	if ( limited_caplen(header->cp, ptr, sizeof(struct udphdr)) ){
 		fprintf(fp, "%s[Packet size limited during capture]", prefix);
 		return;
@@ -72,9 +72,27 @@ static void dump(FILE* fp, const struct header_chunk* header, const char* ptr, c
 	fprintf(fp, "%scheck:              %d\n", prefix, ntohs(udp->check));
 }
 
+static void udp_format(FILE* fp, const struct header_chunk* header, const struct udphdr* udp, const char* ptr, unsigned int flags){
+  fputs(": UDP", fp);
+  
+  const size_t header_size = sizeof(struct udphdr);
+  const size_t total_size = ntohs(udp->len);
+  const size_t payload_size = total_size - header_size;
+  if ( flags & FORMAT_HEADER ){
+    fprintf(fp, "(HDR[%zd]DATA[%zd])", header_size, payload_size);
+  }
+  const uint16_t sport = ntohs(udp->source);
+  const uint16_t dport = ntohs(udp->dest);
+  fprintf(fp, ": %s:%d --> %s:%d",
+	  header->last_net.net_src, sport,
+	  header->last_net.net_dst, dport);
+  
+  
+}
+
 struct caputils_protocol protocol_udp = {
 	.name = "UDP",
-	.next_payload = next_payload,
-	.format = NULL,
-	.dump = dump,
+	.next_payload = next_udp,
+	.format = udp_format,
+	.dump = udp_dump,
 };
