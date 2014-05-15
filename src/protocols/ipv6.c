@@ -143,8 +143,38 @@ static void ipv6_dump(FILE* fp, const struct header_chunk* header, const char* p
 
 	/** @todo extension headers */
 }
+static void format_ipv6(FILE* fp, const struct cap_header* cp, const struct ip6_hdr* ip, unsigned int flags){
+	const char*  payload;
+ 	uint8_t proto;
+	const size_t header_size = ipv6_total_header_size(cp, ip, &payload, &proto);
+	if ( header_size == 0 ){
+		fprintf(fp, " [Packet size limited during capture]");
+		return;
+	}
+	fputs(" IPv6", fp);
+	if ( flags & FORMAT_HEADER ){
+		fprintf(fp, "(HDR[%zd])[plen=%d,hops=%d]", header_size, ntohs(ip->ip6_plen), ip->ip6_hops);
+	}
+	fputs(": ", fp);
+
+	struct network net = { .plen = ip->ip6_plen + sizeof(struct ip6_hdr) - header_size, };
+	inet_ntop(AF_INET6, &ip->ip6_src, net.net_src, sizeof(net.net_src));
+	inet_ntop(AF_INET6, &ip->ip6_dst, net.net_dst, sizeof(net.net_dst));
+	
+	char src[INET6_ADDRSTRLEN];
+	char dst[INET6_ADDRSTRLEN];
+	inet_ntop(AF_INET6, &ip->ip6_src, src, sizeof(src));
+	inet_ntop(AF_INET6, &ip->ip6_dst, dst, sizeof(dst));
+	
+
+	fprintf(fp, ": %s:%s --> %s:%s",
+	net.net_src, src,
+	net.net_dst, dst);
+
+}
 
 #else /* HAVE_IPV6 */
+
 
 static enum caputils_protocol_type ipv6_next(struct header_chunk* header, const char* ptr, const char** out){
 	return PROTOCOL_DATA;
@@ -158,9 +188,9 @@ static void ipv6_dump(FILE* fp, const struct header_chunk* header, const char* p
 
 struct caputils_protocol protocol_ipv6 = {
 	.name = "IPv6",
-	.size = 0,
+	.size = sizeof(struct ip),
 	.partial_print = 0,
 	.next_payload = ipv6_next,
-	.format = NULL,
+	.format = format_ipv6,
 	.dump = ipv6_dump,
 };
