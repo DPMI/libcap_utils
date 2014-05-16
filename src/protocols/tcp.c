@@ -195,7 +195,12 @@ static enum caputils_protocol_type next_payload(struct header_chunk* header, con
 
 static void tcp_format(FILE* fp, const struct header_chunk* header, const char* ptr, unsigned int flags){
 	fputs(": TCP", fp);
-
+	
+	if ( limited_caplen(header->cp, ptr, sizeof(struct tcphdr)) ){
+		fputs(" [Packet size limited during capture]", fp);
+		return;
+	}
+	
 	const struct tcphdr* tcp = (const struct tcphdr*)ptr;
 	const size_t header_size = 4*tcp->doff;
 	const size_t payload_size = header->last_net.plen - header_size;
