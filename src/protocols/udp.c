@@ -78,16 +78,16 @@ static void udp_format(FILE* fp, const struct header_chunk* header, const struct
   const size_t header_size = sizeof(struct udphdr);
   const size_t total_size = ntohs(udp->len);
   const size_t payload_size = total_size - header_size;
-  if ( flags & FORMAT_HEADER ){
-    fprintf(fp, "(HDR[%zd]DATA[%zd])", header_size, payload_size);
-  }
+  //if ( flags & FORMAT_HEADER ){
+    //fprintf(fp, "(HDR[%zd]DATA[%zd])", header_size, payload_size);
+  //}
   const uint16_t sport = ntohs(udp->source);
   const uint16_t dport = ntohs(udp->dest);
   fprintf(fp, ": %s:%d --> %s:%d",
 	  header->last_net.net_src, sport,
 	  header->last_net.net_dst, dport);
   
-  
+  fprintf(fp, " len=%d check=%d ", ntohs(udp->len), ntohs(udp->check)); 
 }
 
 struct caputils_protocol protocol_udp = {
