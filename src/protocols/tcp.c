@@ -217,6 +217,19 @@ static void tcp_format(FILE* fp, const struct header_chunk* header, const char* 
 
 	fprintf(fp, " ws=%d seq=%u ack=%u ", ntohs(tcp->window), ntohl(tcp->seq), ntohl(tcp->ack_seq));
 	tcp_options(header->cp, tcp, fp);
+
+		const char* payload = (const char*)tcp + 4*tcp->doff;
+	if ( payload_size == 0 ) return;
+
+	if ( (sport == PORT_DNS || dport == PORT_DNS) ) {
+		/* offset the length field */
+		print_dns(fp, header->cp, payload + 2, payload_size - 2, flags);
+	}
+
+	if ( (sport == PORT_HTTP || dport == PORT_HTTP) ) {
+		print_http(fp, header->cp, payload, payload_size, flags);
+	}
+       		
 }
 
 static void tcp_dump(FILE* fp, const struct header_chunk* header, const char* ptr, const char* prefix, int flags){
