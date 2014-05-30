@@ -311,7 +311,7 @@ long stream_pfring_open(struct stream** stptr, const struct ether_addr* addr, co
 	{
 		char* iface_rw = strdup(iface); /* hack because (older versions of) pfring_open isn't const correct */
 #if RING_VERSION_NUM < 0x050400
-		pd = pfring_open(iface_rw, LIBPFRING_PROMISC, if_mtu, 0);
+		pd = pfring_open(iface_rw, LIBPFRING_PROMISC, if_mtu+sizeof(struct ethhdr), 0);
 #else
 		//		pfring_flags |= PF_RING_REENTRANT;
 
@@ -322,7 +322,7 @@ long stream_pfring_open(struct stream** stptr, const struct ether_addr* addr, co
 		pfring_flags |= PF_RING_DNA_SYMMETRIC_RSS;
 #endif
 
-		pd = pfring_open(iface_rw, if_mtu, pfring_flags);
+		pd = pfring_open(iface_rw, if_mtu+sizeof(struct ethhdr), pfring_flags);
 #endif
 
 		int saved = errno;
