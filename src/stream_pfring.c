@@ -89,25 +89,29 @@ static int match_ma_pkt(const struct stream_pfring* st, const struct ethhdr* eth
 
 static int stream_pfring_read_frame(struct stream_pfring* st, int block){
 	assert(st);
-
 	do {
 		/* read next frame */
 		struct pfring_pkthdr hdr;
+		//		fprintf(stderr,"Calling pfring_recv()(block = %d) -> \n", block);
 		switch ( pfring_recv(st->pd, (u_char**)&st->frame[st->base.writePos], 0, &hdr, block) ){
 		case 0:
+		  //fprintf(stderr,"pfring_recv() = 0\n");
 			return 0;
 		case 1:
+		  //fprintf(stderr,"pfring_recv() = 1\n");
 			break;
 		case -1:
-			fprintf(stderr, "pfring_recv(..) failed.\n");
+		  //fprintf(stderr, "pfring_recv(..) failed.\n");
 			return 0;
 		}
 
 		char* dst = st->frame[st->base.writePos];
-
+		
 		/* Setup pointers */
 		const struct ethhdr* eh = (const struct ethhdr*)dst;
 		const struct sendhead* sh = (const struct sendhead*)(dst + sizeof(struct ethhdr));
+
+		//		fprintf(stderr,"<-pfring_recv()..\n");
 
 		/* Check if it is a valid packet and if it was destinationed here */
 		int match;
@@ -282,6 +286,8 @@ static int iface_mtu(const char* iface){
 
 long stream_pfring_open(struct stream** stptr, const struct ether_addr* addr, const char* iface, size_t buffer_size){
 	int ret = 0;
+
+	u_int32_t pfring_flags=0;	/* Added for pfring 6.0.2 */
 	assert(stptr);
 
 	/* validate arguments */
@@ -294,6 +300,9 @@ long stream_pfring_open(struct stream** stptr, const struct ether_addr* addr, co
 	if ( if_mtu < 0 ){
 		return errno;
 	}
+	if( if_mtu<9000 ) {
+	  fprintf(stderr, "Warning: %s uses a %d bytes MTU, please consider using a MTU of 9000 bytes for best results.\n", iface, if_mtu);
+	}
 
 	pfring_config(99);
 
@@ -304,7 +313,16 @@ long stream_pfring_open(struct stream** stptr, const struct ether_addr* addr, co
 #if RING_VERSION_NUM < 0x050400
 		pd = pfring_open(iface_rw, LIBPFRING_PROMISC, if_mtu, 0);
 #else
-		pd = pfring_open(iface_rw, if_mtu, 0);
+		//		pfring_flags |= PF_RING_REENTRANT;
+
+		pfring_flags=0;
+#if RING_VERSION_NUM > 0x060000	
+		fprintf(stderr,"Applying PF_RING_PROMISC| PF_RING_DNA_SYMMETRIC_RSS flags.\n");
+		pfring_flags |= PF_RING_PROMISC;
+		pfring_flags |= PF_RING_DNA_SYMMETRIC_RSS;
+#endif
+
+		pd = pfring_open(iface_rw, if_mtu, pfring_flags);
 #endif
 
 		int saved = errno;
@@ -329,7 +347,7 @@ long stream_pfring_open(struct stream** stptr, const struct ether_addr* addr, co
 	if((ret = pfring_set_socket_mode(pd, recv_only_mode)) != 0)
 		fprintf(stderr, "pfring_set_socket_mode returned [rc=%d]\n", ret);
 
-	char bpfFilter[] = "ether proto 0x810";
+	char bpfFilter[] = "ether proto 0x0810";
 	ret = pfring_set_bpf_filter(pd, bpfFilter);
 	if ( ret != 0 ) {
 		fprintf(stderr, "pfring_set_bpf_filter(%s) returned %d\n", bpfFilter, ret);
@@ -388,6 +406,7 @@ long stream_pfring_open(struct stream** stptr, const struct ether_addr* addr, co
 	st->base.write = NULL;
 	st->base.read = (read_callback)stream_pfring_read;
 
+	fprintf(stderr,"PF ring setup done.\n");
 	return 0;
 }
 
