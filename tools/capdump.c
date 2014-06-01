@@ -50,7 +50,19 @@ enum MarkerMode {
 };
 #define BUFSIZE 1500
 
-static const size_t PROGRESS_REPORT_DELAY = 60;  /* seconds between progress reports */
+static const size_t PROGRESS_REPORT_DELAY = 60;  /* seconds between progress reports
+ */
+/* Added to handle the mix of progress and termination handling, based on SIGALRM */
+static const size_t IRQ_DELAY = 1;  /* seconds between IRQs reports */
+static int signal_count=0; /* counter of ALARMS, used to trigger progress_report while at the same time handling terminate markers */
+static int marker_quit=0; /* If set to one, the program will exit (gracefully) after receving a terminate marker */
+static int marker_terminate=0; /* Increments once for each received terminate marker */
+static int marker_terminate_TO=0; /* Increments once for each received SIGALMR, after a terminate marker been detected */
+static int src_stream_count=0; /* The number of source streams present, set after src has been created.*/
+static const int TERMINATE_DELAY = 3; /* The number of seconds between receiving the first terminate marker, and the actual stop. */
+                                      /* Should be large enough to handle many streams, they may be a second later (mp timeout) */
+                                      /* but small to avoid unneeded delays. */
+
 static int keep_running = 1;
 static int marker = 0;
 static int marker_comment = 0;
@@ -85,6 +97,7 @@ static struct option longopts[]= {
 	{"marker-format",  required_argument, 0, 'f'},
 	{"marker-mode",    required_argument, 0, 'M'},
 	{"marker-comment", required_argument, 0, 'C'},
+	{"marker-quit",    no_argument, 0, 'Q'},
 	{"progress",       optional_argument, 0, 's'},
 	{"help",           no_argument,       0, 'h'},
 	{0, 0, 0, 0} /* sentinel */
@@ -102,7 +115,7 @@ stream_t dst;
 stream_addr_t output = STREAM_ADDR_INITIALIZER;
 
 static void show_usage(void){
-	printf("(C) 2011 David Sveningsson <david.sveningsson@bth.se>\n");
+	printf("(C) 2011-2014 David Sveningsson <david.sveningsson@bth.se>, Patrik Arlos <patrik.arlos@bth.se> \n");
 	printf("Usage: %s [OPTIONS] [INPUT..] [OUTPUT]\n", program_name);
 	printf("  -o, --output=FILE    Save output in capfile. [default=stdout]\n"
 	       "  -i, --iface          For ethernet-based streams, this is the interface to listen\n"
@@ -123,6 +136,7 @@ static void show_usage(void){
 	       "      --marker-mode    What to do when identical filename is generated. Valid\n"
 	       "                       modes are [I]crement (default), [O]verwrite and [A]ppend.\n"
 	       "      --marker-comment Use marker comment as the stream comment.\n"
+	       "      --marker-quit    Terminate application after receving a End/Terminate marker.\n"
 	       "      --progress[=FD]  Write progress report to FD every 60 seconds.\n"
 	       "  -h, --help           This text.\n");
 	printf("\n");
@@ -155,23 +169,67 @@ static void sig_handler(int signum){
 	keep_running = 0;
 }
 
-static void progress_report(int signum){
-	static char buf[1024];
-	static char timestr[64];
-	time_t t = time(NULL);
-	struct tm tm = *localtime(&t);
-	strftime(timestr, sizeof(timestr), "%a, %d %b %Y %H:%M:%S %z", &tm);
+static void my_signalhandler(int signum){
+  /* Handle SIGALRM callbacks, first check if its progress report time, then check if we are */
+  /* terminating something, and at the end should we leave. */
 
-	static uint64_t last = 0;
-	const uint64_t delta = stream_stat->read - last;
-	last = stream_stat->read;
-	const uint64_t pps = delta / PROGRESS_REPORT_DELAY;
-	const float rate = (float)(delta * 8 / PROGRESS_REPORT_DELAY / 1024 / 1024);
+  if(progress>0){
+    if( (signal_count+1) == PROGRESS_REPORT_DELAY){
+      static char buf[1024];
+      static char timestr[64];
+      time_t t = time(NULL);
+      struct tm tm = *localtime(&t);
+      strftime(timestr, sizeof(timestr), "%a, %d %b %Y %H:%M:%S %z", &tm);
+      
+      static uint64_t last = 0;
+      const uint64_t delta = stream_stat->read - last;
+      last = stream_stat->read;
+      const uint64_t pps = delta / PROGRESS_REPORT_DELAY;
+      const float rate = (float)(delta * 8 / PROGRESS_REPORT_DELAY / 1024 / 1024);
+      
+      ssize_t bytes = snprintf(buf, 1024, "%s: [%s] progress report: %'"PRIu64" packets read (%"PRIu64" new, %"PRIu64"pkt/s, avg bitrate %.1fMpbs).\n", program_name, timestr, stream_stat->read, delta, pps, rate);
+      if ( write(progress, buf, bytes) == -1 ){
+	fprintf(stderr, "progress report failed: %s\n", strerror(errno));
+      }
+      signal_count=0;
+    } else {
+      signal_count++;
+    }
+  }
+  /* Handle termination */
+  if( marker_terminate ) {
+    if( (marker_terminate>=src_stream_count) || (marker_terminate_TO>=src_stream_count) ){
+      /* We should terminate something */
 
-	ssize_t bytes = snprintf(buf, 1024, "%s: [%s] progress report: %'"PRIu64" packets read (%"PRIu64" new, %"PRIu64"pkt/s, avg bitrate %.1fMpbs).\n", program_name, timestr, stream_stat->read, delta, pps, rate);
-	if ( write(progress, buf, bytes) == -1 ){
-		fprintf(stderr, "progress report failed: %s\n", strerror(errno));
-	}
+      /*
+      if( (marker_terminate>=src_stream_count) )
+	fprintf(stderr," Got enough terminate markers. %d vs %d  ",marker_terminate,src_stream_count);
+      if( (marker_terminate_TO>=src_stream_count) )
+	fprintf(stderr," Got enough terminate_TOs. %d vs %d ",marker_terminate_TO, src_stream_count);
+      */    
+
+      if ( dst ){
+	stream_addr_str(&output, "", STREAM_ADDR_LOCAL);
+	stream_close(dst);
+	dst = NULL;
+      }
+      if(marker_quit){
+	keep_running=0;
+	fprintf(stderr,"\tReached terminate condition, quitting.\n");
+      } else {
+	marker_terminate=0;
+	marker_terminate_TO=0;
+	fprintf(stderr, "\tReached terminate condition, will not save until next marker arrives.\n");
+      }
+      return;
+    } else {
+      /* We are here as we gotten a SIGALRM, and a marker was received at some stage. */
+      /* The marker_terminate is incr. in the handle_marker, here we incr. the timeout counter. */
+      marker_terminate_TO++;
+      //      fprintf(stderr, "\t Incremetned terminate_TO to %d\n",marker_terminate_TO);
+    }    
+  }
+  
 }
 
 static const char* marker_flags(const struct marker* marker){
@@ -374,13 +432,18 @@ static int handle_marker(const struct marker* mark, stream_addr_t* addr, stream_
 
 	/* termination marker */
 	if ( mark->flags & MARKER_TERMINATE ){
-		if ( *st ){
-			stream_addr_str(addr, "", STREAM_ADDR_LOCAL);
-			stream_close(*st);
-			*st = NULL;
-		}
-		fprintf(stderr, "\ttermination flag set, stopping capture until next marker arrives\n");
-		return 0;
+	  marker_terminate++;
+	  /*
+	  fprintf(stderr, "\tTermination flag set, will stop saving upon receving all markers (or timeout).");
+	  
+	  if(marker_quit){
+	    fprintf(stderr, "\tWill then quit.\n");
+	  } else {
+	    fprintf(stderr, "\tWill then wait until next marker arrives.\n");
+	  }
+	  */
+	  return 0;
+	 
 	}
 
 	if ( open_next(addr, st, mark) != 0 ){
@@ -710,7 +773,10 @@ int main(int argc, char **argv){
 		case 'C': /* --marker-comment */
 			marker_comment = 1;
 			break;
-
+			
+		case 'Q': /* --marker-quit */
+ 		        marker_quit=1;
+			break;
 		case 's': /* --progress */
 			progress = STDERR_FILENO;
 			if ( optarg ){
@@ -782,22 +848,30 @@ int main(int argc, char **argv){
 		return 1;
 	}
 	stream_stat = stream_get_stat(src);
+	src_stream_count=stream_num_address(src);
 
 	/* progress report */
-	if ( progress > 0 ){
+	//	if ( progress > 0 ){
 		struct itimerval tv = {
-			{PROGRESS_REPORT_DELAY, 0},
-			{PROGRESS_REPORT_DELAY, 0},
+			{IRQ_DELAY, 0},
+			{IRQ_DELAY, 0},
 		};
 		setitimer(ITIMER_REAL, &tv, NULL);
-		signal(SIGALRM, progress_report);
-	}
+		signal(SIGALRM, my_signalhandler); //progress_report);
+		//}
 
 	/* key validation */
 	if (marker_key){
 		fprintf(stderr, "%s: Looking for %ld as key.\n", program_name, (unsigned long)marker_key);
 	}
-
+	
+	/* Quit / Continue */
+	if(marker_quit){
+	  fprintf(stderr,"%s: Will quit upon receving termination marker.\n",program_name);
+	}else {
+	  fprintf(stderr,"%s: Will continue after receving termination marker.\n",program_name);  
+	}
+	
 	/* setup listen server */
 	if ( use_listen ){
 		setup_udp(udp_dummy);
@@ -824,6 +898,7 @@ int main(int argc, char **argv){
 			abort();
 		}
 
+		
 		if ( handle_marker_caphead(cp, &output, &dst) != 0 ){
 			break; /* error already shown */
 		}
