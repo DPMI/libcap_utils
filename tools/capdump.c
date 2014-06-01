@@ -833,36 +833,35 @@ int main(int argc, char **argv){
 	 * terminate blocking call. */
 	signal(SIGINT, sig_handler);
 	signal(SIGTERM, sig_handler);
-
+	
 	/* open input stream (using a small buffer so pipes will fill faster) */
 	if ( (ret=stream_from_getopt(&src, argv, optind, argc, iface, "-", program_name, buffer_size)) != 0 ) {
-		return 1;
+	  return 1;
 	}
-
-	/* set hostname as mpid */
+       /* set hostname as mpid */
 	gethostname(mpid, 8);
-
+	
 	/* open output stream */
 	if ( (ret=stream_create(&dst, &output, NULL, mpid, comment)) != 0 ){
-		fprintf(stderr, "stream_create() failed with code 0x%08lX: %s\n", ret, caputils_error_string(ret));
-		return 1;
+	  fprintf(stderr, "stream_create() failed with code 0x%08lX: %s\n", ret, caputils_error_string(ret));
+	  return 1;
 	}
 	stream_stat = stream_get_stat(src);
 	src_stream_count=stream_num_address(src);
-
+	
 	/* progress report */
-	//	if ( progress > 0 ){
-		struct itimerval tv = {
-			{IRQ_DELAY, 0},
-			{IRQ_DELAY, 0},
-		};
-		setitimer(ITIMER_REAL, &tv, NULL);
-		signal(SIGALRM, my_signalhandler); //progress_report);
-		//}
-
+	//      if ( progress > 0 ){
+	struct itimerval tv = {
+	  {IRQ_DELAY, 0},
+	  {IRQ_DELAY, 0},
+	};
+	setitimer(ITIMER_REAL, &tv, NULL);
+	signal(SIGALRM, my_signalhandler); //progress_report);
+	//}
+	
 	/* key validation */
 	if (marker_key){
-		fprintf(stderr, "%s: Looking for %ld as key.\n", program_name, (unsigned long)marker_key);
+	  fprintf(stderr, "%s: Looking for %ld as key.\n", program_name, (unsigned long)marker_key);
 	}
 	
 	/* Quit / Continue */
@@ -874,56 +873,57 @@ int main(int argc, char **argv){
 	
 	/* setup listen server */
 	if ( use_listen ){
-		setup_udp(udp_dummy);
-		pthread_create(&child,0,tcprelay,0);
-		pthread_detach(child);
+	  setup_udp(udp_dummy);
+	  pthread_create(&child,0,tcprelay,0);
+	  pthread_detach(child);
 	}
-
+	
 	while( keep_running ){
-		if ( handle_udp(udp_dummy) != 0 ) break;
-
-		/* Read the next packet */
-		cap_head* cp;
-		ret = stream_read(src, &cp, NULL, NULL);
-		if ( ret == EAGAIN ){ /* a timeout occured */
-			continue;
-		} else if ( ret == EINTR && keep_running != 0 ){ /* don't abort unless signal caused a halt */
-			continue;
-		} else if ( ret > 0 ){ /* either an error or proper shutdown */
-			fprintf(stderr, "%s: stream_read() returned 0x%08lX: %s\n", program_name, ret, caputils_error_string(ret));
-			break;
-		} else if ( ret == -1 ){
-			break;
-		} else if ( ret != 0 ){
-			abort();
-		}
-
-		
-		if ( handle_marker_caphead(cp, &output, &dst) != 0 ){
-			break; /* error already shown */
-		}
-
-		if ( write_packet(cp, dst) != 0 ){
-			break; /* error already shown */
-		}
-
-		written_packets++;
-		if ( max_packets > 0 && stream_stat->read >= max_packets ){
-			break;
-		}
+	  if ( handle_udp(udp_dummy) != 0 ) break;
+	  
+	  /* Read the next packet */
+	  cap_head* cp;
+	  ret = stream_read(src, &cp, NULL, NULL);
+	  if ( ret == EAGAIN ){ /* a timeout occured */
+	    continue;
+	  } else if ( ret == EINTR && keep_running != 0 ){ /* don't abort unless signal caused a halt */
+	    continue;
+	  } else if ( ret > 0 ){ /* either an error or proper shutdown */
+	    fprintf(stderr, "%s: stream_read() returned 0x%08lX: %s\n", program_name, ret, caputils_error_string(ret));
+	    break;
+	    
+	  } else if ( ret == -1 ){
+	    break;
+	  } else if ( ret != 0 ){
+	    abort();
+	  }
+	  
+	  
+	  if ( handle_marker_caphead(cp, &output, &dst) != 0 ){
+	    break; /* error already shown */
+	  }
+	  
+	  if ( write_packet(cp, dst) != 0 ){
+	    break; /* error already shown */
+	  }
+	  
+	  written_packets++;
+	  if ( max_packets > 0 && stream_stat->read >= max_packets ){
+	    break;
+	  }
 	}
-
+	
 	fprintf(stderr, "%s: There was a total of %'"PRIu64" packets recv.\n", program_name, stream_stat->recv);
 	fprintf(stderr, "%s: There was a total of %'"PRIu64" packets read.\n", program_name, stream_stat->read);
 	fprintf(stderr, "%s: There was a total of %'ld packets writen.\n", program_name, written_packets);
-
+	
 	close(sockfd);
-
+	
 	stream_close(src);
 	stream_close(dst);
 	stream_addr_reset(&output);
 	free(fmt_basename);
 	free(udp_dummy);
-
+	
 	return 0;
 }
