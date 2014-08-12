@@ -30,6 +30,7 @@
 			abort(); \
 		} \
 		extern struct caputils_protocol x; \
+		x.type = y; \
 		protocol[y] = &x; \
 	} while (0)
 
