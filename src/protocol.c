@@ -43,7 +43,7 @@ struct caputils_protocol* protocol_get(enum caputils_protocol_type type){
 static void __attribute__((constructor)) protocol_init(void){
 	REGISTER_PROTOCOL(protocol_data, PROTOCOL_DATA);
 	REGISTER_PROTOCOL(protocol_done, PROTOCOL_DONE);
-
+	
 	REGISTER_PROTOCOL(protocol_arp, PROTOCOL_ARP);
 	REGISTER_PROTOCOL(protocol_cdp, PROTOCOL_CDP);
 	REGISTER_PROTOCOL(protocol_ethernet, PROTOCOL_ETHERNET);
@@ -57,4 +57,6 @@ static void __attribute__((constructor)) protocol_init(void){
 	REGISTER_PROTOCOL(protocol_tcp, PROTOCOL_TCP);
 	REGISTER_PROTOCOL(protocol_udp, PROTOCOL_UDP);
 	REGISTER_PROTOCOL(protocol_vlan, PROTOCOL_VLAN);
+	REGISTER_PROTOCOL(protocol_gtp, PROTOCOL_GTP);
+  
 }

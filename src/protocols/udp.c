@@ -56,6 +56,32 @@ static enum caputils_protocol_type next_udp(struct header_chunk* header, const c
 	}
 
 	*out = ptr + sizeof(struct udphdr);
+	
+	struct udphdr* myUDP=(struct udphdr*)ptr;
+	const uint16_t sport = ntohs(myUDP->source);
+	const uint16_t dport = ntohs(myUDP->dest);
+	
+	switch(dport) {
+	 
+	  if(dport == sport){
+	  case PORT_GTPu:
+	    return PROTOCOL_GTP;
+	  
+	  case PORT_GTPc:
+	    return PROTOCOL_GTP;
+	  }
+	   /*
+	   * To be done.. 
+	   * case PORT_DNS:
+	    return PROTOCOL_DNS;
+	    
+	  */ 
+	  
+	  default:
+	    return PROTOCOL_DATA;  
+	}
+	
+		
 	return PROTOCOL_DATA;
 }
 
@@ -75,9 +101,9 @@ static void udp_dump(FILE* fp, const struct header_chunk* header, const char* pt
 static void udp_format(FILE* fp, const struct header_chunk* header, const struct udphdr* udp, const char* ptr, unsigned int flags){
   fputs(": UDP", fp);
   
-  const size_t header_size = sizeof(struct udphdr);
-  const size_t total_size = ntohs(udp->len);
-  const size_t payload_size = total_size - header_size;
+  //const size_t header_size = sizeof(struct udphdr);
+  //const size_t total_size = ntohs(udp->len);
+  //const size_t payload_size = total_size - header_size;
   //if ( flags & FORMAT_HEADER ){
     //fprintf(fp, "(HDR[%zd]DATA[%zd])", header_size, payload_size);
   //}
