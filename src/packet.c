@@ -197,3 +197,97 @@ struct ip* find_ipv4_headerRW(struct ethhdr* ether, char** ptr){
 	if ( ptr ) *ptr = ref + payload;
 	return (struct ip*)(ref + offset);
 }
+
+static int next_payload(struct header_chunk* header){
+	/* stop processing if protocol doesn't define next_payload */
+	if ( !header->protocol->next_payload ){
+		return 0;
+	}
+
+	/* stop if previous header was truncated */
+	if ( header->truncated ){
+		return 0;
+	}
+
+	const char* next = header->ptr;
+	enum caputils_protocol_type type = \
+		header->protocol->next_payload(header, header->ptr, &next);
+
+	header->ptr = next;
+	header->protocol = protocol_get(type);
+	if ( !header->protocol ){
+		fprintf(stderr, "invalid protocol type %d, make sure protocol is registerd\n", type);
+		abort();
+	}
+
+	if ( !header->ptr || header->ptr < header->cp->payload ){
+		fprintf(stderr, "invalid payload pointer\n");
+		abort();
+	}
+
+	/* ensure there is enough data left */
+	const size_t used = header->ptr - header->cp->payload;
+	const size_t left = header->cp->caplen - used;
+	const size_t req = header_size(header);
+	header->truncated = left < req;
+
+	return
+		type != PROTOCOL_UNKNOWN &&
+		type != PROTOCOL_DONE;
+}
+
+void header_init(struct header_chunk* header, const struct cap_header* cp, int layer){
+	header->cp = cp;
+	header->protocol = NULL;
+	header->last_net = (struct network){"", "", 0};
+	header->truncated = 0;
+	header->ptr = NULL;
+}
+
+int header_walk(struct header_chunk* header){
+	if ( !header->ptr ){
+		header->protocol = protocol_get(PROTOCOL_ETHERNET);
+		header->ptr = header->cp->payload;
+
+		/* ensure there is enough data left */
+		const size_t used = header_size(header);
+		const size_t left = header->cp->caplen - used;
+		header->truncated = left < used;
+
+		return 1;
+	}
+
+	return next_payload(header);
+}
+
+void header_dump(FILE* fp, const struct header_chunk* header, const char* prefix){
+	if ( !header->protocol->dump ){
+		fprintf(fp, "%s(not implemented)\n", prefix);
+		return;
+	}
+
+	if ( header->truncated && !header->protocol->partial_print ){
+		fprintf(fp, "%s[Packet size limited during capture]\n", prefix);
+		return;
+	}
+
+	header->protocol->dump(fp, header, header->ptr, prefix, 0);
+}
+
+void header_format(FILE* fp, const struct header_chunk* header, int flags){
+	if ( header->truncated && !header->protocol->partial_print ){
+		fprintf(fp, ": %s [Packet size limited during capture]", header->protocol->name);
+		return;
+	}
+
+	if ( !header->protocol->format ){
+		fprintf(fp, ": %s", header->protocol->name);
+		return;
+	}
+
+	header->protocol->format(fp, header, header->ptr, flags);
+}
+
+size_t header_size(const struct header_chunk* header){
+	return header->protocol->size_dyn ? header->protocol->size_dyn(header, header->ptr) : header->protocol->size;
+}

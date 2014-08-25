@@ -21,6 +21,7 @@
 #define CAPUTILS_PACKET_H
 
 #include <caputils/capture.h>
+#include <caputils/protocol.h>
 
 #ifdef CAPUTILS_EXPORT
 #pragma GCC visibility push(default)
@@ -66,6 +67,35 @@ struct ip* find_ipv4_headerRW(struct ethhdr* ether, char** payload);
 
 const struct tcphdr* find_tcp_header(const void* pkt, const struct ethhdr* ether, const struct ip* ip, uint16_t* src, uint16_t* dest);
 const struct udphdr* find_udp_header(const void* pkt, const struct ethhdr* ether, const struct ip* ip, uint16_t* src, uint16_t* dest);
+
+struct network {
+	char net_src[120];   /* human-readable representation of src address */
+	char net_dst[120];   /* human-readable representation of dst address */
+	size_t plen;         /* payload size (not including network headers) */
+};
+typedef const struct network* net_t;
+
+struct header_chunk {
+	/* state */
+	int layer;                                   /* how deep to process protocols before considering data */
+	const struct cap_header* cp;                 /* packet being processed */
+	const struct caputils_protocol* protocol;    /* protocol of current header */
+	struct network last_net;                     /* filled each time network layer header is found */
+	int truncated;                               /* if non-zero the packet is truncated (not enough data to fully read protocol) */
+
+	/* current header */
+	union {
+		const char* ptr;                           /* generic access to header (manual cast or arithmetic) */
+		const struct ethhdr* ethhdr;               /* read as ethernet */
+		const struct ip* ip;                       /* read as IPv4 */
+	};
+};
+
+void header_init(struct header_chunk* header, const struct cap_header* cp, int layer);
+int header_walk(struct header_chunk* header);
+void header_dump(FILE* fp, const struct header_chunk* header, const char* prefix);
+void header_format(FILE* fp, const struct header_chunk* header, int flags);
+size_t header_size(const struct header_chunk* header);
 
 #ifdef __cplusplus
 }

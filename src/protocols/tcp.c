@@ -21,7 +21,7 @@
 #include "config.h"
 #endif
 
-#include "format.h"
+#include "src/format/format.h"
 
 enum OptionKind {
 	EOL = 0,
@@ -176,3 +176,91 @@ void print_tcp(FILE* fp, const struct cap_header* cp, net_t net, const struct tc
 		print_http(fp, cp, payload, payload_size, flags);
 	}
 }
+
+static enum caputils_protocol_type next_payload(struct header_chunk* header, const char* ptr, const char** out){
+	if ( limited_caplen(header->cp, ptr, sizeof(struct tcphdr)) ){
+		return PROTOCOL_DONE;
+	}
+
+	const struct tcphdr* tcp = (const struct tcphdr*)ptr;
+	const size_t header_size = 4*tcp->doff;
+	const size_t payload_size = header->last_net.plen - header_size;
+	*out = ptr + header_size;
+	if ( payload_size == 0 ){
+		return PROTOCOL_DONE;
+	}
+	return PROTOCOL_DATA;
+}
+
+
+static void tcp_format(FILE* fp, const struct header_chunk* header, const char* ptr, unsigned int flags){
+	fputs(": TCP", fp);
+	
+	if ( limited_caplen(header->cp, ptr, sizeof(struct tcphdr)) ){
+		fputs(" [Packet size limited during capture]", fp);
+		return;
+	}
+	
+	const struct tcphdr* tcp = (const struct tcphdr*)ptr;
+	const size_t header_size = 4*tcp->doff;
+	const size_t payload_size = header->last_net.plen - header_size;
+	if ( flags & FORMAT_HEADER ){
+		fprintf(fp, "(HDR[%zd]DATA[%zd])", header_size, payload_size);
+	}
+
+	const uint16_t sport = ntohs(tcp->source);
+	const uint16_t dport = ntohs(tcp->dest);
+
+	fprintf(fp, ": [%s] %s:%d --> %s:%d", tcp_flags(tcp),
+	        header->last_net.net_src, sport,
+	        header->last_net.net_dst, dport);
+
+	fprintf(fp, " ws=%d seq=%u ack=%u ", ntohs(tcp->window), ntohl(tcp->seq), ntohl(tcp->ack_seq));
+	tcp_options(header->cp, tcp, fp);
+
+		const char* payload = (const char*)tcp + 4*tcp->doff;
+	if ( payload_size == 0 ) return;
+
+	if ( (sport == PORT_DNS || dport == PORT_DNS) ) {
+		/* offset the length field */
+		print_dns(fp, header->cp, payload + 2, payload_size - 2, flags);
+	}
+
+	if ( (sport == PORT_HTTP || dport == PORT_HTTP) ) {
+		print_http(fp, header->cp, payload, payload_size, flags);
+	}
+       		
+}
+
+static void tcp_dump(FILE* fp, const struct header_chunk* header, const char* ptr, const char* prefix, int flags){
+	if ( limited_caplen(header->cp, ptr, sizeof(struct tcphdr)) ){
+		fprintf(fp, "%s[Packet size limited during capture]", prefix);
+		return;
+	}
+
+	const struct tcphdr* tcp = (const struct tcphdr*)ptr;
+	fprintf(fp, "%ssource:             %d\n", prefix, ntohs(tcp->source));
+	fprintf(fp, "%sdest:               %d\n", prefix, ntohs(tcp->dest));
+	fprintf(fp, "%sseq:                %u\n", prefix, ntohl(tcp->seq));
+	fprintf(fp, "%sseq_ack:            %u\n", prefix, ntohl(tcp->ack_seq));
+	fprintf(fp, "%sdoff:               %d\n", prefix, tcp->doff);
+	fprintf(fp, "%sdoff:               %d\n", prefix, tcp->doff);
+	fprintf(fp, "%sres1:               0x%x\n", prefix, tcp->res1);
+	fprintf(fp, "%sres2:               0x%x\n", prefix, tcp->res2);
+	fprintf(fp, "%surg:                %d\n", prefix, tcp->urg);
+	fprintf(fp, "%sack:                %d\n", prefix, tcp->ack);
+	fprintf(fp, "%spsh:                %d\n", prefix, tcp->psh);
+	fprintf(fp, "%srst:                %d\n", prefix, tcp->rst);
+	fprintf(fp, "%ssyn:                %d\n", prefix, tcp->syn);
+	fprintf(fp, "%sfin:                %d\n", prefix, tcp->fin);
+	fprintf(fp, "%swindow:             %u\n", prefix, ntohs(tcp->window));
+	fprintf(fp, "%scheck:              0x%04x\n", prefix, ntohs(tcp->check));
+	fprintf(fp, "%surg:                %u\n", prefix, ntohs(tcp->urg_ptr));
+}
+
+struct caputils_protocol protocol_tcp = {
+	.name = "TCP",
+	.next_payload = next_payload,
+	.format = tcp_format,
+	.dump = tcp_dump,
+};

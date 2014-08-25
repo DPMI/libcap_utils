@@ -62,27 +62,21 @@ static void print_timestamp(FILE* fp, struct format* state, const struct cap_hea
 	fprintf(fp, " %s", buffer);
 }
 
-static void print_linklayer(FILE* fp, const struct cap_header* cp, unsigned int flags){
-	fputc(':', fp);
-
-	/* Test for libcap_utils marker packet */
-	struct marker mark;
-	int marker_port;
-	if ( (marker_port=is_marker(cp, &mark, 0)) != 0 ){
-		fprintf(stdout, "Marker [e=%d, r=%d, k=%d, s=%d, port=%d]",
-		        mark.exp_id, mark.run_id, mark.key_id, mark.seq_num, marker_port);
-		return;
-	}
-
-	print_eth(fp, cp, cp->ethhdr, ntohs(cp->ethhdr->h_proto), cp->payload + sizeof(struct ethhdr), flags);
-}
-
 static void print_pkt(FILE* fp, struct format* state, const struct cap_header* cp){
 	print_timestamp(fp, state, cp);
 	fprintf(fp, ":LINK(%4d):CAPLEN(%4d)", cp->len, cp->caplen);
 
 	if ( state->flags >= FORMAT_LAYER_LINK ){
-		print_linklayer(fp, cp, state->flags);
+		struct header_chunk header;
+		header_init(&header, cp, 0);
+		while ( header_walk(&header) ){
+			if ( !header.protocol ){
+				fprintf(fp, "Unknown protocol\n");
+				continue;
+			}
+
+			header_format(fp, &header, state->flags);
+		};
 	}
 	fputc('\n', fp);
 
@@ -117,6 +111,15 @@ void format_ignore(FILE* fp, struct format* state, const struct cap_header* cp){
 		state->ref = cp->ts;
 		state->first = 0;
 	}
+}
+
+const char* name_lookup(const struct name_table* table, int value, const char* def){
+	const struct name_table* cur = table;
+	while ( cur->name ){
+		if ( value == cur->value ) return cur->name;
+		cur++;
+	}
+	return def;
 }
 
 int limited_caplen(const struct cap_header* cp, const void* ptr, size_t bytes){

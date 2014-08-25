@@ -21,54 +21,31 @@
 #include "config.h"
 #endif
 
-#include "format.h"
 #include "caputils/caputils.h"
-#include "caputils/log.h"
-#include <stdio.h>
-#include <arpa/inet.h>
+#include "caputils/protocol.h"
+#include <netinet/in.h>
 
-void print_ipproto(FILE* fp, const struct cap_header* cp, net_t net, uint8_t proto, const char* payload, unsigned int flags){
+enum caputils_protocol_type ipproto_next(uint8_t proto){
 	switch( proto ) {
-	case IPPROTO_TCP:
-		print_tcp(fp, cp, net, (const struct tcphdr*)payload, flags);
-		break;
-
-	case IPPROTO_UDP:
-		print_udp(fp, cp, net, (const struct udphdr*)payload, flags);
-		break;
+	case IPPROTO_GRE:
+		return PROTOCOL_GRE;
 
 	case IPPROTO_ICMP:
-		print_icmp(fp, cp, net, (const struct icmphdr*)payload, flags);
-		break;
-
-	case IPPROTO_GRE:
-		print_gre(fp, cp, net, payload, flags);
-		break;
+		return PROTOCOL_ICMP;
 
 	case IPPROTO_IPIP:
-		fputs("IP-in-IP:", fp);
-		print_ipv4(fp, cp, (const struct ip*)payload, flags);
-		break;
+		return PROTOCOL_IPV4;
 
 	case IPPROTO_IPV6:
-		fputs("IPv6-in-IP:", fp);
-		print_ipv6(fp, cp, (const struct ip6_hdr*)payload, flags);
-		break;
+		return PROTOCOL_IPV6;
 
-	case IPPROTO_ICMPV6:
-		fprintf(fp, "ICMPv6");
-		break;
+	case IPPROTO_TCP:
+		return PROTOCOL_TCP;
 
-	case IPPROTO_IGMP:
-		fprintf(fp, "IGMP");
-		break;
-
-	case IPPROTO_OSPF:
-		fprintf(fp, "OSPF");
-		break;
+	case IPPROTO_UDP:
+		return PROTOCOL_UDP;
 
 	default:
-		fprintf(fp, "Unknown transport protocol: %d", proto);
-		break;
+		return PROTOCOL_DATA;
 	}
 }

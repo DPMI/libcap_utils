@@ -1,5 +1,5 @@
 ACLOCAL_AMFLAGS = -I m4
-AM_CFLAGS = -Wall ${PCAP_CFLAGS} ${PFRING_CFLAGS}
+AM_CFLAGS = -Wall -lssl -lcrypto ${PCAP_CFLAGS} ${PFRING_CFLAGS}
 
 lib_LTLIBRARIES = libcap_utils-07.la libcap_filter-07.la libcap_stream-07.la libcap_marc-07.la
 bin_PROGRAMS = 
@@ -62,7 +62,7 @@ notrans_dist_man_MANS += man/capmerge.1
 endif
 
 if BUILD_CAPSHOW
-bin_PROGRAMS += capshow
+bin_PROGRAMS += capshow capwalk
 man1_MANS += man/capshow.1
 notrans_dist_man_MANS += man/capshow.1
 endif
@@ -92,6 +92,7 @@ nobase_include_HEADERS =    \
 	caputils/marker.h    \
 	caputils/packet.h    \
 	caputils/picotime.h  \
+	caputils/protocol.h  \
 	caputils/send.h      \
 	caputils/stream.h    \
 	caputils/utils.h     \
@@ -111,31 +112,36 @@ endif
 
 libcap_utils_07_la_CFLAGS = ${AM_CFLAGS} -I${top_srcdir}/fallback
 libcap_utils_07_la_LDFLAGS = -version-info 1:0:1 -Wl,--allow-shlib-undefined
-libcap_utils_07_la_SOURCES =   \
-	src/caputils_int.h      \
-	src/address.c           \
-	src/error.c             \
-	src/format/arp.c        \
-	src/format/dns.c        \
-	src/format/ethernet.c   \
-	src/format/format.h     \
-	src/format/gre.c        \
-	src/format/http.c       \
-	src/format/icmp.c       \
-	src/format/ip.c         \
-	src/format/ipv4.c       \
-	src/format/ipv6.c       \
-	src/format/mp.c         \
-	src/format/mpls.c       \
-	src/format/tcp.c        \
-	src/format/udp.c        \
-	src/format.c            \
-	src/interface.c         \
-	src/log.c               \
-	src/marker.c            \
-	src/utils.c             \
-	src/packet.c            \
-	src/picotime.c
+libcap_utils_07_la_SOURCES = \
+	src/caputils_int.h         \
+	src/address.c              \
+	src/error.c                \
+	src/format/dns.c           \
+	src/format/format.h        \
+	src/format/http.c          \
+	src/format/mp.c            \
+	src/format/stp.c           \
+	src/format.c               \
+	src/interface.c            \
+	src/log.c                  \
+	src/marker.c               \
+	src/utils.c                \
+	src/packet.c               \
+	src/picotime.c             \
+	src/protocol.c             \
+	src/protocols/arp.c        \
+	src/protocols/cdp.c        \
+	src/protocols/data.c       \
+	src/protocols/ethernet.c   \
+	src/protocols/gre.c        \
+	src/protocols/gtp.c	   \
+	src/protocols/icmp.c       \
+	src/protocols/ip.c         \
+	src/protocols/ipv4.c       \
+	src/protocols/ipv6.c       \
+	src/protocols/mpls.c       \
+	src/protocols/tcp.c        \
+	src/protocols/udp.c
 #	stream_tcp.c
 
 if BUILD_BE64TOH
@@ -198,6 +204,9 @@ capmerge_LDADD = ${tools_LIBS}
 capshow_SOURCES = tools/capshow.c
 capshow_CFLAGS = ${tools_CFLAGS}
 capshow_LDADD = ${tools_LIBS}
+capwalk_SOURCES = tools/capwalk.c
+capwalk_CFLAGS = ${tools_CFLAGS}
+capwalk_LDADD = ${tools_LIBS}
 ifstat_SOURCES = tools/ifstat.c
 ifstat_CFLAGS = ${tools_CFLAGS}
 ifstat_LDADD = ${tools_LIBS}

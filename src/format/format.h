@@ -23,6 +23,7 @@
 
 #include <caputils/log.h>
 #include <caputils/send.h>
+#include <caputils/packet.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <arpa/inet.h>
@@ -34,17 +35,22 @@
 
 #define PORT_DNS 53
 #define PORT_HTTP 80
-
-struct network {
-	const char* net_src; /* human-readable representation of src address */
-	const char* net_dst; /* human-readable representation of dst address */
-	size_t plen;         /* payload size (not including network headers) */
-};
-typedef const struct network* net_t;
-
+#define PORT_GTPu 2152
+#define PORT_GTPc 2123
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+struct name_table {
+	int value;
+	const char* name;
+};
+
+/**
+ * From a name table find entry with value and return name.
+ * If value isn't found it returns def.
+ */
+const char* name_lookup(const struct name_table* table, int value, const char* def);
 
 /**
  * Test if there is enough data left for parsing.
@@ -55,22 +61,13 @@ extern "C" {
  */
 int limited_caplen(const struct cap_header* cp, const void* ptr, size_t bytes) __attribute__((visibility("default")));
 
-/* layer 2 */
-void print_eth(FILE* dst, const struct cap_header* cp, const struct ethhdr* eth, unsigned int h_proto, const char* payload, unsigned int flags);
-
 /* layer 3 */
-void print_ipproto(FILE* fp, const struct cap_header* cp, net_t net, uint8_t proto, const char* payload, unsigned int flags);
-void print_ipv4(FILE* fp, const struct cap_header* cp, const struct ip* ip, unsigned int flags);
-void print_ipv6(FILE* fp, const struct cap_header* cp, const struct ip6_hdr* ip, unsigned int flags);
 void print_arp(FILE* dst, const struct cap_header* cp, const struct ether_arp* arp);
 void print_mp(FILE* fp, const struct cap_header* cp, const struct sendhead* send);
 void print_mp_diagnostic(FILE* fp, const struct cap_header* cp, const char* data);
 void print_mpls(FILE* fp, const struct cap_header* cp, const char* data);
-void print_gre(FILE* fp, const struct cap_header* cp, net_t net, const char* data, unsigned int flags);
 
 /* layer 4 */
-void print_tcp(FILE* fp, const struct cap_header* cp, net_t net, const struct tcphdr* tcp, unsigned int flags);
-void print_udp(FILE* fp, const struct cap_header* cp, net_t net, const struct udphdr* udp, unsigned int flags);
 void print_icmp(FILE* fp, const struct cap_header* cp, net_t net, const struct icmphdr* icmp, unsigned int flags);
 
 /* application layer */
