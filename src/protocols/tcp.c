@@ -141,12 +141,8 @@ static void tcp_options(const struct cap_header* cp,const struct tcphdr* tcp, FI
 	}
 }
 
-void print_tcp(FILE* fp, const struct cap_header* cp, net_t net, const struct tcphdr* tcp, unsigned int flags){
+static void print_tcp(FILE* fp, const struct cap_header* cp, net_t net, const struct tcphdr* tcp, unsigned int flags){
 	fputs("TCP", fp);
-	if ( limited_caplen(cp, tcp, sizeof(struct tcphdr)) ){
-		fprintf(fp, " [Packet size limited during capture]");
-		return;
-	}
 
 	const size_t header_size = 4*tcp->doff;
 	const size_t payload_size = net->plen - header_size;
@@ -177,11 +173,7 @@ void print_tcp(FILE* fp, const struct cap_header* cp, net_t net, const struct tc
 	}
 }
 
-static enum caputils_protocol_type next_payload(struct header_chunk* header, const char* ptr, const char** out){
-	if ( limited_caplen(header->cp, ptr, sizeof(struct tcphdr)) ){
-		return PROTOCOL_DONE;
-	}
-
+static enum caputils_protocol_type tcp_next(struct header_chunk* header, const char* ptr, const char** out){
 	const struct tcphdr* tcp = (const struct tcphdr*)ptr;
 	const size_t header_size = 4*tcp->doff;
 	const size_t payload_size = header->last_net.plen - header_size;
@@ -259,7 +251,8 @@ static void tcp_dump(FILE* fp, const struct header_chunk* header, const char* pt
 
 struct caputils_protocol protocol_tcp = {
 	.name = "TCP",
-	.next_payload = next_payload,
+	.size = sizeof(struct tcphdr),
+	.next_payload = tcp_next,
 	.format = tcp_format,
 	.dump = tcp_dump,
 };
