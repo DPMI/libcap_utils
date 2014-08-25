@@ -27,43 +27,24 @@
 
 struct gtp_header {
 
-#if __BYTE_ORDER == __LITTLE_ENDIAN
-		uint8_t nextheader   : 8;
-		uint8_t pdunr        : 8;
-		uint16_t sequencenr   : 16;
-		uint32_t teid	      : 32;
-		uint16_t total	      : 16;
-		uint8_t message      : 8;
-		uint8_t npdu	     : 1;
-		uint8_t seqflag      : 1;
-		uint8_t extension    : 1;
-		uint8_t reserved     : 1;
-		uint8_t type         : 1;
-		uint8_t version      : 3;
-#else /* __BYTE_ORDER */
-		uint8_t version      : 3;
-		uint8_t type         : 1;
-		uint8_t reserved     : 1;
-		uint8_t extension    : 1;
-		uint8_t seqflag      : 1;
-		uint8_t npdu	     : 1;
-		uint8_t message      : 8;
-		uint16_t total	      : 16;
-		uint32_t teid	      : 32;
-		uint16_t sequencenr   : 16;
-		uint8_t pdunr        : 8;
-		uint8_t nextheader   : 8;
-		
-#endif /* __BYTE_ORDER */
-
-	
+  uint8_t npdu		: 1;
+  uint8_t seqflag	: 1;
+  uint8_t extension 	: 1;
+  uint8_t reserved 	: 1;
+  uint8_t type		: 1;
+  uint8_t version 	: 3;
+  uint8_t message;
+  uint16_t total;
+  uint32_t teid;
+  uint16_t sequencenr;
+  uint16_t pdunr;
+  uint8_t nextheader; 	
 	
 } __attribute__((packed));
 
 
 static enum caputils_protocol_type gtp_header_next_payload(struct header_chunk* header, const char* ptr, const char** out){
-	const struct gtp_header* gtp = (const struct gtp_header*)ptr; 
-	const char* payload = ptr + 8;//+ sizeof(union gtp_header);
+	const char* payload = ptr + 8; // sizeof(struct gtp_header);
 	*out = payload;
 
 	
@@ -87,21 +68,15 @@ static enum caputils_protocol_type gtp_header_next_payload(struct header_chunk* 
 static void gtp_format(FILE* fp, const struct header_chunk* header, const char* ptr, unsigned int flags){
 	const struct gtp_header* gtp = (const struct gtp_header*)ptr; 
 	fprintf(fp, ": GTP(verison: %d, message type: %02x. length: %d)",
-		gtp->version, gtp->message, gtp->total);
+		gtp->version, gtp->message, ntohs(gtp->total));
 }
 
 static void gtp_dump(FILE* fp, const struct header_chunk* header, const char* ptr, const char* prefix, int flags){
 	const struct gtp_header* gtp = (const struct gtp_header*)ptr; 
-	char test = *ptr; 
-	char test1 = *(ptr+1); 
-	char test2 = *(ptr+2);
-	char test3 = *(ptr+3);
-	const char* payload = ptr + sizeof(struct gtp_header);
-	fprintf(fp,"GTPoutput%0x %0x %0x %0x	\n", test, test1, test2, test3 );
 	fprintf(fp, "%sversion:              %0x\n", prefix, gtp->version);
-	fprintf(fp, "%message type:          %0x\n", prefix, gtp->message);
-	fprintf(fp, "%slength:               %d\n", prefix, gtp->total);
-	fprintf(fp, "%steid:                 0x%08x\n", prefix, gtp->teid);
+	fprintf(fp, "%smessage type:          %0x\n", prefix, gtp->message);
+	fprintf(fp, "%slength:               %d\n", prefix, ntohs(gtp->total));
+	fprintf(fp, "%steid:                 0x%08x\n", prefix, ntohl(gtp->teid));
 }
 
 
