@@ -141,38 +141,6 @@ static void tcp_options(const struct cap_header* cp,const struct tcphdr* tcp, FI
 	}
 }
 
-static void print_tcp(FILE* fp, const struct cap_header* cp, net_t net, const struct tcphdr* tcp, unsigned int flags){
-	fputs("TCP", fp);
-
-	const size_t header_size = 4*tcp->doff;
-	const size_t payload_size = net->plen - header_size;
-	if ( flags & FORMAT_HEADER ){
-		fprintf(fp, "(HDR[%zd]DATA[%zd])", header_size, payload_size);
-	}
-
-	const uint16_t sport = ntohs(tcp->source);
-	const uint16_t dport = ntohs(tcp->dest);
-
-	fprintf(fp, ": [%s] %s:%d --> %s:%d", tcp_flags(tcp),
-	        net->net_src, sport,
-	        net->net_dst, dport);
-
-	fprintf(fp, " ws=%d seq=%u ack=%u ", ntohs(tcp->window), ntohl(tcp->seq), ntohl(tcp->ack_seq));
-	tcp_options(cp,tcp,fp);
-
-	const char* payload = (const char*)tcp + 4*tcp->doff;
-	if ( payload_size == 0 ) return;
-
-	if ( (sport == PORT_DNS || dport == PORT_DNS) ) {
-		/* offset the length field */
-		print_dns(fp, cp, payload + 2, payload_size - 2, flags);
-	}
-
-	if ( (sport == PORT_HTTP || dport == PORT_HTTP) ) {
-		print_http(fp, cp, payload, payload_size, flags);
-	}
-}
-
 static enum caputils_protocol_type tcp_next(struct header_chunk* header, const char* ptr, const char** out){
 	const struct tcphdr* tcp = (const struct tcphdr*)ptr;
 	const size_t header_size = 4*tcp->doff;
