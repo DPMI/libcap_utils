@@ -41,15 +41,22 @@ struct gtp_stub_header {
 };
 
 struct gtp_v1_header {
-	uint8_t npdu        : 1;
-	uint8_t seqflag     : 1;
-	uint8_t extension   : 1;
+	uint8_t npdu_flag   : 1;
+	uint8_t seq_flag    : 1;
+	uint8_t ext_flag    : 1;
 	uint8_t reserved    : 1;
 	uint8_t pt          : 1;
 	uint8_t version     : 3;
 	uint8_t message;
 	uint16_t total;
 	uint32_t teid;
+
+	/* optional fields (since array size is 0 it won't affect sizeof) */
+	struct {
+		uint16_t seqnum;
+		uint8_t npdu;
+		uint8_t ext_type;
+	} optional[0];
 } __attribute__((packed));
 
 struct gtp_v2_header {
@@ -170,14 +177,14 @@ static const char* gtp_message_type_str(const union gtp_header* gtp){
 static size_t gtp_header_size(const union gtp_header* gtp){
 	switch ( gtp_version(gtp) ){
 	case GTPv1:
-		if ( gtp->v1.extension ){
+		if ( gtp->v1.ext_flag ){
 			fprintf(stderr, "GTPv1 extension headers isn't supported (yet)\n");
 			abort();
 		}
 
 		/* if either flag is set all fields is sent (but must not be interpreted
 		 * unless the specific flag is set) */
-		if ( gtp->v1.seqflag || gtp->v1.npdu || gtp->v1.extension ){
+		if ( gtp->v1.seq_flag || gtp->v1.npdu_flag || gtp->v1.ext_flag ){
 			return sizeof(struct gtp_v1_header) + sizeof(uint32_t);
 		} else {
 			return sizeof(struct gtp_v1_header);
@@ -235,17 +242,25 @@ static void gtp_format(FILE* fp, const struct header_chunk* header, const char* 
 static void gtp_dump(FILE* fp, const struct header_chunk* header, const char* ptr, const char* prefix, int flags){
 	const union gtp_header* gtp = (const union gtp_header*)ptr;
 
-	fprintf(fp, "%sversion:              0x%02x\n", prefix, gtp->stub.version);
-	fprintf(fp, "%smessage type:         %s (0x%02x)\n", prefix, gtp_message_type_str(gtp), gtp_message_type(gtp));
+	fprintf(fp, "%sversion:            0x%02x\n", prefix, gtp->stub.version);
+	fprintf(fp, "%smessage type:       %s (0x%02x)\n", prefix, gtp_message_type_str(gtp), gtp_message_type(gtp));
 
 	switch ( gtp_version(gtp) ){
 	case GTPv1:
-		fprintf(fp, "%spt:                   %d\n", prefix, gtp->v1.pt);
-		fprintf(fp, "%sextensions:           %s\n", prefix, gtp->v1.extension ? "yes" : "no");
-		fprintf(fp, "%ssequence num.:        %s\n", prefix, gtp->v1.seqflag ? "yes" : "no");
-		fprintf(fp, "%snpdu:                 %s\n", prefix, gtp->v1.npdu ? "yes" : "no");
-		fprintf(fp, "%slength:               %d octets\n", prefix, ntohs(gtp->v1.total));
-		fprintf(fp, "%steid:                 0x%08x\n", prefix, ntohl(gtp->v1.teid));
+		fprintf(fp, "%spt:                 %d\n", prefix, gtp->v1.pt);
+		fprintf(fp, "%sextensions:         %s\n", prefix, gtp->v1.ext_flag ? "yes (not shown)" : "no");
+		if ( gtp->v1.seq_flag ){
+			fprintf(fp, "%ssequence num.:      0x%04d\n", prefix, ntohs(gtp->v1.optional[0].seqnum));
+		} else {
+			fprintf(fp, "%ssequence num.:      no\n", prefix);
+		}
+		if ( gtp->v1.npdu_flag ){
+			fprintf(fp, "%snpdu:               0x%02d\n", prefix, gtp->v1.optional[0].npdu);
+		} else {
+			fprintf(fp, "%snpdu:               no\n", prefix);
+		}
+		fprintf(fp, "%slength:             %d octets\n", prefix, ntohs(gtp->v1.total));
+		fprintf(fp, "%steid:               0x%08x\n", prefix, ntohl(gtp->v1.teid));
 		break;
 
 	case GTPv2:
