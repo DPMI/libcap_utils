@@ -25,6 +25,32 @@
 
 static enum caputils_protocol_type udp_next(struct header_chunk* header, const char* ptr, const char** out){
 	*out = ptr + sizeof(struct udphdr);
+
+	struct udphdr* myUDP=(struct udphdr*)ptr;
+	const uint16_t sport = ntohs(myUDP->source);
+	const uint16_t dport = ntohs(myUDP->dest);
+
+	switch(dport) {
+
+	  if(dport == sport){
+	  case PORT_GTPu:
+	    return PROTOCOL_GTP;
+
+	  case PORT_GTPc:
+	    return PROTOCOL_GTP;
+	  }
+	   /*
+	   * To be done..
+	   * case PORT_DNS:
+	    return PROTOCOL_DNS;
+
+	  */
+
+	  default:
+	    return PROTOCOL_DATA;
+	}
+
+
 	return PROTOCOL_DATA;
 }
 
