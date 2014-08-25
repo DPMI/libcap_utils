@@ -1,5 +1,5 @@
 ACLOCAL_AMFLAGS = -I m4
-AM_CFLAGS = -Wall -lssl -lcrypto ${PCAP_CFLAGS} ${PFRING_CFLAGS}
+AM_CFLAGS = -Wall -Wcast-qual -lssl -lcrypto ${PCAP_CFLAGS} ${PFRING_CFLAGS}
 
 lib_LTLIBRARIES = libcap_utils-07.la libcap_filter-07.la libcap_stream-07.la libcap_marc-07.la
 bin_PROGRAMS = 
