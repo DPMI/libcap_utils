@@ -52,6 +52,7 @@ enum caputils_protocol_type {
 	PROTOCOL_TCP,
 	PROTOCOL_UDP,
 	PROTOCOL_VLAN,
+	PROTOCOL_GTP,
 
 	PROTOCOL_NUM_AVAILABLE,
 };

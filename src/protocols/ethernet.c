@@ -26,6 +26,7 @@
 
 enum caputils_protocol_type ethertype_next(const unsigned int ethertype){
 	switch ( ethertype ){
+
 	case ETHERTYPE_ARP:
 		return PROTOCOL_ARP;
 
@@ -64,7 +65,7 @@ static void ethernet_format(FILE* fp, const struct header_chunk* header, const c
 
 	switch ( h_proto ){
 	case STPBRIDGES:
-		return;
+	        return;
 	}
 
 	if ( h_proto < 0x05DC ){

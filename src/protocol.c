@@ -57,4 +57,5 @@ static void __attribute__((constructor)) protocol_init(void){
 	REGISTER_PROTOCOL(protocol_tcp, PROTOCOL_TCP);
 	REGISTER_PROTOCOL(protocol_udp, PROTOCOL_UDP);
 	REGISTER_PROTOCOL(protocol_vlan, PROTOCOL_VLAN);
+	REGISTER_PROTOCOL(protocol_gtp, PROTOCOL_GTP);
 }

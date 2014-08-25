@@ -1,5 +1,5 @@
 ACLOCAL_AMFLAGS = -I m4
-AM_CFLAGS = -Wall ${PCAP_CFLAGS} ${PFRING_CFLAGS}
+AM_CFLAGS = -Wall -Wcast-qual -lssl -lcrypto ${PCAP_CFLAGS} ${PFRING_CFLAGS}
 
 lib_LTLIBRARIES = libcap_utils-07.la libcap_filter-07.la libcap_stream-07.la libcap_marc-07.la
 bin_PROGRAMS = 
@@ -134,6 +134,7 @@ libcap_utils_07_la_SOURCES = \
 	src/protocols/data.c       \
 	src/protocols/ethernet.c   \
 	src/protocols/gre.c        \
+	src/protocols/gtp.c	   \
 	src/protocols/icmp.c       \
 	src/protocols/ip.c         \
 	src/protocols/ipv4.c       \
