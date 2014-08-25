@@ -143,10 +143,13 @@ static void ipv6_dump(FILE* fp, const struct header_chunk* header, const char* p
 
 	/** @todo extension headers */
 }
-static void format_ipv6(FILE* fp, const struct cap_header* cp, const struct ip6_hdr* ip, unsigned int flags){
+
+
+static void ipv6_format(FILE* fp, const struct header_chunk* header, const char* ptr, unsigned int flags){
+	const struct ip6_hdr* ip = (const struct ip6_hdr*)ptr;
 	const char*  payload;
  	uint8_t proto;
-	const size_t header_size = ipv6_total_header_size(cp, ip, &payload, &proto);
+	const size_t header_size = ipv6_total_header_size(header->cp, ip, &payload, &proto);
 	fputs(" IPv6", fp);
 	if ( flags & FORMAT_HEADER ){
 		fprintf(fp, "(HDR[%zd])[plen=%d,hops=%d]", header_size, ntohs(ip->ip6_plen), ip->ip6_hops);
@@ -187,6 +190,6 @@ struct caputils_protocol protocol_ipv6 = {
 	.size = sizeof(struct ip),
 	.partial_print = 0,
 	.next_payload = ipv6_next,
-	.format = format_ipv6,
+	.format = ipv6_format,
 	.dump = ipv6_dump,
 };
