@@ -21,7 +21,7 @@
 #include "config.h"
 #endif
 
-#include "format.h"
+#include "src/format/format.h"
 
 union gre_header {
 	struct {
@@ -50,22 +50,44 @@ union gre_header {
 	uint32_t val;
 } __attribute__((packed));
 
-void print_gre(FILE* fp, const struct cap_header* cp, net_t net, const char* data, unsigned int flags){
-	const size_t bytes = cp->caplen - (data - cp->payload);
-	if ( bytes < sizeof(union gre_header) ){
-		fputs("GRE [Packet size limited during capture]", fp);
-		return;
-	}
+enum caputils_protocol_type ethertype_next(const unsigned int ethertype);
 
-	const char* payload = data + sizeof(union gre_header);
-	const union gre_header gre = {.val = ntohl(*(const uint32_t*)data)};
-	fprintf(fp, "GRE(0x%02x):", gre.val & 0x00ff);
+static enum caputils_protocol_type gre_next(struct header_chunk* header, const char* ptr, const char** out){
+	const char* payload = ptr + sizeof(union gre_header);
+	const union gre_header gre = {.val = ntohl(*(const uint32_t*)ptr)};
 
 	/* skip optional parts of GRE header */
 	if ( gre.checksum || gre.routing ) payload += 4;
 	if ( gre.key      ) payload += 4;
 	if ( gre.sequence ) payload += 4;
 
-	/* print contained header */
-	print_eth(fp, cp, NULL, gre.proto, payload, flags);
+	*out = payload;
+	return ethertype_next(gre.proto);
 }
+
+static void gre_format(FILE* fp, const struct header_chunk* header, const char* ptr, unsigned int flags){
+	const union gre_header gre = {.val = ntohl(*(const uint32_t*)ptr)};
+	fprintf(fp, ": GRE(0x%02x)", gre.val & 0x00ff);
+}
+
+static void gre_dump(FILE* fp, const struct header_chunk* header, const char* ptr, const char* prefix, int flags){
+	const union gre_header gre = {.val = ntohl(*(const uint32_t*)ptr)};
+
+	fprintf(fp, "%schecksum       		 %d\n", prefix, gre.checksum);
+	fprintf(fp, "%srouting        		 %d\n", prefix, gre.routing);
+	fprintf(fp, "%skey            		 %d\n", prefix, gre.key);
+	fprintf(fp, "%ssequence       		 %d\n", prefix, gre.sequence);
+	fprintf(fp, "%sstrict         		 %d\n", prefix, gre.strict);
+	fprintf(fp, "%srecursion      		 %d\n", prefix, gre.recursion);
+	fprintf(fp, "%sreserved       		 %d\n", prefix, gre.reserved);
+	fprintf(fp, "%sversion        		 %d\n", prefix, gre.version);
+	fprintf(fp, "%sproto          		 %d\n", prefix, gre.proto);
+}
+
+struct caputils_protocol protocol_gre = {
+	.name = "GRE",
+	.size = sizeof(union gre_header),
+	.next_payload = gre_next,
+	.format = gre_format,
+	.dump = gre_dump,
+};
