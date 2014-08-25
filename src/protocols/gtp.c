@@ -175,9 +175,13 @@ static size_t gtp_header_size(const union gtp_header* gtp){
 			abort();
 		}
 
-		return sizeof(struct gtp_v1_header) +
-			(gtp->v1.seqflag ? sizeof(uint16_t) : 0) +
-			(gtp->v1.npdu ? sizeof(uint8_t) : 0);
+		/* if either flag is set all fields is sent (but must not be interpreted
+		 * unless the specific flag is set) */
+		if ( gtp->v1.seqflag || gtp->v1.npdu || gtp->v1.extension ){
+			return sizeof(struct gtp_v1_header) + sizeof(uint32_t);
+		} else {
+			return sizeof(struct gtp_v1_header);
+		}
 
 	case GTPv2:
 		return sizeof(struct gtp_v2_header) +
