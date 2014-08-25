@@ -23,27 +23,30 @@
 
 #include "src/format/format.h"
 
+enum {
+	PORT_GTPu = 2152,
+	PORT_GTPc = 2123,
+};
+
 static enum caputils_protocol_type udp_next(struct header_chunk* header, const char* ptr, const char** out){
+	const struct udphdr* udp = (const struct udphdr*)ptr;
 	*out = ptr + sizeof(struct udphdr);
 
-	struct udphdr* myUDP=(struct udphdr*)ptr;
-	const uint16_t sport = ntohs(myUDP->source);
-	const uint16_t dport = ntohs(myUDP->dest);
+	const uint16_t sport = ntohs(udp->source);
+	const uint16_t dport = ntohs(udp->dest);
 
 	switch(dport) {
 
 	  if(dport == sport){
 	  case PORT_GTPu:
-	    return PROTOCOL_GTP;
-
 	  case PORT_GTPc:
 	    return PROTOCOL_GTP;
 	  }
-	   /*
+
+	  /*
 	   * To be done..
 	   * case PORT_DNS:
-	    return PROTOCOL_DNS;
-
+	   return PROTOCOL_DNS;
 	  */
 
 	  default:

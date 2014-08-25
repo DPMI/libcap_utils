@@ -26,7 +26,7 @@
 
 enum caputils_protocol_type ethertype_next(const unsigned int ethertype){
 	switch ( ethertype ){
-	  
+
 	case ETHERTYPE_ARP:
 		return PROTOCOL_ARP;
 

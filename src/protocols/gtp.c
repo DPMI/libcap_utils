@@ -43,14 +43,9 @@ struct gtp_header {
 } __attribute__((packed));
 
 
-static enum caputils_protocol_type gtp_header_next_payload(struct header_chunk* header, const char* ptr, const char** out){
+static enum caputils_protocol_type gtp_next(struct header_chunk* header, const char* ptr, const char** out){
 	const char* payload = ptr + 8; // sizeof(struct gtp_header);
 	*out = payload;
-
-	
-	if ( (payload[0] & 0xf0) == 0x30 ){
-		return PROTOCOL_IPV4;
-	}
 
 	/* detect IPv4 */
 	if ( (payload[0] & 0xf0) == 0x40 ){
@@ -66,28 +61,24 @@ static enum caputils_protocol_type gtp_header_next_payload(struct header_chunk* 
 }
 
 static void gtp_format(FILE* fp, const struct header_chunk* header, const char* ptr, unsigned int flags){
-	const struct gtp_header* gtp = (const struct gtp_header*)ptr; 
+	const struct gtp_header* gtp = (const struct gtp_header*)ptr;
 	fprintf(fp, ": GTP(verison: %d, message type: %02x. length: %d)",
-		gtp->version, gtp->message, ntohs(gtp->total));
+	        gtp->version, gtp->message, ntohs(gtp->total));
 }
 
 static void gtp_dump(FILE* fp, const struct header_chunk* header, const char* ptr, const char* prefix, int flags){
-	const struct gtp_header* gtp = (const struct gtp_header*)ptr; 
+	const struct gtp_header* gtp = (const struct gtp_header*)ptr;
+
 	fprintf(fp, "%sversion:              %0x\n", prefix, gtp->version);
-	fprintf(fp, "%smessage type:          %0x\n", prefix, gtp->message);
+	fprintf(fp, "%smessage type:         %0x\n", prefix, gtp->message);
 	fprintf(fp, "%slength:               %d\n", prefix, ntohs(gtp->total));
 	fprintf(fp, "%steid:                 0x%08x\n", prefix, ntohl(gtp->teid));
 }
 
-
-
-
-
 struct caputils_protocol protocol_gtp = {
 	.name = "GTP",
 	.size = sizeof(uint32_t),
-	.next_payload = gtp_header_next_payload,
+	.next_payload = gtp_next,
 	.format = gtp_format,
 	.dump = gtp_dump,
 };
-

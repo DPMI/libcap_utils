@@ -53,8 +53,8 @@ enum caputils_protocol_type {
 	PROTOCOL_UDP,
 	PROTOCOL_VLAN,
 	PROTOCOL_GTP,
-	PROTOCOL_NUM_AVAILABLE,
 
+	PROTOCOL_NUM_AVAILABLE,
 };
 
 struct header_chunk;

@@ -35,8 +35,7 @@
 
 #define PORT_DNS 53
 #define PORT_HTTP 80
-#define PORT_GTPu 2152
-#define PORT_GTPc 2123
+
 #ifdef __cplusplus
 extern "C" {
 #endif
