@@ -283,23 +283,16 @@ releasedir=/var/marc/releases
 deb: all check
 	@test "x${prefix}" = "x/usr" || (echo "Error: --prefix must be /usr when creating debian release (currently ${prefix})"; exit 1)
 	@test "x${sysconfdir}" = "x/etc" || (echo "Error: --sysconfdir must be /etc when creating debian release (currently ${sysconfdir})"; exit 1)
-	echo b
 	@test `id -u` = "0" || (echo "Error: must run as root to set proper permissions"; exit 1)
-	echo c
 	@test -e $(debpkgname) && rm -rf $(debpkgname) || true
-	echo a
 	mkdir -p $(debpkgname)/DEBIAN
 	sed 's/_git/git/g'  < dist/deb-control > $(debpkgname)/DEBIAN/control
 	cp ${top_srcdir}/dist/deb-postinst ${debpkgname}/DEBIAN/postinst
 	echo "/etc/default/dumper" >  $(debpkgname)/DEBIAN/conffiles
 	echo "/etc/init.d/dumper"  >> $(debpkgname)/DEBIAN/conffiles
-	echo d
 	$(MAKE) install DESTDIR=`pwd`/$(debpkgname)
-	echo e
 	strip `pwd`/$(debpkgname)/usr/bin/* `pwd`/$(debpkgname)/usr/lib/*.so
-	echo f
 	$(MAKE) install-dumper DESTDIR=`pwd`/$(debpkgname)
-	echo g
 	gzip -9 `pwd`/$(debpkgname)/usr/share/man/*/*
 	find `pwd`/$(debpkgname) -name '*.la' -delete
 	chmod 0755 `pwd`/$(debpkgname)/usr/bin/*
