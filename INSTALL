@@ -21,7 +21,7 @@ This document describes how to install from source, for supported distributions 
 Prerequisites
 -----------------------
 
-apt-get install build-essential autoconf libtool orrdtool librrd-dev libxml2-dev pkg-config libpcap-dev
+apt-get install build-essential autoconf libtool orrdtool librrd-dev libxml2-dev pkg-config libpcap-dev libssl-dev
 
 (or equivalent if your not using a Debian/Ubuntu based distribution)
 
