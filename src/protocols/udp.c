@@ -26,6 +26,7 @@
 enum {
 	PORT_GTPu = 2152,
 	PORT_GTPc = 2123,
+	PORT_PTPv2= 319,
 };
 
 static enum caputils_protocol_type udp_next(struct header_chunk* header, const char* ptr, const char** out){
@@ -42,6 +43,9 @@ static enum caputils_protocol_type udp_next(struct header_chunk* header, const c
 	  case PORT_GTPc:
 	    return PROTOCOL_GTP;
 	  }
+
+	case PORT_PTPv2:
+	  return PROTOCOL_PTPv2;
 
 	  /*
 	   * To be done..

@@ -141,6 +141,8 @@ libcap_utils_07_la_SOURCES = \
 	src/protocols/ipv6.c       \
 	src/protocols/mpls.c       \
 	src/protocols/tcp.c        \
+	src/protocols/sctp.c	   \
+	src/protocols/ptpv2.c	   \
 	src/protocols/udp.c
 #	stream_tcp.c
 

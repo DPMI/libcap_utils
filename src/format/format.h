@@ -31,7 +31,9 @@
 #include <netinet/ip6.h>
 #include <netinet/tcp.h>
 #include <netinet/udp.h>
+#include <netinet/sctp.h>
 #include <netinet/ip_icmp.h>
+
 
 #define PORT_DNS 53
 #define PORT_HTTP 80

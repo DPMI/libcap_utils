@@ -45,6 +45,9 @@ enum caputils_protocol_type ethertype_next(const unsigned int ethertype){
 	case STPBRIDGES:
 		return PROTOCOL_STP;
 
+	case 0x88F7: // PTPv2 in Ethernet
+	  return PROTOCOL_PTPv2;
+
 	default:
 		return PROTOCOL_DATA;
 	}
