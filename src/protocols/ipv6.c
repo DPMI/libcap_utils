@@ -125,22 +125,6 @@ static void ipv6_format(FILE* fp, const struct header_chunk* header, const char*
 	if ( flags & FORMAT_HEADER ){
 		fprintf(fp, "(HDR[%zd])[plen=%d,hops=%d]", header_size, ntohs(ip->ip6_plen), ip->ip6_hops);
 	}
-	fputs(": ", fp);
-
-	struct network net = { .plen = ip->ip6_plen + sizeof(struct ip6_hdr) - header_size, };
-	inet_ntop(AF_INET6, &ip->ip6_src, net.net_src, sizeof(net.net_src));
-	inet_ntop(AF_INET6, &ip->ip6_dst, net.net_dst, sizeof(net.net_dst));
-
-	char src[INET6_ADDRSTRLEN];
-	char dst[INET6_ADDRSTRLEN];
-	inet_ntop(AF_INET6, &ip->ip6_src, src, sizeof(src));
-	inet_ntop(AF_INET6, &ip->ip6_dst, dst, sizeof(dst));
-
-
-	fprintf(fp, ": %s:%s --> %s:%s",
-	net.net_src, src,
-	net.net_dst, dst);
-
 }
 
 #else /* HAVE_IPV6 */
