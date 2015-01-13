@@ -44,7 +44,7 @@ enum caputils_protocol_type ipproto_next(uint8_t proto){
 
 	case IPPROTO_UDP:
 		return PROTOCOL_UDP;
-		
+
 	case IPPROTO_SCTP:
 	  return PROTOCOL_SCTP;
 

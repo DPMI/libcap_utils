@@ -37,6 +37,15 @@ static enum caputils_protocol_type ipv4_next(struct header_chunk* header, const 
 	return ipproto_next(ip->ip_p);
 }
 
+static void ipv4_format(FILE* fp, const struct header_chunk* header, const char* ptr, unsigned int flags){
+	fprintf(fp, ": %s", header->protocol->name);
+
+	const struct ip* ip = (const struct ip*)ptr;
+	if ( ipproto_next(ip->ip_p) == PROTOCOL_DATA ){
+		fprintf(fp, " [ip_p=0x%02x]", ip->ip_p);
+	}
+}
+
 static void ipv4_dump(FILE* fp, const struct header_chunk* header, const char* ptr, const char* prefix, int flags){
 	const struct ip* ip = (const struct ip*)ptr;
 	char src[INET_ADDRSTRLEN];
@@ -67,6 +76,6 @@ struct caputils_protocol protocol_ipv4 = {
 	.name = "IPv4",
 	.size = sizeof(struct ip),
 	.next_payload = ipv4_next,
-	.format = NULL,
+	.format = ipv4_format,
 	.dump = ipv4_dump,
 };
