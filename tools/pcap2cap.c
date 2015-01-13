@@ -184,6 +184,7 @@ int main (int argc, char **argv){
 
     case 'i': /* --iface */
       strncpy(cp.nic, optarg, CAPHEAD_NICLEN);
+      cp.nic[CAPHEAD_NICLEN-1] = 0; /* force null-terminator */
       break;
 
     case 'l':
