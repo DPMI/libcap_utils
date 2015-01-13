@@ -80,6 +80,10 @@ static void ethernet_format(FILE* fp, const struct header_chunk* header, const c
 
 		const struct llc_pdu_sn* llc = (const struct llc_pdu_sn*)(ptr + sizeof(struct ethhdr));
 		fprintf(fp, "dsap=%02x ssap=%02x ctrl1 = %02x ctrl2 = %02x", llc->dsap, llc->ssap, llc->ctrl_1, llc->ctrl_2);
+	} else {
+		if ( ethertype_next(h_proto) == PROTOCOL_DATA ){
+			fprintf(fp, ": Ethernet [h_proto=0x%04x]", h_proto);
+		}
 	}
 }
 
