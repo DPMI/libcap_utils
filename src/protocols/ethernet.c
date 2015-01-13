@@ -46,7 +46,7 @@ enum caputils_protocol_type ethertype_next(const unsigned int ethertype){
 		return PROTOCOL_STP;
 
 	case 0x88F7: // PTPv2 in Ethernet
-	  return PROTOCOL_PTPv2;
+		return PROTOCOL_PTPv2;
 
 	default:
 		return PROTOCOL_DATA;
@@ -68,7 +68,7 @@ static void ethernet_format(FILE* fp, const struct header_chunk* header, const c
 
 	switch ( h_proto ){
 	case STPBRIDGES:
-	        return;
+		return;
 	}
 
 	if ( h_proto < 0x05DC ){
