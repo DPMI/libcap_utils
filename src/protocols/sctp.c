@@ -159,7 +159,7 @@ static void sctp_dump(FILE* fp, const struct header_chunk* header, const char* p
 struct caputils_protocol protocol_sctp = {
 	.name = "SCTP",
 	.size = sizeof(struct sctphdr),
-	.next_payload = NULL,
+	.next_payload = sctp_next,
 	.format = sctp_format,
 	.dump = sctp_dump,
 };

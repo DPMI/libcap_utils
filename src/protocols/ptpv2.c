@@ -119,7 +119,7 @@ static void ptpv2_dump(FILE* fp, const struct header_chunk* header, const char* 
 struct caputils_protocol protocol_ptpv2 = {
 	.name = "PTPV2",
 	.size = sizeof(struct ptpv2hdr),
-	.next_payload = NULL,
+	.next_payload = ptpv2_next,
 	.format = ptpv2_format,
 	.dump = ptpv2_dump,
 };
