@@ -125,6 +125,10 @@ static void ipv6_format(FILE* fp, const struct header_chunk* header, const char*
 	if ( flags & FORMAT_HEADER ){
 		fprintf(fp, "(HDR[%zd])[plen=%d,hops=%d]", header_size, ntohs(ip->ip6_plen), ip->ip6_hops);
 	}
+
+	if ( ipproto_next(proto) == PROTOCOL_DATA ){
+		fprintf(fp, " [ip6_next=0x%02x]", proto);
+	}
 }
 
 #else /* HAVE_IPV6 */
