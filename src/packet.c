@@ -30,7 +30,6 @@
 #include <netinet/ip.h>
 #include <netinet/tcp.h>
 #include <netinet/udp.h>
-#include <netinet/sctp.h>
 
 enum Level level_from_string(const char* str){
 	struct entry { const char* name; enum Level level; };
