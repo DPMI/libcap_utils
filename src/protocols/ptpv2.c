@@ -28,7 +28,6 @@ struct uint48 {
 } __attribute__((packed));
 typedef struct uint48 uint48_t;
 
-
 /*  PTPv2 Common Header Format */
 typedef struct ptpv2hdr {
   uint8_t tSpec;
@@ -38,7 +37,7 @@ typedef struct ptpv2hdr {
   uint8_t reserved;
   uint16_t Flags;
   uint48_t correction;
-  /* 
+  /*
      uint32_t correction_ns1;
      uint16_t correction_ns2;
   */
@@ -59,8 +58,6 @@ typedef struct ptpv2_opt_originTimestamp {
   uint32_t ts_nseconds;
 } __attribute__((packed)) sctp_opt_originTs;
 
-
-
 static void ptpv2_options(const struct cap_header* cp,const struct ptpv2hdr* ptpv2, int chunksize, FILE* dst){
 
 
@@ -70,7 +67,6 @@ static void ptpv2_options(const struct cap_header* cp,const struct ptpv2hdr* ptp
 	fprintf(dst," %0x ", ptpv2->tSpec);
 
 }
-
 
 static enum caputils_protocol_type ptpv2_next(struct header_chunk* header, const char* ptr, const char** out){
   /*
@@ -110,10 +106,10 @@ static void ptpv2_dump(FILE* fp, const struct header_chunk* header, const char* 
 	}
 
 	const struct ptpv2hdr* ptpv2 = (const struct ptpv2hdr*)ptr;
-	fprintf(fp, "%stSpec:             %d\n", prefix, ptpv2->tSpec);
-	fprintf(fp, "%sversion:               %d\n", prefix, ptpv2->verPtp);
-	fprintf(fp, "%slength:                %u\n", prefix, ntohs(ptpv2->len));
-	fprintf(fp, "%sdomain:            %u\n", prefix, ntohs(ptpv2->domainNumber));
+	fprintf(fp, "%stSpec:              %d\n", prefix, ptpv2->tSpec);
+	fprintf(fp, "%sversion:            %d\n", prefix, ptpv2->verPtp);
+	fprintf(fp, "%slength:             %u\n", prefix, ntohs(ptpv2->len));
+	fprintf(fp, "%sdomain:             %u\n", prefix, ntohs(ptpv2->domainNumber));
 }
 
 struct caputils_protocol protocol_ptpv2 = {

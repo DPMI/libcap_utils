@@ -23,30 +23,24 @@
 
 #include "src/format/format.h"
 
-/* Section 3.1.  SCTP Common Header Format */
+/* Section 3.1.	 SCTP Common Header Format */
 typedef struct sctphdr {
-         uint16_t source;
-         uint16_t dest;
-         uint32_t vtag;
-         uint32_t checksum;
+	uint16_t source;
+	uint16_t dest;
+	uint32_t vtag;
+	uint32_t checksum;
 } __attribute__((packed)) sctp_sctphdr_t;
 
 typedef struct sctp_chunkhdr {
-  uint8_t type;
-  uint8_t flags;
-  uint16_t length;
+	uint8_t type;
+	uint8_t flags;
+	uint16_t length;
 } __attribute__((packed)) sctp_chunkhdr_t;
 
-
-
-
 static void sctp_chunks(const struct cap_header* cp,const struct sctphdr* sctp, int chunksize, FILE* dst){
-
-
 	fprintf(dst,": (in development) ");
 	const uint8_t* ptr = (const u_int8_t*)((const char*)sctp) + sizeof(struct sctphdr);
 	int chunkread=0;
-
 
 	while ( ptr != 0 ){
 	  const sctp_chunkhdr_t* chunk = (const sctp_chunkhdr_t*)ptr;
@@ -62,7 +56,7 @@ static void sctp_chunks(const struct cap_header* cp,const struct sctphdr* sctp, 
 	    break;
 	  case 3:
 	    fprintf(dst,"SACK %d bytes, ",ntohs(chunk->length));
-	    break;	    
+	    break;
 	  case 4:
 	    fprintf(dst,"HEARTBEAT %d bytes, ",ntohs(chunk->length));
 	    break;
@@ -100,7 +94,7 @@ static void sctp_chunks(const struct cap_header* cp,const struct sctphdr* sctp, 
 	    fprintf(dst,"Type=%" PRIu8 ", length=%u bytes ",ntohs(chunk->type),ntohs(chunk->length));
 	    break;
 	  }
-	  
+
 	  /*read next chunk */
 	  ptr += sizeof(struct sctp_chunkhdr) + chunk->length;
 	  chunkread += sizeof(struct sctp_chunkhdr) + chunk->length;
@@ -108,18 +102,14 @@ static void sctp_chunks(const struct cap_header* cp,const struct sctphdr* sctp, 
 	    ptr=0;
 	  }
 	}
-	
 }
-
 
 static enum caputils_protocol_type sctp_next(struct header_chunk* header, const char* ptr, const char** out){
   /*
-    Do not look for data after SCTP message, chunks... handled differently 
+    Do not look for data after SCTP message, chunks... handled differently
     */
-  return PROTOCOL_DONE; 
-  
+  return PROTOCOL_DONE;
 }
-
 
 static void sctp_format(FILE* fp, const struct header_chunk* header, const char* ptr, unsigned int flags){
 	fputs(": SCTP", fp);
