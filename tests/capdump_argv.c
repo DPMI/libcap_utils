@@ -15,7 +15,7 @@ static int check(const char* cmdline, int expect_fail){
 	/* try to execute */
 	ret = system(cmdline);
 	if ( ret != 0 && !expect_fail ){
-		fprintf(stderr, "capdump_argv: command exited with code %d: \"%s\"\n", ret, cmdline);
+		fprintf(stderr, "capdump_argv: command exited with code %d: \"%s\"\n", WEXITSTATUS(ret), cmdline);
 		return 0;
 	} else if ( ret == 0 && expect_fail ){
 		fprintf(stderr, "capdump_argv: command exited with code 0 but expected to fail: \"%s\"\n", cmdline);
