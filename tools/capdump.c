@@ -50,15 +50,15 @@ enum MarkerMode {
 };
 #define BUFSIZE 1500
 
-static const size_t PROGRESS_REPORT_DELAY = 60;  /* seconds between progress reports
- */
+static const size_t PROGRESS_REPORT_DELAY = 60;  /* seconds between progress reports */
+
 /* Added to handle the mix of progress and termination handling, based on SIGALRM */
-static const size_t IRQ_DELAY = 1;  /* seconds between IRQs reports */
-static int signal_count=0; /* counter of ALARMS, used to trigger progress_report while at the same time handling terminate markers */
-static int marker_quit=0; /* If set to one, the program will exit (gracefully) after receving a terminate marker */
-static int marker_terminate=0; /* Increments once for each received terminate marker */
-static int marker_terminate_TO=0; /* Increments once for each received SIGALMR, after a terminate marker been detected */
-static int src_stream_count=0; /* The number of source streams present, set after src has been created.*/
+static const size_t IRQ_DELAY = 1;     /* seconds between IRQs reports */
+static int signal_count=0;            /* counter of ALARMS, used to trigger progress_report while at the same time handling terminate markers */
+static int marker_quit=0;             /* If set to one, the program will exit (gracefully) after receving a terminate marker */
+static int marker_terminate=0;        /* Increments once for each received terminate marker */
+static int marker_terminate_TO=0;     /* Increments once for each received SIGALMR, after a terminate marker been detected */
+static int src_stream_count=0;        /* The number of source streams present, set after src has been created.*/
 static const int TERMINATE_DELAY = 3; /* The number of seconds between receiving the first terminate marker, and the actual stop. */
                                       /* Should be large enough to handle many streams, they may be a second later (mp timeout) */
                                       /* but small to avoid unneeded delays. */
@@ -138,10 +138,10 @@ static void show_usage(void){
 	       "      --marker-comment Use marker comment as the stream comment.\n"
 	       "      --marker-quit    Terminate application after receving a End/Terminate marker.\n"
 	       "      --progress[=FD]  Write progress report to FD every 60 seconds.\n"
-	       "  -h, --help           This text.\n");
-	printf("\n");
-	printf("Streams can be specified in the following formats:\n");
-	printf("  - NN:NN:NN:NN:NN:NN  Listen to ethernet multicast stream.\n"
+	       "  -h, --help           This text.\n"
+	       "\n"
+	       "Streams can be specified in the following formats:\n"
+	       "  - NN:NN:NN:NN:NN:NN  Listen to ethernet multicast stream.\n"
 	       "  - tcp://IP[:PORT]    Listen to TCP unicast.\n"
 	       "  - udp://IP[:PORT]    Listen to UDP broadcast.\n"
 	       "  - FILENAME           Open capfile for reading.\n");
@@ -170,66 +170,58 @@ static void sig_handler(int signum){
 }
 
 static void my_signalhandler(int signum){
-  /* Handle SIGALRM callbacks, first check if its progress report time, then check if we are */
-  /* terminating something, and at the end should we leave. */
+	/* Handle SIGALRM callbacks, first check if its progress report time, then check if we are */
+	/* terminating something, and at the end should we leave. */
 
-  if(progress>0){
-    if( (signal_count+1) == PROGRESS_REPORT_DELAY){
-      static char buf[1024];
-      static char timestr[64];
-      time_t t = time(NULL);
-      struct tm tm = *localtime(&t);
-      strftime(timestr, sizeof(timestr), "%a, %d %b %Y %H:%M:%S %z", &tm);
-      
-      static uint64_t last = 0;
-      const uint64_t delta = stream_stat->read - last;
-      last = stream_stat->read;
-      const uint64_t pps = delta / PROGRESS_REPORT_DELAY;
-      const float rate = (float)(delta * 8 / PROGRESS_REPORT_DELAY / 1024 / 1024);
-      
-      ssize_t bytes = snprintf(buf, 1024, "%s: [%s] progress report: %'"PRIu64" packets read (%"PRIu64" new, %"PRIu64"pkt/s, avg bitrate %.1fMpbs).\n", program_name, timestr, stream_stat->read, delta, pps, rate);
-      if ( write(progress, buf, bytes) == -1 ){
-	fprintf(stderr, "progress report failed: %s\n", strerror(errno));
-      }
-      signal_count=0;
-    } else {
-      signal_count++;
-    }
-  }
-  /* Handle termination */
-  if( marker_terminate ) {
-    if( (marker_terminate>=src_stream_count) || (marker_terminate_TO>=src_stream_count) ){
-      /* We should terminate something */
+	if(progress>0){
+		if( (signal_count+1) == PROGRESS_REPORT_DELAY){
+			static char buf[1024];
+			static char timestr[64];
+			time_t t = time(NULL);
+			struct tm tm = *localtime(&t);
+			strftime(timestr, sizeof(timestr), "%a, %d %b %Y %H:%M:%S %z", &tm);
 
-      /*
-      if( (marker_terminate>=src_stream_count) )
-	fprintf(stderr," Got enough terminate markers. %d vs %d  ",marker_terminate,src_stream_count);
-      if( (marker_terminate_TO>=src_stream_count) )
-	fprintf(stderr," Got enough terminate_TOs. %d vs %d ",marker_terminate_TO, src_stream_count);
-      */    
+			static uint64_t last = 0;
+			const uint64_t delta = stream_stat->read - last;
+			last = stream_stat->read;
+			const uint64_t pps = delta / PROGRESS_REPORT_DELAY;
+			const float rate = (float)(delta * 8 / PROGRESS_REPORT_DELAY / 1024 / 1024);
 
-      if ( dst ){
-	stream_addr_str(&output, "", STREAM_ADDR_LOCAL);
-	stream_close(dst);
-	dst = NULL;
-      }
-      if(marker_quit){
-	keep_running=0;
-	fprintf(stderr,"\tReached terminate condition, quitting.\n");
-      } else {
-	marker_terminate=0;
-	marker_terminate_TO=0;
-	fprintf(stderr, "\tReached terminate condition, will not save until next marker arrives.\n");
-      }
-      return;
-    } else {
-      /* We are here as we gotten a SIGALRM, and a marker was received at some stage. */
-      /* The marker_terminate is incr. in the handle_marker, here we incr. the timeout counter. */
-      marker_terminate_TO++;
-      //      fprintf(stderr, "\t Incremetned terminate_TO to %d\n",marker_terminate_TO);
-    }    
-  }
-  
+			ssize_t bytes = snprintf(buf, 1024, "%s: [%s] progress report: %'"PRIu64" packets read (%"PRIu64" new, %"PRIu64"pkt/s, avg bitrate %.1fMpbs).\n", program_name, timestr, stream_stat->read, delta, pps, rate);
+			if ( write(progress, buf, bytes) == -1 ){
+				fprintf(stderr, "progress report failed: %s\n", strerror(errno));
+			}
+			signal_count=0;
+		} else {
+			signal_count++;
+		}
+	}
+
+	/* Handle termination */
+	if( marker_terminate ) {
+		if( (marker_terminate>=src_stream_count) || (marker_terminate_TO>=src_stream_count) ){
+			/* We should terminate something */
+
+			if ( dst ){
+				stream_addr_str(&output, "", STREAM_ADDR_LOCAL);
+				stream_close(dst);
+				dst = NULL;
+			}
+			if(marker_quit){
+				keep_running=0;
+				fprintf(stderr,"\tReached terminate condition, quitting.\n");
+			} else {
+				marker_terminate=0;
+				marker_terminate_TO=0;
+				fprintf(stderr, "\tReached terminate condition, will not save until next marker arrives.\n");
+			}
+			return;
+		} else {
+			/* We are here as we gotten a SIGALRM, and a marker was received at some stage. */
+			/* The marker_terminate is incr. in the handle_marker, here we incr. the timeout counter. */
+			marker_terminate_TO++;
+		}
+	}
 }
 
 static const char* marker_flags(const struct marker* marker){
@@ -353,7 +345,7 @@ static const char* generate_filename(const char* fmt, const struct marker* marke
 		do {
 			/* test if filename already exists */
 			struct stat st;
-			if ( stat(buffer, &st) == -1  ){
+			if ( stat(buffer, &st) == -1 ){
 				if ( errno == ENOENT ){
 					break; /* exit loop and return filename */
 				} else {
@@ -363,7 +355,7 @@ static const char* generate_filename(const char* fmt, const struct marker* marke
 			}
 
 			/* increment suffix and retry */
-			const size_t left = sizeof(buffer)  - (dst - buffer);
+			const size_t left = sizeof(buffer) - (dst - buffer);
 			snprintf(dst, left, ".%d", suffix++);
 		} while (1);
 	}
@@ -432,18 +424,8 @@ static int handle_marker(const struct marker* mark, stream_addr_t* addr, stream_
 
 	/* termination marker */
 	if ( mark->flags & MARKER_TERMINATE ){
-	  marker_terminate++;
-	  /*
-	  fprintf(stderr, "\tTermination flag set, will stop saving upon receving all markers (or timeout).");
-	  
-	  if(marker_quit){
-	    fprintf(stderr, "\tWill then quit.\n");
-	  } else {
-	    fprintf(stderr, "\tWill then wait until next marker arrives.\n");
-	  }
-	  */
-	  return 0;
-	 
+		marker_terminate++;
+		return 0;
 	}
 
 	if ( open_next(addr, st, mark) != 0 ){
@@ -773,10 +755,11 @@ int main(int argc, char **argv){
 		case 'C': /* --marker-comment */
 			marker_comment = 1;
 			break;
-			
+
 		case 'Q': /* --marker-quit */
- 		        marker_quit=1;
+			marker_quit=1;
 			break;
+
 		case 's': /* --progress */
 			progress = STDERR_FILENO;
 			if ( optarg ){
@@ -788,7 +771,6 @@ int main(int argc, char **argv){
 				}
 				close(fd);
 				break;
-
 			}
 			break;
 
@@ -833,97 +815,94 @@ int main(int argc, char **argv){
 	 * terminate blocking call. */
 	signal(SIGINT, sig_handler);
 	signal(SIGTERM, sig_handler);
-	
+
 	/* open input stream (using a small buffer so pipes will fill faster) */
 	if ( (ret=stream_from_getopt(&src, argv, optind, argc, iface, "-", program_name, buffer_size)) != 0 ) {
-	  return 1;
+		return 1;
 	}
-       /* set hostname as mpid */
+
+	/* set hostname as mpid */
 	gethostname(mpid, 8);
-	
+
 	/* open output stream */
 	if ( (ret=stream_create(&dst, &output, NULL, mpid, comment)) != 0 ){
-	  fprintf(stderr, "stream_create() failed with code 0x%08lX: %s\n", ret, caputils_error_string(ret));
-	  return 1;
+		fprintf(stderr, "stream_create() failed with code 0x%08lX: %s\n", ret, caputils_error_string(ret));
+		return 1;
 	}
 	stream_stat = stream_get_stat(src);
-	src_stream_count=stream_num_address(src);
-	
+	src_stream_count = stream_num_address(src);
+
 	/* progress report */
-	//      if ( progress > 0 ){
 	struct itimerval tv = {
-	  {IRQ_DELAY, 0},
-	  {IRQ_DELAY, 0},
+		{IRQ_DELAY, 0},
+		{IRQ_DELAY, 0},
 	};
 	setitimer(ITIMER_REAL, &tv, NULL);
-	signal(SIGALRM, my_signalhandler); //progress_report);
-	//}
-	
+	signal(SIGALRM, my_signalhandler);
+
 	/* key validation */
 	if (marker_key){
-	  fprintf(stderr, "%s: Looking for %ld as key.\n", program_name, (unsigned long)marker_key);
+		fprintf(stderr, "%s: Looking for %ld as key.\n", program_name, (unsigned long)marker_key);
 	}
-	
+
 	/* Quit / Continue */
 	if(marker_quit){
-	  fprintf(stderr,"%s: Will quit upon receving termination marker.\n",program_name);
+		fprintf(stderr,"%s: Will quit upon receving termination marker.\n", program_name);
 	}else {
-	  fprintf(stderr,"%s: Will continue after receving termination marker.\n",program_name);  
+		fprintf(stderr,"%s: Will continue after receving termination marker.\n", program_name);
 	}
-	
+
 	/* setup listen server */
 	if ( use_listen ){
-	  setup_udp(udp_dummy);
-	  pthread_create(&child,0,tcprelay,0);
-	  pthread_detach(child);
+		setup_udp(udp_dummy);
+		pthread_create(&child,0,tcprelay,0);
+		pthread_detach(child);
 	}
-	
+
 	while( keep_running ){
-	  if ( handle_udp(udp_dummy) != 0 ) break;
-	  
-	  /* Read the next packet */
-	  cap_head* cp;
-	  ret = stream_read(src, &cp, NULL, NULL);
-	  if ( ret == EAGAIN ){ /* a timeout occured */
-	    continue;
-	  } else if ( ret == EINTR && keep_running != 0 ){ /* don't abort unless signal caused a halt */
-	    continue;
-	  } else if ( ret > 0 ){ /* either an error or proper shutdown */
-	    fprintf(stderr, "%s: stream_read() returned 0x%08lX: %s\n", program_name, ret, caputils_error_string(ret));
-	    break;
-	    
-	  } else if ( ret == -1 ){
-	    break;
-	  } else if ( ret != 0 ){
-	    abort();
-	  }
-	  
-	  
-	  if ( handle_marker_caphead(cp, &output, &dst) != 0 ){
-	    break; /* error already shown */
-	  }
-	  
-	  if ( write_packet(cp, dst) != 0 ){
-	    break; /* error already shown */
-	  }
-	  
-	  written_packets++;
-	  if ( max_packets > 0 && stream_stat->read >= max_packets ){
-	    break;
-	  }
+		if ( handle_udp(udp_dummy) != 0 ) break;
+
+		/* Read the next packet */
+		cap_head* cp;
+		ret = stream_read(src, &cp, NULL, NULL);
+		if ( ret == EAGAIN ){ /* a timeout occured */
+			continue;
+		} else if ( ret == EINTR && keep_running != 0 ){ /* don't abort unless signal caused a halt */
+			continue;
+		} else if ( ret > 0 ){ /* either an error or proper shutdown */
+			fprintf(stderr, "%s: stream_read() returned 0x%08lX: %s\n", program_name, ret, caputils_error_string(ret));
+			break;
+		} else if ( ret == -1 ){
+			break;
+		} else if ( ret != 0 ){
+			abort();
+		}
+
+		if ( handle_marker_caphead(cp, &output, &dst) != 0 ){
+			break; /* error already shown */
+		}
+
+		if ( write_packet(cp, dst) != 0 ){
+			break; /* error already shown */
+		}
+
+		written_packets++;
+		if ( max_packets > 0 && stream_stat->read >= max_packets ){
+			break;
+		}
 	}
-	
+
 	fprintf(stderr, "%s: There was a total of %'"PRIu64" packets recv.\n", program_name, stream_stat->recv);
 	fprintf(stderr, "%s: There was a total of %'"PRIu64" packets read.\n", program_name, stream_stat->read);
 	fprintf(stderr, "%s: There was a total of %'ld packets writen.\n", program_name, written_packets);
-	
+
 	close(sockfd);
-	
+
 	stream_close(src);
 	stream_close(dst);
 	stream_addr_reset(&output);
 	free(fmt_basename);
 	free(udp_dummy);
-	
+
 	return 0;
 }
