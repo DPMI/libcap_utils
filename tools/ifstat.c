@@ -32,6 +32,12 @@ int main(int argc, const char* argv[]){
 	struct iface iface;
 	int ret;
 
+	if ( argc < 2 ){
+		fprintf(stderr, "usage: ifstat IFACE\n");
+		fprintf(stderr, "Displays information about network interface.\n");
+		return 1;
+	}
+
 	if ( (ret=iface_get(argv[1], &iface)) != 0 ){
 		fprintf(stderr, "ifstat: %s\n", strerror(ret));
 		return 1;
