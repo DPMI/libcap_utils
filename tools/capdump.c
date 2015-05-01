@@ -169,58 +169,61 @@ static void sig_handler(int signum){
 	keep_running = 0;
 }
 
+static void progress_report(){
+	static char buf[1024];
+	static char timestr[64];
+
+	time_t t = time(NULL);
+	struct tm tm = *localtime(&t);
+	strftime(timestr, sizeof(timestr), "%a, %d %b %Y %H:%M:%S %z", &tm);
+
+	static uint64_t last = 0;
+	const uint64_t delta = stream_stat->read - last;
+	last = stream_stat->read;
+	const uint64_t pps = delta / PROGRESS_REPORT_DELAY;
+	const float rate = (float)(delta * 8 / PROGRESS_REPORT_DELAY / 1024 / 1024);
+
+	ssize_t bytes = snprintf(buf, 1024, "%s: [%s] progress report: %'"PRIu64" packets read (%"PRIu64" new, %"PRIu64"pkt/s, avg bitrate %.1fMpbs).\n", program_name, timestr, stream_stat->read, delta, pps, rate);
+	if ( write(progress, buf, bytes) == -1 ){
+		fprintf(stderr, "progress report failed: %s\n", strerror(errno));
+	}
+}
+
+static void handle_terminate_signal(){
+	if( (marker_terminate>=src_stream_count) || (marker_terminate_TO>=src_stream_count) ){
+		/* We should terminate something */
+
+		if ( dst ){
+			stream_addr_str(&output, "", STREAM_ADDR_LOCAL);
+			stream_close(dst);
+			dst = NULL;
+		}
+		if(marker_quit){
+			keep_running=0;
+			fprintf(stderr,"\tReached terminate condition, quitting.\n");
+		} else {
+			marker_terminate=0;
+			marker_terminate_TO=0;
+			fprintf(stderr, "\tReached terminate condition, will not save until next marker arrives.\n");
+		}
+		return;
+	} else {
+		/* We are here as we gotten a SIGALRM, and a marker was received at some stage. */
+		/* The marker_terminate is incr. in the handle_marker, here we incr. the timeout counter. */
+		marker_terminate_TO++;
+	}
+}
+
 static void my_signalhandler(int signum){
 	/* Handle SIGALRM callbacks, first check if its progress report time, then check if we are */
 	/* terminating something, and at the end should we leave. */
 
-	if(progress>0){
-		if( (signal_count+1) == PROGRESS_REPORT_DELAY){
-			static char buf[1024];
-			static char timestr[64];
-			time_t t = time(NULL);
-			struct tm tm = *localtime(&t);
-			strftime(timestr, sizeof(timestr), "%a, %d %b %Y %H:%M:%S %z", &tm);
-
-			static uint64_t last = 0;
-			const uint64_t delta = stream_stat->read - last;
-			last = stream_stat->read;
-			const uint64_t pps = delta / PROGRESS_REPORT_DELAY;
-			const float rate = (float)(delta * 8 / PROGRESS_REPORT_DELAY / 1024 / 1024);
-
-			ssize_t bytes = snprintf(buf, 1024, "%s: [%s] progress report: %'"PRIu64" packets read (%"PRIu64" new, %"PRIu64"pkt/s, avg bitrate %.1fMpbs).\n", program_name, timestr, stream_stat->read, delta, pps, rate);
-			if ( write(progress, buf, bytes) == -1 ){
-				fprintf(stderr, "progress report failed: %s\n", strerror(errno));
-			}
-			signal_count=0;
-		} else {
-			signal_count++;
-		}
+	if ( progress > 0 && (signal_count++ % PROGRESS_REPORT_DELAY) == 0 ){
+		progress_report();
 	}
 
-	/* Handle termination */
 	if( marker_terminate ) {
-		if( (marker_terminate>=src_stream_count) || (marker_terminate_TO>=src_stream_count) ){
-			/* We should terminate something */
-
-			if ( dst ){
-				stream_addr_str(&output, "", STREAM_ADDR_LOCAL);
-				stream_close(dst);
-				dst = NULL;
-			}
-			if(marker_quit){
-				keep_running=0;
-				fprintf(stderr,"\tReached terminate condition, quitting.\n");
-			} else {
-				marker_terminate=0;
-				marker_terminate_TO=0;
-				fprintf(stderr, "\tReached terminate condition, will not save until next marker arrives.\n");
-			}
-			return;
-		} else {
-			/* We are here as we gotten a SIGALRM, and a marker was received at some stage. */
-			/* The marker_terminate is incr. in the handle_marker, here we incr. the timeout counter. */
-			marker_terminate_TO++;
-		}
+		handle_terminate_signal();
 	}
 }
 
