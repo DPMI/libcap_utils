@@ -1,6 +1,6 @@
 /**
  * libcap_utils - DPMI capture utilities
- * Copyright (C) 2003-2013 (see AUTHORS)
+ * Copyright (C) 2003-2015 (see AUTHORS)
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -48,20 +48,19 @@ enum MarkerMode {
 	MARKER_OVERWRITE,
 	MARKER_APPEND,
 };
+
 #define BUFSIZE 1500
 
 static const size_t PROGRESS_REPORT_DELAY = 60;  /* seconds between progress reports */
-
-/* Added to handle the mix of progress and termination handling, based on SIGALRM */
-static const size_t IRQ_DELAY = 1;     /* seconds between IRQs reports */
-static int signal_count=0;            /* counter of ALARMS, used to trigger progress_report while at the same time handling terminate markers */
-static int marker_quit=0;             /* If set to one, the program will exit (gracefully) after receving a terminate marker */
-static int marker_terminate=0;        /* Increments once for each received terminate marker */
-static int marker_terminate_TO=0;     /* Increments once for each received SIGALMR, after a terminate marker been detected */
-static int src_stream_count=0;        /* The number of source streams present, set after src has been created.*/
-static const int TERMINATE_DELAY = 3; /* The number of seconds between receiving the first terminate marker, and the actual stop. */
-                                      /* Should be large enough to handle many streams, they may be a second later (mp timeout) */
-                                      /* but small to avoid unneeded delays. */
+static const size_t IRQ_DELAY = 1;               /* seconds between IRQs reports */
+static int signal_count=0;                       /* counter of ALARMS, used to trigger progress_report while at the same time handling terminate markers */
+static int marker_quit=0;                        /* If set to one, the program will exit (gracefully) after receving a terminate marker */
+static int marker_terminate=0;                   /* Increments once for each received terminate marker */
+static int marker_terminate_TO=0;                /* Increments once for each received SIGALMR, after a terminate marker been detected */
+static int src_stream_count=0;                   /* The number of source streams present, set after src has been created.*/
+static const int TERMINATE_DELAY = 3;            /* The number of seconds between receiving the first terminate marker, and the actual stop. */
+                                                 /* Should be large enough to handle many streams, they may be a second later (mp timeout) */
+                                                 /* but small to avoid unneeded delays. */
 
 static int keep_running = 1;
 static int marker = 0;
@@ -75,13 +74,13 @@ static const char* comment = "capdump-" VERSION " stream";
 static const struct stream_stat* stream_stat = NULL;
 static char mpid[8];
 static int progress = -1;          /* if >0 progress reports is written to this file descriptor */
-static uint32_t marker_key = 0; /* Key to look for, 0 means disabled */
+static uint32_t marker_key = 0;    /* Key to look for, 0 means disabled */
 
 /* Added to act as a marker recipient */
 static int use_listen = 0;
-static int sockfd = 0; /* Socket for the UDP server */
-static int portno = 4000; /* Port number for UDP server */
-struct sockaddr_in clientaddr; /* client addr */
+static int sockfd = 0;             /* Socket for the UDP server */
+static int portno = 4000;          /* Port number for UDP server */
+struct sockaddr_in clientaddr;     /* client addr */
 
 static const char* shortopts = "o:p:i:c:b:m:K:LP:f:M:C:s::h";
 static struct option longopts[]= {
@@ -115,9 +114,9 @@ stream_t dst;
 stream_addr_t output = STREAM_ADDR_INITIALIZER;
 
 static void show_usage(void){
-	printf("(C) 2011-2014 David Sveningsson <david.sveningsson@bth.se>, Patrik Arlos <patrik.arlos@bth.se> \n");
-	printf("Usage: %s [OPTIONS] [INPUT..] [OUTPUT]\n", program_name);
-	printf("  -o, --output=FILE    Save output in capfile. [default=stdout]\n"
+	printf("(C) 2011-2014 David Sveningsson <david.sveningsson@bth.se>, Patrik Arlos <patrik.arlos@bth.se> \n"
+	       "Usage: %s [OPTIONS] [INPUT..] [OUTPUT]\n"
+	       "  -o, --output=FILE    Save output in capfile. [default=stdout]\n"
 	       "  -i, --iface          For ethernet-based streams, this is the interface to listen\n"
 	       "                       on. For other streams it is ignored.\n"
 	       "  -p, --packets=INT    Stop capture after INT packages.\n"
@@ -144,7 +143,8 @@ static void show_usage(void){
 	       "  - NN:NN:NN:NN:NN:NN  Listen to ethernet multicast stream.\n"
 	       "  - tcp://IP[:PORT]    Listen to TCP unicast.\n"
 	       "  - udp://IP[:PORT]    Listen to UDP broadcast.\n"
-	       "  - FILENAME           Open capfile for reading.\n");
+	       "  - FILENAME           Open capfile for reading.\n",
+	       program_name);
 }
 
 static void sig_handler(int signum){
@@ -846,9 +846,9 @@ int main(int argc, char **argv){
 	}
 
 	/* Quit / Continue */
-	if(marker_quit){
+	if ( marker_quit ){
 		fprintf(stderr,"%s: Will quit upon receving termination marker.\n", program_name);
-	}else {
+	} else {
 		fprintf(stderr,"%s: Will continue after receving termination marker.\n", program_name);
 	}
 
