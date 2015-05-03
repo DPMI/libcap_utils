@@ -210,14 +210,19 @@ static int next_payload(struct header_chunk* header){
 	}
 
 	const char* next = header->ptr;
-	enum caputils_protocol_type type = \
-		header->protocol->next_payload(header, header->ptr, &next);
+	enum caputils_protocol_type type = header->protocol->next_payload(header, header->ptr, &next);
 
 	header->ptr = next;
 	header->protocol = protocol_get(type);
 	if ( !header->protocol ){
 		fprintf(stderr, "invalid protocol type %d, make sure protocol is registerd\n", type);
 		abort();
+	}
+
+	if ( header->ptr == NULL && type == PROTOCOL_DONE ){
+		/* could not get next header, probably limited caplen */
+		header->truncated = 1;
+		return 0;
 	}
 
 	if ( !header->ptr || header->ptr < header->cp->payload ){

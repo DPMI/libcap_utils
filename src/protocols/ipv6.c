@@ -89,7 +89,9 @@ static enum caputils_protocol_type ipv6_next(struct header_chunk* header, const 
 	const struct ip6_hdr* ip = (const struct ip6_hdr*)ptr;
 	const size_t header_size = ipv6_total_header_size(header->cp, ip, &payload, &proto);
 
+	/* could not determine the header size, probably limited caplen */
 	if ( !payload ){
+		*out = NULL;
 		return PROTOCOL_DONE;
 	}
 
