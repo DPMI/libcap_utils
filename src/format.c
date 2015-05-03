@@ -31,7 +31,7 @@
 static int min(int a, int b){ return a<b?a:b; }
 
 void fputs_printable(const char* str, int max, FILE* fp){
-	unsigned int n = max >= 0 ? (unsigned int)max : strlen(str);
+	unsigned int n = max >= 0 ? (unsigned int)min(max, strlen(str)) : strlen(str);
 	for ( unsigned int i = 0; i < n; i++ ){
 		if ( isprint(str[i]) && str[i] != '\n' ){
 			fputc(str[i], fp);
