@@ -164,6 +164,7 @@ static const char* dns_name_int(char** dst, size_t* size, const char* src, const
 		return NULL;
 	}
 
+	const char* begin = src;
 	uint8_t len = *(const uint8_t*)(src++);
 	do {
 
@@ -171,8 +172,14 @@ static const char* dns_name_int(char** dst, size_t* size, const char* src, const
 		 * reference to a previous label. It should therefore continue to read from
 		 * there until len is zero again. */
 		if ( (len & 0xc0) == 0xc0 ){
-			uint16_t offset = ((len & 0x3f) << 8) + *(const uint8_t*)(src++);
-			dns_name_int(dst, size, payload + offset, end, payload);
+			const uint16_t offset = ((len & 0x3f) << 8) + *(const uint8_t*)(src++);
+			if ( begin != payload + offset ){
+				dns_name_int(dst, size, payload + offset, end, payload);
+			} else {
+				/* recursive label references itself */
+				static const char* malformed = "[malformed]";
+				copy_label(dst, *size, malformed, strlen(malformed));
+			}
 			return src;
 		}
 
