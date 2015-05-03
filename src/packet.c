@@ -23,6 +23,7 @@
 
 #include "caputils/packet.h"
 #include "caputils/caputils.h"
+#include "src/format/format.h"
 
 #include <stdio.h>
 #include <strings.h>
@@ -247,10 +248,9 @@ static int next_payload(struct header_chunk* header){
 	ptr_sanity(header->cp, header->ptr);
 
 	/* ensure there is enough data left */
-	const size_t used = header->ptr - header->cp->payload;
-	const size_t left = header->cp->caplen - used;
-	const size_t req = header_size(header);
-	header->truncated = left < req;
+	if ( limited_caplen(header->cp, header->ptr, header_size(header)) ){
+		header->truncated = 1;
+	}
 
 	return
 		type != PROTOCOL_UNKNOWN &&
@@ -270,10 +270,9 @@ int header_walk(struct header_chunk* header){
 		header->protocol = protocol_get(PROTOCOL_ETHERNET);
 		header->ptr = header->cp->payload;
 
-		/* ensure there is enough data left */
-		const size_t used = header_size(header);
-		const size_t left = header->cp->caplen - used;
-		header->truncated = left < used;
+		if ( limited_caplen(header->cp, header->ptr, header_size(header)) ){
+			header->truncated = 1;
+		}
 
 		return 1;
 	}
