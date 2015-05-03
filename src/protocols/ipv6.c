@@ -67,11 +67,15 @@ static size_t ipv6_total_header_size(const struct cap_header* cp, const struct i
 	const struct ip6_ext* ext = NULL;
 	do {
 		if ( limited_caplen(cp, payload, sizeof(struct ip6_ext)) ){
-			return sizeof(struct ip6_hdr);
+			return header_size;
 		}
 
 		ext = (const struct ip6_ext*)payload;
 		const size_t cur_size = ntohs(ext->ip6e_len) * 8 + 8;
+		if ( limited_caplen(cp, payload, cur_size) ){
+			return header_size;
+		}
+
 		header_size += cur_size;
 		payload += cur_size;
 	} while ( is_ipv6_ext(ext->ip6e_nxt) );
