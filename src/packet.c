@@ -57,7 +57,16 @@ enum Level level_from_string(const char* str){
 static void ptr_sanity(const cap_head* cp, const char* ptr){
 	const char* begin = cp->payload;
 	const char* end   = cp->payload + cp->caplen;
-	if ( ptr < begin || ptr > end ){
+	if ( !ptr || ptr < begin || ptr > end ){
+		fprintf(stderr,
+		        "\n\n"
+		        "invalid payload pointer\n"
+		        "  ptr: %p\n"
+		        "  packet: %p - %p (%zd bytes)\n"
+		        "  offset: %zd bytes (from beginning of packet)\n"
+		        "this is an error in the protocol decoder (but the packet is probably corrupted)\n"
+		        "\n",
+		        ptr, begin, end, end - begin, ptr - begin);
 		abort();
 	}
 }
@@ -234,10 +243,8 @@ static int next_payload(struct header_chunk* header){
 		return 0;
 	}
 
-	if ( !header->ptr || header->ptr < header->cp->payload ){
-		fprintf(stderr, "invalid payload pointer\n");
-		abort();
-	}
+	/* make sure pointer is actually inside the captured packet (and not pointing at random data because of a corrupted packet) */
+	ptr_sanity(header->cp, header->ptr);
 
 	/* ensure there is enough data left */
 	const size_t used = header->ptr - header->cp->payload;
