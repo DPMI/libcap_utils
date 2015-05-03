@@ -27,6 +27,8 @@
 #include <ctype.h>
 #include <arpa/inet.h>
 
+static const unsigned int MAX_LABEL_REFERENCES = 32;    /* how many label references (depth) is allowed */
+
 static int min(int a, int b){ return a<b?a:b; }
 
 struct dns_header {
@@ -158,13 +160,12 @@ static size_t copy_label(char** dst, size_t size, const char* src, size_t len){
 	return bytes;
 }
 
-static const char* dns_name_int(char** dst, size_t* size, const char* src, const char* end, const char* payload){
+static const char* dns_name_int(char** dst, size_t* size, const char* src, const char* end, const char* payload, int visited[MAX_LABEL_REFERENCES]){
 	/* validate range in case of malformed packets */
 	if ( src < payload || src >= end ){
 		return NULL;
 	}
 
-	const char* begin = src;
 	uint8_t len = *(const uint8_t*)(src++);
 	do {
 
@@ -173,13 +174,26 @@ static const char* dns_name_int(char** dst, size_t* size, const char* src, const
 		 * there until len is zero again. */
 		if ( (len & 0xc0) == 0xc0 ){
 			const uint16_t offset = ((len & 0x3f) << 8) + *(const uint8_t*)(src++);
-			if ( begin != payload + offset ){
-				dns_name_int(dst, size, payload + offset, end, payload);
-			} else {
-				/* recursive label references itself */
-				static const char* malformed = "[malformed]";
-				copy_label(dst, *size, malformed, strlen(malformed));
+
+			/* detect label loops (from malformed packets) */
+			for ( unsigned int i = 0; i <= MAX_LABEL_REFERENCES; i++ ){
+				const int invalid_offset = offset == 0;
+				const int deep_nesting = i == MAX_LABEL_REFERENCES;
+
+				if ( invalid_offset || deep_nesting || visited[i] == offset ){
+					static const char* malformed = "[malformed]";
+					copy_label(dst, *size, malformed, strlen(malformed));
+					return src;
+				}
+
+				/* no loop detected, this is the last entry so record this offset and visit the label */
+				if ( visited[i] == 0 ){
+					visited[i] = offset;
+					break;
+				}
 			}
+
+			dns_name_int(dst, size, payload + offset, end, payload, visited);
 			return src;
 		}
 
@@ -210,7 +224,11 @@ static const char* dns_name(char* dst, size_t size, const char* src, const char*
 		size -= 3;
 	}
 
-	return dns_name_int(&dst, &size, src, end, payload);
+	/* LUT to remember which label references has been visited to prevent loops */
+	int labels[MAX_LABEL_REFERENCES];
+	memset(labels, 0, sizeof(labels));
+
+	return dns_name_int(&dst, &size, src, end, payload, labels);
 }
 
 static void print_query(FILE* fp, const struct dns_header* h, const char* ptr, const char* end, const char* payload, unsigned int flags){
