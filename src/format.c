@@ -39,7 +39,6 @@ void fputs_printable(const char* str, int max, FILE* fp){
 			fprintf(fp, "\\x%02x", str[i] & 0xff);
 		}
 	}
-	fputc(' ', fp);
 }
 
 static void print_timestamp(FILE* fp, struct format* state, const struct cap_header* cp){

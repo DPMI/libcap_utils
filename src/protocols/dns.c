@@ -330,6 +330,7 @@ static void print_response(FILE* fp, const struct dns_header* h, const char* ptr
 				dns_name(name, sizeof(name), ptr, end, packet);
 				if ( ptr ){
 					fputs_printable(name, -1, fp);
+					fputc(' ', fp);
 				} else {
 					fputs(" [Packet size limited during capture]", fp);
 				}
