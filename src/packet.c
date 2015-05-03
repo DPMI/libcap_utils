@@ -53,6 +53,15 @@ enum Level level_from_string(const char* str){
 	return LEVEL_INVALID;
 }
 
+/* sanity check: should not happen because the previous protocol should flag as truncated or otherwise deal with it */
+static void ptr_sanity(const cap_head* cp, const char* ptr){
+	const char* begin = cp->payload;
+	const char* end   = cp->payload + cp->caplen;
+	if ( ptr < begin || ptr > end ){
+		abort();
+	}
+}
+
 static size_t payload_tcp(enum Level level, const struct ip* ip, const struct tcphdr* tcp){
 	if ( level == LEVEL_TRANSPORT ){
 		return ntohs(ip->ip_len) - 4*tcp->doff - 4*ip->ip_hl;
@@ -276,6 +285,8 @@ void header_dump(FILE* fp, const struct header_chunk* header, const char* prefix
 		return;
 	}
 
+
+	ptr_sanity(header->cp, header->ptr);
 	header->protocol->dump(fp, header, header->ptr, prefix, 0);
 }
 
@@ -290,6 +301,7 @@ void header_format(FILE* fp, const struct header_chunk* header, int flags){
 		return;
 	}
 
+	ptr_sanity(header->cp, header->ptr);
 	header->protocol->format(fp, header, header->ptr, flags);
 }
 
