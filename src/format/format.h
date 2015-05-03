@@ -57,8 +57,9 @@ const char* name_lookup(const struct name_table* table, int value, const char* d
  * Like fputs but only prints printable characters. Nonprintable characters is
  * replaced with \x## where ## is hex ASCII.
  * @note It also skips newlines.
+ * @param max max characters to print or -1 to read until null-terminator
  */
-void fputs_printable(const char* str, FILE* fp);
+void fputs_printable(const char* str, int max, FILE* fp);
 
 /**
  * Test if there is enough data left for parsing.

@@ -30,8 +30,9 @@
 
 static int min(int a, int b){ return a<b?a:b; }
 
-void fputs_printable(const char* str, FILE* fp){
-	for ( unsigned int i = 0; i < strlen(str); i++ ){
+void fputs_printable(const char* str, int max, FILE* fp){
+	unsigned int n = max >= 0 ? (unsigned int)max : strlen(str);
+	for ( unsigned int i = 0; i < n; i++ ){
 		if ( isprint(str[i]) && str[i] != '\n' ){
 			fputc(str[i], fp);
 		} else {
@@ -110,7 +111,11 @@ void format_setup(struct format* state, unsigned int flags){
 }
 
 void format_pkg(FILE* fp, struct format* state, const struct cap_header* cp){
-	fprintf(fp, "[%4"PRIu64"]:%.8s:%.8s:", ++state->pktcount, cp->nic, cp->mampid);
+	fprintf(fp, "[%4"PRIu64"]:", ++state->pktcount);
+	fputs_printable(cp->nic, 8, fp);
+	fputc(':', fp);
+	fputs_printable(cp->mampid, 8, fp);
+	fputc(':', fp);
 	if ( state->first ){
 		state->ref = cp->ts;
 		state->first = 0;

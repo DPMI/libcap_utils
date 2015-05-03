@@ -237,7 +237,7 @@ static void print_query(FILE* fp, const struct dns_header* h, const char* ptr, c
 		}
 
 		fputc(' ', fp);
-		fputs_printable(qname, fp);
+		fputs_printable(qname, -1, fp);
 	}
 }
 
@@ -311,7 +311,7 @@ static void print_response(FILE* fp, const struct dns_header* h, const char* ptr
 			case TYPE_SPF:
 				dns_name(name, sizeof(name), ptr, end, packet);
 				if ( ptr ){
-					fputs_printable(name, fp);
+					fputs_printable(name, -1, fp);
 				} else {
 					fputs(" [Packet size limited during capture]", fp);
 				}
