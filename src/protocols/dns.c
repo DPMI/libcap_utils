@@ -139,6 +139,10 @@ static void dns_initialize(){
 	initialized = 1;
 }
 
+static const char* dns_class_name(int class){
+	return class < CLASS_MAX ? dns_class_lut[class] : "INVALID";
+}
+
 static size_t copy_label(char** dst, size_t size, const char* src, size_t len){
 	if ( size == 0 ) return 0;
 
@@ -203,7 +207,7 @@ static void print_query(FILE* fp, const struct dns_header* h, const char* ptr, c
 		uint16_t qtype  = ntohs(*(const uint16_t*)ptr); ptr += 2;
 		uint16_t qclass = ntohs(*(const uint16_t*)ptr); ptr += 2;
 
-		fprintf(fp, "%s ", qclass < CLASS_MAX ? dns_class_lut[qclass] : "INVALID");
+		fprintf(fp, "%s ", dns_class_name(qclass));
 		if ( qtype <= TYPE_ANY && dns_type_lut[qtype] ){
 			fputs(dns_type_lut[qtype], fp);
 		} else {
@@ -288,7 +292,7 @@ static void print_response(FILE* fp, const struct dns_header* h, const char* ptr
 				break;
 			}
 		} else {
-			fprintf(fp, "%s ", class < CLASS_MAX ? dns_class_lut[class] : "INVALID");
+			fprintf(fp, "%s ", dns_class_name(class));
 		}
 
 		ptr += rdlen;
@@ -302,7 +306,7 @@ static const char* dns_dump_question(FILE* fp, const char* prefix, unsigned int 
 	uint16_t qclass = ntohs(*(const uint16_t*)ptr); ptr += 2;
 
 	fprintf(fp, "%sqd[%d]:\n", prefix, i);
-	fprintf(fp, "  %sqclass:           %s (%d)\n", prefix, dns_class_lut[qclass], qclass);
+	fprintf(fp, "  %sqclass:           %s (%d)\n", prefix, dns_class_name(qclass), qclass);
 	fprintf(fp, "  %sqtype:            ", prefix);
 	if ( qtype <= TYPE_ANY && dns_type_lut[qtype] ){
 		fprintf(fp, "%s (%d)\n", dns_type_lut[qtype], qtype);
@@ -323,7 +327,7 @@ static const char* dns_dump_answer(FILE* fp, const char* prefix, const char* sec
 	uint16_t rdlen = ntohs(*(const uint16_t*)ptr); ptr += 2;
 
 	fprintf(fp, "%s%s[%d]:\n", prefix, section, i);
-	fprintf(fp, "  %sclass:            %s (%d)\n", prefix, dns_class_lut[class], class);
+	fprintf(fp, "  %sclass:            %s (%d)\n", prefix, dns_class_name(class), class);
 	fprintf(fp, "  %stype:             ", prefix);
 	if ( type <= TYPE_ANY && dns_type_lut[type] ){
 		fprintf(fp, "%s (%d)\n", dns_type_lut[type], type);
@@ -370,7 +374,7 @@ static const char* dns_dump_answer(FILE* fp, const char* prefix, const char* sec
 				break;
 			}
 		} else {
-			fprintf(fp, "%s\n", dns_class_lut[class]);
+			fprintf(fp, "%s\n", dns_class_name(class));
 		}
 
 	return ptr + rdlen;
