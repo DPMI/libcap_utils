@@ -24,9 +24,22 @@
 #include "format/format.h"
 #include "caputils/caputils.h"
 #include "caputils/marker.h"
+#include <string.h>
+#include <ctype.h>
 #include <time.h>
 
 static int min(int a, int b){ return a<b?a:b; }
+
+void fputs_printable(const char* str, FILE* fp){
+	for ( unsigned int i = 0; i < strlen(str); i++ ){
+		if ( isprint(str[i]) && str[i] != '\n' ){
+			fputc(str[i], fp);
+		} else {
+			fprintf(fp, "\\x%02x", str[i] & 0xff);
+		}
+	}
+	fputc(' ', fp);
+}
 
 static void print_timestamp(FILE* fp, struct format* state, const struct cap_header* cp){
 	const int format_date  = state->flags & FORMAT_DATE_BIT;

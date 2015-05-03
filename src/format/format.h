@@ -54,6 +54,13 @@ struct name_table {
 const char* name_lookup(const struct name_table* table, int value, const char* def);
 
 /**
+ * Like fputs but only prints printable characters. Nonprintable characters is
+ * replaced with \x## where ## is hex ASCII.
+ * @note It also skips newlines.
+ */
+void fputs_printable(const char* str, FILE* fp);
+
+/**
  * Test if there is enough data left for parsing.
  * @param cp capture header
  * @param ptr current read position
