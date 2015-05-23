@@ -1,7 +1,7 @@
 ACLOCAL_AMFLAGS = -I m4
 AM_CFLAGS = -Wall -Wcast-qual ${PCAP_CFLAGS} ${PFRING_CFLAGS}
 
-lib_LTLIBRARIES = libcap_utils-07.la libcap_filter-07.la libcap_stream-07.la libcap_marc-07.la
+lib_LTLIBRARIES = libcap_utils-07.la libcap_filter-07.la libcap_marc-07.la
 bin_PROGRAMS = 
 noinst_PROGRAMS = ifstat example/01-reading_packets
 man1_MANS =
@@ -99,19 +99,10 @@ nobase_include_HEADERS =    \
 	caputils/version.h
 
 pkgconfigdir = $(libdir)/pkgconfig
-pkgconfig_DATA = libcap_stream-0.7.pc libcap_filter-0.7.pc libcap_utils-0.7.pc libcap_marc-0.7.pc
-
-libcap_stream_07_la_LDFLAGS = -version-info 2:1:2 ${PFRING_LIBS}
-libcap_stream_07_la_SOURCES = src/stream.c src/stream.h src/stream_buffer.c src/stream_buffer.h src/stream_file.c src/stream_udp.c
-
-if BUILD_PFRING
-libcap_stream_07_la_SOURCES += src/stream_pfring.c
-else
-libcap_stream_07_la_SOURCES += src/stream_ethernet.c
-endif
+pkgconfig_DATA = libcap_filter-0.7.pc libcap_utils-0.7.pc libcap_marc-0.7.pc
 
 libcap_utils_07_la_CFLAGS = ${AM_CFLAGS} -I${top_srcdir}/fallback
-libcap_utils_07_la_LDFLAGS = -version-info 1:0:1 -Wl,--allow-shlib-undefined
+libcap_utils_07_la_LDFLAGS = -version-info 2:0:0 -Wl,--allow-shlib-undefined ${PFRING_LIBS}
 libcap_utils_07_la_SOURCES = \
 	src/address.c              \
 	src/caputils_int.h         \
@@ -144,8 +135,20 @@ libcap_utils_07_la_SOURCES = \
 	src/protocols/tcp.c        \
 	src/protocols/udp.c        \
 	src/protocols/vlan.c       \
+	src/stream.c               \
+	src/stream.h               \
+	src/stream_buffer.c        \
+	src/stream_buffer.h        \
+	src/stream_file.c          \
+	src/stream_udp.c           \
 	src/utils.c
 #	stream_tcp.c
+
+if BUILD_PFRING
+libcap_utils_07_la_SOURCES += src/stream_pfring.c
+else
+libcap_utils_07_la_SOURCES += src/stream_ethernet.c
+endif
 
 if BUILD_BE64TOH
 libcap_utils_07_la_SOURCES += fallback/be64toh.c fallback/be64toh.h
@@ -180,7 +183,7 @@ libcap_marc_07_la_CFLAGS = ${AM_CFLAGS} ${libcap_filter_CFLAGS}
 libcap_marc_07_la_SOURCES = src/marc.c src/marc_dstat.c
 
 tools_CFLAGS = ${AM_CFLAGS} -I${top_srcdir}/fallback
-tools_LIBS = libcap_utils-07.la libcap_filter-07.la libcap_stream-07.la ${PCAP_LIBS} ${PFRING_LIBS}
+tools_LIBS = libcap_utils-07.la libcap_filter-07.la ${PCAP_LIBS} ${PFRING_LIBS}
 
 pcap2cap_SOURCES = tools/pcap2cap.c
 pcap2cap_CFLAGS = ${tools_CFLAGS}
@@ -246,12 +249,12 @@ tests_hexdump_SOURCES = tests/hexdump.cpp tests/common.cpp src/log.c
 
 tests_packet_CXXFLAGS = ${AM_CFLAGS} $(CPPUNIT_CFLAGS) -DDATA_FILENAME=\"tests/http.packet\" -DDATA_SIZE=541
 tests_packet_LDFLAGS = $(CPPUNIT_LIBS)
-tests_packet_LDADD = libcap_utils-07.la libcap_filter-07.la libcap_stream-07.la
+tests_packet_LDADD = libcap_utils-07.la libcap_filter-07.la
 tests_packet_SOURCES = tests/packet.cpp tests/common.cpp
 
 tests_stream_CXXFLAGS = ${AM_CFLAGS} $(CPPUNIT_CFLAGS)
 tests_stream_LDFLAGS = $(CPPUNIT_LIBS)
-tests_stream_LDADD = libcap_utils-07.la libcap_stream-07.la libcap_filter-07.la
+tests_stream_LDADD = libcap_utils-07.la libcap_filter-07.la
 tests_stream_SOURCES = tests/stream.cpp
 
 tests_timepico_CXXFLAGS = ${AM_CFLAGS} $(CPPUNIT_CFLAGS)
@@ -259,7 +262,7 @@ tests_timepico_LDFLAGS = $(CPPUNIT_LIBS)
 tests_timepico_LDADD = libcap_utils-07.la libcap_filter-07.la
 tests_timepico_SOURCES = tests/timepico.cpp
 
-tests_capdump_argv_LDADD = libcap_utils-07.la libcap_stream-07.la libcap_filter-07.la
+tests_capdump_argv_LDADD = libcap_utils-07.la libcap_filter-07.la
 
 example_01_reading_packets_CFLAGS = ${tools_CFLAGS}
 example_01_reading_packets_LDADD = ${tools_LIBS}

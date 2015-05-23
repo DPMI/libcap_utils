@@ -18,7 +18,6 @@ AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_FILES([
   libcap_filter-0.7.pc
-  libcap_stream-0.7.pc
   libcap_marc-0.7.pc
   libcap_utils-0.7.pc
   caputils/version.h
