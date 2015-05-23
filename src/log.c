@@ -86,11 +86,17 @@ void hexdump(FILE* dst, const char* data, size_t size){
 	free(tmp);
 }
 
+size_t aligned(size_t value, size_t n){
+	return n * (value / n + ((value % n) > 0 ? 1 : 0));
+}
+
 char* hexdump_str(const char* data, size_t size){
 	char* buffer = malloc(size*10+80); /* more than really needed */
 	char* dst = buffer;
 
-	const size_t align = size + (size % 16);
+	/* align the byte count to 16 */
+	const size_t align = aligned(size, 16);
+
 	dst += sprintf(dst, "[0000]  ");
 	for( unsigned int i=0; i < align; i++){
 		if ( i < size ){
