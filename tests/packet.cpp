@@ -1,17 +1,7 @@
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
+#include "test.hpp"
 
 #include <caputils/packet.h>
 #include "src/format/format.h"
-
-#include <cppunit/CompilerOutputter.h>
-#include <cppunit/extensions/TestFactoryRegistry.h>
-#include <cppunit/ui/text/TestRunner.h>
-#include <cppunit/extensions/HelperMacros.h>
-
-static char data[1024];
-static const cap_head* caphead = (const cap_head*)data;
 
 class Test: public CppUnit::TestFixture {
 	CPPUNIT_TEST_SUITE(Test);
@@ -97,29 +87,3 @@ public:
 };
 
 CPPUNIT_TEST_SUITE_REGISTRATION(Test);
-
-int main(int argc, const char* argv[]){
-	CppUnit::Test *suite = CppUnit::TestFactoryRegistry::getRegistry().makeTest();
-	CppUnit::TextUi::TestRunner runner;
-
-	const char* path = TOP_SRCDIR"/tests/http.packet";
-	FILE* fp = fopen(path, "r");
-	if ( !fp ){
-		fprintf(stderr, "failed to read `%s'\n", path);
-		return 1;
-	}
-
-	/* read the test packet */
-	int bytes;
-	const int expected = 541;
-	if ( (bytes=fread(data, 1, sizeof(data), fp)) < expected ){
-		fprintf(stderr, "failed to read `%s' (data truncated, read %d bytes, expected %d)\n", path, bytes, expected);
-		return 1;
-	}
-	fclose(fp);
-
-	runner.addTest(suite);
-	runner.setOutputter(new CppUnit::CompilerOutputter(&runner.result(), std::cerr));
-
-	return runner.run() ? 0 : 1;
-}
