@@ -55,7 +55,7 @@ enum Level level_from_string(const char* str){
 }
 
 /* sanity check: should not happen because the previous protocol should flag as truncated or otherwise deal with it */
-static void ptr_sanity(const cap_head* cp, const char* ptr){
+static void ptr_sanity(const cap_head* cp, const char* ptr, const struct caputils_protocol* proto){
 	const char* begin = cp->payload;
 	const char* end   = cp->payload + cp->caplen;
 	if ( !ptr || ptr < begin || ptr > end ){
@@ -65,9 +65,11 @@ static void ptr_sanity(const cap_head* cp, const char* ptr){
 		        "  ptr: %p\n"
 		        "  packet: %p - %p (%zd bytes)\n"
 		        "  offset: %zd bytes (from beginning of packet)\n"
+		        "  protocol: %s\n"
 		        "this is an error in the protocol decoder (but the packet is probably corrupted)\n"
 		        "\n",
-		        ptr, begin, end, end - begin, ptr - begin);
+		        ptr, begin, end, end - begin, ptr - begin,
+		        proto ? proto->name : "N/A");
 		abort();
 	}
 }
@@ -229,7 +231,8 @@ static int next_payload(struct header_chunk* header){
 	}
 
 	const char* next = header->ptr;
-	enum caputils_protocol_type type = header->protocol->next_payload(header, header->ptr, &next);
+	const struct caputils_protocol* current = header->protocol;
+	enum caputils_protocol_type type = current->next_payload(header, header->ptr, &next);
 
 	header->ptr = next;
 	header->protocol = protocol_get(type);
@@ -245,7 +248,7 @@ static int next_payload(struct header_chunk* header){
 	}
 
 	/* make sure pointer is actually inside the captured packet (and not pointing at random data because of a corrupted packet) */
-	ptr_sanity(header->cp, header->ptr);
+	ptr_sanity(header->cp, header->ptr, current);
 
 	/* ensure there is enough data left */
 	if ( limited_caplen(header->cp, header->ptr, header_size(header)) ){
@@ -292,7 +295,7 @@ void header_dump(FILE* fp, const struct header_chunk* header, const char* prefix
 	}
 
 
-	ptr_sanity(header->cp, header->ptr);
+	ptr_sanity(header->cp, header->ptr, NULL);
 	header->protocol->dump(fp, header, header->ptr, prefix, 0);
 }
 
@@ -307,7 +310,7 @@ void header_format(FILE* fp, const struct header_chunk* header, int flags){
 		return;
 	}
 
-	ptr_sanity(header->cp, header->ptr);
+	ptr_sanity(header->cp, header->ptr, NULL);
 	header->protocol->format(fp, header, header->ptr, flags);
 }
 
