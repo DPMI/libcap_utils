@@ -110,14 +110,11 @@ char* hexdump_str(const char* data, size_t size){
 		if ( i % 16 == 15 ){
 			dst += sprintf(dst, "    |");
 			for ( unsigned int j = i-15; j<=i; j++ ){
-				char ch = data[j];
-
 				if ( j >= size ){
-					ch = ' ';
-				} else if ( !isprint(data[j]) ){
-					ch = '.';
+					break;
 				}
 
+				const char ch = isprint(data[j]) ? data[j] : '.';
 				dst += sprintf(dst, "%c", ch);
 			}
 			dst += sprintf(dst, "|");
