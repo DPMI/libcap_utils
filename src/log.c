@@ -127,6 +127,7 @@ char* hexdump_str(const char* data, size_t size){
 		}
 	}
 	dst += sprintf(dst, "\n");
+	dst += sprintf(dst, "[%04X]\n", (unsigned int)size);
 
 	return buffer;
 }
