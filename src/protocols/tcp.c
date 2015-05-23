@@ -146,6 +146,14 @@ static enum caputils_protocol_type tcp_next(struct header_chunk* header, const c
 	const size_t header_size = 4*tcp->doff;
 	const size_t payload_size = header->last_net.plen - header_size;
 	*out = ptr + header_size;
+
+	/* limited caplen */
+	if ( *out > header->cp->payload + header->cp->caplen ){
+		*out = NULL;
+		return PROTOCOL_DONE;
+	}
+
+	/* no payload, only flags */
 	if ( payload_size == 0 ){
 		return PROTOCOL_DONE;
 	}
@@ -161,7 +169,6 @@ static enum caputils_protocol_type tcp_next(struct header_chunk* header, const c
 
 	return PROTOCOL_DATA;
 }
-
 
 static void tcp_format(FILE* fp, const struct header_chunk* header, const char* ptr, unsigned int flags){
 	fputs(": TCP", fp);
