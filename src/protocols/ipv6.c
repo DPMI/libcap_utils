@@ -88,12 +88,16 @@ static enum caputils_protocol_type ipv6_next(struct header_chunk* header, const 
 	const char* payload;
 	const struct ip6_hdr* ip = (const struct ip6_hdr*)ptr;
 	const size_t header_size = ipv6_total_header_size(header->cp, ip, &payload, &proto);
-	*out = payload;
+
+	if ( !payload ){
+		return PROTOCOL_DONE;
+	}
 
 	inet_ntop(AF_INET6, &ip->ip6_src, header->last_net.net_src, sizeof(header->last_net.net_src));
 	inet_ntop(AF_INET6, &ip->ip6_dst, header->last_net.net_dst, sizeof(header->last_net.net_dst));
 	header->last_net.plen = ip->ip6_plen + sizeof(struct ip6_hdr) - header_size;
 
+	*out = payload;
 	return ipproto_next(proto);
 }
 
