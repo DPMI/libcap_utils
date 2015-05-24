@@ -179,8 +179,8 @@ struct filter_packed {
 	struct ether_addr eth_src;         /*  64: Ethernet Source */
 	struct ether_addr eth_dst;         /*  32: Ethernet Destination */
 	uint8_t ip_proto;                  /*  16: IP Payload Protocol */
-	unsigned char _ip_src[16];          /*   8: IP source */
-	unsigned char _ip_dst[16];          /*   4: IP destination */
+	unsigned char _ip_src[16];         /*   8: IP source */
+	unsigned char _ip_dst[16];         /*   4: IP destination */
 	uint16_t src_port;                 /*   2: Transport Source Port */
 	uint16_t dst_port;                 /*   1: Transport Destination Port */
 
@@ -215,8 +215,26 @@ int filter_from_argv(int* argc, char** argv, struct filter*);
 void filter_from_argv_usage(void);
 extern int filter_from_argv_opterr;
 
+/* functions for pragmatically creating filter */
+void filter_ci_set(struct filter* filter, const char* str);
+void filter_vlan_set(struct filter* filter, const char* str);
+void filter_eth_type_set(struct filter* filter, const char* str);
+void filter_eth_src_set(struct filter* filter, const char* str);
+void filter_eth_dst_set(struct filter* filter, const char* str);
+void filter_ip_proto_set(struct filter* filter, int proto);
+void filter_ip_proto_aton(struct filter* filter, const char* str);
+void filter_src_ip_set(struct filter* filter, struct in_addr ip, struct in_addr mask);
+void filter_dst_ip_set(struct filter* filter, struct in_addr ip, struct in_addr mask);
+void filter_src_ip_aton(struct filter* filter, const char* str);
+void filter_dst_ip_aton(struct filter* filter, const char* str);
 void filter_src_port_set(struct filter* filter, uint16_t port, uint16_t mask);
 void filter_dst_port_set(struct filter* filter, uint16_t port, uint16_t mask);
+void filter_tp_port_set(struct filter* filter, uint16_t port, uint16_t mask);
+void filter_mampid_set(struct filter* filter, const char* mampid);
+void filter_starttime_set(struct filter* filter, const timepico t);
+void filter_endtime_set(struct filter* filter, const timepico t);
+void filter_frame_dt_set(struct filter* filter, const timepico t);
+void filter_frame_num_set(struct filter* filter, const char* str);
 
 /**
  * Display a representation of the filter.

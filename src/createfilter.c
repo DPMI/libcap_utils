@@ -155,8 +155,9 @@ static void split_argv(int* src_argc, char** src_argv, int* dst_argc, char** dst
  * Parse a string as IP address and mask. Mask does not have to correspond to valid netmask.
  * CIDR-notation works.
  */
-static int parse_inet_addr(const char* src, struct in_addr* addr, struct in_addr* mask, const char* flag){
+static int parse_inet_addr(const char* str, struct in_addr* addr, struct in_addr* mask, const char* flag){
 	static const char* mask_default = "255.255.255.255";
+	char* src = strdup(str);
 	const char* buf_addr = src;
 	const char* buf_mask = mask_default;
 
@@ -169,6 +170,7 @@ static int parse_inet_addr(const char* src, struct in_addr* addr, struct in_addr
 
 	if ( inet_aton(buf_addr, addr) == 0 ){
 		fprintf(stderr, "Invalid IP address passed to --%s: %s. Ignoring\n", flag, buf_addr);
+		free(src);
 		return 0;
 	}
 
@@ -183,6 +185,7 @@ static int parse_inet_addr(const char* src, struct in_addr* addr, struct in_addr
 	} else { /* regular address */
 		if ( inet_aton(buf_mask, mask) == 0 ){
 			fprintf(stderr, "Invalid mask passed to --%s: %s. Ignoring\n", flag, buf_mask);
+			free(src);
 			return 0;
 		}
 	}
@@ -190,6 +193,7 @@ static int parse_inet_addr(const char* src, struct in_addr* addr, struct in_addr
 	/* always mask the address based on mask */
 	addr->s_addr &= mask->s_addr;
 
+	free(src);
 	return 1;
 }
 
@@ -225,7 +229,18 @@ static int parse_port(const char* src, uint16_t* port, uint16_t* mask, const cha
 	return 1;
 }
 
-static int parse_eth_type(const char* src, uint16_t* type, uint16_t* mask, const char* flag){
+static int parse_vlan(const char* src, uint16_t* vlan_tci, uint16_t* vlan_tci_mask, const char* flag){
+	*vlan_tci_mask = 0xFFFF;
+	int x = 0;
+	if ( (x=sscanf(src, "%hi/%hi", vlan_tci, vlan_tci_mask)) == 0 ){
+		fprintf(stderr, "Invalid VLAN TCI given to --%s: %s. Ignoring.\n", flag, src);
+		return 0;
+	}
+	return 1;
+}
+
+static int parse_eth_type(const char* src_orig, uint16_t* type, uint16_t* mask, const char* flag){
+	char* src = strdup(src_orig);
 	*mask = 0xFFFF;
 
 	/* test if mask was passed */
@@ -249,16 +264,19 @@ static int parse_eth_type(const char* src, uint16_t* type, uint16_t* mask, const
 		/* try to match a number */
 		if ( sscanf(src, "%hd", type) == 0 ){
 			fprintf(stderr, "Invalid ethernet protocol given to --%s: %s. Ignoring.\n", flag, src);
+			free(src);
 			return 0;
 		}
 	}
 
 	*type &= *mask;
+	free(src);
 	return 1;
 }
 
-static int parse_eth_addr(const char* src, struct ether_addr* addr, struct ether_addr* mask, const char* flag){
+static int parse_eth_addr(const char* str, struct ether_addr* addr, struct ether_addr* mask, const char* flag){
 	static const char* mask_default = "FF:FF:FF:FF:FF:FF";
+	char* src = strdup(str);
 	const char* buf_addr = src;
 	const char* buf_mask = mask_default;
 
@@ -271,10 +289,12 @@ static int parse_eth_addr(const char* src, struct ether_addr* addr, struct ether
 
 	if ( !eth_aton(addr, buf_addr) ){
 		fprintf(stderr, "Invalid ethernet address passed to --%s: %s. Ignoring\n", flag, buf_addr);
+		free(src);
 		return 0;
 	}
 	if ( !eth_aton(mask, buf_mask) ){
 		fprintf(stderr, "Invalid ethernet mask passed to --%s: %s. Ignoring\n", flag, buf_mask);
+		free(src);
 		return 0;
 	}
 
@@ -283,6 +303,20 @@ static int parse_eth_addr(const char* src, struct ether_addr* addr, struct ether
 		addr->ether_addr_octet[i] &= mask->ether_addr_octet[i];
 	}
 
+	free(src);
+	return 1;
+}
+
+static int parse_ip_proto(const char* src, uint8_t* ip_proto, const char* flag){
+	struct protoent* proto = getprotobyname(src);
+	if ( proto ){
+		*ip_proto = proto->p_proto;
+	} else if ( isdigit(src[0]) ) {
+		*ip_proto = atoi(src);
+	} else {
+		fprintf(stderr, "Invalid IP protocol passed to --%s: %s. Ignoring\n", flag, src);
+		return 0;
+	}
 	return 1;
 }
 
@@ -513,9 +547,7 @@ int filter_from_argv(int* argcptr, char** argv, struct filter* filter){
 			break;
 
 		case FILTER_VLAN:
-			filter->vlan_tci_mask = 0xFFFF;
-			if ( sscanf(optarg, "%hd/%hd", &filter->vlan_tci, &filter->vlan_tci_mask) == 0 ){
-				fprintf(stderr, "Invalid VLAN TCI: %s. Ignoring\n", optarg);
+			if ( !parse_vlan(optarg, &filter->vlan_tci, &filter->vlan_tci_mask, "eth.vlan") ){
 				continue;
 			}
 			break;
@@ -539,18 +571,10 @@ int filter_from_argv(int* argcptr, char** argv, struct filter* filter){
 			break;
 
 		case FILTER_IP_PROTO:
-		{
-			struct protoent* proto = getprotobyname(optarg);
-			if ( proto ){
-				filter->ip_proto = proto->p_proto;
-			} else if ( isdigit(optarg[0]) ) {
-				filter->ip_proto = atoi(optarg);
-			} else {
-				fprintf(stderr, "Invalid IP protocol: %s. Ignoring\n", optarg);
+			if ( !parse_ip_proto(optarg, &filter->ip_proto, "ip.proto") ){
 				continue;
 			}
-		}
-		break;
+			break;
 
 		case FILTER_IP_SRC:
 			if ( !parse_inet_addr(optarg, &filter->ip_src, &filter->ip_src_mask, "ip.src") ){
@@ -624,6 +648,41 @@ int filter_close(struct filter* filter){
 	return 0;
 }
 
+void filter_ci_set(struct filter* filter, const char* str){
+	filter->index |= FILTER_CI;
+	strncpy(filter->iface, str, 8);
+}
+
+void filter_vlan_set(struct filter* filter, const char* str){
+	filter->index |= FILTER_VLAN;
+	parse_vlan(str, &filter->vlan_tci, &filter->vlan_tci_mask, "eth.vlan");
+}
+
+void filter_eth_type_set(struct filter* filter, const char* str){
+	filter->index |= FILTER_ETH_TYPE;
+	parse_eth_type(str, &filter->eth_type, &filter->eth_type_mask, "eth.type");
+}
+
+void filter_eth_src_set(struct filter* filter, const char* str){
+	filter->index |= FILTER_ETH_SRC;
+	parse_eth_addr(str, &filter->eth_src, &filter->eth_src_mask, "eth.src");
+}
+
+void filter_eth_dst_set(struct filter* filter, const char* str){
+	filter->index |= FILTER_ETH_DST;
+	parse_eth_addr(str, &filter->eth_dst, &filter->eth_dst_mask, "eth.dst");
+}
+
+void filter_ip_proto_set(struct filter* filter, int proto){
+	filter->index |= FILTER_IP_PROTO;
+	filter->ip_proto = proto;
+}
+
+void filter_ip_proto_aton(struct filter* filter, const char* str){
+	filter->index |= FILTER_IP_PROTO;
+	parse_ip_proto(str, &filter->ip_proto, "--ip.proto");
+}
+
 void filter_src_port_set(struct filter* filter, uint16_t port, uint16_t mask){
 	filter->index |= FILTER_SRC_PORT;
 	filter->src_port = port & mask;
@@ -634,4 +693,57 @@ void filter_dst_port_set(struct filter* filter, uint16_t port, uint16_t mask){
 	filter->index |= FILTER_DST_PORT;
 	filter->dst_port = port & mask;
 	filter->dst_port_mask = mask;
+}
+
+void filter_tp_port_set(struct filter* filter, uint16_t port, uint16_t mask){
+	filter->index |= FILTER_PORT;
+	filter->port = port & mask;
+	filter->port_mask = mask;
+}
+
+void filter_src_ip_set(struct filter* filter, struct in_addr ip, struct in_addr mask){
+	filter->index |= FILTER_IP_SRC;
+	filter->ip_src.s_addr = ip.s_addr & mask.s_addr;
+	filter->ip_src_mask = mask;
+}
+
+void filter_dst_ip_set(struct filter* filter, struct in_addr ip, struct in_addr mask){
+	filter->index |= FILTER_IP_DST;
+	filter->ip_dst.s_addr = ip.s_addr & mask.s_addr;
+	filter->ip_dst_mask = mask;
+}
+
+void filter_src_ip_aton(struct filter* filter, const char* str){
+	filter->index |= FILTER_IP_SRC;
+	parse_inet_addr(str, &filter->ip_src, &filter->ip_src_mask, "ip.src");
+}
+
+void filter_dst_ip_aton(struct filter* filter, const char* str){
+	filter->index |= FILTER_IP_DST;
+	parse_inet_addr(str, &filter->ip_dst, &filter->ip_dst_mask, "ip.dst");
+}
+
+void filter_mampid_set(struct filter* filter, const char* mampid){
+	filter->index |= FILTER_MAMPID;
+	strncpy(filter->mampid, mampid, 8);
+}
+
+void filter_starttime_set(struct filter* filter, const timepico t){
+	filter->index |= FILTER_START_TIME;
+	filter->starttime = t;
+}
+
+void filter_endtime_set(struct filter* filter, const timepico t){
+	filter->index |= FILTER_END_TIME;
+	filter->endtime = t;
+}
+
+void filter_frame_dt_set(struct filter* filter, const timepico t){
+	filter->index |= FILTER_FRAME_MAX_DT;
+	filter->frame_max_dt = t;
+}
+
+void filter_frame_num_set(struct filter* filter, const char* str){
+	filter->index |= FILTER_FRAME_NUM;
+	parse_frame_range(str, filter);
 }

@@ -51,6 +51,10 @@ timepico timeval_to_timepico(struct timeval in)
 	return out;
 }
 
+timepico timepico_new(long int sec, long int psec){
+	return (timepico){sec, psec};
+}
+
 /***************************************************************************
  This function compares two struct timepico (ts1<ts2=-1, ts1>ts2=1, ts1==ts2=0)
 ***************************************************************************/
