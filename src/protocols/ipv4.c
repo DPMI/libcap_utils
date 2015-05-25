@@ -29,12 +29,6 @@ static enum caputils_protocol_type ipv4_next(struct header_chunk* header, const 
 	const struct ip* ip = (const struct ip*)ptr;
 	const void* payload = ptr + 4*ip->ip_hl;
 
-	/* validate caplen */
-	if ( limited_caplen(header->cp, payload, 0) ){
-		*out = NULL;
-		return PROTOCOL_DONE;
-	}
-
 	inet_ntop(AF_INET, &ip->ip_src, header->last_net.net_src, sizeof(header->last_net.net_src));
 	inet_ntop(AF_INET, &ip->ip_dst, header->last_net.net_dst, sizeof(header->last_net.net_dst));
 	header->last_net.plen = ntohs(ip->ip_len) - 4*ip->ip_hl;

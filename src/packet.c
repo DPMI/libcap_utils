@@ -241,8 +241,9 @@ static int next_payload(struct header_chunk* header){
 		abort();
 	}
 
-	if ( header->ptr == NULL && type == PROTOCOL_DONE ){
-		/* could not get next header, probably limited caplen */
+	/* validate payload pointer */
+	if ( (header->ptr == NULL && type == PROTOCOL_DONE) || limited_caplen(header->cp, header->ptr, 0) ){
+		header->ptr = NULL;
 		header->truncated = 1;
 		return 0;
 	}
