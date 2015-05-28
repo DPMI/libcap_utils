@@ -113,18 +113,17 @@ endif
 libcap_utils_07_la_CFLAGS = ${AM_CFLAGS} -I${top_srcdir}/fallback
 libcap_utils_07_la_LDFLAGS = -version-info 1:0:1 -Wl,--allow-shlib-undefined
 libcap_utils_07_la_SOURCES = \
-	src/caputils_int.h         \
 	src/address.c              \
+	src/caputils_int.h         \
 	src/error.c                \
+	src/format.c               \
 	src/format/format.h        \
 	src/format/http.c          \
 	src/format/mp.c            \
 	src/format/stp.c           \
-	src/format.c               \
 	src/interface.c            \
 	src/log.c                  \
 	src/marker.c               \
-	src/utils.c                \
 	src/packet.c               \
 	src/picotime.c             \
 	src/protocol.c             \
@@ -134,17 +133,18 @@ libcap_utils_07_la_SOURCES = \
 	src/protocols/dns.c        \
 	src/protocols/ethernet.c   \
 	src/protocols/gre.c        \
-	src/protocols/gtp.c	   \
+	src/protocols/gtp.c	       \
 	src/protocols/icmp.c       \
 	src/protocols/ip.c         \
 	src/protocols/ipv4.c       \
 	src/protocols/ipv6.c       \
 	src/protocols/mpls.c       \
+	src/protocols/ptpv2.c	     \
+	src/protocols/sctp.c	     \
 	src/protocols/tcp.c        \
-	src/protocols/sctp.c	   \
-	src/protocols/ptpv2.c	   \
 	src/protocols/udp.c        \
-	src/protocols/vlan.c
+	src/protocols/vlan.c       \
+	src/utils.c
 #	stream_tcp.c
 
 if BUILD_BE64TOH
