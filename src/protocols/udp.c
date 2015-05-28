@@ -36,27 +36,23 @@ static enum caputils_protocol_type udp_next(struct header_chunk* header, const c
 	const uint16_t sport = ntohs(udp->source);
 	const uint16_t dport = ntohs(udp->dest);
 
-	switch(dport) {
-
-	  if(dport == sport){
-	  case PORT_GTPu:
-	  case PORT_GTPc:
-	    return PROTOCOL_GTP;
-	  }
-
-	case PORT_PTPv2:
-	  return PROTOCOL_PTPv2;
-
-	  /*
-	   * To be done..
-	   * case PORT_DNS:
-	   return PROTOCOL_DNS;
-	  */
-
-	  default:
-	    return PROTOCOL_DATA;
+	if ( sport == PORT_DNS || dport == PORT_DNS ){
+		return PROTOCOL_DNS;
 	}
 
+	switch(dport) {
+		if(dport == sport){
+		case PORT_GTPu:
+		case PORT_GTPc:
+			return PROTOCOL_GTP;
+		}
+
+	case PORT_PTPv2:
+		return PROTOCOL_PTPv2;
+
+	default:
+		return PROTOCOL_DATA;
+	}
 
 	return PROTOCOL_DATA;
 }

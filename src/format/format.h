@@ -33,9 +33,10 @@
 #include <netinet/udp.h>
 #include <netinet/ip_icmp.h>
 
-
-#define PORT_DNS 53
-#define PORT_HTTP 80
+enum {
+	PORT_DNS = 53,
+	PORT_HTTP = 80,
+};
 
 #ifdef __cplusplus
 extern "C" {
@@ -71,7 +72,6 @@ void print_mpls(FILE* fp, const struct cap_header* cp, const char* data);
 void print_icmp(FILE* fp, const struct cap_header* cp, net_t net, const struct icmphdr* icmp, unsigned int flags);
 
 /* application layer */
-void print_dns(FILE* fp, const struct cap_header* cp, const char* payload, size_t size, unsigned int flags);
 void print_http(FILE* fp, const struct cap_header* cp, const char* payload, size_t size, unsigned int flags);
 
 #ifdef __cplusplus

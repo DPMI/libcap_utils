@@ -149,6 +149,16 @@ static enum caputils_protocol_type tcp_next(struct header_chunk* header, const c
 	if ( payload_size == 0 ){
 		return PROTOCOL_DONE;
 	}
+
+	const uint16_t sport = ntohs(tcp->source);
+	const uint16_t dport = ntohs(tcp->dest);
+
+	if ( (sport == PORT_DNS || dport == PORT_DNS) ) {
+		/* offset the length field */
+		*out += 2;
+		return PROTOCOL_DNS;
+	}
+
 	return PROTOCOL_DATA;
 }
 
@@ -180,11 +190,6 @@ static void tcp_format(FILE* fp, const struct header_chunk* header, const char* 
 
 	const char* payload = (const char*)tcp + 4*tcp->doff;
 	if ( payload_size == 0 ) return;
-
-	if ( (sport == PORT_DNS || dport == PORT_DNS) ) {
-		/* offset the length field */
-		print_dns(fp, header->cp, payload + 2, payload_size - 2, flags);
-	}
 
 	if ( (sport == PORT_HTTP || dport == PORT_HTTP) ) {
 		print_http(fp, header->cp, payload, payload_size, flags);

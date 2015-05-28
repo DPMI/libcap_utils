@@ -116,7 +116,6 @@ libcap_utils_07_la_SOURCES = \
 	src/caputils_int.h         \
 	src/address.c              \
 	src/error.c                \
-	src/format/dns.c           \
 	src/format/format.h        \
 	src/format/http.c          \
 	src/format/mp.c            \
@@ -132,6 +131,7 @@ libcap_utils_07_la_SOURCES = \
 	src/protocols/arp.c        \
 	src/protocols/cdp.c        \
 	src/protocols/data.c       \
+	src/protocols/dns.c        \
 	src/protocols/ethernet.c   \
 	src/protocols/gre.c        \
 	src/protocols/gtp.c	   \
