@@ -143,7 +143,8 @@ libcap_utils_07_la_SOURCES = \
 	src/protocols/tcp.c        \
 	src/protocols/sctp.c	   \
 	src/protocols/ptpv2.c	   \
-	src/protocols/udp.c
+	src/protocols/udp.c        \
+	src/protocols/vlan.c
 #	stream_tcp.c
 
 if BUILD_BE64TOH

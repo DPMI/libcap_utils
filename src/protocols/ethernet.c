@@ -94,43 +94,10 @@ static void ethernet_dump(FILE* fp, const struct header_chunk* header, const cha
 	fprintf(fp, "%sh_proto:            0x%04x\n", prefix, ntohs(eth->h_proto));
 }
 
-static enum caputils_protocol_type vlan_next(struct header_chunk* header, const char* ptr, const char** out){
-	const unsigned int h_proto  = ntohs(((const uint16_t*)ptr)[1]);
-
-	*out = ptr + sizeof(uint32_t);
-	return ethertype_next(h_proto);
-}
-
-static void vlan_format(FILE* fp, const struct header_chunk* header, const char* ptr, unsigned int flags){
-	const unsigned int tci = ntohs(((const uint16_t*)ptr)[0]);
-
-	fprintf(fp, ": 802.1Q vlan# %d", 0x0FFF & tci);
-}
-
-static void vlan_dump(FILE* fp, const struct header_chunk* header, const char* ptr, const char* prefix, int flags){
-	const unsigned int tci = ntohs(((const uint16_t*)ptr)[0]);
-	const unsigned int pcp = (0xE000 & tci) >> 13;
-	const unsigned int dei = (0x1000 & tci) >> 12;
-	const unsigned int vid = (0x0FFF & tci);
-
-	fprintf(fp, "%sTCI:                0x%02x\n", prefix, tci);
-	fprintf(fp, "%sPCP:                %d\n", prefix, pcp);
-	fprintf(fp, "%sDEI/CFI:            %d\n", prefix, dei);
-	fprintf(fp, "%sVID:                %d\n", prefix, vid);
-}
-
 struct caputils_protocol protocol_ethernet = {
 	.name = "ethernet",
 	.size = sizeof(struct ethhdr),
 	.next_payload = ethernet_next,
 	.format = ethernet_format,
 	.dump = ethernet_dump,
-};
-
-struct caputils_protocol protocol_vlan = {
-	.name = "vlan",
-	.size = sizeof(uint32_t),
-	.next_payload = vlan_next,
-	.format = vlan_format,
-	.dump = vlan_dump,
 };
