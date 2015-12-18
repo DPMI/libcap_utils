@@ -226,6 +226,13 @@ int stream_file_open(struct stream** stptr, FILE* fp, const char* filename, size
 				break;
 			}
 
+			/* test for invalid offset size (possibly malformed files) */
+			const size_t min_size = sizeof(struct file_extension);
+			const size_t max_size = fhptr->header_offset;
+			if ( ext.next_offset < min_size || ext.next_offset > max_size ){
+				return ERROR_CAPFILE_INVALID;
+			}
+
 			/* move to next */
 			fseek(st->file, ext.next_offset - sizeof(struct file_extension), SEEK_CUR);
 		} while (1);

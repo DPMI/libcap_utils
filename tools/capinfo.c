@@ -311,7 +311,7 @@ static void print_distribution(){
  */
 static const char* get_location(struct cap_header* cp){
   static char buffer[17];
-  sprintf(buffer,"%.8s:%.8s", cp->mampid, cp->nic);
+  snprintf(buffer, sizeof(buffer), "%.8s:%.8s", cp->mampid, cp->nic);
   return buffer;
 }
 

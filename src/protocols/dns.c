@@ -22,6 +22,10 @@
 #endif
 
 #include "src/format/format.h"
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+#include <arpa/inet.h>
 
 static int min(int a, int b){ return a<b?a:b; }
 
@@ -191,14 +195,15 @@ static const char* dns_name(char* dst, size_t size, const char* src, const char*
 
 static void print_query(FILE* fp, const struct dns_header* h, const char* ptr, const char* payload, unsigned int flags){
 	fprintf(fp, " Standard query 0x%04x ", ntohs(h->id));
-	for ( unsigned int i = 0; i < ntohs(h->qdcount); i++ ){
+	const unsigned int n = ntohs(h->qdcount);
+	for ( unsigned int i = 0; i < n; i++ ){
 		if ( i > 1 ) fputs(", ", fp);
 		char qname[128];
 		ptr = dns_name(qname, sizeof(qname), ptr, payload);
 		uint16_t qtype  = ntohs(*(const uint16_t*)ptr); ptr += 2;
 		uint16_t qclass = ntohs(*(const uint16_t*)ptr); ptr += 2;
 
-		fprintf(fp, "%s ", dns_class_lut[qclass]);
+		fprintf(fp, "%s ", qclass < CLASS_MAX ? dns_class_lut[qclass] : "INVALID");
 		if ( qtype <= TYPE_ANY && dns_type_lut[qtype] ){
 			fputs(dns_type_lut[qtype], fp);
 		} else {
@@ -269,14 +274,21 @@ static void print_response(FILE* fp, const struct dns_header* h, const char* ptr
 			case TYPE_TXT:
 			case TYPE_SPF:
 				dns_name(name, sizeof(name), ptr, packet);
-				fprintf(fp, " %s ", name);
+				for ( unsigned int i = 0; i < strlen(name); i++ ){
+					if ( isprint(name[i]) && name[i] != '\n' ){
+						fputc(name[i], fp);
+					} else {
+						fprintf(fp, "\\x%02x", name[i] & 0xff);
+					}
+				}
+				fputc(' ', fp);
 				break;
 
 			default:
 				break;
 			}
 		} else {
-			fprintf(fp, "%s ", dns_class_lut[class]);
+			fprintf(fp, "%s ", class < CLASS_MAX ? dns_class_lut[class] : "INVALID");
 		}
 
 		ptr += rdlen;
