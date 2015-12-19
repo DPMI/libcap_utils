@@ -54,7 +54,7 @@
 		vm.content = undefined;
 		vm.error = undefined;
 
-		$http.get(getUrl($routeParams.page)).then(function(response){
+		$http.get(getUrl($routeParams.page), {cache: true}).then(function(response){
 			vm.content = response.data;
 		}, function(e){
 			vm.error = e.status + ': ' + e.statusText;
