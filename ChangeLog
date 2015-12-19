@@ -1,6 +1,7 @@
 caputils-0.7.16
 ---------------
 
+	* add: stream_read_cb: higher-level stream_read for easier consumers.
 	* fix: misc issues found during fuzzing.
 	* add: additional tests
 	* add: support for decoding additional protocols.

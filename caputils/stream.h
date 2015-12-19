@@ -164,6 +164,23 @@ int stream_copy(stream_t st, const struct cap_header* head);
 int stream_read(stream_t st, cap_head** header, struct filter* filter, struct timeval* timeout);
 
 /**
+ * Read packets until stream ends or interrupted. Apply callback on captured
+ * packet.
+ *
+ * Should be called in a simple loop until it returns non-zero. This function
+ * primary deals with the error conditions from stream_read and ensures the
+ * callers application can terminate properly given signals such as SIGINT.
+ *
+ * @param st Stream to read from.
+ * @param filter If non-null, match frame against filter.
+ * @param callback Function to call for each packet.
+ * @param timeout See select(2) for description of timeout.
+ * @return Callback return value if successful, -1 when finished, positive int on error.
+ */
+typedef int (*stream_read_callback_t)(const stream_t st, const cap_head* cp);
+int stream_read_cb(stream_t st, struct filter* filter, stream_read_callback_t callback, const struct timeval* timeout);
+
+/**
  * Similar to stream_read but does not pop packet from stream.
  * @note If a filter is passed it _will_ discard non-matches, e.g. if you use
  *       stream_peek with filter and later call stream_read without you have

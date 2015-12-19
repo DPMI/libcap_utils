@@ -493,6 +493,26 @@ int stream_read(struct stream *st, cap_head** data, struct filter *my_Filter, st
 	return 0;
 }
 
+int stream_read_cb(stream_t st, struct filter* filter, stream_read_callback_t callback, const struct timeval* timeout){
+	/* A short timeout is used to allow the application to "breathe", i.e
+	 * terminate if SIGINT was received. */
+	struct timeval tv = *timeout;
+
+	/* Read the next packet */
+	cap_head* cp;
+	const int ret = stream_read(st, &cp, filter, &tv);
+	if ( ret == EAGAIN ){
+		return 0;
+	} else if ( ret == -1 || ret == EINTR ){
+		return ret; /* properly closed stream or user-signaled request for shutdown */
+	} else if ( ret != 0 ){
+		fprintf(stderr, "stream_read() returned 0x%08X: %s\n", ret, caputils_error_string(ret));
+		return ret;
+	}
+
+	return callback(st, cp);
+}
+
 int stream_peek(stream_t st, cap_head** header, struct filter* filter){
 	if ( st->read ){
 		fprintf(stderr, "stream_peek not implemented for this stream type\n");

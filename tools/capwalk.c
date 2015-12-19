@@ -46,6 +46,7 @@ static unsigned int max_matched_packets = 0;
 static const char* iface = NULL;
 static struct timeval timeout = {1,0};
 static const char* program_name = NULL;
+static const struct stream_stat* stream_stat = NULL;
 
 void handle_sigint(int signum){
 	if ( keep_running == 0 ){
@@ -111,6 +112,32 @@ static const char* ucfirst(const char* str){
 	return buf;
 }
 
+static int handle_packet(const stream_t st, const cap_head* cp){
+	printf("Packet %ld\n", stream_stat->read);
+	printf("  DPMI\n"
+	       "    MAMPid:             %.8s\n"
+	       "    Iface:              %.8s\n"
+	       "    Timestamp:          %s\n"
+	       "    Length:             %d\n"
+	       "    Capture length:     %d\n"
+	       , cp->mampid, cp->nic, timepico_to_string(&cp->ts, "%Y-%m-%d %H:%M:%S +00:00")
+	       , cp->len, cp->caplen);
+
+	struct header_chunk header;
+	header_init(&header, cp, 0);
+	while ( header_walk(&header) ){
+		if ( !header.protocol ){
+			printf("Unknown protocol\n");
+			continue;
+		}
+
+		printf("  %s @ %ld\n", ucfirst(header.protocol->name), header.ptr - cp->payload);
+		header_dump(stdout, &header, "    ");
+	};
+
+	return 0;
+}
+
 int main(int argc, char **argv){
 	/* extract program name from path. e.g. /path/to/MArCd -> MArCd */
 	const char* separator = strrchr(argv[0], '/');
@@ -171,7 +198,6 @@ int main(int argc, char **argv){
 			max_matched_packets = atoi(optarg);
 			break;
 
-
 		case 't': /* --timeout */
 		{
 			int tmp = atoi(optarg);
@@ -208,50 +234,9 @@ int main(int argc, char **argv){
 	/* handle C-c */
 	signal(SIGINT, handle_sigint);
 
-	uint64_t matched = 0;
-	while ( keep_running ) {
-		/* A short timeout is used to allow the application to "breathe", i.e
-		 * terminate if SIGINT was received. */
-		struct timeval tv = timeout;
-
-		/* Read the next packet */
-		cap_head* cp;
-		ret = stream_read(stream, &cp, &filter, &tv);
-		if ( ret == EAGAIN ){
-			continue; /* timeout */
-		} else if ( ret != 0 ){
-			break; /* shutdown or error */
-		}
-
-		matched++;
-		printf("Packet %ld\n", matched);
-		printf("  DPMI\n"
-		       "    MAMPid:             %.8s\n"
-		       "    Iface:              %.8s\n"
-		       "    Timestamp:          %s\n"
-		       "    Length:             %d\n"
-		       "    Capture length:     %d\n"
-		       , cp->mampid, cp->nic, timepico_to_string(&cp->ts, "%Y-%m-%d %H:%M:%S +00:00")
-		       , cp->len, cp->caplen);
-		struct header_chunk header;
-		header_init(&header, cp, 0);
-		while ( header_walk(&header) ){
-			if ( !header.protocol ){
-				printf("Unknown protocol\n");
-				continue;
-			}
-
-			printf("  %s @ %ld\n", ucfirst(header.protocol->name), header.ptr - cp->payload);
-			header_dump(stdout, &header, "    ");
-		};
-	}
-
-	/* if ret == -1 the stream was closed properly (e.g EOF or TCP shutdown)
-	 * In addition EINTR should not give any errors because it is implied when the
-	 * user presses C-c */
-	if ( ret > 0 && ret != EINTR ){
-		fprintf(stderr, "stream_read() returned 0x%08X: %s\n", ret, caputils_error_string(ret));
-	}
+	/* read packets */
+	stream_stat = stream_get_stat(stream);
+	while ( keep_running && stream_read_cb(stream, &filter, handle_packet, &timeout) == 0 );
 
 	/* Release resources */
 	stream_close(stream);
