@@ -9988,4 +9988,12 @@ button.close {
 .fa-percent:before {
   content: ""; }
 
+/* line 5, /home/ext/workspace/DPMI/libcap_utils/css/site.scss */
+body {
+  background: #ccc url(images/tweed.png); }
+
+/* line 9, /home/ext/workspace/DPMI/libcap_utils/css/site.scss */
+.container {
+  background: #fff; }
+
 /*# sourceMappingURL=site.min.css.map */

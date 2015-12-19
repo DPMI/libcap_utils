@@ -1,0 +1,27 @@
+{
+  "name": "dpmi-libcap_utils",
+  "description": "Documentation for DPMI libcap_utils",
+  "main": "index.js",
+  "authors": [
+    "David Sveningsson <ext-github@sidvind.com>"
+  ],
+  "license": "MIT",
+  "homepage": "https://github.com/DPMI/libcap_utils",
+  "moduleType": [],
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "angular-bootstrap": "angular-ui-bootstrap-bower#~0.14.3",
+    "angular-translate": "~2.8.1",
+    "angular": "angularjs#~1.4.8",
+    "bootstrap-sass": "~3.3.6",
+    "fontawesome": "~4.5.0",
+    "ng-showdown": "~1.1.0"
+  }
+}
