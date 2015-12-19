@@ -8,7 +8,7 @@ Quick Install
  1. mkdir build; cd build
  2. ../configure 
  3. make
- 4. make install
+ 4. sudo make install
  
  Update ldconfig/ld.so.conf or what ever your system uses to be aware of the new library and include files.
  
