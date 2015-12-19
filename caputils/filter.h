@@ -46,6 +46,8 @@
 extern "C" {
 #endif
 
+#define FILTER_INITIALIZER {0,}
+
 typedef char CI_handle_t[8];
 
 enum FilterOffset {
@@ -216,6 +218,7 @@ void filter_from_argv_usage(void);
 extern int filter_from_argv_opterr;
 
 /* functions for pragmatically creating filter */
+void filter_init(struct filter* filter);
 void filter_ci_set(struct filter* filter, const char* str);
 void filter_vlan_set(struct filter* filter, const char* str);
 void filter_eth_type_set(struct filter* filter, const char* str);

@@ -447,6 +447,15 @@ void filter_from_argv_usage(){
 		);
 }
 
+void filter_init(struct filter* filter){
+	memset(filter, 0, sizeof(struct filter));
+	filter->caplen = -1; /* capture everything (-1 overflows to a very large int) */
+	filter->mode = FILTER_AND;
+	filter->first = 1;
+	filter->frame_num = NULL;
+	filter->frame_counter = 1;
+}
+
 int filter_from_argv_opterr = 1;
 
 int filter_from_argv(int* argcptr, char** argv, struct filter* filter){
@@ -457,12 +466,7 @@ int filter_from_argv(int* argcptr, char** argv, struct filter* filter){
 	int argc = *argcptr;
 
 	/* reset filter */
-	memset(filter, 0, sizeof(struct filter));
-	filter->caplen = -1; /* capture everything (-1 overflows to a very large int) */
-	filter->mode = FILTER_AND;
-	filter->first = 1;
-	filter->frame_num = NULL;
-	filter->frame_counter = 1;
+	filter_init(filter);
 
 	/* fast path */
 	if ( argc == 0 ){
