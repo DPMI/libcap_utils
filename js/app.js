@@ -13,9 +13,11 @@
 		.controller('PageController', PageController)
 	;
 
-	Config.$inject = ['$translateProvider', '$routeProvider'];
-	function Config($translateProvider, $routeProvider){
+	Config.$inject = ['$translateProvider', '$routeProvider', '$showdownProvider'];
+	function Config($translateProvider, $routeProvider, $showdownProvider){
 		$translateProvider.translations({});
+
+		$showdownProvider.setOption('headerLevelStart', 2);
 
 		$routeProvider
 			.when('/0.7', {
@@ -38,11 +40,25 @@
 		var vm = this;
 	}
 
-	PageController.$inject = ['$routeParams'];
-	function PageController($routeParams){
-		var vm = this;
+	function capitalize(string) {
+		return string.charAt(0).toUpperCase() + string.slice(1);
+	}
 
-		console.log($routeParams.page);
+	function getUrl(name){
+		return 'https://raw.githubusercontent.com/DPMI/libcap_utils/master/doc/' + capitalize(name) + '.md';
+	}
+
+	PageController.$inject = ['$routeParams', '$http'];
+	function PageController($routeParams, $http){
+		var vm = this;
+		vm.content = undefined;
+		vm.error = undefined;
+
+		$http.get(getUrl($routeParams.page)).then(function(response){
+			vm.content = response.data;
+		}, function(e){
+			vm.error = e.status + ': ' + e.statusText;
+		});
 	}
 
 })();
