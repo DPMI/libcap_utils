@@ -3,7 +3,7 @@ AM_CFLAGS = -Wall -Wcast-qual ${PCAP_CFLAGS} ${PFRING_CFLAGS}
 
 lib_LTLIBRARIES = libcap_utils-07.la libcap_filter-07.la libcap_stream-07.la libcap_marc-07.la
 bin_PROGRAMS = 
-noinst_PROGRAMS = ifstat
+noinst_PROGRAMS = ifstat example/01-reading_packets
 man1_MANS =
 man3_MANS =                 \
 	man/libcaputils_reading.3 \
@@ -260,6 +260,9 @@ tests_timepico_LDADD = libcap_utils-07.la libcap_filter-07.la
 tests_timepico_SOURCES = tests/timepico.cpp
 
 tests_capdump_argv_LDADD = libcap_utils-07.la libcap_stream-07.la libcap_filter-07.la
+
+example_01_reading_packets_CFLAGS = ${tools_CFLAGS}
+example_01_reading_packets_LDADD = ${tools_LIBS}
 
 install-dumper:
 	install -D -m 0755 dist/dumper_init $(DESTDIR)${sysconfdir}/init.d/dumper
