@@ -236,7 +236,7 @@ int main(int argc, char **argv){
 
 	/* read packets */
 	stream_stat = stream_get_stat(stream);
-	while ( keep_running && stream_read_cb(stream, &filter, handle_packet, &timeout) == 0 );
+	while ( keep_running && stream_read_cb(stream, handle_packet, &filter, &timeout) == 0 );
 
 	/* Release resources */
 	stream_close(stream);

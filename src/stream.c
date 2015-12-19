@@ -493,10 +493,11 @@ int stream_read(struct stream *st, cap_head** data, struct filter *my_Filter, st
 	return 0;
 }
 
-int stream_read_cb(stream_t st, struct filter* filter, stream_read_callback_t callback, const struct timeval* timeout){
+int stream_read_cb(stream_t st, stream_read_callback_t callback, struct filter* filter, const struct timeval* timeout){
 	/* A short timeout is used to allow the application to "breathe", i.e
 	 * terminate if SIGINT was received. */
-	struct timeval tv = *timeout;
+	struct timeval tv = {1,};
+	if ( timeout ) tv = *timeout;
 
 	/* Read the next packet */
 	cap_head* cp;

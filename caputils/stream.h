@@ -178,7 +178,7 @@ int stream_read(stream_t st, cap_head** header, struct filter* filter, struct ti
  * @return Callback return value if successful, -1 when finished, positive int on error.
  */
 typedef int (*stream_read_callback_t)(const stream_t st, const cap_head* cp);
-int stream_read_cb(stream_t st, struct filter* filter, stream_read_callback_t callback, const struct timeval* timeout);
+int stream_read_cb(stream_t st, stream_read_callback_t callback, struct filter* filter, const struct timeval* timeout);
 
 /**
  * Similar to stream_read but does not pop packet from stream.
