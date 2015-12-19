@@ -1,0 +1,32 @@
+{
+  "name": "dpmi-libcap_utils",
+  "version": "0.7.0",
+  "description": "Documentation for DPMI libcap_utils",
+  "main": "index.js",
+  "directories": {
+    "example": "example",
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DPMI/libcap_utils.git"
+  },
+  "author": "David Sveningsson <ext-github@sidvind.com>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/DPMI/libcap_utils/issues"
+  },
+  "homepage": "https://github.com/DPMI/libcap_utils#readme",
+  "devDependencies": {
+    "bower": "^1.7.1",
+    "grunt": "^0.4.5",
+    "grunt-contrib-connect": "^0.11.2",
+    "grunt-contrib-jshint": "^0.11.3",
+    "grunt-contrib-uglify": "^0.11.0",
+    "grunt-contrib-watch": "^0.6.1",
+    "grunt-sass": "^1.1.0"
+  }
+}
