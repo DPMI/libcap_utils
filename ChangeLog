@@ -1,6 +1,14 @@
+caputils-0.7.16
+---------------
+
+	* fix: misc issues found during fuzzing.
+	* add: additional tests
+	* add: support for decoding additional protocols.
+
 caputils-0.7.15
 ---------------
 
+	* add: header_walk functionality
 	* fix: format properly handles truncated http
 	* fix: format properly handles truncated tcp options
 
