@@ -17,6 +17,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+/**
+ * Compile with:
+ * gcc -Wall example/01-reading_packets.c $(pkg-config libcap_utils-0.7 --libs) -o 01-reading_packets
+ */
+
 #include "caputils/caputils.h"
 #include <stdio.h>
 
