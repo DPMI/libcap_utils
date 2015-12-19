@@ -28,12 +28,18 @@ extern enum caputils_protocol_type ipproto_next(uint8_t proto);
 static enum caputils_protocol_type ipv4_next(struct header_chunk* header, const char* ptr, const char** out){
 	const struct ip* ip = (const struct ip*)ptr;
 	const void* payload = ptr + 4*ip->ip_hl;
-	*out = payload;
+
+	/* RFC 791: minimum IHL is 5 octets. */
+	if ( ip->ip_hl < 5 ){
+		*out = NULL;
+		return PROTOCOL_DONE;
+	}
 
 	inet_ntop(AF_INET, &ip->ip_src, header->last_net.net_src, sizeof(header->last_net.net_src));
 	inet_ntop(AF_INET, &ip->ip_dst, header->last_net.net_dst, sizeof(header->last_net.net_dst));
 	header->last_net.plen = ntohs(ip->ip_len) - 4*ip->ip_hl;
 
+	*out = payload;
 	return ipproto_next(ip->ip_p);
 }
 
@@ -41,6 +47,14 @@ static void ipv4_format(FILE* fp, const struct header_chunk* header, const char*
 	fprintf(fp, ": %s", header->protocol->name);
 
 	const struct ip* ip = (const struct ip*)ptr;
+
+
+	/* RFC 791: minimum IHL is 5 octets. */
+	if ( ip->ip_hl < 5 ){
+		fprintf(fp, " [corrupt]");
+		return;
+	}
+
 	if ( ipproto_next(ip->ip_p) == PROTOCOL_DATA ){
 		fprintf(fp, " [ip_p=0x%02x]", ip->ip_p);
 	}

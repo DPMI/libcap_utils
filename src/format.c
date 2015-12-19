@@ -24,9 +24,22 @@
 #include "format/format.h"
 #include "caputils/caputils.h"
 #include "caputils/marker.h"
+#include <string.h>
+#include <ctype.h>
 #include <time.h>
 
 static int min(int a, int b){ return a<b?a:b; }
+
+void fputs_printable(const char* str, int max, FILE* fp){
+	unsigned int n = max >= 0 ? (unsigned int)min(max, strlen(str)) : strlen(str);
+	for ( unsigned int i = 0; i < n; i++ ){
+		if ( isprint(str[i]) && str[i] != '\n' ){
+			fputc(str[i], fp);
+		} else {
+			fprintf(fp, "\\x%02x", str[i] & 0xff);
+		}
+	}
+}
 
 static void print_timestamp(FILE* fp, struct format* state, const struct cap_header* cp){
 	const int format_date  = state->flags & FORMAT_DATE_BIT;
@@ -66,7 +79,7 @@ static void print_pkt(FILE* fp, struct format* state, const struct cap_header* c
 	print_timestamp(fp, state, cp);
 	fprintf(fp, ":LINK(%4d):CAPLEN(%4d)", cp->len, cp->caplen);
 
-	if ( state->flags >= FORMAT_LAYER_LINK ){
+	if ( cp->caplen > 0 && state->flags >= FORMAT_LAYER_LINK ){
 		struct header_chunk header;
 		header_init(&header, cp, 0);
 		while ( header_walk(&header) ){
@@ -97,7 +110,11 @@ void format_setup(struct format* state, unsigned int flags){
 }
 
 void format_pkg(FILE* fp, struct format* state, const struct cap_header* cp){
-	fprintf(fp, "[%4"PRIu64"]:%.8s:%.8s:", ++state->pktcount, cp->nic, cp->mampid);
+	fprintf(fp, "[%4"PRIu64"]:", ++state->pktcount);
+	fputs_printable(cp->nic, 8, fp);
+	fputc(':', fp);
+	fputs_printable(cp->mampid, 8, fp);
+	fputc(':', fp);
 	if ( state->first ){
 		state->ref = cp->ts;
 		state->first = 0;

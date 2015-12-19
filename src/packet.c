@@ -23,6 +23,7 @@
 
 #include "caputils/packet.h"
 #include "caputils/caputils.h"
+#include "src/format/format.h"
 
 #include <stdio.h>
 #include <strings.h>
@@ -51,6 +52,26 @@ enum Level level_from_string(const char* str){
 	}
 
 	return LEVEL_INVALID;
+}
+
+/* sanity check: should not happen because the previous protocol should flag as truncated or otherwise deal with it */
+static void ptr_sanity(const cap_head* cp, const char* ptr, const struct caputils_protocol* proto){
+	const char* begin = cp->payload;
+	const char* end   = cp->payload + cp->caplen;
+	if ( !ptr || ptr < begin || ptr > end ){
+		fprintf(stderr,
+		        "\n\n"
+		        "invalid payload pointer\n"
+		        "  ptr: %p\n"
+		        "  packet: %p - %p (%zd bytes)\n"
+		        "  offset: %zd bytes (from beginning of packet)\n"
+		        "  protocol: %s\n"
+		        "this is an error in the protocol decoder (but the packet is probably corrupted)\n"
+		        "\n",
+		        ptr, begin, end, end - begin, ptr - begin,
+		        proto ? proto->name : "N/A");
+		abort();
+	}
 }
 
 static size_t payload_tcp(enum Level level, const struct ip* ip, const struct tcphdr* tcp){
@@ -210,8 +231,8 @@ static int next_payload(struct header_chunk* header){
 	}
 
 	const char* next = header->ptr;
-	enum caputils_protocol_type type = \
-		header->protocol->next_payload(header, header->ptr, &next);
+	const struct caputils_protocol* current = header->protocol;
+	enum caputils_protocol_type type = current->next_payload(header, header->ptr, &next);
 
 	header->ptr = next;
 	header->protocol = protocol_get(type);
@@ -220,16 +241,20 @@ static int next_payload(struct header_chunk* header){
 		abort();
 	}
 
-	if ( !header->ptr || header->ptr < header->cp->payload ){
-		fprintf(stderr, "invalid payload pointer\n");
-		abort();
+	/* validate payload pointer */
+	if ( (header->ptr == NULL && type == PROTOCOL_DONE) || limited_caplen(header->cp, header->ptr, 0) ){
+		header->ptr = NULL;
+		header->truncated = 1;
+		return 0;
 	}
 
+	/* make sure pointer is actually inside the captured packet (and not pointing at random data because of a corrupted packet) */
+	ptr_sanity(header->cp, header->ptr, current);
+
 	/* ensure there is enough data left */
-	const size_t used = header->ptr - header->cp->payload;
-	const size_t left = header->cp->caplen - used;
-	const size_t req = header_size(header);
-	header->truncated = left < req;
+	if ( limited_caplen(header->cp, header->ptr, header_size(header)) ){
+		header->truncated = 1;
+	}
 
 	return
 		type != PROTOCOL_UNKNOWN &&
@@ -249,10 +274,9 @@ int header_walk(struct header_chunk* header){
 		header->protocol = protocol_get(PROTOCOL_ETHERNET);
 		header->ptr = header->cp->payload;
 
-		/* ensure there is enough data left */
-		const size_t used = header_size(header);
-		const size_t left = header->cp->caplen - used;
-		header->truncated = left < used;
+		if ( limited_caplen(header->cp, header->ptr, header_size(header)) ){
+			header->truncated = 1;
+		}
 
 		return 1;
 	}
@@ -271,6 +295,8 @@ void header_dump(FILE* fp, const struct header_chunk* header, const char* prefix
 		return;
 	}
 
+
+	ptr_sanity(header->cp, header->ptr, NULL);
 	header->protocol->dump(fp, header, header->ptr, prefix, 0);
 }
 
@@ -285,6 +311,7 @@ void header_format(FILE* fp, const struct header_chunk* header, int flags){
 		return;
 	}
 
+	ptr_sanity(header->cp, header->ptr, NULL);
 	header->protocol->format(fp, header, header->ptr, flags);
 }
 

@@ -27,6 +27,8 @@
 #include <ctype.h>
 #include <arpa/inet.h>
 
+static const unsigned int MAX_LABEL_REFERENCES = 32;    /* how many label references (depth) is allowed */
+
 static int min(int a, int b){ return a<b?a:b; }
 
 struct dns_header {
@@ -139,6 +141,10 @@ static void dns_initialize(){
 	initialized = 1;
 }
 
+static const char* dns_class_name(int class){
+	return class < CLASS_MAX ? dns_class_lut[class] : "INVALID";
+}
+
 static size_t copy_label(char** dst, size_t size, const char* src, size_t len){
 	if ( size == 0 ) return 0;
 
@@ -154,7 +160,12 @@ static size_t copy_label(char** dst, size_t size, const char* src, size_t len){
 	return bytes;
 }
 
-static const char* dns_name_int(char** dst, size_t* size, const char* src, const char* payload){
+static const char* dns_name_int(char** dst, size_t* size, const char* src, const char* end, const char* payload, int visited[MAX_LABEL_REFERENCES]){
+	/* validate range in case of malformed packets */
+	if ( src < payload || src >= end ){
+		return NULL;
+	}
+
 	uint8_t len = *(const uint8_t*)(src++);
 	do {
 
@@ -162,14 +173,36 @@ static const char* dns_name_int(char** dst, size_t* size, const char* src, const
 		 * reference to a previous label. It should therefore continue to read from
 		 * there until len is zero again. */
 		if ( (len & 0xc0) == 0xc0 ){
-			uint16_t offset = ((len & 0x3f) << 8) + *(const uint8_t*)(src++);
-			dns_name_int(dst, size, payload + offset, payload);
+			const uint16_t offset = ((len & 0x3f) << 8) + *(const uint8_t*)(src++);
+
+			/* detect label loops (from malformed packets) */
+			for ( unsigned int i = 0; i <= MAX_LABEL_REFERENCES; i++ ){
+				const int invalid_offset = offset == 0;
+				const int deep_nesting = i == MAX_LABEL_REFERENCES;
+
+				if ( invalid_offset || deep_nesting || visited[i] == offset ){
+					static const char* malformed = "[malformed]";
+					copy_label(dst, *size, malformed, strlen(malformed));
+					return src;
+				}
+
+				/* no loop detected, this is the last entry so record this offset and visit the label */
+				if ( visited[i] == 0 ){
+					visited[i] = offset;
+					break;
+				}
+			}
+
+			dns_name_int(dst, size, payload + offset, end, payload, visited);
 			return src;
 		}
 
 		/* store the current label */
 		*size -= copy_label(dst, *size, src, len);
 		src += len;
+		if ( src >= end ){
+			return NULL;
+		}
 		len = *(const uint8_t*)(src++);
 	} while ( len > 0 );
 
@@ -181,45 +214,61 @@ static const char* dns_name_int(char** dst, size_t* size, const char* src, const
  * @param dst Buffer when labels will be written.
  * @param size Number of bytes in dst buffer.
  * @param src Current reading position in packet.
+ * @param end Pointer to the end of the captured data (that is, the byte after the last readable)
  * @param payload Full packet.
- * @return New position in packet.
+ * @return New position in packet or null if limited by caplen
  */
-static const char* dns_name(char* dst, size_t size, const char* src, const char* payload){
+static const char* dns_name(char* dst, size_t size, const char* src, const char* end, const char* payload){
 /* small hack to get "..." at the end */
 	if ( size != 0 ){
 		size -= 3;
 	}
 
-	return dns_name_int(&dst, &size, src, payload);
+	/* LUT to remember which label references has been visited to prevent loops */
+	int labels[MAX_LABEL_REFERENCES];
+	memset(labels, 0, sizeof(labels));
+
+	return dns_name_int(&dst, &size, src, end, payload, labels);
 }
 
-static void print_query(FILE* fp, const struct dns_header* h, const char* ptr, const char* payload, unsigned int flags){
-	fprintf(fp, " Standard query 0x%04x ", ntohs(h->id));
+static void print_query(FILE* fp, const struct dns_header* h, const char* ptr, const char* end, const char* payload, unsigned int flags){
 	const unsigned int n = ntohs(h->qdcount);
+	fprintf(fp, " Standard query 0x%04x [qdcount=%d] ", ntohs(h->id), n);
 	for ( unsigned int i = 0; i < n; i++ ){
 		if ( i > 1 ) fputs(", ", fp);
 		char qname[128];
-		ptr = dns_name(qname, sizeof(qname), ptr, payload);
+		ptr = dns_name(qname, sizeof(qname), ptr, end, payload);
+
+		if ( ptr == NULL || (ptr+4) >= end ){
+			fputs(" [Packet size limited during capture]", fp);
+			return;
+		}
+
 		uint16_t qtype  = ntohs(*(const uint16_t*)ptr); ptr += 2;
 		uint16_t qclass = ntohs(*(const uint16_t*)ptr); ptr += 2;
 
-		fprintf(fp, "%s ", qclass < CLASS_MAX ? dns_class_lut[qclass] : "INVALID");
+		fprintf(fp, "%s ", dns_class_name(qclass));
 		if ( qtype <= TYPE_ANY && dns_type_lut[qtype] ){
 			fputs(dns_type_lut[qtype], fp);
 		} else {
 			fprintf(fp, "(%d)", qtype);
 		}
 
-		fprintf(fp, " %s", qname);
+		fputc(' ', fp);
+		fputs_printable(qname, -1, fp);
 	}
 }
 
-static void print_response(FILE* fp, const struct dns_header* h, const char* ptr, const char* packet, unsigned int flags){
+static void print_response(FILE* fp, const struct dns_header* h, const char* ptr, const char* end, const char* packet, unsigned int flags){
 	fprintf(fp, " Standard query response 0x%04x ", ntohs(h->id));
 
 	/* discard question sections */
 	for ( unsigned int i = 0; i < ntohs(h->qdcount); i++ ){
-		ptr = dns_name(NULL, 0, ptr, packet);
+		ptr = dns_name(NULL, 0, ptr, end, packet);
+		if ( ptr == NULL || (ptr+4) >= end ){
+			fputs(" [Packet size limited during capture]", fp);
+			return;
+		}
 		ptr += 4; /* +4 to skip qtype and qclass */
 	}
 
@@ -230,7 +279,12 @@ static void print_response(FILE* fp, const struct dns_header* h, const char* ptr
 	/* process answer sections */
 	for ( unsigned int i = 0; i < ntohs(h->ancount); i++ ){
 		char name[128];
-		ptr = dns_name(name, sizeof(name), ptr, packet);
+		ptr = dns_name(name, sizeof(name), ptr, end, packet);
+
+		if ( ptr == NULL || (ptr+10) >= end ){
+			fputs(" [Packet size limited during capture]", fp);
+			return;
+		}
 
 		uint16_t type  = ntohs(*(const uint16_t*)ptr); ptr += 2;
 		uint16_t class = ntohs(*(const uint16_t*)ptr); ptr += 2;
@@ -273,36 +327,34 @@ static void print_response(FILE* fp, const struct dns_header* h, const char* ptr
 			case TYPE_PTR:
 			case TYPE_TXT:
 			case TYPE_SPF:
-				dns_name(name, sizeof(name), ptr, packet);
-				for ( unsigned int i = 0; i < strlen(name); i++ ){
-					if ( isprint(name[i]) && name[i] != '\n' ){
-						fputc(name[i], fp);
-					} else {
-						fprintf(fp, "\\x%02x", name[i] & 0xff);
-					}
+				dns_name(name, sizeof(name), ptr, end, packet);
+				if ( ptr ){
+					fputs_printable(name, -1, fp);
+					fputc(' ', fp);
+				} else {
+					fputs(" [Packet size limited during capture]", fp);
 				}
-				fputc(' ', fp);
 				break;
 
 			default:
 				break;
 			}
 		} else {
-			fprintf(fp, "%s ", class < CLASS_MAX ? dns_class_lut[class] : "INVALID");
+			fprintf(fp, "%s ", dns_class_name(class));
 		}
 
 		ptr += rdlen;
 	}
 }
 
-static const char* dns_dump_question(FILE* fp, const char* prefix, unsigned int i, const char* payload, const char* ptr){
+static const char* dns_dump_question(FILE* fp, const char* prefix, unsigned int i, const char* payload, const char* ptr, const char* end){
 	char qname[128];
-	ptr = dns_name(qname, sizeof(qname), ptr, payload);
+	ptr = dns_name(qname, sizeof(qname), ptr, end, payload);
 	uint16_t qtype  = ntohs(*(const uint16_t*)ptr); ptr += 2;
 	uint16_t qclass = ntohs(*(const uint16_t*)ptr); ptr += 2;
 
 	fprintf(fp, "%sqd[%d]:\n", prefix, i);
-	fprintf(fp, "  %sqclass:           %s (%d)\n", prefix, dns_class_lut[qclass], qclass);
+	fprintf(fp, "  %sqclass:           %s (%d)\n", prefix, dns_class_name(qclass), qclass);
 	fprintf(fp, "  %sqtype:            ", prefix);
 	if ( qtype <= TYPE_ANY && dns_type_lut[qtype] ){
 		fprintf(fp, "%s (%d)\n", dns_type_lut[qtype], qtype);
@@ -314,16 +366,16 @@ static const char* dns_dump_question(FILE* fp, const char* prefix, unsigned int 
 	return ptr;
 }
 
-static const char* dns_dump_answer(FILE* fp, const char* prefix, const char* section, unsigned int i, const char* payload, const char* ptr){
+static const char* dns_dump_answer(FILE* fp, const char* prefix, const char* section, unsigned int i, const char* payload, const char* ptr, const char* end){
 	char name[128];
-	ptr = dns_name(name, sizeof(name), ptr, payload);
+	ptr = dns_name(name, sizeof(name), ptr, end, payload);
 	uint16_t type  = ntohs(*(const uint16_t*)ptr); ptr += 2;
 	uint16_t class = ntohs(*(const uint16_t*)ptr); ptr += 2;
 	uint32_t ttl   = ntohl(*(const uint32_t*)ptr); ptr += 4;
 	uint16_t rdlen = ntohs(*(const uint16_t*)ptr); ptr += 2;
 
 	fprintf(fp, "%s%s[%d]:\n", prefix, section, i);
-	fprintf(fp, "  %sclass:            %s (%d)\n", prefix, dns_class_lut[class], class);
+	fprintf(fp, "  %sclass:            %s (%d)\n", prefix, dns_class_name(class), class);
 	fprintf(fp, "  %stype:             ", prefix);
 	if ( type <= TYPE_ANY && dns_type_lut[type] ){
 		fprintf(fp, "%s (%d)\n", dns_type_lut[type], type);
@@ -362,7 +414,7 @@ static const char* dns_dump_answer(FILE* fp, const char* prefix, const char* sec
 			case TYPE_PTR:
 			case TYPE_TXT:
 			case TYPE_SPF:
-				dns_name(name, sizeof(name), ptr, payload);
+				dns_name(name, sizeof(name), ptr, end, payload);
 				fprintf(fp, "%s\n", name);
 				break;
 
@@ -370,7 +422,7 @@ static const char* dns_dump_answer(FILE* fp, const char* prefix, const char* sec
 				break;
 			}
 		} else {
-			fprintf(fp, "%s\n", dns_class_lut[class]);
+			fprintf(fp, "%s\n", dns_class_name(class));
 		}
 
 	return ptr + rdlen;
@@ -383,6 +435,7 @@ static void dns_dump(FILE* fp, const struct header_chunk* header, const char* pt
 
 	struct dns_header h = *(const struct dns_header*)ptr;
 	const char* cur = ptr + sizeof(struct dns_header);
+	const char* end = header->cp->payload + header->cp->caplen;
 	h.flags = ntohs(h.flags);
 
 	fprintf(fp, "%sid:                 0x%04X\n", prefix, ntohs(h.id));
@@ -407,19 +460,19 @@ static void dns_dump(FILE* fp, const struct header_chunk* header, const char* pt
 	}
 
 	for ( unsigned int i = 0; i < ntohs(h.qdcount); i++ ){
-		cur = dns_dump_question(fp, prefix, i, ptr, cur);
+		cur = dns_dump_question(fp, prefix, i, ptr, cur, end);
 	}
 
 	for ( unsigned int i = 0; i < ntohs(h.ancount); i++ ){
-		cur = dns_dump_answer(fp, prefix, "an", i, ptr, cur);
+		cur = dns_dump_answer(fp, prefix, "an", i, ptr, cur, end);
 	}
 
 	for ( unsigned int i = 0; i < ntohs(h.nscount); i++ ){
-		cur = dns_dump_answer(fp, prefix, "ns", i, ptr, cur);
+		cur = dns_dump_answer(fp, prefix, "ns", i, ptr, cur, end);
 	}
 
 	for ( unsigned int i = 0; i < ntohs(h.arcount); i++ ){
-		cur = dns_dump_answer(fp, prefix, "ar", i, ptr, cur);
+		cur = dns_dump_answer(fp, prefix, "ar", i, ptr, cur, end);
 	}
 }
 
@@ -502,12 +555,13 @@ static void dns_format(FILE* fp, const struct header_chunk* header, const char* 
 	}
 
 	const char* payload = ptr + sizeof(struct dns_header);
+	const char* end = cp->payload + cp->caplen;
 	switch ( h.opcode ){
 	case QUERY: /* standard query */
 		if ( h.qr == 0 ){
-			print_query(fp, &h, payload, ptr, flags);
+			print_query(fp, &h, payload, end, ptr, flags);
 		} else {
-			print_response(fp, &h, payload, ptr, flags);
+			print_response(fp, &h, payload, end, ptr, flags);
 		}
 		break;
 

@@ -26,6 +26,7 @@
 #include <caputils/log.h>
 #include "caputils_int.h"
 #include "stream.h"
+#include "format/format.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -644,8 +645,14 @@ void stream_print_info(const stream_t st, FILE* dst){
 	const char* comment = stream_get_comment(st);
 	stream_get_version(st, &version);
 	fprintf(dst, "%s caputils %d.%d stream\n", stream_addr_ntoa(&st->addr), version.major, version.minor);
-	fprintf(dst, "     mpid: %s\n", mampid[0] != 0 ? mampid : "(unset)");
-	fprintf(dst, "  comment: %s\n", comment ? comment : "(unset)");
+
+	fputs("     mpid: ", dst);
+	fputs_printable(mampid[0] != 0 ? mampid : "(unset)", -1, dst);
+	fputc('\n', dst);
+
+	fputs("  comment: ", dst);
+	fputs_printable(comment ? comment : "(unset)", -1, dst);
+	fputc('\n', dst);
 }
 
 int stream_add(struct stream* st, const stream_addr_t* addr){

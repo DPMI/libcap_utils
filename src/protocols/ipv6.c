@@ -67,11 +67,15 @@ static size_t ipv6_total_header_size(const struct cap_header* cp, const struct i
 	const struct ip6_ext* ext = NULL;
 	do {
 		if ( limited_caplen(cp, payload, sizeof(struct ip6_ext)) ){
-			return sizeof(struct ip6_hdr);
+			return header_size;
 		}
 
 		ext = (const struct ip6_ext*)payload;
 		const size_t cur_size = ntohs(ext->ip6e_len) * 8 + 8;
+		if ( limited_caplen(cp, payload, cur_size) ){
+			return header_size;
+		}
+
 		header_size += cur_size;
 		payload += cur_size;
 	} while ( is_ipv6_ext(ext->ip6e_nxt) );
@@ -84,12 +88,14 @@ static size_t ipv6_total_header_size(const struct cap_header* cp, const struct i
 extern enum caputils_protocol_type ipproto_next(uint8_t proto);
 
 static enum caputils_protocol_type ipv6_next(struct header_chunk* header, const char* ptr, const char** out){
-	uint8_t proto;
-	const char* payload;
+	uint8_t proto = 0;
+	const char* payload = NULL;
 	const struct ip6_hdr* ip = (const struct ip6_hdr*)ptr;
 	const size_t header_size = ipv6_total_header_size(header->cp, ip, &payload, &proto);
 
+	/* could not determine the header size or limited caplen */
 	if ( !payload ){
+		*out = NULL;
 		return PROTOCOL_DONE;
 	}
 
@@ -122,8 +128,8 @@ static void ipv6_dump(FILE* fp, const struct header_chunk* header, const char* p
 
 static void ipv6_format(FILE* fp, const struct header_chunk* header, const char* ptr, unsigned int flags){
 	const struct ip6_hdr* ip = (const struct ip6_hdr*)ptr;
-	const char*  payload;
- 	uint8_t proto;
+	const char*  payload = NULL;
+	uint8_t proto = 0;
 	const size_t header_size = ipv6_total_header_size(header->cp, ip, &payload, &proto);
 	fputs(" IPv6", fp);
 	if ( flags & FORMAT_HEADER ){
