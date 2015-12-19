@@ -334,7 +334,7 @@ static void parse_frame_range(const char* arg, struct filter* filter){
 	char* buf = strdup(arg);
 	struct frame_num_node** dst = &filter->frame_num;
 
-	char* range_ptr;
+	char* range_ptr = NULL;
 	char* range = strtok_r(buf, ",", &range_ptr);
 	for ( ; range; range=strtok_r(NULL, ",", &range_ptr) ){
 		struct frame_num_node* node = (struct frame_num_node*)malloc(sizeof(struct frame_num_node));
