@@ -3,4 +3,8 @@ compiler:
   - clang
   - gcc
 
-before_script: autoreconf -si
+before_install:
+  - sudo apt-get install libpcap-dev libssl-dev
+
+before_script:
+  autoreconf -si
