@@ -24,26 +24,34 @@ capture until sender terminates or SIGINT is recevied.
 Set the comment for the output stream. Default is to copy from source stream (if
 available.)
 .TP
-\fB\-t\fR, \fB\-\-timeout\fR=\fIN\fR
-Sets the timeout in milliseconds to stream_read. Lower timeout increases the
-responsiveness when using pipes but can decrease the performance slightly as the
-buffer might not be fully utilized. High timeouts will fill the buffer but may
-instead cause drops because while it drains the buffer OS starts dropping
-packets. Default is 1000ms. 
-.TP
 \fB\-b\fR, \fB\-\-bufsize\fR=\fISIZE\fR
 Use a buffer of \fISIZE\fP bytes or 0 for default. The actual default size
 depends on the source stream. Capfiles uses 4096 bytes and ethernet 175k
 bytes.
 .TP
-\fB\-\-marker\fR=\fIPORT\fR
-Split stream based on marker packet on port \fiPORT\fP. It looks for a specific
-packet in the stream and once found it stops the current output and starts
-outputting to a new destination.
+\fB\-\-progress\fR[=\fIFD\fR]
+Writes a progress report to \fIFD\fR (default stderr) every 60th second.
+.TP
+\fB\-h\fR, \fB\-\-help\fR
+Short help.
+.SH MARKERS
+Markers can be used to segment the stream to multiple files or to stop saving
+when marker is received. Markers can either be sent inside the stream (live on
+the measured stream, will be present in the trace) or via an additional socket.
 
 If \fB\-o\fR is used files will be named according to the format specified with
 \fB\-\-marker\-format\fR, if using redirection or pipes EOF will be sent and the
 capturing stops.
+
+Markers are sent using capmaker(1).
+
+.TP
+\fB\-\-marker\fR=\fIPORT\fR
+Look for specially crafted marker packet in the stream on port \fiPORT\fP.
+.TP
+\fB\-K\fR, \fB\-\-key=\fIKEY\fR
+Only act on markers with matching key, other markers is ignored (but will still
+be present in output file).
 .TP
 \fB\-\-marker\-format\fR=\fIFORMAT\fR
 Default format is "%f.%s.%e".
@@ -75,15 +83,18 @@ Append. Retain the previous trace and append packets to it (the marker will also
 be included in the trace)
 .RE
 .TP
-\fB\-\-marker\-comment
+\fB\-\-marker\-comment\fR
 Use marker comment as the stream comment.
 .TP
-\fB\-h\fR, \fB\-\-help
-Short help.
+\fB\-\-marker\-quit\fR
+Terminate application after receiving marker.
 .TP
-\fB\-\-progress\fR[=\fIFD\fR]
-Writes a progress report to \fIFD\fR (default stderr) every 60th second.
+\fB\-L\fR, \fB\-\-listen\fR
+Listen on local TCP and UDP sockets for markers.
+.TP
+\fB\-P\fR, \fB\-\-port=\fIPORT\fR
+Port number to listen on. Default is 4000.
 .SH COPYRIGHT
 Copyright (C) 2011-2012 David Sveningsson <dsv@bth.se>.
 .SH "SEE ALSO"
-stream-address(3), capplay(1)
+stream-address(3), capmarker(1)

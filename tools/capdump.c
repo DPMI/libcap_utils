@@ -82,7 +82,7 @@ static int sockfd = 0;             /* Socket for the UDP server */
 static int portno = 4000;          /* Port number for UDP server */
 struct sockaddr_in clientaddr;     /* client addr */
 
-static const char* shortopts = "o:p:i:c:b:m:K:LP:f:M:C:s::h";
+static const char* shortopts = "o:i:p:c:b:m:K:LP:f:h";
 static struct option longopts[]= {
 	{"output",         required_argument, 0, 'o'},
 	{"packets",        required_argument, 0, 'p'},
@@ -92,7 +92,7 @@ static struct option longopts[]= {
 	{"marker",         required_argument, 0, 'm'},
 	{"key",            optional_argument, 0, 'K'},
 	{"listen",         optional_argument, 0, 'L'},
-	{"port",           optional_argument, 0, 'P'},
+	{"port",           required_argument, 0, 'P'},
 	{"marker-format",  required_argument, 0, 'f'},
 	{"marker-mode",    required_argument, 0, 'M'},
 	{"marker-comment", required_argument, 0, 'C'},
@@ -119,10 +119,13 @@ static void show_usage(void){
 	       "  -o, --output=FILE    Save output in capfile. [default=stdout]\n"
 	       "  -i, --iface          For ethernet-based streams, this is the interface to listen\n"
 	       "                       on. For other streams it is ignored.\n"
-	       "  -p, --packets=INT    Stop capture after INT packages.\n"
-	       "  -c, --comment        Set stream comment.\n"
-	       "  -t, --timeout=N      Wait for N ms while buffer fills [default: 1000ms].\n"
+	       "  -p, --packets=n      Stop capture after N read packages.\n"
+	       "  -c, --comment=TEXT   Set stream comment.\n"
 	       "  -b, --bufsize=BYTES  Use BYTES buffer size [default depends on driver].\n"
+	       "      --progress[=FD]  Write progress report to FD every 60 seconds.\n"
+	       "  -h, --help           This text.\n"
+	       "\n"
+	       "Markers\n"
 	       "  -m, --marker=PORT    Split streams based on marker packet. See capdump(1) for\n"
 	       "                       further description of this feature.\n"
 	       "  -K, --key=KEY        If markers are used, and the key is set, the marker must contain\n"
@@ -136,8 +139,6 @@ static void show_usage(void){
 	       "                       modes are [I]crement (default), [O]verwrite and [A]ppend.\n"
 	       "      --marker-comment Use marker comment as the stream comment.\n"
 	       "      --marker-quit    Terminate application after receving a End/Terminate marker.\n"
-	       "      --progress[=FD]  Write progress report to FD every 60 seconds.\n"
-	       "  -h, --help           This text.\n"
 	       "\n"
 	       "Streams can be specified in the following formats:\n"
 	       "  - NN:NN:NN:NN:NN:NN  Listen to ethernet multicast stream.\n"
