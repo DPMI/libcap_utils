@@ -291,14 +291,13 @@ static void print_response(FILE* fp, const struct dns_header* h, const char* ptr
 		uint32_t ttl   = ntohl(*(const uint32_t*)ptr); ptr += 4;
 		uint16_t rdlen = ntohs(*(const uint16_t*)ptr); ptr += 2;
 
-		/* hack to silence compiler */
-		ttl = ttl;
-
 		if ( type <= TYPE_ANY && dns_type_lut[type] ){
 			fprintf(fp, "%s ", dns_type_lut[type]);
 		} else {
 			fprintf(fp, "(%d) ", type);
 		}
+
+		fprintf(fp, "[ttl=%ud] ", ttl);
 
 		if ( class == CLASS_IN ){
 			char buf[INET6_ADDRSTRLEN];
