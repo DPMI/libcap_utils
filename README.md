@@ -1,9 +1,11 @@
 DPMI capture utilities (libcap_utils)
 =====================================
 
-The libary is used by consumers to interface with the measurement stream and the [measurement points](https://github.com/DPMI/mp) use it to construct the measurement frames.
+Library and tools for working with network packet streams (traces) from a DPMI MA (measurement area) with one or more [measurement points](https://github.com/DPMI/mp).
 
-It features tools for working with captured traces, including capture, splitting, merging, filtering, converting and displaying traces.
+It features tools for working with captured traces, including capture, splitting, merging, filtering, converting and displaying traces. Offline traces are similar to pcap (tcpdump, wireshark) but contains additional metadata and higher precision timestamps but most tools work just as well with live streams.
+
+The library serves as a starting point for writing consumers (e.g. [bitrate](https://github.com/DPMI/consumer-bitrate), [oneway-delay](https://github.com/DPMI/consumer-onewaydelay), etc) which can perform live or offline analyzis of the captured streams (traces).
 
 Documentation
 -------------
