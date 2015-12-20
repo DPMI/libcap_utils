@@ -32,6 +32,12 @@ Most tools have manpages and all of them support `--help`.
 * `ifstat.c` - debugging utility
 * `pcap2cap.c` - convert pcap to cap (tcpdump to libcap_utils).
 
+Patches
+-------
+
+The preferred way to submit patches is to [fork the project](https://help.github.com/articles/working-with-forks/) and submit a [pull request](https://help.github.com/articles/using-pull-requests/). You can also email patches generated using `git format-patch` or a regular `diff -u`.
+
+--
 Version history
 ---------------
 
