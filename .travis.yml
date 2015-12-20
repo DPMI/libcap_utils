@@ -8,6 +8,7 @@ addons:
     packages:
       - libpcap-dev
       - libssl-dev
+      - libcppunit-dev
 
 before_script:
   - autoreconf -si
