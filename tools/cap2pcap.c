@@ -48,7 +48,7 @@ int main (int argc, char **argv){
 		program_name = argv[0];
 	}
 
-	extern int optind, opterr, optopt;
+	extern int optind;
 	int op;
 
 	int option_index;

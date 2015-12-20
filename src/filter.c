@@ -40,7 +40,12 @@
 #include <pcap/pcap.h>
 #endif
 
+/** @todo should feature-detect this instead */
+#if defined(__GNUC__) && !defined(__clang__)
 #define FILTER __attribute__ ((pure, hot, visibility ("hidden")))
+#else
+#define FILTER __attribute__ ((pure, visibility ("hidden")))
+#endif
 
 /**
  * Match ethernet address.
