@@ -1,14 +1,19 @@
-libcap_utils
-============
+DPMI capture utilities (libcap_utils)
+=====================================
 
 The libary is used by consumers to interface with the measurement stream and the [measurement points](https://github.com/DPMI/mp) use it to construct the measurement frames.
 
 It features tools for working with captured traces, including capture, splitting, merging, filtering, converting and displaying traces.
 
+Documentation
+-------------
+
+Documentation is available at https://dpmi.github.io/libcap_utils. The public [API headers](caputils) also contains lots of documentations for library usage.
+
 Installing
 ----------
 
-See INSTALL for details
+See [Installing](https://dpmi.github.io/libcap_utils/#/0.7/install) for details.
 
     autoreconf -si
     mkdir build; cd build
@@ -21,16 +26,16 @@ Usage
 
 Most tools have manpages and all of them support `--help`.
 
-* `cap2pcap.c` - convert cap to pcap (libcap_utils to tcpdump).
-* `capdump.c` - read a live stream (e.g. from a MP) and dump the trace to a file.
-* `capfilter.c` - apply filters to a trace.
-* `capinfo.c` - short information and generic statistics of a trace.
-* `capmarker.c` - send a special marker packet through a live stream (easily identifiable by libcap_utils when doing analyzis).
-* `capmerge.c` - merge two or more traces.
-* `capshow.c` - display packets in a trace (tcpdump-style).
-* `capwalk.c` - display packets in a trace (verbose deep decoding of all packets)
-* `ifstat.c` - debugging utility
-* `pcap2cap.c` - convert pcap to cap (tcpdump to libcap_utils).
+* `cap2pcap` - convert cap to pcap (libcap_utils to tcpdump).
+* `capdump` - read a live stream (e.g. from a MP) and dump the trace to a file.
+* `capfilter` - apply filters to a trace.
+* `capinfo` - short information and generic statistics of a trace.
+* `capmarker` - send a special marker packet through a live stream (easily identifiable by libcap_utils when doing analyzis).
+* `capmerge` - merge two or more traces.
+* `capshow` - display packets in a trace (tcpdump-style).
+* `capwalk` - display packets in a trace (verbose deep decoding of all packets)
+* `ifstat` - debugging utility
+* `pcap2cap` - convert pcap to cap (tcpdump to libcap_utils).
 
 Patches
 -------
