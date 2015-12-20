@@ -7,4 +7,9 @@ before_install:
   - sudo apt-get install libpcap-dev libssl-dev
 
 before_script:
-  autoreconf -si
+  - autoreconf -si
+
+script:
+  - ./configure
+  - make
+  - make check
