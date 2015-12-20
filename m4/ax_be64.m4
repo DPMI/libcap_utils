@@ -6,7 +6,7 @@ AC_DEFUN([AX_BE64], [
   AC_COMPILE_IFELSE([AC_LANG_SOURCE([
   #include <endian.h>
   #include <stdint.h>
-  int foo(void){ uint64_t x = be64toh((uint64_t)0); }
+  void foo(void){ uint64_t x = be64toh((uint64_t)0); }
   ])], [
     AC_MSG_RESULT([yes])
     AC_DEFINE([HAVE_BE64TOH], [], [Define to 1 if you have the be64toh function.])
