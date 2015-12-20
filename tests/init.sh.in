@@ -1,4 +1,4 @@
 #!/bin/sh
 
-testdir="$(dirname $0)/@srcdir@"
+testdir="$(dirname ${BASH_SOURCE[0]})/@srcdir@"
 traces="$testdir/traces"
