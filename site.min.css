@@ -9989,11 +9989,21 @@ button.close {
   content: ""; }
 
 /* line 5, /home/ext/workspace/DPMI/libcap_utils/css/site.scss */
+html, body {
+  height: 100%; }
+
+/* line 9, /home/ext/workspace/DPMI/libcap_utils/css/site.scss */
 body {
   background: #ccc url(images/tweed.png); }
 
-/* line 9, /home/ext/workspace/DPMI/libcap_utils/css/site.scss */
+/* line 13, /home/ext/workspace/DPMI/libcap_utils/css/site.scss */
 .container {
-  background: #fff; }
+  min-height: 100%;
+  background: #fff;
+  box-shadow: 0 0 25px rgba(0, 0, 0, 0.5); }
+
+/* line 20, /home/ext/workspace/DPMI/libcap_utils/css/site.scss */
+.markdown img {
+  max-width: 100%; }
 
 /*# sourceMappingURL=site.min.css.map */

@@ -2,10 +2,22 @@
 @import "bootstrap";
 @import "font-awesome";
 
+html, body {
+	height: 100%;
+}
+
 body {
 	background: #ccc url(images/tweed.png);
 }
 
 .container {
+	min-height: 100%;
 	background: #fff;
+	box-shadow: 0 0 25px rgba(0, 0, 0, 0.5);
+}
+
+.markdown {
+	img {
+		max-width: 100%;
+	}
 }

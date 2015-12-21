@@ -27,6 +27,7 @@ module.exports = function(grunt) {
 				validthis: true,
 				globals: {
 					angular: true,
+					showdown: true,
 				},
 			},
 			script: ['js/*.js'],

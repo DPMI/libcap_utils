@@ -1,6 +1,8 @@
 (function(){
 	'use strict';
 
+	var base_url = 'https://raw.githubusercontent.com/DPMI/libcap_utils/master/doc/';
+
 	var app = angular.module('site', [
 		'ngRoute',
 		'pascalprecht.translate',
@@ -17,7 +19,14 @@
 	function Config($translateProvider, $routeProvider, $showdownProvider){
 		$translateProvider.translations({});
 
+		showdown.extension('rewrite_url', function(){
+			return [
+				{ type: 'output', regex: 'src="(.*)"', replace: 'src="' + base_url + '/$1"' },
+			];
+		});
+
 		$showdownProvider.setOption('headerLevelStart', 2);
+		$showdownProvider.loadExtension('rewrite_url');
 
 		$routeProvider
 			.when('/0.7', {
@@ -45,7 +54,7 @@
 	}
 
 	function getUrl(name){
-		return 'https://raw.githubusercontent.com/DPMI/libcap_utils/master/doc/' + capitalize(name) + '.md';
+		return base_url + capitalize(name) + '.md';
 	}
 
 	PageController.$inject = ['$routeParams', '$http'];
