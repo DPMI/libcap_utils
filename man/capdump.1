@@ -46,14 +46,14 @@ capturing stops.
 Markers are sent using capmaker(1).
 
 .TP
-\fB\-\-marker\fR=\fIPORT\fR
+\fB\-m\fR, \fB\-\-marker\fR=\fIPORT\fR
 Look for specially crafted marker packet in the stream on port \fiPORT\fP.
 .TP
 \fB\-K\fR, \fB\-\-key=\fIKEY\fR
 Only act on markers with matching key, other markers is ignored (but will still
 be present in output file).
 .TP
-\fB\-\-marker\-format\fR=\fIFORMAT\fR
+\fB\-f\fR, \fB\-\-marker\-format\fR=\fIFORMAT\fR
 Default format is "%f.%s.%e".
 .RS
 .IP %f
@@ -95,6 +95,6 @@ Listen on local TCP and UDP sockets for markers.
 \fB\-P\fR, \fB\-\-port=\fIPORT\fR
 Port number to listen on. Default is 4000.
 .SH COPYRIGHT
-Copyright (C) 2011-2012 David Sveningsson <dsv@bth.se>.
+Copyright (C) 2011-2015 David Sveningsson <ext-dpmi@sidvind.com>.
 .SH "SEE ALSO"
 stream-address(3), capmarker(1)
