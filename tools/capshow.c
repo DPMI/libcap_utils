@@ -95,7 +95,7 @@ static void show_usage(void){
 	       "  -3                     .. include transport layer.\n"
 	       "  -4                     .. include application layer. [default]\n"
 	       "  -H, --headers        Show layer headers.\n"
-	       "  -x, --hexdump        Write full package content as hexdump.\n"
+	       "  -x, --hexdump        Write full packet content as hexdump.\n"
 	       "  -d, --calender       Show timestamps in human-readable format (UTC).\n"
 	       "  -D, --localtime      Show timestamps in human-readable format (local time).\n"
 	       "  -a, --absolute       Show absolute timestamps.\n"

@@ -1,0 +1,67 @@
+.TH capshow 1 "21 Dec 2015" "BTH" "Measurement Area Manual"
+.SH NAME
+capshow \- Decode and display packages in a stream or trace.
+.SH SYNOPSIS
+.nf
+.B capshow [\fIOPTIONS...\fP] STREAM
+.SH DESCRIPTION
+.BR capshow
+is used to decode and display packages in a live stream or an offline
+capfile.
+.TP
+\fB\-i\fR, \fB\-\-iface\fR=\fIIFACE\fR
+For ethernet-based streams this is the interface to listen
+on. Required for ethernet streams.
+.TP
+\fB\-p\fR, \fB\-\-packets\fR=\fIN\fR
+Stops capture after \fIN\fP packets has been recevied.
+.TP
+\fB\-c\fR, \fB\-\-count\fR=\fIN\fR
+Stops capture after \fIN\fP packets has been matched.
+.TP
+\fB\-t\fR, \fB\-\-timeout\fR=\fIN\fR
+Wait for N ms while packet-buffer filles. Use longer intervals for
+hi-speed streams and shorter for streams with very little packets but
+you want application to be responsive.
+.TP
+\fB\-h\fR\, \fB\-\-help\fR
+Display short help and exit.
+.TP
+\fB\-\-version\fR
+Display version and exit.
+.SH FORMATTING OPTIONS
+These options affect the output format and how deep packet decoding should occur.
+.TP
+\fB\-1\fR
+Show only DPMI metadata.
+.TP
+\fB\-2\fR
+Include link layer.
+.TP
+\fB\-3\fR
+Include transport layer.
+.TP
+\fB\-4\fR
+Include application layer. Default.
+.TP
+\fB\-H\fR, \fB\-\-headers\fR
+Show full layer headers.
+.TP
+\fB\-x\fR, \fB\-\-hexdump\fR
+Write full packet contents as hexdump.
+.TP
+\fB\-d\fR, \fB\-\-calender\fR
+Show timestamps in humand-readable format (UTC).
+.TP
+\fB\-D\fR, \fB\-\-localtime\fR
+Show timestamps in humand-readable format (local time).
+.TP
+\fB\-a\fR, \fB\-\-absolute\fR
+Show absolute timestamps (unix timestamps).
+.TP
+\fB\-r\fR, \fB\-\-relative\fR
+Show timestamps relative to the first packet. Default.
+.SH COPYRIGHT
+Copyright (C) 2011-2015 David Sveningsson <ext-dpmi@sidvind.com>.
+.SH "SEE ALSO"
+mp(1), capdump(1), capwalk(1)
