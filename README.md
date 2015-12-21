@@ -1,5 +1,6 @@
 DPMI capture utilities (libcap_utils)
 =====================================
+[![Build Status](https://travis-ci.org/DPMI/libcap_utils.svg?branch=master)](https://travis-ci.org/DPMI/libcap_utils)
 
 Library and tools for working with network packet streams (traces) from a DPMI MA (measurement area) with one or more [measurement points](https://github.com/DPMI/mp).
 
