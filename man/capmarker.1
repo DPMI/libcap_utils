@@ -5,9 +5,47 @@ capmarker \- Send a special packet that be identified in the capture stream.
 .nf
 .B capmarker \-e \fIEXP\fP \-r \fIRUN\fP [\-k \fIKEY\fP] [\-s \fISEQ\fP]
 .SH DESCRIPTION
+Markers are special packets that \fIlibcap_utils\fR can easily
+identify and which contains meta-data about the traffic. \fIcapdump\fR
+can use markers to split captures to multiple files and it can be used
+to later identify what experiment and run the traffic belongs to.
 
+.nf
+\fB\-e\fR, \fB\-\-experiment\fR=\fIID\fR
+\fB\-r\fR, \fB\-\-run\fR=\fIID\fR
+\fB\-k\fR, \fB\-\-key\fR=\fIID\fR
+\fB\-s\fR, \fB\-\-sequence\fR=\fIID\fR
+.RS
+Extra information passed in the marker. There is no inherit meaning to
+these numbers, it is considered domain-specific information that the
+user puts meaning into.
+.BR
+Usually all numbers starts at 1 and for each new scenario the
+\fBexperiment\fR number is increased. If the scenario consists of
+multiple runs the \fBrun\fR number is reset back to 1 at the start and
+increased once per run. \fBKey\fR can be used as an identifier and
+\fBsequence\fR might be a global sequential number.
+.RE
 .TP
-\fB\-h\fR, \fB\-\-help
+\fB\-c\fR, \fB\-\-comment\fR
+Include text-comment in marker. Up to 63 characters can be included verbatim.
+.TP
+\fB\-u\fR
+Send marker as a UDP packet. Default.
+.TP
+\fB\-t\fR
+Send marker as a TCP packet (need a receiver for to work, e.g. `nc -lp PORT`).
+.TP
+\fB\-x\fR
+Send marker as an ethernet frame.
+.TP
+\fB\-T\fR, \fB\-\-terminate\fR
+Include a hint to consumers that this stream is no longer interesting,
+e.g. if you have some automatic tests or scenario that have finished
+you make include the termination hint so consumers can stop
+processing.
+.TP
+\fB\-h\fR, \fB\-\-help\fR
 Short help.
 .SH COPYRIGHT
 Copyright (C) 2011-2012 David Sveningsson <dsv@bth.se>.
