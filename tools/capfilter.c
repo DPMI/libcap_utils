@@ -49,7 +49,7 @@ static int quiet = 0;
 static unsigned int max_read = 0;
 static unsigned int max_matched = 0;
 
-static const char* shortopts = "p:m:i:o:r:b:vqh";
+static const char* shortopts = "p:m:i:o:r:vqh";
 static struct option longopts[] = {
 	{"packets", required_argument, 0, 'p'},
 	{"matched", required_argument, 0, 'm'},

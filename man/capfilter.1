@@ -10,6 +10,12 @@ is used to filter packages in an existing capture and store the result in a new
 file. \fIcapfilter\fP without a filter can be used to convert a capture from an
 old format to the latest.
 .TP
+\fB\-p\fR, \fB\-\-packets\fR=\fIN\fR
+Stop capture after \fIN\fP packets has been recevied.
+.TP
+\fB\-m\fR, \fB\-\-matched\fR=\fIN\fR
+Stop capture after \fIN\fP packets has been matched.
+.TP
 \fB\-i\fR, \fB\-\-input\fR=\fIFILE\fR
 Read capture from FILE or use \- to read from stdin (default)
 .TP
@@ -18,6 +24,16 @@ Store result into FILE or use \- to write to stdout (default if not a TTY)
 .TP
 \fB\-r\fR, \fB\-\-rejects\fR=\fIFILE\fR
 Store packets rejected by the filter.
+.TP
+\fB\-v\fR, \fB\-\-invert
+Inverts (negates) the filter, i.e. packets that would normally match
+will not be discareded and vice-versa.
+.TP
+\fB\-q\fR, \fB\-\-quiet
+Suppress output.
+.TP
+\fB\-h\fR, \fB\-\-help
+Short help text.
 .SH FILTER
 .TP
 \fB\-\-starttime\fR=\fIDATETIME\fR
@@ -41,11 +57,14 @@ Discard all packets after DATETIME seconds went since the last packet.
 \fB\-\-iface\fR=\fISTRING\fR
 Discard all packages which isn't captured on the interface give by STRING.
 .TP
+\fB\-\-if\fR=\fISTRING\fR (deprecated)
+Alias for \-\-iface.
+.TP
 \fB\-\-mampid\fR=\fISTRING\fR
 Discard all packages not originating from MP with MAMPid STRING.
 .TP
 \fB\-\-mpid\fR=\fISTRING\fR (deprecated)
-Alias for --mampid.
+Alias for \-\-mampid.
 .TP
 \fB\-\-eth.vlan\fR=\fITCO[/MASK]\fR
 Filter by VLAN Tag Control Information. Discards packets without a VLAN tag.
@@ -81,6 +100,13 @@ protocol number or a valid name from `/etc/services`.
 Discard packets not destined to \fIPORT\fP which can either be entered as
 protocol number or a valid name from `/etc/services`.
 .TP
+\fB\-\-tp.port\fR=\fIPORT[/MASK]\fR
+Matches packets either to \fBor\fR from \fIPORT\fR,
+e.g. \-\-tp.port=80 will match both request and response.
+.TP
+\fB\-\-caplen\fR=\fIBYTES\fR
+Limit the amount of captured bytes to \fIBYTES\fR, truncating packets as needed.
+.TP
 \fB\-\-filter-mode\fR=\fIMODE\fR
 \fIMODE\fP can be set to either OR or AND (default) which changes the operator
 when joining the different filters. By setting to OR only one of the filters
@@ -91,17 +117,20 @@ Discards all packets not in the specified range.
 Range can be specified as
 .RS
 .TP
-\[bu] FRAME - Match only this specific frame.
+\[bu] "23" - Match only a specific frame.
 .TP
-\[bu] LOWER-UPPER - Match all frames between LOWER and UPPER (inclusive)
+\[bu] "23-59" - Match all frames between 23 and 59 (inclusive)
 .TP
-\[bu] -UPPER - Match all frames up to UPPER (inclusive)
+\[bu] "-59" - Match all frames up to 59 (inclusive)
 .TP
-\[bu] LOWER- - Match all frames from LOWER and onwards (inclusive)
+\[bu] "23-" - Match all frames from 23 and onwards (inclusive)
 .TP
 .RE
 Multiple ranges can be joined with comma. E.g. "-5,7,10-" would match packets
 1-5, 7 and then from 10 until the end of the stream.
+.TP
+\fB\-\-bpf\fR=\fIFILTER\fR
+Match using a BPF filter. Requires pcap support.
 .SH DATE FORMAT
 Valid date formats are:
 .sp
