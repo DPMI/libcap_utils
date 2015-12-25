@@ -76,8 +76,10 @@ static void print_timestamp(FILE* fp, struct format* state, const struct cap_hea
 }
 
 static void print_pkt(FILE* fp, struct format* state, const struct cap_header* cp){
+	const stream_id_t id = stream_id(cp);
+
 	print_timestamp(fp, state, cp);
-	fprintf(fp, ":LINK(%4d):CAPLEN(%4d)", cp->len, cp->caplen);
+	fprintf(fp, ":LINK(%4d):CAPLEN(%4d):ID(%4d)", cp->len, cp->caplen, id);
 
 	if ( cp->caplen > 0 && state->flags >= FORMAT_LAYER_LINK ){
 		struct header_chunk header;

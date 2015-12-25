@@ -97,6 +97,30 @@ void header_dump(FILE* fp, const struct header_chunk* header, const char* prefix
 void header_format(FILE* fp, const struct header_chunk* header, int flags);
 size_t header_size(const struct header_chunk* header);
 
+typedef unsigned int stream_id_t;
+
+/**
+ * Determinate stream id for this packet.
+ *
+ * If this is a new stream a new unique id will be generated or if
+ * this packet is part of an existing stream (connection) the same id
+ * as the existing will be returned. Given the same trace the same
+ * connections will yield deterministic output but for a different
+ * trace the same set of IP:port can yield a different id.
+ *
+ * Request for stream ids should be sequential, calling this function
+ * for out-of-order packets can potentially yield the wrong id
+ * (out-of-order within a CI, packets being out-of-order due to
+ * arriving at different times to multiple CI is fine but reading
+ * randomized packets from trace will not work.)
+ */
+stream_id_t stream_id(const struct cap_header* cp);
+
+/**
+ * No stream id could be generated.
+ */
+enum { STREAM_ID_NONE = 0, };
+
 #ifdef __cplusplus
 }
 #endif

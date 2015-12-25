@@ -318,3 +318,7 @@ void header_format(FILE* fp, const struct header_chunk* header, int flags){
 size_t header_size(const struct header_chunk* header){
 	return header->protocol->size_dyn ? header->protocol->size_dyn(header, header->ptr) : header->protocol->size;
 }
+
+stream_id_t stream_id(const struct cap_header* cp){
+	return STREAM_ID_NONE;
+}
