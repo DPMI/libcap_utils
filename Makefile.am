@@ -67,7 +67,7 @@ man1_MANS += man/capshow.1
 notrans_dist_man_MANS += man/capshow.1
 endif
 
-COMPILED_TESTS = tests/capdump_argv tests/capinfo_zero tests/capmerge_zero
+COMPILED_TESTS = tests/capdump_argv tests/capinfo_zero tests/capmerge_zero tests/slist
 if BUILD_TESTS
 # tests which requires cppunit
 COMPILED_TESTS += tests/filter tests/filter_argv tests/address tests/endian tests/hexdump tests/packet tests/stream tests/timepico
@@ -137,6 +137,7 @@ libcap_utils_07_la_SOURCES = \
 	src/protocols/tcp.c        \
 	src/protocols/udp.c        \
 	src/protocols/vlan.c       \
+	src/slist.c                \
 	src/stream.c               \
 	src/stream.h               \
 	src/stream_buffer.c        \
@@ -193,7 +194,7 @@ pcap2cap_LDADD = ${tools_LIBS}
 cap2pcap_SOURCES = tools/cap2pcap.c
 cap2pcap_CFLAGS = ${tools_CFLAGS}
 cap2pcap_LDADD = ${tools_LIBS}
-capinfo_SOURCES = tools/capinfo.c
+capinfo_SOURCES = tools/capinfo.c src/slist.c
 capinfo_CFLAGS = ${tools_CFLAGS}
 capinfo_LDADD = ${tools_LIBS}
 capdump_SOURCES = tools/capdump.c
@@ -263,6 +264,10 @@ tests_timepico_CXXFLAGS = ${AM_CFLAGS} $(CPPUNIT_CFLAGS)
 tests_timepico_LDFLAGS = $(CPPUNIT_LIBS)
 tests_timepico_LDADD = libcap_utils-07.la libcap_filter-07.la
 tests_timepico_SOURCES = tests/timepico.cpp
+
+tests_slist_CXXFLAGS = ${AM_CFLAGS} $(CPPUNIT_CFLAGS)
+tests_slist_LDFLAGS = $(CPPUNIT_LIBS)
+tests_slist_SOURCES = tests/slist.cpp src/slist.c
 
 tests_capdump_argv_LDADD = libcap_utils-07.la libcap_filter-07.la
 

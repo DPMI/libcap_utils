@@ -25,6 +25,7 @@
 
 #include "caputils/caputils.h"
 #include "caputils/marker.h"
+#include "src/slist.h"
 #include <unistd.h>
 #include <getopt.h>
 #include <string.h>
@@ -48,34 +49,6 @@ struct stats {
 
 	struct count transport[UINT16_MAX];    /* packet summary for transport layer */
 };
-
-struct simple_list {
-	char** key;          /* group key */
-	struct stats* value; /* statistics for this group */
-
-	size_t size;         /* slots in use */
-	size_t capacity;     /* slots available */
-};
-
-static void slist_clear(struct simple_list* slist){
-	for ( unsigned int i = 0; i < slist->size; i++ ){
-		free(slist->key[i]);
-	}
-	slist->size = 0;
-}
-
-static void slist_alloc(struct simple_list* slist, size_t growth){
-	slist->capacity += growth;
-	slist->key   = realloc(slist->key,   sizeof(char*) * slist->capacity);
-	slist->value = realloc(slist->value, sizeof(struct stats) * slist->capacity);
-}
-
-static void slist_free(struct simple_list* slist){
-	slist_clear(slist);
-	free(slist->key);
-	free(slist->value);
-	slist->capacity = 0;
-}
 
 static struct stats global;
 static stream_t st = NULL;
@@ -109,6 +82,8 @@ static unsigned int max(unsigned int a, unsigned int b){
 }
 
 static void reset_stats(struct stats* stat){
+	if ( !stat ) return;
+
 	stat->packets = 0;
 	stat->bytes = 0;
 	stat->byte_min = UINT16_MAX;
@@ -194,7 +169,7 @@ static void format_seconds(char* dst, size_t size, timepico first, timepico last
 	snprintf(dst, size, "%02d:%02d:%04.1f", h, m, s > 0 ? (float)s/10 : 0);
 }
 
-static const char* array_join(char* dst, char* const src[], size_t n, const char* delimiter){
+static const char* array_join(char* dst, const char* src[], size_t n, const char* delimiter){
 	char* cur = dst;
 	for ( unsigned int i = 0; i < n; i++ ){
 		cur += sprintf(cur, "%s%s", (i>0?delimiter:""), src[i]);
@@ -204,12 +179,12 @@ static const char* array_join(char* dst, char* const src[], size_t n, const char
 
 static const char* get_mampid_list(const char* delimiter){
 	static char buffer[2048];
-	return array_join(buffer, mpid.key, mpid.size, delimiter);
+	return array_join(buffer, (const char**)mpid.key, mpid.size, delimiter);
 }
 
 static const char* get_CI_list(const char* delimiter){
 	static char buffer[2048];
-	return array_join(buffer, CI.key, CI.size, delimiter);
+	return array_join(buffer, (const char**)CI.key, CI.size, delimiter);
 }
 
 static const char* get_comment(stream_t st){
@@ -255,11 +230,11 @@ static void print_overview(){
 	printf("Locations\n"
 	       "---------\n");
 	for ( size_t i = 0; i < location.size; i++ ){
-		const struct stats* s = &location.value[i];
+		const struct stats* s = (const struct stats*)slist_get(&location, i);
 		const timepico time_diff = timepico_sub(s->last, s->first);
 		uint64_t hseconds = time_diff.tv_sec * 10 + time_diff.tv_psec / (PICODIVIDER / 10);
 		format_seconds(sec_str, 128, global.first, global.last);
-		printf("  location:%s %.1f seconds, %ld packets, %ld bytes\n", location.key[i], (float)hseconds/10, s->packets, s->bytes);
+		printf("  location:%s %.1f seconds, %ld packets, %ld bytes\n", (const char *)location.key[i], (float)hseconds/10, s->packets, s->bytes);
 	}
 	printf("\n");
 }
@@ -315,38 +290,39 @@ static const char* get_location(struct cap_header* cp){
   return buffer;
 }
 
-static unsigned int store_unique(struct simple_list* slist, const char* key, size_t maxlen){
+struct cmp_data { const char* str; size_t maxlen; };
+
+static int cmp(const void* cur, const void* key){
+	const struct cmp_data* data = (const struct cmp_data*)key;
+	return strncmp((const char*)cur, data->str, data->maxlen);
+}
+
+static struct stats* store_unique(struct simple_list* slist, const char* key, size_t maxlen){
 	/* try to locate an existing string */
-	for ( unsigned int i = 0; i < slist->size; i++ ){
-		if ( strncmp(slist->key[i], key, maxlen) == 0 ) return i;
+	struct cmp_data cmp_data = {key, maxlen};
+	struct stats* existing = slist_find(slist, &cmp_data, cmp);
+	if ( existing ){
+		return existing;
 	}
 
-	/* allocate more memory if needed */
-	if ( slist->size == slist->capacity ){
-		slist_alloc(slist, /* growth = */ slist->capacity);
-	}
-
-	/* store key */
-	unsigned int index = slist->size;
-	slist->key[index] = strndup(key, maxlen);
-	slist->size++;
-	reset_stats(&slist->value[index]);
-	return index;
+	struct stats* stats = slist_put(slist, strndup(key, maxlen));
+	reset_stats(stats);
+	return stats;
 }
 
 static void store_mampid(struct cap_header* cp){
-	const int i = store_unique(&mpid, cp->mampid, 8);
-	store_stats(&mpid.value[i], cp);
+	struct stats* stats = store_unique(&mpid, cp->mampid, 8);
+	store_stats(stats, cp);
 }
 
 static void store_CI(struct cap_header* cp){
-	const int i = store_unique(&CI, cp->nic, CAPHEAD_NICLEN);
-	store_stats(&CI.value[i], cp);
+	struct stats* stats = store_unique(&CI, cp->nic, CAPHEAD_NICLEN);
+	store_stats(stats, cp);
 }
 
 static void store_location(struct cap_header* cp){
-	const int i = store_unique(&location, get_location(cp), 17);
-	store_stats(&location.value[i], cp);
+	struct stats* stats = store_unique(&location, get_location(cp), 17);
+	store_stats(stats, cp);
 }
 
 static void parse_ethernetII(const struct cap_header* cp){
@@ -451,9 +427,10 @@ int main(int argc, char* argv[]){
 	}
 
 	/* initial storage */
-	slist_alloc(&mpid, 8);
-	slist_alloc(&CI, 8);
-	slist_alloc(&location, 8);
+	const size_t initial_size = 80;
+	slist_init(&mpid, sizeof(char*), sizeof(struct stats), initial_size);
+	slist_init(&CI, sizeof(char*), sizeof(struct stats), initial_size);
+	slist_init(&location, sizeof(char*), sizeof(struct stats), initial_size);
 
 	/* no positional arguments, try to process stdin */
 	if ( optind == argc ){
