@@ -27,6 +27,7 @@
 #include "caputils/utils.h"
 #include "caputils/marker.h"
 #include "caputils/log.h"
+#include "caputils/packet.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -228,6 +229,10 @@ int main(int argc, char **argv){
 		} else if ( ret != 0 ){
 			break; /* shutdown or error */
 		}
+
+		/* identify connection even if filter doesn't match so id will be
+		 * deterministic when changing the filter */
+		stream_id(cp);
 
 		if ( filter_match(&filter, cp->payload, cp) ){
 			format_pkg(stdout, &format, cp);

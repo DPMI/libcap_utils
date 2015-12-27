@@ -116,6 +116,7 @@ libcap_utils_07_la_SOURCES = \
 	src/log.c                  \
 	src/marker.c               \
 	src/packet.c               \
+	src/packet/stream_id.c     \
 	src/picotime.c             \
 	src/protocol.c             \
 	src/protocols/arp.c        \
