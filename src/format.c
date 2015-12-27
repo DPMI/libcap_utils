@@ -79,7 +79,7 @@ static void print_pkt(FILE* fp, struct format* state, const struct cap_header* c
 	print_timestamp(fp, state, cp);
 	fprintf(fp, ":LINK(%4d):CAPLEN(%4d)", cp->len, cp->caplen);
 
-	const stream_id_t id = stream_id(cp);
+	const connection_id_t id = connection_id(cp);
 	if ( id > 0 ){
 		fprintf(fp, ":ID(%4d)", id);
 	} else {

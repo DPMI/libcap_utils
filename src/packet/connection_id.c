@@ -43,11 +43,11 @@ static void ipv4_backward(struct entry* entry, const struct ip* ip, int sport, i
 	entry->ip.dport = sport;
 }
 
-static int stream_id_cmp(const void* cur, const void* key){
+static int connection_id_cmp(const void* cur, const void* key){
 	return memcmp(cur, key, sizeof(struct entry));
 }
 
-static void ipv4_stream_id(const struct cap_header* cp, const struct ip* ip, struct entry entry[2]){
+static void ipv4_connection_id(const struct cap_header* cp, const struct ip* ip, struct entry entry[2]){
 	uint16_t sport;
 	uint16_t dport;
 	find_tcp_header(cp->payload, cp->ethhdr, ip, &sport, &dport);
@@ -56,12 +56,12 @@ static void ipv4_stream_id(const struct cap_header* cp, const struct ip* ip, str
 	ipv4_backward(&entry[1], ip, sport, dport);
 }
 
-static stream_id_t stream_id_search(struct entry entry[2]){
+static connection_id_t connection_id_search(struct entry entry[2]){
 	int* id = NULL;
 
 	/* search both forward and backward entries for existing connection */
 	for ( unsigned int i = 0; i < 2; i++ ){
-		id = slist_find(&list, &entry[i], stream_id_cmp);
+		id = slist_find(&list, &entry[i], connection_id_cmp);
 		if ( id ) return *id;
 	}
 
@@ -73,7 +73,7 @@ static stream_id_t stream_id_search(struct entry entry[2]){
 	return *id;
 }
 
-stream_id_t stream_id(const struct cap_header* cp){
+connection_id_t connection_id(const struct cap_header* cp){
 	if ( !initialized ){
 		slist_init(&list, sizeof(void*), sizeof(int), 32);
 		initialized = 1;
@@ -84,9 +84,9 @@ stream_id_t stream_id(const struct cap_header* cp){
 	/* IPv4 */
 	const struct ip* ip = find_ipv4_header(cp->ethhdr, NULL);
 	if ( ip ){
-		ipv4_stream_id(cp, ip, entry);
-		return stream_id_search(entry);
+		ipv4_connection_id(cp, ip, entry);
+		return connection_id_search(entry);
 	}
 
-	return STREAM_ID_NONE;
+	return CONNECTION_ID_NONE;
 }

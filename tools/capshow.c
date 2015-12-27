@@ -232,7 +232,7 @@ int main(int argc, char **argv){
 
 		/* identify connection even if filter doesn't match so id will be
 		 * deterministic when changing the filter */
-		stream_id(cp);
+		connection_id(cp);
 
 		if ( filter_match(&filter, cp->payload, cp) ){
 			format_pkg(stdout, &format, cp);
