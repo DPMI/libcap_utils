@@ -130,6 +130,7 @@ libcap_utils_07_la_SOURCES = \
 	src/protocols/ipv4.c       \
 	src/protocols/ipv6.c       \
 	src/protocols/mpls.c       \
+	src/protocols/ospf.c       \
 	src/protocols/ptpv2.c	     \
 	src/protocols/sctp.c	     \
 	src/protocols/tcp.c        \

@@ -39,6 +39,9 @@ enum caputils_protocol_type ipproto_next(uint8_t proto){
 	case IPPROTO_IPV6:
 		return PROTOCOL_IPV6;
 
+	case IPPROTO_OSPF:
+		return PROTOCOL_OSPF;
+
 	case IPPROTO_TCP:
 		return PROTOCOL_TCP;
 
