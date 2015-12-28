@@ -72,13 +72,19 @@ static int connection_id_cmp(const void* cur, const void* key){
 	return memcmp(cur, key, sizeof(struct entry));
 }
 
-static void ipv4_connection_id(const struct cap_header* cp, const struct ip* ip, struct entry entry[2]){
-	uint16_t sport;
-	uint16_t dport;
-	find_tcp_header(cp->payload, cp->ethhdr, ip, &sport, &dport);
-	find_udp_header(cp->payload, cp->ethhdr, ip, &sport, &dport);
-	ipv4_forward (&entry[0], ip, sport, dport);
-	ipv4_backward(&entry[1], ip, sport, dport);
+static int ipv4_connection_id(const struct cap_header* cp, const struct ip* ip, struct entry entry[2]){
+	uint16_t sport = 0;
+	uint16_t dport = 0;
+	const void* tcp = find_tcp_header(cp->payload, cp->ethhdr, ip, &sport, &dport);
+	const void* udp = find_udp_header(cp->payload, cp->ethhdr, ip, &sport, &dport);
+
+	if ( tcp || udp ){
+		ipv4_forward (&entry[0], ip, sport, dport);
+		ipv4_backward(&entry[1], ip, sport, dport);
+		return 1;
+	} else {
+		return 0;
+	}
 }
 
 static struct state* connection_id_tcp_syn(const struct cap_header* cp, struct state* state){
@@ -152,8 +158,7 @@ connection_id_t connection_id(const struct cap_header* cp){
 
 	/* IPv4 */
 	const struct ip* ip = find_ipv4_header(cp->ethhdr, NULL);
-	if ( ip ){
-		ipv4_connection_id(cp, ip, entry);
+	if ( ip && ipv4_connection_id(cp, ip, entry) ){
 		return connection_id_search(cp, entry);
 	}
 
