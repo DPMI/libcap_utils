@@ -32,17 +32,25 @@ struct state {
 	connection_id_t id;
 };
 
-static struct simple_list list = {0,};
+/**
+ * States are stored in N buckets.
+ *
+ * Which bucket depends on the packet but both directions must yield the same
+ * bucket, e.g. (src^dst%N)
+ */
+#define bucket_count 256
+static struct simple_list list[bucket_count];
+
 static int initialized = 0;
 static int counter = 0;
 
-static struct state* entry_put(const struct entry* entry, connection_id_t id){
+static struct state* entry_put(struct simple_list* bucket, const struct entry* entry, connection_id_t id){
 	/* allocate new entry (key) */
 	void* key = malloc(sizeof(struct entry));
 	memcpy(key, entry, sizeof(struct entry));
 
 	/* initialize new state */
-	struct state* state = slist_put(&list, key);
+	struct state* state = slist_put(bucket, key);
 	memset(state, 0, sizeof(struct state));
 	state->entry = key;
 	state->id = id;
@@ -87,7 +95,11 @@ static int ipv4_connection_id(const struct cap_header* cp, const struct ip* ip, 
 	}
 }
 
-static struct state* connection_id_tcp_syn(const struct cap_header* cp, struct state* state){
+static unsigned int ipv4_bucket_select(const struct ip* ip){
+	return (ip->ip_src.s_addr ^ ip->ip_dst.s_addr) % bucket_count;
+}
+
+static struct state* connection_id_tcp_syn(struct simple_list* bucket, const struct cap_header* cp, struct state* state){
 	const struct ip* ip = find_ipv4_header(cp->ethhdr, NULL);
 	if ( !ip ) return state;
 
@@ -102,8 +114,8 @@ static struct state* connection_id_tcp_syn(const struct cap_header* cp, struct s
 	/* new SYN detected, assume new connection */
 	const connection_id_t id = ++counter;
 	struct state* new[2] = {
-		entry_put(state->entry, id),
-		entry_put(state->sibling->entry, id),
+		entry_put(bucket, state->entry, id),
+		entry_put(bucket, state->sibling->entry, id),
 	};
 
 	/* setup new connection */
@@ -119,11 +131,11 @@ static struct state* connection_id_tcp_syn(const struct cap_header* cp, struct s
 	return new[0];
 }
 
-static connection_id_t connection_id_search(const struct cap_header* cp, struct entry entry[2]){
+static connection_id_t connection_id_search(struct simple_list* bucket, const struct cap_header* cp, struct entry entry[2]){
 	/* search both forward and backward entries for existing connection */
-	struct state* state = slist_find(&list, &entry[0], connection_id_cmp);
+	struct state* state = slist_find(bucket, &entry[0], connection_id_cmp);
 	if ( state ){
-		state = connection_id_tcp_syn(cp, state);
+		state = connection_id_tcp_syn(bucket, cp, state);
 		return state->id;
 	}
 
@@ -132,7 +144,7 @@ static connection_id_t connection_id_search(const struct cap_header* cp, struct 
 	/* create new entry for this connection */
 	struct state* new[2] = {0,};
 	for ( unsigned int i = 0; i < 2; i++ ){
-		new[i] = entry_put(&entry[i], id);
+		new[i] = entry_put(bucket, &entry[i], id);
 
 		/* try to get a sequence number */
 		const struct ip* ip = find_ipv4_header(cp->ethhdr, NULL);
@@ -150,7 +162,9 @@ static connection_id_t connection_id_search(const struct cap_header* cp, struct 
 
 connection_id_t connection_id(const struct cap_header* cp){
 	if ( !initialized ){
-		slist_init(&list, sizeof(void*), sizeof(struct state), 32);
+		for ( unsigned int i = 0; i < bucket_count; i++ ){
+			slist_init(&list[i], sizeof(void*), sizeof(struct state), 32);
+		}
 		initialized = 1;
 	}
 
@@ -159,7 +173,8 @@ connection_id_t connection_id(const struct cap_header* cp){
 	/* IPv4 */
 	const struct ip* ip = find_ipv4_header(cp->ethhdr, NULL);
 	if ( ip && ipv4_connection_id(cp, ip, entry) ){
-		return connection_id_search(cp, entry);
+		const unsigned int bucket = ipv4_bucket_select(ip);
+		return connection_id_search(&list[bucket], cp, entry);
 	}
 
 	return CONNECTION_ID_NONE;
