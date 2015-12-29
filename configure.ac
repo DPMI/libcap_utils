@@ -93,6 +93,11 @@ AS_IF([test "x$enable_utils" = "xno"], [
   fi
 ])
 
+AC_ARG_ENABLE([valgrind], [AS_HELP_STRING([--enable-valgrind], [Extra memory debugging annotation for validing])])
+AS_IF([test "x$enable_valgrind" != "xyes"], [
+  AC_DEFINE([NVALGRIND], [1], [Define to 1 if extra valgrind annotation should be enabled])
+])
+
 AM_CONDITIONAL([BUILD_CAPDUMP],   [test "x$enable_capdump"   = "xyes" -o "x$enable_capdump"   = "$utils_unset"])
 AM_CONDITIONAL([BUILD_CAPINFO],   [test "x$enable_capinfo"   = "xyes" -o "x$enable_capinfo"   = "$utils_unset"])
 AM_CONDITIONAL([BUILD_CAPFILTER], [test "x$enable_capfilter" = "xyes" -o "x$enable_capfilter" = "$utils_unset"])

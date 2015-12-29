@@ -79,6 +79,13 @@ static void print_pkt(FILE* fp, struct format* state, const struct cap_header* c
 	print_timestamp(fp, state, cp);
 	fprintf(fp, ":LINK(%4d):CAPLEN(%4d)", cp->len, cp->caplen);
 
+	const connection_id_t id = connection_id(cp);
+	if ( id > 0 ){
+		fprintf(fp, ":ID(%4d)", id);
+	} else {
+		fprintf(fp, ":ID(   -)");
+	}
+
 	if ( cp->caplen > 0 && state->flags >= FORMAT_LAYER_LINK ){
 		struct header_chunk header;
 		header_init(&header, cp, 0);
