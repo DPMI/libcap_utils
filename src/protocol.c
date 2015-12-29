@@ -51,6 +51,7 @@ static void __attribute__((constructor)) protocol_init(void){
 	REGISTER_PROTOCOL(protocol_gre, PROTOCOL_GRE);
 	REGISTER_PROTOCOL(protocol_gtp, PROTOCOL_GTP);
 	REGISTER_PROTOCOL(protocol_icmp, PROTOCOL_ICMP);
+	REGISTER_PROTOCOL(protocol_igmp, PROTOCOL_IGMP);
 	REGISTER_PROTOCOL(protocol_ipv4, PROTOCOL_IPV4);
 	REGISTER_PROTOCOL(protocol_ipv6, PROTOCOL_IPV6);
 	REGISTER_PROTOCOL(protocol_mpls, PROTOCOL_MPLS);

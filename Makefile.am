@@ -126,6 +126,7 @@ libcap_utils_07_la_SOURCES = \
 	src/protocols/gre.c        \
 	src/protocols/gtp.c	       \
 	src/protocols/icmp.c       \
+	src/protocols/igmp.c       \
 	src/protocols/ip.c         \
 	src/protocols/ipv4.c       \
 	src/protocols/ipv6.c       \
