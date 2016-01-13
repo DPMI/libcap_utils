@@ -8,3 +8,4 @@ Overall it is a good idea to look through headers in the `caputils` folder and r
 1. [Reading packets](01-reading_packets.c) - A rudimentary consumer which reads packets for a trace and prints packet sizes.
 2. [Filtering packets](02-filtering_packets.c) - Creating packet filter pragmatically.
 3. [Traversing headers](03-traversing_headers.c) - Traversing and inspecting each header in captured packets.
+4. [Identifying connections](04-identifying_connections.c) - Identify a connection and assign a unique ID to it.

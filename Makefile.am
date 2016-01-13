@@ -7,7 +7,8 @@ noinst_PROGRAMS =                      \
 	ifstat                               \
 	example/01-reading_packets           \
 	example/02-filtering_packets         \
-	example/03-traversing_headers
+	example/03-traversing_headers        \
+	example/04-identifying_connections
 man1_MANS =
 man3_MANS =                 \
 	man/libcaputils_reading.3 \
@@ -284,6 +285,9 @@ example_02_filtering_packets_LDADD = ${tools_LIBS}
 
 example_03_traversing_headers_CFLAGS = ${tools_CFLAGS}
 example_03_traversing_headers_LDADD = ${tools_LIBS}
+
+example_04_identifying_connections_CFLAGS = ${tools_CFLAGS}
+example_04_identifying_connections_LDADD = ${tools_LIBS}
 
 install-dumper:
 	install -D -m 0755 dist/dumper_init $(DESTDIR)${sysconfdir}/init.d/dumper
