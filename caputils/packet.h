@@ -75,6 +75,20 @@ struct network {
 };
 typedef const struct network* net_t;
 
+/**
+ * Header walk. An API for traversing each (known) header in a packet.
+ *
+ * Usually something like this:
+ *
+ * struct header_chunk header;
+ * header_init(&header, cp, 0);
+ * while ( header_walk(&header) ){
+ *   switch ( header.protocol->type ){
+ *     // ...
+ *   }
+ * }
+ */
+
 struct header_chunk {
 	/* state */
 	int layer;                                   /* how deep to process protocols before considering data */
@@ -91,6 +105,13 @@ struct header_chunk {
 	};
 };
 
+/**
+ * Initialize header walker.
+ *
+ * @param header context to initialize.
+ * @param cp captured packet.
+ * @param layer unused for now.
+ */
 void header_init(struct header_chunk* header, const struct cap_header* cp, int layer);
 int header_walk(struct header_chunk* header);
 void header_dump(FILE* fp, const struct header_chunk* header, const char* prefix);

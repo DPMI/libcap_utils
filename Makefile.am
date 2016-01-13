@@ -3,7 +3,11 @@ AM_CFLAGS = -Wall -Wcast-qual ${PCAP_CFLAGS} ${PFRING_CFLAGS}
 
 lib_LTLIBRARIES = libcap_utils-07.la libcap_filter-07.la libcap_marc-07.la
 bin_PROGRAMS = 
-noinst_PROGRAMS = ifstat example/01-reading_packets example/02-filtering_packets
+noinst_PROGRAMS =                      \
+	ifstat                               \
+	example/01-reading_packets           \
+	example/02-filtering_packets         \
+	example/03-traversing_headers
 man1_MANS =
 man3_MANS =                 \
 	man/libcaputils_reading.3 \
@@ -277,6 +281,9 @@ example_01_reading_packets_LDADD = ${tools_LIBS}
 
 example_02_filtering_packets_CFLAGS = ${tools_CFLAGS}
 example_02_filtering_packets_LDADD = ${tools_LIBS}
+
+example_03_traversing_headers_CFLAGS = ${tools_CFLAGS}
+example_03_traversing_headers_LDADD = ${tools_LIBS}
 
 install-dumper:
 	install -D -m 0755 dist/dumper_init $(DESTDIR)${sysconfdir}/init.d/dumper
