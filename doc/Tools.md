@@ -23,6 +23,12 @@ Most tools have manpages and all of them support `--help` for detailed usage.
 
     capshow trace.cap
 
+
+### Show the content of two live streams
+    
+    capshow -i eth0 01::10 01::01
+    
+    
 ### Merge two traces to a single file
 
     capmerge -o merged.cap trace1.cap trace2.cap
