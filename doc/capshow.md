@@ -3,8 +3,8 @@
 Use "--help" for detailed usage, and read the code for new features. 
 
 ## capshow-0.7.17-git[7e641fd/master]
-(C) 2004 Patrik Arlos <patrik.arlos@bth.se>
-(C) 2012 David Sveningsson <david.sveningsson@bth.se>
+(C) 2004 Patrik Arlos \<patrik.arlos@bth.se\>
+(C) 2012 David Sveningsson \<david.sveningsson@bth.se\>
 Usage: capshow [OPTIONS] STREAM
   -i, --iface          For ethernet-based streams, this is the interface to listen
                        on. For other streams it is ignored.
@@ -15,7 +15,7 @@ Usage: capshow [OPTIONS] STREAM
       --version        Show program version and exit.
   -h, --help           This text.
 
-## Formatting options:
+## Formatting options
   -1                   Show only DPMI information.
   -2                     .. include link layer.
   -3                     .. include transport layer.
@@ -60,15 +60,15 @@ Usage: capshow [OPTIONS] STREAM
                                 filter.
 
 ## Output 
-[pktCnt]:<CI>:<mpid>:<arrivaltime>:LINK(<L2 lenght>):CAPLEN( <captured bytes>):<NetworkProtocol>:<TransportInfo>:<Additional info>
+pktCnt:CI:mpid:arrivaltime:LINK(L2 lenght):CAPLEN(captured bytes):NetworkProtocol:TransportProtocol:AdditionalInfo
 
 ## Output: UDP example
-[   1]:d01::0.000000000000:LINK(  94):CAPLEN(  98):ID(   1): IPv4: UDP: 10.53.36.3:1985 --> 224.0.0.102:1985 len=60 check=7692
-[   2]:d01::0.291647136250:LINK(  94):CAPLEN(  98):ID(   2): IPv4: UDP: 10.53.36.2:1985 --> 224.0.0.102:1985 len=60 check=2316
+\[   1\]:d01:mpa:0.000000000000:LINK(  94):CAPLEN(  98):ID(   1): IPv4: UDP: 10.53.36.3:1985 --> 224.0.0.102:1985 len=60 check=7692
+\[   2\]:d01:mpa:0.291647136250:LINK(  94):CAPLEN(  98):ID(   2): IPv4: UDP: 10.53.36.2:1985 --> 224.0.0.102:1985 len=60 check=2316
 
 ## Output: TCP example
-[10843]:d00::774.438017189500:LINK(  60):CAPLEN(  64):ID( 744): IPv4: TCP: [A] 10.53.36.6:56351 --> 195.54.108.78:443 ws=16425 seq=1856428498 ack=1383033854
-[10844]:d01::774.463548302750:LINK(1514):CAPLEN(1518):ID( 744): IPv4: TCP: [A] 195.54.108.78:443 --> 10.53.36.6:56351 ws=986 seq=1383035314 ack=1856428498
+\[10843\]:d00:mpb:774.438017189500:LINK(  60):CAPLEN(  64):ID( 744): IPv4: TCP: [A] 10.53.36.6:56351 --> 195.54.108.78:443 ws=16425 seq=1856428498 ack=1383033854
+\[10844\]:d01:mpb:774.463548302750:LINK(1514):CAPLEN(1518):ID( 744): IPv4: TCP: [A] 195.54.108.78:443 --> 10.53.36.6:56351 ws=986 seq=1383035314 ack=1856428498
 
 
 
