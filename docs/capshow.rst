@@ -1,27 +1,27 @@
 capshow
 =======
 
+Read packets from stream and display packet data (similar to ``tcpdump``).
+
 Use ``--help`` for detailed usage, and read the code for new features.
 
 General options
 ---------------
 
--i, --iface          For ethernet-based streams, this is the interface to listen
-                     on. For other streams it is ignored.
+-i, --iface          For ethernet-based streams, this is the interface to listen on. For other streams it is ignored.
 -p, --packets=N      Stop after N read packets.
--c, --count=N        Stop after N matched packets.
-                     If both -p and -c is used, what ever happens first will stop.
+-c, --count=N        Stop after N matched packets. If both -p and -c is used, what ever happens first will stop.
 -t, --timeout=N      Wait for N ms while buffer fills [default: 1000ms].
-    --version        Show program version and exit.
+--version            Show program version and exit.
 -h, --help           This text.
 
 Formatting options
 ------------------
 
 -1                   Show only DPMI information.
--2                     .. include link layer.
--3                     .. include transport layer.
--4                     .. include application layer. [default]
+-2                   .. include link layer.
+-3                   .. include transport layer.
+-4                   .. include application layer. [default]
 -H, --headers        Show layer headers.
 -x, --hexdump        Write full packet content as hexdump.
 -d, --calender       Show timestamps in human-readable format (UTC).
@@ -32,7 +32,7 @@ Formatting options
 Filter options
 --------------
 
-:::
+::
 
    --starttime=DATETIME      Discard all packages before starttime described by
                              the unix timestamp. See capfilter(1) for
