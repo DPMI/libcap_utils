@@ -27,6 +27,7 @@ streams (traces).
 
    tools
    capshow
+   usecases
 
 
 Indices and tables
