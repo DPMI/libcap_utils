@@ -19,9 +19,9 @@ Formatting options
 ------------------
 
 -1                   Show only DPMI information.
--2                   .. include link layer.
--3                   .. include transport layer.
--4                   .. include application layer. [default]
+-2                   \.. include link layer.
+-3                   \.. include transport layer.
+-4                   \.. include application layer. [default]
 -H, --headers        Show layer headers.
 -x, --hexdump        Write full packet content as hexdump.
 -d, --calender       Show timestamps in human-readable format (UTC).
