@@ -13,9 +13,20 @@ live or offline analyzis (e.g. bitrate, oneway-delay, etc) of the captured
 streams (traces).
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Contents:
 
+   overview
+   install
+   consumers
+   api
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Tools:
+
+   tools
+   capshow
 
 
 Indices and tables
