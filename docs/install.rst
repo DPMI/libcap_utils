@@ -1,6 +1,9 @@
 Install instructions
 ====================
 
+.. role:: bash(code)
+   :language: bash
+
 .. code-block:: bash
 
    autoreconf -si
@@ -166,7 +169,7 @@ pkg-config)
 Library not found during relinking
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-   libtool: install: warning: relinking `libcap_utils-07.la'
+   libtool: install: warning: relinking \`libcap_utils-07.la'
    libtool: install: (cd /home/dsv/libcap_utils-0.7.7; /bin/bash /home/dsv/libcap_utils-0.7.7/libtool  --silent --tag CC --mode=relink gcc -std=gnu99 -Wall -g -O2 -version-info 0:1:0 -o libcap_utils-07.la -rpath /usr/lib address.lo error.lo log.lo marker.lo utils.lo picotime.lo libcap_stream-07.la libcap_filter-07.la libcap_marc-07.la -inst-prefix-dir /home/dsv/libcap_utils-0.7.7/libcap-utils_0.7.7_amd64)
    /usr/bin/ld: cannot find -lcap_stream-07
    collect2: ld returned 1 exit status
