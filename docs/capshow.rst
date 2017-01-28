@@ -6,6 +6,8 @@ Use `--help` for detailed usage, and read the code for new features.
 capshow-0.7.17-git[7e641fd/master]
 ----------------------------------
 
+::
+
    (C) 2004 Patrik Arlos \<patrik.arlos@bth.se\>
    (C) 2012 David Sveningsson \<david.sveningsson@bth.se\>
    Usage: capshow [OPTIONS] STREAM
@@ -21,6 +23,8 @@ capshow-0.7.17-git[7e641fd/master]
 Formatting options
 ------------------
 
+::
+
    -1                   Show only DPMI information.
    -2                     .. include link layer.
    -3                     .. include transport layer.
@@ -34,6 +38,8 @@ Formatting options
 
 libcap_filter-0.7.17-git options
 --------------------------------
+
+::
 
    --starttime=DATETIME      Discard all packages before starttime described by
                              the unix timestamp. See capfilter(1) for
