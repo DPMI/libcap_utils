@@ -32,36 +32,38 @@ Formatting options
 Filter options
 --------------
 
---starttime=DATETIME      Discard all packages before starttime described by
-                          the unix timestamp. See capfilter(1) for
-                          additional accepted formats.
---endtime=DATETIME        Discard all packets after endtime.
---begin                   Alias for --starttime
---end                     Alias for --endtime
---mampid=STRING           Filter on MAMPid.
---mpid=STRING             Alias for --mampid.
---iface=STRING            Filter on networkinterface on MP.
---if=STRING               Alias for --iface.
---eth.vlan=TCI[/MASK]     Filter on VLAN TCI and mask.
---eth.type=STRING[/MASK]  Filter on carrier protocol (IP, ARP, RARP).
---eth.src=ADDR[/MASK]     Filter on ethernet source.
---eth.dst=ADDR[/MASK]     Filter on ethernet destination.
---ip.proto=STRING         Filter on ip protocol (TCP, UDP, ICMP).
---ip.src=ADDR[/MASK]      Filter on source ip address, dotted decimal.
---ip.dst=ADDR[/MASK]      Filter on destination ip address, dotted decimal.
---tp.sport=PORT[/MASK]    Filter on source portnumber.
---tp.dport=PORT[/MASK]    Filter on destination portnumber.
---tp.port=PORT[/MASK]     Filter or source or destination portnumber (if
-                          either is a match the packet matches).
---frame-max-dt=TIME       Starts to reject packets after the interarrival-
-                          time is greater than TIME (WRT matched packets).
---frame-num=RANGE[,..]    Reject all packets not in specified range (see
-                          capfilter(1) for further description of syntax).
---caplen=BYTES            Store BYTES of the captured packet. [default=ALL]
---filter-mode=MODE        Set filter mode to AND or OR. [default=AND]
---bpf=FILTER              In addition to regular DPMI filter also use the
-                          supplied BPF. Matching takes place after DPMI
-                          filter.
+:::
+
+   --starttime=DATETIME      Discard all packages before starttime described by
+                             the unix timestamp. See capfilter(1) for
+                             additional accepted formats.
+   --endtime=DATETIME        Discard all packets after endtime.
+   --begin                   Alias for --starttime
+   --end                     Alias for --endtime
+   --mampid=STRING           Filter on MAMPid.
+   --mpid=STRING             Alias for --mampid.
+   --iface=STRING            Filter on networkinterface on MP.
+   --if=STRING               Alias for --iface.
+   --eth.vlan=TCI[/MASK]     Filter on VLAN TCI and mask.
+   --eth.type=STRING[/MASK]  Filter on carrier protocol (IP, ARP, RARP).
+   --eth.src=ADDR[/MASK]     Filter on ethernet source.
+   --eth.dst=ADDR[/MASK]     Filter on ethernet destination.
+   --ip.proto=STRING         Filter on ip protocol (TCP, UDP, ICMP).
+   --ip.src=ADDR[/MASK]      Filter on source ip address, dotted decimal.
+   --ip.dst=ADDR[/MASK]      Filter on destination ip address, dotted decimal.
+   --tp.sport=PORT[/MASK]    Filter on source portnumber.
+   --tp.dport=PORT[/MASK]    Filter on destination portnumber.
+   --tp.port=PORT[/MASK]     Filter or source or destination portnumber (if
+                             either is a match the packet matches).
+   --frame-max-dt=TIME       Starts to reject packets after the interarrival-
+                             time is greater than TIME (WRT matched packets).
+   --frame-num=RANGE[,..]    Reject all packets not in specified range (see
+                             capfilter(1) for further description of syntax).
+   --caplen=BYTES            Store BYTES of the captured packet. [default=ALL]
+   --filter-mode=MODE        Set filter mode to AND or OR. [default=AND]
+   --bpf=FILTER              In addition to regular DPMI filter also use the
+                             supplied BPF. Matching takes place after DPMI
+                             filter.
 
 Sample output
 -------------
