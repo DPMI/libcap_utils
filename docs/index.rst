@@ -11,3 +11,16 @@ timestamps but most tools work just as well with live streams.
 The library serves as a starting point for writing consumers which can perform
 live or offline analyzis (e.g. bitrate, oneway-delay, etc) of the captured
 streams (traces).
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Contents:
+
+
+
+Indices and tables
+==================
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`
