@@ -16,7 +16,6 @@ streams (traces).
    :maxdepth: 1
    :caption: Contents:
 
-   index
    overview
    install
    consumers
