@@ -11,12 +11,12 @@ The library serves as a starting point for writing consumers which can perform l
 Documentation
 -------------
 
-Documentation is available at https://dpmi.github.io/libcap_utils. The public [API headers](caputils) also contains lots of documentations for library usage.
+Documentation is available at http://libcap-utils.readthedocs.io/en/latest/. The public [API headers](caputils) also contains lots of documentations for library usage.
 
 Installing
 ----------
 
-See [Installing](https://dpmi.github.io/libcap_utils/#/0.7/install) for details.
+See [Installing](http://libcap-utils.readthedocs.io/en/latest/install.html) for details.
 
     autoreconf -si
     mkdir build; cd build
