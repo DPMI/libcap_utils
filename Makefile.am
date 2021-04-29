@@ -115,6 +115,7 @@ libcap_utils_07_la_SOURCES = \
 	src/format.c               \
 	src/format/format.h        \
 	src/format/http.c          \
+	src/format/clp.c          \
 	src/format/mp.c            \
 	src/format/stp.c           \
 	src/interface.c            \
@@ -128,6 +129,9 @@ libcap_utils_07_la_SOURCES = \
 	src/protocols/cdp.c        \
 	src/protocols/data.c       \
 	src/protocols/dns.c        \
+	src/protocols/tg.c        \
+	src/protocols/cp.c        \
+	src/protocols/clp.c        \
 	src/protocols/ethernet.c   \
 	src/protocols/gre.c        \
 	src/protocols/gtp.c	       \

@@ -155,6 +155,10 @@ static enum caputils_protocol_type tcp_next(struct header_chunk* header, const c
 	const uint16_t sport = ntohs(tcp->source);
 	const uint16_t dport = ntohs(tcp->dest);
 
+	if ( sport == PORT_CP || dport == PORT_CP ){
+		return PROTOCOL_CLP;
+	}
+	
 	if ( (sport == PORT_DNS || dport == PORT_DNS) ) {
 		/* offset the length field */
 		*out += 2;
@@ -191,10 +195,15 @@ static void tcp_format(FILE* fp, const struct header_chunk* header, const char* 
 
 	const char* payload = (const char*)tcp + 4*tcp->doff;
 	if ( payload_size == 0 ) return;
-
+	
 	if ( (sport == PORT_HTTP || dport == PORT_HTTP) ) {
 		print_http(fp, header->cp, payload, payload_size, flags);
 	}
+	if ( (sport == PORT_CLP || dport == PORT_CLP) ) {
+	  fprintf(fp, "CLP  ");
+		print_clp(fp, header->cp, payload, payload_size, flags);
+	}
+	
 }
 
 static void tcp_dump(FILE* fp, const struct header_chunk* header, const char* ptr, const char* prefix, int flags){

@@ -36,6 +36,9 @@
 enum {
 	PORT_DNS = 53,
 	PORT_HTTP = 80,
+	PORT_CP = 5000,
+	PORT_CLP = 5001,
+	PORT_TG  = 1500,
 };
 
 #ifdef __cplusplus
@@ -81,7 +84,8 @@ void print_icmp(FILE* fp, const struct cap_header* cp, net_t net, const struct i
 
 /* application layer */
 void print_http(FILE* fp, const struct cap_header* cp, const char* payload, size_t size, unsigned int flags);
-
+  void print_clp(FILE* fp, const struct cap_header* cp, const char* payload, size_t size, unsigned int flags); // calc line protocol used in DV1619
+  
 #ifdef __cplusplus
 }
 #endif

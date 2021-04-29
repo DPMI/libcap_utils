@@ -120,7 +120,13 @@ void format_pkg(FILE* fp, struct format* state, const struct cap_header* cp){
 	fprintf(fp, "[%4"PRIu64"]:", ++state->pktcount);
 	fputs_printable(cp->nic, 8, fp);
 	fputc(':', fp);
-	fputs_printable(cp->mampid, 8, fp);
+
+	/* Added to handle some output if no mampid is found */
+	if(strlen(cp->mampid)!=0){
+	  fputs_printable(cp->mampid, 8, fp);
+	} else {
+	  fputs_printable("(unset)", 8, fp);
+	}
 	fputc(':', fp);
 	if ( state->first ){
 		state->ref = cp->ts;

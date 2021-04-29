@@ -245,6 +245,7 @@ static int next_payload(struct header_chunk* header){
 	if ( (header->ptr == NULL && type == PROTOCOL_DONE) || limited_caplen(header->cp, header->ptr, 0) ){
 		header->ptr = NULL;
 		header->truncated = 1;
+		fprintf(stderr,"header truncated.\n");
 		return 0;
 	}
 
@@ -254,6 +255,7 @@ static int next_payload(struct header_chunk* header){
 	/* ensure there is enough data left */
 	if ( limited_caplen(header->cp, header->ptr, header_size(header)) ){
 		header->truncated = 1;
+		fprintf(stderr,"header truncated, no data left, %d .\n", header_size(header));
 	}
 
 	return
@@ -291,7 +293,7 @@ void header_dump(FILE* fp, const struct header_chunk* header, const char* prefix
 	}
 
 	if ( header->truncated && !header->protocol->partial_print ){
-		fprintf(fp, "%s[Packet size limited during capture]\n", prefix);
+		fprintf(fp, "%s[Packet size limited during capture(HD)]\n", prefix);
 		return;
 	}
 
@@ -302,7 +304,8 @@ void header_dump(FILE* fp, const struct header_chunk* header, const char* prefix
 
 void header_format(FILE* fp, const struct header_chunk* header, int flags){
 	if ( header->truncated && !header->protocol->partial_print ){
-		fprintf(fp, ": %s [Packet size limited during capture]", header->protocol->name);
+		fprintf(fp, ": %s [Packet size limited during capture(HF)]", header->protocol->name);
+		//		fprintf(fp, "header->truncated = %d, header->protocol->partial_print = %d \n", header->truncated, header->protocol->partial_print);
 		return;
 	}
 
