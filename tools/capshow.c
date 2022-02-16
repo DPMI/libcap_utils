@@ -208,6 +208,7 @@ int main(int argc, char **argv){
 	const stream_stat_t* stat = stream_get_stat(stream);
 	stream_print_info(stream, stderr);
 
+	
 	/* handle C-c */
 	signal(SIGINT, handle_sigint);
 

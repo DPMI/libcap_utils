@@ -61,6 +61,7 @@ enum caputils_protocol_type {
 	PROTOCOL_CP,
 	PROTOCOL_CLP,
 	PROTOCOL_TG,
+	PROTOCOL_MARKER,
 	PROTOCOL_NUM_AVAILABLE,
 };
 

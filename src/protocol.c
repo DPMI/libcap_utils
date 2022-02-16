@@ -63,7 +63,8 @@ static void __attribute__((constructor)) protocol_init(void){
 	REGISTER_PROTOCOL(protocol_tcp, PROTOCOL_TCP);
 	REGISTER_PROTOCOL(protocol_clp, PROTOCOL_CLP);// TCP calc line protocol 
 	REGISTER_PROTOCOL(protocol_cp, PROTOCOL_CP);  // UDP calc protocol
-	REGISTER_PROTOCOL(protocol_tg, PROTOCOL_TG);  // Traffic Generator UDP protocol	
+	REGISTER_PROTOCOL(protocol_tg, PROTOCOL_TG);  // Traffic Generator UDP protocol
+	REGISTER_PROTOCOL(protocol_marker, PROTOCOL_MARKER); // Cap Marker Protocol 
 	REGISTER_PROTOCOL(protocol_udp, PROTOCOL_UDP);
 	REGISTER_PROTOCOL(protocol_vlan, PROTOCOL_VLAN);
 }

@@ -201,6 +201,7 @@ int main(int argc, char* argv[]){
 	}
 	stream_close(dst);
 
+	
 	if ( sort ){
 		if ( !quiet ){
 			fprintf(stderr, "%s starting sort of %zd bytes\n", program_name, sort_size);

@@ -49,13 +49,19 @@ static enum caputils_protocol_type udp_next(struct header_chunk* header, const c
 		return PROTOCOL_TG;
 	}
 
+	if ( sport == PORT_MARKER || dport == PORT_MARKER ){
+	  return PROTOCOL_MARKER;
+	}
+
 	
 	switch(dport) {
-		if(dport == sport){
-		case PORT_GTPu:
-		case PORT_GTPc:
-			return PROTOCOL_GTP;
-		}
+	  
+	case PORT_GTPu:
+	case PORT_GTPc:
+	  if(dport == sport){
+	    return PROTOCOL_GTP;
+	    break;
+	  }
 
 	case PORT_PTPv2:
 		return PROTOCOL_PTPv2;

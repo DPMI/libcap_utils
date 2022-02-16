@@ -130,6 +130,7 @@ libcap_utils_07_la_SOURCES = \
 	src/protocols/data.c       \
 	src/protocols/dns.c        \
 	src/protocols/tg.c        \
+	src/protocols/marker.c    \
 	src/protocols/cp.c        \
 	src/protocols/clp.c        \
 	src/protocols/ethernet.c   \
