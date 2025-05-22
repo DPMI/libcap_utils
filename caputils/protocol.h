@@ -34,6 +34,9 @@ extern "C" {
 #include <stdint.h>
 #include <stddef.h>
 
+
+
+  
 enum caputils_protocol_type {
 	PROTOCOL_UNKNOWN = 0,              /* unknown or invalid protocol */
 	PROTOCOL_DONE,                     /* no more headers, shouldn't be any more payload */
@@ -62,6 +65,8 @@ enum caputils_protocol_type {
 	PROTOCOL_CLP,
 	PROTOCOL_TG,
 	PROTOCOL_MARKER,
+	PROTOCOL_VRRP,
+	IPPROTO_VRRP = 112,
 	PROTOCOL_NUM_AVAILABLE,
 };
 
