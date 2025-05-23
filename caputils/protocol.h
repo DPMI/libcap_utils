@@ -43,6 +43,7 @@ enum caputils_protocol_type {
 	PROTOCOL_DATA,                     /* no more headers, payload is data */
 
 	PROTOCOL_ARP = 3,
+	PROTOCOL_BACNET,
 	PROTOCOL_CDP,
 	PROTOCOL_DNS,
 	PROTOCOL_ETHERNET,
