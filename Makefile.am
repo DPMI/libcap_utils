@@ -126,6 +126,7 @@ libcap_utils_07_la_SOURCES = \
 	src/picotime.c             \
 	src/protocol.c             \
 	src/protocols/arp.c        \
+	src/protocols/bacnet.c     \
 	src/protocols/cdp.c        \
 	src/protocols/data.c       \
 	src/protocols/dns.c        \

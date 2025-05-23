@@ -35,6 +35,7 @@ static enum caputils_protocol_type udp_next(struct header_chunk* header, const c
 
 	const uint16_t sport = ntohs(udp->source);
 	const uint16_t dport = ntohs(udp->dest);
+	const uint8_t* payload = (const uint8_t*)(udp + 1);
 
 	if ( sport == PORT_DNS || dport == PORT_DNS ){
 		return PROTOCOL_DNS;
@@ -52,6 +53,13 @@ static enum caputils_protocol_type udp_next(struct header_chunk* header, const c
 	if ( sport == PORT_MARKER || dport == PORT_MARKER ){
 	  return PROTOCOL_MARKER;
 	}
+
+	if ((dport & PORT_BACNET) || (sport & PORT_BACNET)) {
+		if (payload[0] == 0x81) {	// BVLC Type for BACnet/IP
+			return PROTOCOL_BACNET;
+		}
+	}
+
 
 	
 	switch(dport) {
