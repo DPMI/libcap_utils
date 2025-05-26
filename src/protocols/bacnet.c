@@ -9,6 +9,15 @@
 
 #define BACNET_BVLC_TYPE 0x81
 
+static const char* bvlc_function_str(uint8_t func) {
+	switch (func) {
+		case 0x0A: return "Original-Unicast-NPDU";
+		case 0x0B: return "Original-Broadcast-NPDU";
+		case 0x04: return "Forwarded-NPDU";
+		default:   return "Unknown Function";
+	}
+}
+
 static enum caputils_protocol_type bacnet_next(struct header_chunk* header, const char* ptr, const char** out) {
 	const struct udphdr* udp = (const struct udphdr*)ptr;
 	const unsigned char* payload = (const unsigned char*)(udp + 1);
@@ -22,19 +31,31 @@ static enum caputils_protocol_type bacnet_next(struct header_chunk* header, cons
 }
 
 static void bacnet_format(FILE* fp, const struct header_chunk* header, const char* ptr, unsigned int flags) {
+	fputs(": BACnet", fp);
+
 	const struct udphdr* udp = (const struct udphdr*)ptr;
 	const unsigned char* payload = (const unsigned char*)(udp + 1);
+	uint8_t npdu_version = 0;
 
-	fprintf(fp, ": BACnet");
-	if (payload[0] == BACNET_BVLC_TYPE) {
-		fprintf(fp, " (BVLC function 0x%02X)", payload[1]);
+	uint8_t bvlc_type = payload[0];
+	uint8_t bvlc_func = payload[1];
+	uint16_t bvlc_len = (payload[2] << 8) | payload[3];
+
+	if (bvlc_func == 0x0A || bvlc_func == 0x0B) {
+		npdu_version = payload[4];
+	} else if (bvlc_func == 0x04 && bvlc_len >= 10) {
+		npdu_version = payload[10];
 	}
+
+	fprintf(fp, ": Function = %s, Version = %u, Length = %u",
+	        bvlc_function_str(bvlc_func),
+	        npdu_version,
+	        bvlc_len);
 }
 
 static void bacnet_dump(FILE* fp, const struct header_chunk* header, const char* ptr, const char* prefix, int flags) {
 	const unsigned char* payload = (const unsigned char*)ptr;
 
-	// We can't get payload_len directly, so estimate from caplen
 	size_t payload_len = header->cp->caplen - (ptr - header->cp->payload);
 	if (payload_len < 4) {
 		fprintf(fp, "%sNot a BACnet BVLC packet\n", prefix);
