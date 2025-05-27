@@ -40,6 +40,7 @@ enum {
 	PORT_CLP = 5001,
 	PORT_TG  = 1500,
 	PORT_MARKER = 4000,
+	PORT_BACNET = 0xBAC0,
 };
 
 #ifdef __cplusplus
