@@ -114,19 +114,42 @@ static void bacnet_dump(FILE* fp, const struct header_chunk* header, const char*
 	fprintf(fp,"%sPDU Type:           %u\n", prefix, pdu_type);
 	fprintf(fp,"%sFlags:              %u\n", prefix, pdu_flags);
 
-	if (pdu_type <= 0x07) {
+	if (pdu_type <= 0x04) {
 		if (apdu_len >= 2) {
 			if (pdu_type == 0x01) {
 				fprintf(fp,"%sService Type:       %u\n", prefix, apdu[1]);
-			} else if (pdu_type == 0x04) {
+			} 
+			else if (pdu_type == 0x04) {
 				fprintf(fp,"%sInvoke ID:          %u (Segment ACK — no service type)\n", prefix, apdu[1]);
-			} else if (apdu_len >= 3) {
-				uint8_t service_type = apdu[2];
+			} 
+			else if (pdu_type == 0x00 && apdu_len >= 4) {
+				uint8_t service_type = apdu[3];
+				fprintf(fp,"%sInvoke ID:          %u\n", prefix, apdu[2]);
 				fprintf(fp,"%sService Type:       %u\n", prefix, service_type);
+			}
+			else if (apdu_len >= 3) {
+				uint8_t service_type = apdu[2];
 				fprintf(fp,"%sInvoke ID:          %u\n", prefix, apdu[1]);
+				fprintf(fp,"%sService Type:       %u\n", prefix, service_type);
 			}
 		}
-	} else {
+	} 
+	else if(pdu_type <= 0x07 && pdu_type > 0x04)
+	{
+		switch(pdu_type) {
+			case 0x05:
+				fprintf(fp, "%sError PDU\n", prefix);
+				break;
+			case 0x06:
+				fprintf(fp, "%sReject PDU\n", prefix);
+				break;
+			case 0x07:
+				fprintf(fp, "%sAbort PDU\n", prefix);
+				break;
+		}
+	}
+	else 
+	{
 		fprintf(fp, "%sNon-BACnet PDU Type: %u — dropping\n", prefix, pdu_type);
 		return;
 	}
