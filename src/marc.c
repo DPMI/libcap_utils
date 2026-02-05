@@ -103,13 +103,19 @@ static marc_output_handlerv_t out_funcv = vfprintf;
 static FILE* dst_error = NULL;
 static FILE* dst_verbose = NULL;
 
+enum { MAMPID_LEN = 16 };
+
 void mampid_set(mampid_t dst, const char* src){
 	/* no garbage in field, mostly for viewing hexdumps of traffic */
-	memset(dst, 0, 16);
+
+    /* Reset to empty (all zeros). */
+    memset(dst, 0, MAMPID_LEN);
 
 	/* if no src is provided, it is considered a reset */
 	if ( src ){
-		strncpy(dst, src, 16);
+	    /* Truncate and guarantee NUL-termination. */
+    	/* snprintf writes at most MAMPID_LEN-1 chars + '\0' */
+    	snprintf((char*)dst, MAMPID_LEN, "%s", src);
 	}
 }
 

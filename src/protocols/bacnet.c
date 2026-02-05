@@ -37,7 +37,8 @@ static void bacnet_format(FILE* fp, const struct header_chunk* header, const cha
 	const unsigned char* payload = (const unsigned char*)(udp + 1);
 	uint8_t npdu_version = 0;
 
-	uint8_t bvlc_type = payload[0];
+	// aparently bvlc_type was not used, strange..
+//	uint8_t bvlc_type = payload[0];
 	uint8_t bvlc_func = payload[1];
 	uint16_t bvlc_len = (payload[2] << 8) | payload[3];
 

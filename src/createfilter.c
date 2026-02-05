@@ -543,11 +543,16 @@ int filter_from_argv(int* argcptr, char** argv, struct filter* filter){
 			break;
 
 		case FILTER_MAMPID:
-			strncpy(filter->mampid, optarg, 8);
+//			strncpy(filter->mampid, optarg, 8);
+			memset(filter->mampid, 0, sizeof filter->mampid);
+			memcpy(filter->mampid, optarg, sizeof filter->mampid);
 			break;
 
 		case FILTER_IFACE:
-			strncpy(filter->iface, optarg, 8);
+//			strncpy(filter->iface, optarg, 8);
+			memset(filter->iface, 0, sizeof filter->iface);
+			memcpy(filter->iface, optarg, sizeof filter->iface);
+
 			break;
 
 		case FILTER_VLAN:
@@ -654,7 +659,10 @@ int filter_close(struct filter* filter){
 
 void filter_ci_set(struct filter* filter, const char* str){
 	filter->index |= FILTER_CI;
-	strncpy(filter->iface, str, 8);
+//	strncpy(filter->iface, str, 8);
+	memset(filter->iface, 0, sizeof filter->iface);
+	memcpy(filter->iface, optarg, sizeof filter->iface);
+
 }
 
 void filter_vlan_set(struct filter* filter, const char* str){
@@ -729,7 +737,10 @@ void filter_dst_ip_aton(struct filter* filter, const char* str){
 
 void filter_mampid_set(struct filter* filter, const char* mampid){
 	filter->index |= FILTER_MAMPID;
-	strncpy(filter->mampid, mampid, 8);
+//	strncpy(filter->mampid, mampid, 8);
+	memset(filter->mampid, 0, sizeof filter->mampid);
+	memcpy(filter->mampid, optarg, sizeof filter->mampid);
+
 }
 
 void filter_starttime_set(struct filter* filter, const timepico t){

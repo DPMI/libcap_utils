@@ -140,7 +140,10 @@ static void homogenize_eth_addr(char* buf){
 
 int stream_addr_aton(stream_addr_t* dst, const char* src, enum AddressType type, int flags){
 	char buf[48] = {0,};   /* larger than max, just in case user provides large */
-	strncpy(buf, src, 48); /* input, will bail out later on bad data. */
+//	strncpy(buf, src, 48); /* input, will bail out later on bad data. */
+
+	memset(buf, 0, sizeof buf);
+	memcpy(buf, src, 48);
 
 	stream_addr_reset(dst);
 	dst->_type = htons(type);
@@ -186,7 +189,11 @@ int stream_addr_aton(stream_addr_t* dst, const char* src, enum AddressType type,
 		// DESTADDR is ipaddress:port
 		{
 			char* ip = buf;
-			strncpy(buf, src, 48);
+//			strncpy(buf, src, 48);
+
+			memset(buf, 0, sizeof buf);
+			memcpy(buf, src, 48);
+
 
 			dst->ipv4.sin_family = AF_INET;
 			dst->ipv4.sin_port = htons(0x0810); /* default port */

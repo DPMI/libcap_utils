@@ -25,7 +25,7 @@
 #include <string.h>
 
 
-static int min(int a, int b){ return a<b?a:b; }
+//static int min(int a, int b){ return a<b?a:b; }
 
 void print_clp(FILE* fp, const struct cap_header* cp, const char* payload, size_t size, unsigned int flags){
 
@@ -37,7 +37,9 @@ void print_clp(FILE* fp, const struct cap_header* cp, const char* payload, size_
     if (payload[k] < 30 ){
       fprintf(fp,"\\%d ",payload[k]);
     } else {
-      fprintf(fp,"%03c ",payload[k]);
+//      fprintf(fp,"%03c ",payload[k]);  /* Old code, update below */
+      fprintf(fp,"%03u ",payload[k] & 0xFF );
+
     } 
   }
   fprintf(fp,"]\n");

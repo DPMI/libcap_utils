@@ -255,7 +255,7 @@ static int next_payload(struct header_chunk* header){
 	/* ensure there is enough data left */
 	if ( limited_caplen(header->cp, header->ptr, header_size(header)) ){
 		header->truncated = 1;
-		fprintf(stderr,"header truncated, no data left, %d .\n", header_size(header));
+		fprintf(stderr,"header truncated, no data left, %ld .\n", header_size(header));
 	}
 
 	return

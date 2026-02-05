@@ -27,19 +27,19 @@
 #include <ctype.h>
 #include <arpa/inet.h>
 
-static const unsigned int MAX_LABEL_REFERENCES = 32;    /* how many label references (depth) is allowed */
+//static const unsigned int MAX_LABEL_REFERENCES = 32;    /* how many label references (depth) is allowed */
 
-static int min(int a, int b){ return a<b?a:b; }
+//static int min(int a, int b){ return a<b?a:b; }
 
 static void clp_dump(FILE* fp, const struct header_chunk* header, const char* payload, const char* prefix, int flags){
   
   const struct cap_header* cp = header->cp;
 
   //  fprintf(fp," CLP \n");
-  const char* cur = payload;
+//  const char* cur = payload; /* Not used */
   const char* end = header->cp->payload + header->cp->caplen;
-  const cpSize = end - payload;
-  fprintf(fp,"CLP size = %d \n",cpSize);    
+  const ptrdiff_t cpSize = end - payload;
+  fprintf(fp,"CLP size = %ld \n",cpSize);    
 
   if ( cp->caplen < cp->len ){
     fprintf(fp, "%s[Packet size limited during capture %d / %d ]", prefix,cp->caplen,cp->len);
@@ -63,11 +63,11 @@ static void clp_dump(FILE* fp, const struct header_chunk* header, const char* pa
 
 static void clp_format(FILE* fp, const struct header_chunk* header, const char* payload, unsigned int flags){
 
-  
-  const struct cap_header* cp = header->cp;
-  const size_t offset         = payload - cp->payload;     /* how many bytes into the packet are we? */
-  const size_t full_size      = cp->len    - offset;   /* how many bytes was the packet? */
-  const size_t captured_size  = cp->caplen - offset;   /* how many bytes is left to read? */
+  /* The next four lines are probably from a more complicated protocol.*/
+//  const struct cap_header* cp = header->cp;
+//  const size_t offset         = payload - cp->payload;     /* how many bytes into the packet are we? */
+ // const size_t full_size      = cp->len    - offset;   /* how many bytes was the packet? */
+ // const size_t captured_size  = cp->caplen - offset;   /* how many bytes is left to read? */
   
   fputs("CLP (prot) ", fp);
   //  fprintf(fp,"\nfsize = %d , captured_size = %d, offset = %d \n",full_size, captured_size,offset);
@@ -85,14 +85,18 @@ static void clp_format(FILE* fp, const struct header_chunk* header, const char* 
   
 }
 
+/*
+// Removed, used in old solution. 
 static size_t clp_message_size(const struct header_chunk* header, const char* ptr){
   return strlen(ptr);
 }
 
+*/
 
 struct caputils_protocol protocol_clp = {
 	.name = "CalcProtocol",
-	.size = clp_message_size,
+//	.size = clp_message_size, // OLD approach. 
+	.size = 0,
 	.next_payload = NULL,
 	.format = clp_format,
 	.dump = clp_dump,
