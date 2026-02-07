@@ -658,7 +658,6 @@ int filter_close(struct filter* filter){
 }
 
 void filter_ci_set(struct filter* filter, const char* str){
-	filter->index |= FILTER_CI;
 //	strncpy(filter->iface, str, 8);
 	memset(filter->iface, 0, sizeof filter->iface);
 	memcpy(filter->iface, optarg, sizeof filter->iface);

@@ -71,9 +71,8 @@ const char* caputils_version(caputils_version_t* version){
 		version->minor = VERSION_MINOR;
 		version->micro = VERSION_MICRO;
 		version->features = features;
-	}
-
-	return VERSION
+	} 
+	return VERSION_FULL
 #ifdef VCS_REV
 		"[" VCS_REV "/" VCS_BRANCH "]"
 #endif
@@ -130,6 +129,7 @@ static struct ethertype ethertype[] = {
 	{"PAE",       0x888E},          /* Port Access Entity (IEEE 802.1X) */
 	{"AOE",       0x88A2},          /* ATA over Ethernet            */
 	{"TIPC",      0x88CA},          /* TIPC                         */
+	{"LLDP",	  0x88CC},			/* LLDP */
 	{"1588",      0x88F7},          /* IEEE 1588 Timesync */
 	{"FCOE",      0x8906},          /* Fibre Channel over Ethernet  */
 	{"FIP",       0x8914},          /* FCoE Initialization Protocol */

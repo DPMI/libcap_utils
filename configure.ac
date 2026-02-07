@@ -1,15 +1,26 @@
 m4_define([__VERSION_MAJOR__], [0])
 m4_define([__VERSION_MINOR__], [7])
-m4_define([__VERSION_MICRO__], [17])
+m4_define([__VERSION_MICRO__], [18])
 m4_define([__VERSION_SUFFIX__], [-git])
 
-AC_INIT([libcap_utils], m4_defn([__VERSION_MAJOR__]).m4_defn([__VERSION_MINOR__]).m4_defn([__VERSION_MICRO__])m4_defn([__VERSION_SUFFIX__]), [https://github.com/DPMI/libcap_utils])
+
+AC_INIT(
+  [libcap_utils],
+  [m4_defn([__VERSION_MAJOR__]).m4_defn([__VERSION_MINOR__]).m4_defn([__VERSION_MICRO__])m4_defn([__VERSION_SUFFIX__])],
+  [https://github.com/DPMI/libcap_utils]
+)
+
 
 VERSION_MAJOR=__VERSION_MAJOR__
 VERSION_MINOR=__VERSION_MINOR__
 VERSION_MICRO=__VERSION_MICRO__
 VERSION_SUFFIX=__VERSION_SUFFIX__
 VERSION_NUM=`printf "0x00%02d%02d%02d\n" ${VERSION_MAJOR} ${VERSION_MINOR} ${VERSION_MICRO}`
+VERSION="${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_MICRO}${VERSION_SUFFIX}"
+
+AC_SUBST([VERSION])
+
+
 
 AC_CONFIG_AUX_DIR([build-aux])
 AM_INIT_AUTOMAKE([1.11 foreign color-tests subdir-objects -Wall -Werror])
@@ -41,12 +52,11 @@ AC_DEFINE_UNQUOTED([TOP_SRCDIR], ["${srcdir}"], [top source directory])
 
 AX_DEFAULT_CFLAGS([-O2])
 AC_PROG_SED
-AM_PROG_CC_C_O
-AC_PROG_CC_C99
+AC_PROG_CC
+AC_USE_SYSTEM_EXTENSIONS
 AC_PROG_CXX
 AC_PROG_LN_S
 AC_ARG_PROGRAM
-AC_USE_SYSTEM_EXTENSIONS
 AC_DISABLE_STATIC([])
 m4_ifdef([AM_PROG_AR], [AM_PROG_AR])
 LT_INIT
