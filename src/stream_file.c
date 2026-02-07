@@ -301,7 +301,18 @@ int stream_file_create(struct stream** stptr, FILE* fp, const char* filename, co
 	st->base.FH.version.minor = VERSION_MINOR;
 	st->base.FH.header_offset = sizeof(struct file_header_t);
 	st->base.FH.comment_size = strlen(comment);
-	strncpy(st->base.FH.mpid, mpid, 200);
+	//strncpy(st->base.FH.mpid, mpid, 200); /* Old */
+
+	memset(st->base.FH.mpid, 0, sizeof st->base.FH.mpid);  // fill with zeros
+	if (mpid) {
+    	size_t cap = sizeof st->base.FH.mpid - 1;          // leave room for '\0'
+    	size_t n = strnlen(mpid, cap);                     // copy at most cap bytes
+    	memcpy(st->base.FH.mpid, mpid, n);                 // copy n bytes
+    	/* NUL is already present due to memset; explicit write optional:
+    	   st->base.FH.mpid[n] = '\0'; */
+	}
+
+
 
 	if ( fwrite(&st->base.FH, 1, sizeof(struct file_header_t), st->file) < sizeof(struct file_header_t) ){
 		return EIO;

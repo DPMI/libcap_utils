@@ -25,6 +25,7 @@
 
 #include "src/format/format.h"
 #include <stdio.h>
+//#include <stddef.h>
 #include <string.h>
 #include <ctype.h>
 #include <arpa/inet.h>
@@ -52,10 +53,10 @@ static void tg_dump(FILE* fp, const struct header_chunk* header, const char* ptr
 
   //  fprintf(fp," CP \n");
   struct tg_Protocol h = *(const struct tg_Protocol*)ptr;
-  const char* cur = ptr + sizeof(struct tg_Protocol);
+//  const char* cur = ptr + sizeof(struct tg_Protocol);
   const char* end = header->cp->payload + header->cp->caplen;
-  const tgSize = end - ptr;
-  fprintf(fp,"TG size = %d \n",tgSize);    
+  const ptrdiff_t tgSize = end - ptr;
+  fprintf(fp,"TG size = %ld \n",tgSize);    
 
   if ( cp->caplen < cp->len ){
     fprintf(fp, "%s[Packet size limited during capture %d / %d ]", prefix,cp->caplen,cp->len);
@@ -89,8 +90,8 @@ static void tg_format(FILE* fp, const struct header_chunk* header, const char* p
     fprintf(fp, "%d:%d:%d:%d ",ntohl(h.exp_id),ntohl(h.run_id),ntohl(h.key_id),ntohl(h.counter));   
   } else {
     fprintf(fp,"Unknown ");
-    fprintf(fp,"\nfsize = %d , captured_size = %d, offset = %d \n",full_size, captured_size,offset);
-    fprintf(fp,"\nsize(Protocol) = %d \n",sizeof(struct tg_Protocol));
+    fprintf(fp,"\nfsize = %ld , captured_size = %ld, offset = %ld \n",full_size, captured_size,offset);
+    fprintf(fp,"\nsize(Protocol) = %ld \n",sizeof(struct tg_Protocol));
     
   }
   

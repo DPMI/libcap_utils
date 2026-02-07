@@ -48,6 +48,9 @@ enum caputils_protocol_type ethertype_next(const unsigned int ethertype){
 	case 0x88F7: // PTPv2 in Ethernet
 		return PROTOCOL_PTPv2;
 
+	case 0x88cc: // LLDP
+		return PROTOCOL_LLDP;
+
 	default:
 		return PROTOCOL_DATA;
 	}

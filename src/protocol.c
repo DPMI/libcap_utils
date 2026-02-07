@@ -69,5 +69,6 @@ static void __attribute__((constructor)) protocol_init(void){
 	REGISTER_PROTOCOL(protocol_udp, PROTOCOL_UDP);
 	REGISTER_PROTOCOL(protocol_vlan, PROTOCOL_VLAN);
 	REGISTER_PROTOCOL(protocol_vrrp, PROTOCOL_VRRP);
+	REGISTER_PROTOCOL(protocol_lldp, PROTOCOL_LLDP);
 	
 }

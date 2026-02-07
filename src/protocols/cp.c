@@ -29,9 +29,9 @@
 #include <ctype.h>
 #include <arpa/inet.h>
 
-static const unsigned int MAX_LABEL_REFERENCES = 32;    /* how many label references (depth) is allowed */
+//static const unsigned int MAX_LABEL_REFERENCES = 32;    /* how many label references (depth) is allowed */
 
-static int min(int a, int b){ return a<b?a:b; }
+//static int min(int a, int b){ return a<b?a:b; }
 
 struct cp_Protocol {
   uint16_t type;  // What message is this, 1 = server to client, 2 client to server, 3... reserved , conversion needed (for practice)
@@ -63,11 +63,11 @@ static void cp_dump(FILE* fp, const struct header_chunk* header, const char* ptr
   const struct cap_header* cp = header->cp;
 
   //  fprintf(fp," CP \n");
-  struct cp_Protocol h = *(const struct cp_Protocol*)ptr;
-  const char* cur = ptr + sizeof(struct cp_Protocol);
+//  struct cp_Protocol h = *(const struct cp_Protocol*)ptr;
+//  const char* cur = ptr + sizeof(struct cp_Protocol);
   const char* end = header->cp->payload + header->cp->caplen;
-  const cpSize = end - ptr;
-  fprintf(fp,"CP size = %d \n",cpSize);    
+  const ptrdiff_t cpSize = end - ptr;
+  fprintf(fp,"CP size = %ld \n",cpSize);    
 
   if ( cp->caplen < cp->len ){
     fprintf(fp, "%s[Packet size limited during capture %d / %d ]", prefix,cp->caplen,cp->len);
@@ -180,8 +180,8 @@ static void cp_format(FILE* fp, const struct header_chunk* header, const char* p
     
   } else {
     fprintf(fp,"Unknown ");
-    fprintf(fp,"\nfsize = %d , captured_size = %d, offset = %d \n",full_size, captured_size,offset);
-    fprintf(fp,"\nsize(Message) = %d , size(Protocol) = %d \n",sizeof(struct cp_Message), sizeof(struct cp_Protocol));
+    fprintf(fp,"\nfsize = %ld , captured_size = %ld, offset = %ld \n",full_size, captured_size,offset);
+    fprintf(fp,"\nsize(Message) = %ld , size(Protocol) = %ld \n",sizeof(struct cp_Message), sizeof(struct cp_Protocol));
     
   }
   

@@ -23,6 +23,8 @@
 
 #include "src/format/format.h"
 
+#include <string.h>
+
 struct vrrpv3 {
   uint8_t version_type;
   uint8_t virtual_router_id;
@@ -154,12 +156,12 @@ static void vrrp_dump(FILE* fp, const struct header_chunk* header, const char* p
   const struct cap_header* cp = header->cp;
   const size_t offset         = ptr - cp->payload;     /* how many bytes into the packet are we? */
   const size_t full_size      = cp->len    - offset;   /* how many bytes was the packet? */
-  const size_t captured_size  = cp->caplen - offset;   /* how many bytes is left to read? */
+//  const size_t captured_size  = cp->caplen - offset;   /* how many bytes is left to read? */
   
 
   
 
-  fprintf(fp, "%sSize (Padding ?)     %d\n", prefix, full_size); 
+  fprintf(fp, "%sSize (Padding ?)     %ld\n", prefix, full_size); 
   
   fprintf(fp, "%sversion:             %d\n", prefix, (vrrp->version_type>>4)&0x0F);
   fprintf(fp, "%stype:                %s (%d)\n", prefix, vrrp_type_name(vrrp->version_type&0x0F), (vrrp->version_type)&0x0F);
@@ -187,20 +189,20 @@ static void vrrp_dump(FILE* fp, const struct header_chunk* header, const char* p
 
 
   
-  char *IPAddress_Data = ptr + sizeof(struct vrrpv3);
-  char *Auth_data = ptr + sizeof(struct vrrpv3) + vrrp->count_ipvx_addresses*sizeof(struct in_addr);
+  const unsigned char *IPAddress_Data = (const unsigned char*)ptr + sizeof(struct vrrpv3);
+  const unsigned char *Auth_data = (const unsigned char*)ptr + sizeof(struct vrrpv3) + vrrp->count_ipvx_addresses*sizeof(struct in_addr);
 
 
-  const size_t AuthOff = Auth_data - IPAddress_Data;
+//  const size_t AuthOff = Auth_data - IPAddress_Data; /* unused */
   char ip_string[INET_ADDRSTRLEN];
-  char *result;
+  const char *result;
   
   for(int IPindex=0;IPindex<vrrp->count_ipvx_addresses; IPindex++){
-    struct in_addr *anAddress=(struct in_addr*)IPAddress_Data;
+    const struct in_addr *anAddress=(const struct in_addr*)IPAddress_Data;
     result = inet_ntop(AF_INET, anAddress, ip_string, INET_ADDRSTRLEN);
     if (result == NULL ) {
       perror("ntop failed");
-      return 1;
+      return;
     }
     fprintf(fp,"%sAddress [%d]          %s\n", prefix,IPindex, ip_string);
   }
@@ -209,7 +211,9 @@ static void vrrp_dump(FILE* fp, const struct header_chunk* header, const char* p
   int index=0;
 
 
-  while (Auth_data+(index+1)*8 < (ptr+full_size) ){
+//  while (Auth_data+(index+1)*8 < (ptr+full_size) ){ /* old */
+const unsigned char *end = (const unsigned char*)ptr + full_size;
+while (Auth_data + (index + 1) * 8 < end) {
     memcpy(authBuffer, Auth_data+index*8,8);
     authBuffer[8]='\0';
     fprintf(fp,"%sAuthString [%d]       \"%s\"\n",prefix, index,authBuffer);

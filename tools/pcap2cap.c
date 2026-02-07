@@ -179,7 +179,10 @@ int main (int argc, char **argv){
       break;
 
     case 'm':
-      strncpy(cp.mampid, optarg, 8);
+//      strncpy(cp.mampid, optarg, 8);
+      memset(cp.mampid, 0, sizeof cp.mampid);
+      memcpy(cp.mampid, optarg, strnlen(optarg, sizeof cp.mampid - 1));
+
       break;
 
     case 'i': /* --iface */

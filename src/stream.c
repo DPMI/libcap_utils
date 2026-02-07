@@ -200,7 +200,10 @@ int stream_open(stream_t* stptr, const stream_addr_t* dest, const char* iface, s
 		return EINVAL;
 
 	case STREAM_ADDR_UDP:
-		ret = stream_udp_open(stptr, &dest->ipv4, iface);
+		//ret = stream_udp_open(stptr, &dest->ipv4, iface); /* Old */ 
+		struct sockaddr_in tmp;
+    	memcpy(&tmp, &dest->ipv4, sizeof tmp);
+    	ret = stream_udp_open(stptr, &tmp, iface);
 		break;
 
 	case STREAM_ADDR_TCP:
@@ -258,7 +261,11 @@ int stream_create(stream_t* stptr, const stream_addr_t* dest, const char* nic, c
 		return EINVAL;
 
 	case STREAM_ADDR_UDP:
-		ret = stream_udp_create(stptr, &dest->ipv4, nic, flags);
+		//ret = stream_udp_create(stptr, &dest->ipv4, nic, flags); /* Old */
+ 		struct sockaddr_in tmp;
+    	memcpy(&tmp, &dest->ipv4, sizeof tmp);
+    	ret = stream_udp_create(stptr, &tmp, nic, flags);
+
 		break;
 
 	case STREAM_ADDR_TCP:

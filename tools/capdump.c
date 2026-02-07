@@ -58,7 +58,8 @@ static int marker_quit=0;                        /* If set to one, the program w
 static int marker_terminate=0;                   /* Increments once for each received terminate marker */
 static int marker_terminate_TO=0;                /* Increments once for each received SIGALMR, after a terminate marker been detected */
 static int src_stream_count=0;                   /* The number of source streams present, set after src has been created.*/
-static const int TERMINATE_DELAY = 3;            /* The number of seconds between receiving the first terminate marker, and the actual stop. */
+// TERMINATE_DELAY used so commented away, inspect why not used 
+//static const int TERMINATE_DELAY = 3;            /* The number of seconds between receiving the first terminate marker, and the actual stop. */
                                                  /* Should be large enough to handle many streams, they may be a second later (mp timeout) */
                                                  /* but small to avoid unneeded delays. */
 
@@ -262,7 +263,26 @@ static void marker_report(const struct marker* marker){
 	strftime(timestr, sizeof(timestr), "%a, %d %b %Y %H:%M:%S %z", &tm);
 
 	/* timestamp from marker */
-	tm = *localtime((const time_t*)&marker->timestamp);
+//	tm = *localtime((const time_t*)&marker->timestamp);
+
+
+
+	// After (portable and safe)
+	time_t ts = (time_t)marker->timestamp;  // if timestamp is integer-like
+	struct tm tmp;
+#if defined(_POSIX_THREAD_SAFE_FUNCTIONS)
+	if (localtime_r(&ts, &tmp) != NULL) {
+	    tm = tmp;
+	} else {
+    	/* handle error: set a default or return */
+	}
+#else
+	struct tm *ptm = localtime(&ts);
+	if (ptm) {
+    	tm = *ptm;
+	}
+#endif
+
 	strftime(timestamp, 200, "%a, %d %b %Y %T %z", &tm);
 
 	fprintf(stderr, "%s: [%s] marker v%d found\n", program_name, timestr, marker->version);
@@ -521,8 +541,15 @@ static void *tcprelay(void *arg){
 	packet->eth_inner.h_proto = htons(ETHERTYPE_IP);
 	//memcpy(&packet->eth_inner.h_source, &hwaddr, ETH_ALEN);
 	//memcpy(&packet->eth_inner.h_dest, &addr.ether_addr, ETH_ALEN);
-	strncpy(packet->cap.nic, "c0", 2);
-	strncpy(packet->cap.mampid, "control", 8);
+//	strncpy(packet->cap.nic, "c0", 2); 				/*updated */
+//	strncpy(packet->cap.mampid, "control", 8);
+
+	memset(packet->cap.nic, 0, sizeof packet->cap.nic);
+	memcpy(packet->cap.nic, "c0", 2);
+
+	memset(packet->cap.mampid, 0, sizeof packet->cap.mampid);
+	memcpy(packet->cap.mampid, "control", 7);
+
 	/* The following IP&UDP packet is just a place holder, it's configured just to trick libcap_utils to think that its a marker */
 	/* ip */
 	packet->ip_inner.protocol=IPPROTO_UDP;
@@ -622,8 +649,18 @@ static void setup_udp(struct packet* packet){
 	packet->eth_inner.h_proto = htons(ETHERTYPE_IP);
 	//memcpy(&packet->eth_inner.h_source, &hwaddr, ETH_ALEN);
 	//memcpy(&packet->eth_inner.h_dest, &addr.ether_addr, ETH_ALEN);
-	strncpy(packet->cap.nic, "c0", 2);
-	strncpy(packet->cap.mampid, "control", 8);
+
+//	strncpy(packet->cap.nic, "c0", 2);				/*updated */
+//	strncpy(packet->cap.mampid, "control", 8);
+
+	memset(packet->cap.nic, 0, sizeof packet->cap.nic);
+	memcpy(packet->cap.nic, "c0", 2);
+
+	memset(packet->cap.mampid, 0, sizeof packet->cap.mampid);
+	memcpy(packet->cap.mampid, "control", 7);
+
+
+
 	/* The following IP&UDP packet is just a place holder, it's configured just to trick libcap_utils to think that its a marker */
 	/* ip */
 	packet->ip_inner.protocol=IPPROTO_UDP;

@@ -32,8 +32,10 @@ int iface_get(const char* name, struct iface* iface){
 	struct ifreq ifr;
 
 	/* store the iface name */
-	strncpy(ifr.ifr_name,   name, IFNAMSIZ);
-	strncpy(iface->if_name, name, IFNAMSIZ);
+	strncpy(ifr.ifr_name,   name, IFNAMSIZ - 1);
+	strncpy(iface->if_name, name, IFNAMSIZ - 1 );
+	ifr.ifr_name[IFNAMSIZ - 1] = '\0';
+	iface->if_name[IFNAMSIZ - 1] = '\0';
 
 	/* open socket */
 	int fd = socket(AF_INET, SOCK_DGRAM, 0);

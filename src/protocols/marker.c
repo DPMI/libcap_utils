@@ -57,10 +57,11 @@ static void marker_dump(FILE* fp, const struct header_chunk* header, const char*
 
   //  fprintf(fp," CP \n");
   struct marker h = *(const struct marker*)ptr;
-  const char* cur = ptr + sizeof(struct marker);
+
+//  const char* cur = ptr + sizeof(struct marker); /* Not used, commented */
   const char* end = header->cp->payload + header->cp->caplen;
-  const markerSize = end - ptr;
-  fprintf(fp,"Marker size = %d \n",markerSize);    
+  const ptrdiff_t markerSize = end - ptr;
+  fprintf(fp,"Marker size = %ld \n",markerSize);    
 
   if ( cp->caplen < cp->len ){
     fprintf(fp, "%s[Packet size limited during capture %d / %d ]", prefix,cp->caplen,cp->len);
@@ -112,8 +113,8 @@ static void marker_format(FILE* fp, const struct header_chunk* header, const cha
     
   } else {
     fprintf(fp,"Unknown ");
-    fprintf(fp,"\nfsize = %d , captured_size = %d, offset = %d \n",full_size, captured_size,offset);
-    fprintf(fp,"\nsize(Protocol) = %d \n",sizeof(struct marker));
+    fprintf(fp,"\nfsize = %ld , captured_size = %ld, offset = %ld \n",full_size, captured_size,offset);
+    fprintf(fp,"\nsize(Protocol) = %ld \n",sizeof(struct marker));
     
   }
   
