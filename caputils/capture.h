@@ -40,7 +40,7 @@ struct ether_vlan_header{
 	uint16_t vlan_proto;                  /* vlan is present if field begins with 0x8100 */
 	uint16_t vlan_tci;                    /* vlan is present if field begins with 0x8100 */
 	uint16_t h_proto;                     /* Ethernet payload protocol */
-};
+} __attribute((packed));
 
 // Capture Header. This header is attached to each packet that we keep, i.e. it matched a filter.
 #define CAPHEAD_NICLEN 8

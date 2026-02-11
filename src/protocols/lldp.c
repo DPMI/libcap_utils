@@ -173,12 +173,12 @@ static int lldp_format_mgmt_addr_short(char *dst, size_t dstsz,
     uint8_t addr_len = (uint8_t)(mlen - 1);
 
     /* Optional: interface fields if present */
-    uint8_t ifsub = 0;
+    //    uint8_t ifsub = 0;
     uint32_t ifnum = 0;
     int have_if = 0;
     if ((uint16_t)(1 + mlen + 1 + 4) <= len) {
         const uint8_t *p_if = val + 1 + mlen;
-        ifsub = p_if[0];
+	//        ifsub = p_if[0];
         ifnum = ((uint32_t)p_if[1] << 24) |
                 ((uint32_t)p_if[2] << 16) |
                 ((uint32_t)p_if[3] << 8)  |

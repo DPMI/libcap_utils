@@ -150,7 +150,7 @@ int marc_init_client(marc_context_t* ctxptr, const char* iface, struct marc_clie
 
 	struct ifreq ifreq;
 	memset(&ifreq, 0, sizeof(struct ifreq));
-	strncpy(ifreq.ifr_name, iface, IFNAMSIZ);
+	strncpy(ifreq.ifr_name, iface, IFNAMSIZ-1);
 
 	/* open UDP socket */
 	int sd = socket(AF_INET, SOCK_DGRAM, 0);
