@@ -63,9 +63,9 @@ static int matchEth(const struct ether_addr* desired, const struct ether_addr* m
 
 static const struct ether_vlan_header* find_ether_vlan_header(const struct ethhdr* ether, uint16_t* h_proto){
 	if( *h_proto == 0x8100 ){
-		const struct ether_vlan_header* vlan = (const struct ether_vlan_header*)ether;
-		*h_proto = ntohs(vlan->h_proto);
-		return vlan;
+	  const struct ether_vlan_header* vlan = (const struct ether_vlan_header*)ether;
+	  *h_proto = ntohs(vlan->h_proto);
+	  return vlan;
 	}
 	return NULL;
 }

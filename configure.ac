@@ -7,8 +7,11 @@ m4_define([__VERSION_SUFFIX__], [-git])
 AC_INIT(
   [libcap_utils],
   [m4_defn([__VERSION_MAJOR__]).m4_defn([__VERSION_MINOR__]).m4_defn([__VERSION_MICRO__])m4_defn([__VERSION_SUFFIX__])],
-  [https://github.com/DPMI/libcap_utils]
-)
+  [https://github.com/DPMI/libcap_utils],
+  [libcap_utils],
+  [https://github.com/DPMI/libcap_utils])
+
+
 
 
 VERSION_MAJOR=__VERSION_MAJOR__
