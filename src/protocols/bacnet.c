@@ -109,27 +109,34 @@ static void bacnet_dump(FILE* fp, const struct header_chunk* header, const char*
 	size_t apdu_len = payload_len - offset;
 
 	uint8_t apdu_header = apdu[0];
+	uint8_t offsetFlags = 0;
 	uint8_t pdu_type = apdu_header >> 4;
 	uint8_t pdu_flags = apdu_header & 0x0F;
 
 	fprintf(fp,"%sPDU Type:           %u\n", prefix, pdu_type);
 	fprintf(fp,"%sFlags:              %u\n", prefix, pdu_flags);
+	
+	if (pdu_flags & 0x08) {
+        offsetFlags = 2; // Segmentable
+    } else {
+        offsetFlags = 0;
+    }
 
 	if (pdu_type <= 0x04) {
 		if (apdu_len >= 2) {
 			if (pdu_type == 0x01) {
-				fprintf(fp,"%sService Type:       %u\n", prefix, apdu[1]);
+				fprintf(fp,"%sService Type:       %u\n", prefix, apdu[1 + offsetFlags]);
 			} 
 			else if (pdu_type == 0x04) {
 				fprintf(fp,"%sInvoke ID:          %u (Segment ACK — no service type)\n", prefix, apdu[1]);
 			} 
 			else if (pdu_type == 0x00 && apdu_len >= 4) {
-				uint8_t service_type = apdu[3];
+				uint8_t service_type = apdu[3 + offsetFlags];
 				fprintf(fp,"%sInvoke ID:          %u\n", prefix, apdu[2]);
 				fprintf(fp,"%sService Type:       %u\n", prefix, service_type);
 			}
 			else if (apdu_len >= 3) {
-				uint8_t service_type = apdu[2];
+				uint8_t service_type = apdu[2 + offsetFlags];
 				fprintf(fp,"%sInvoke ID:          %u\n", prefix, apdu[1]);
 				fprintf(fp,"%sService Type:       %u\n", prefix, service_type);
 			}
